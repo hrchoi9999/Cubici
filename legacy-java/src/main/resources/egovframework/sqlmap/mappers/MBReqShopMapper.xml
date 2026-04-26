@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.MBReqShopMapper">
+	<select id="getMBRequestShopList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			murs.mb_request_shop,
+			'true' as isShop,
+			ca.SHOP_TYPE,
+			ca.SHOP_ID,
+			mur.user_code 
+		FROM
+			MONEYBANK_USER_REQUEST_SHOP murs, MONEYBANK_USER_REQUEST mur
+			LEFT JOIN CBCI_ACCOUNT ca ON ca.USER_CODE = mur.user_code
+		WHERE
+			mur.mbid = #{mbid}
+			AND mur.mbid = murs.mbid
+			AND (SELECT CC.CODE_E_NM FROM CBCI_CODE CC WHERE CC.CODE_ID = ca.SHOP_TYPE) = murs.mb_request_shop	
+		GROUP BY murs.mb_request_shop
+	</select>
+	
+	<select id="getInterparkAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			DISTINCT SUBSTRING_INDEX(입금계좌, ' ',-1) AS acc_no,
+			SUBSTRING_INDEX(입금계좌, ' ', 1) AS acc_bank,
+			'' as acc_holder
+		FROM
+			CBCI_INTERPARK_WITHDRAW_VALUE
+		WHERE
+			입금계좌 IS NOT NULL
+			AND SHOP_ID IN (${shop_id})
+		 	AND INPUT_TIME >= #{request_date}
+		ORDER BY INPUT_TIME DESC
+	</select>
+	
+	<select id="getCoupangAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			DISTINCT SUBSTRING_INDEX(bank_account, '*', 1) AS acc_no,
+			bank_name AS acc_bank,
+			bank_account_holder AS acc_holder
+		FROM
+			CBCI_COUPANG_SETTLEMENT 
+		WHERE
+			bank_account IS NOT NULL
+		 	AND SHOP_ID IN (${shop_id})
+		 	AND input_date >= #{request_date}
+		ORDER BY input_date DESC
+	</select>
+	
+	<select id="getNaverAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			SUBSTRING_INDEX(SUBSTRING_INDEX(계좌번호, ' ', -1), '*', 1) AS acc_no,
+			SUBSTRING_INDEX(계좌번호, ' ', 1) AS acc_bank,
+			'' AS acc_holder,
+			'naver' AS shop,
+			SUB_STORE
+		FROM
+			CBCI_NAVER_WITHDRAWDAY
+		WHERE
+			계좌번호 != ''
+			AND SHOP_ID IN (${shop_id})
+			AND (SUB_STORE, INPUT_DATETIME) IN (SELECT SUB_STORE, MAX(INPUT_DATETIME) AS INPUT_DATETIME FROM CBCI_NAVER_WITHDRAWDAY GROUP BY SUB_STORE)
+		 	AND INPUT_DATETIME >= #{request_date}
+		GROUP BY SUB_STORE 
+		ORDER BY INPUT_DATETIME DESC
+	</select>
+	
+	<select id="getGmarketAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			DISTINCT SUBSTRING_INDEX(입금계좌번호, '*',-1) AS acc_no,
+			입금은행 AS acc_bank,
+			예금주명 AS acc_holder
+		FROM
+			CBCI_GMARKET_WITHDRAW
+		WHERE
+			SHOP_ID IN (${shop_id})
+			AND INPUT_DATETIME >= #{request_date}
+		ORDER BY INPUT_DATETIME DESC
+	</select>
+	
+	<select id="getAuctionAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			SUBSTRING_INDEX(입금계좌번호, '*', 1) AS acc_no,
+		 	SUBSTRING_INDEX(입금계좌번호, '*', -1) AS acc_second,
+			입금은행 AS acc_bank,
+			예금주명 AS acc_holder
+		FROM
+			CBCI_AUCTION_WITHDRAW
+		WHERE
+			SHOP_ID IN (${shop_id})
+			AND INPUT_DATETIME >= #{request_date}
+		GROUP BY acc_first, acc_second
+		ORDER BY INPUT_DATETIME DESC
+	</select>
+	
+	<select id="get11stAccInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			DISTINCT 계좌번호 AS acc_no,
+			은행명 AS acc_bank,
+			예금주명 AS acc_holder
+		FROM
+			CBCI_11ST_WITHDRAW
+		WHERE
+			SHOP_ID IN (${shop_id})
+			AND INPUT_DATETIME >= #{request_date}
+		ORDER BY INPUT_DATETIME DESC
+	</select>
+</mapper>

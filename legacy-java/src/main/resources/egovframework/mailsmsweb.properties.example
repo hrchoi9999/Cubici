@@ -1,0 +1,10 @@
+# Sanitized sample mail/SMS settings.
+
+mail.host = smtp.example.com
+mail.username = change-me
+mail.password = change-me
+
+sms.url = https://example.invalid/sms
+sms.key = change-me
+sms.user_id = change-me
+sms.sender = change-me

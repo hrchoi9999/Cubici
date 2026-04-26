@@ -1,0 +1,318 @@
+:root {
+  color: #172033;
+  background: #f6f8fb;
+  font-family:
+    Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.app-shell {
+  min-height: 100vh;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 48px;
+  align-items: center;
+  min-height: 78vh;
+  padding: 64px clamp(24px, 6vw, 96px);
+  background:
+    linear-gradient(135deg, rgba(5, 38, 64, 0.84), rgba(15, 118, 110, 0.64)),
+    url("https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1800&q=80");
+  background-position: center;
+  background-size: cover;
+  color: #ffffff;
+}
+
+.hero-copy {
+  max-width: 760px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: #5eead4;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(3.4rem, 8vw, 7.8rem);
+  line-height: 0.92;
+  letter-spacing: 0;
+}
+
+.hero p:not(.eyebrow) {
+  max-width: 640px;
+  margin: 24px 0 0;
+  color: #e8f3f5;
+  font-size: 1.13rem;
+  line-height: 1.75;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.primary-action,
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  font-weight: 800;
+}
+
+.primary-action {
+  background: #ffffff;
+  color: #0f766e;
+}
+
+.secondary-action {
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  color: #ffffff;
+}
+
+.hero-panel {
+  display: grid;
+  gap: 16px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.hero-panel div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.hero-panel div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.hero-panel span {
+  color: #dff7f6;
+  font-size: 0.95rem;
+}
+
+.hero-panel strong {
+  font-size: 2rem;
+}
+
+.feature-band,
+.dashboard,
+.contact {
+  padding: 64px clamp(20px, 6vw, 96px);
+}
+
+.feature-band {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  background: #ffffff;
+}
+
+.feature-band article,
+.chart-card,
+.risk-table,
+.contact {
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.feature-band article {
+  padding: 24px;
+}
+
+.feature-band svg,
+.card-title svg,
+.contact svg {
+  color: #0f766e;
+}
+
+h2,
+h3,
+p {
+  letter-spacing: 0;
+}
+
+.feature-band h2,
+.contact h2 {
+  margin: 16px 0 8px;
+  font-size: 1.15rem;
+}
+
+.feature-band p,
+.contact p {
+  margin: 0;
+  color: #586275;
+  line-height: 1.65;
+}
+
+.dashboard {
+  background: #f6f8fb;
+}
+
+.section-heading {
+  margin-bottom: 24px;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  gap: 18px;
+}
+
+.chart-card,
+.risk-table {
+  padding: 22px;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.card-title h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.risk-table {
+  margin-top: 18px;
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 580px;
+}
+
+th,
+td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e5ebf3;
+  text-align: left;
+}
+
+th {
+  color: #667085;
+  font-size: 0.82rem;
+}
+
+.status {
+  display: inline-flex;
+  min-width: 52px;
+  justify-content: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.status.안정 {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.관찰 {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status.주의 {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.contact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 clamp(20px, 6vw, 96px) 72px;
+  padding: 24px;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .feature-band,
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero {
+    min-height: auto;
+    padding-top: 56px;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero,
+  .feature-band,
+  .dashboard,
+  .contact {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  .primary-action,
+  .secondary-action {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .hero-panel {
+    padding: 20px;
+  }
+
+  .hero-panel div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .contact {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+}

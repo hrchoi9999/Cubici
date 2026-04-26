@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.mapper.CoupangScheduledMapper">
+
+	<!-- 쿠팡 사용자 목록 -->
+	<select id="selectCoupangUserList" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				CA.USER_NO,
+				SHOP_ID,
+				SHOP_TYPE,
+				TRIM(VENDOR_ID) AS VENDOR_ID,
+				TRIM(API_KEY) AS ACCESS_KEY,
+				TRIM(API_SECRET_KEY) AS SECRET_KEY,
+				SEND_MAIL,
+				USER_NEW_YN1,
+				USER_NEW_YN2
+			FROM CBCI_ACCOUNT CA
+			LEFT JOIN CBCI_USER CU ON CA.USER_NO = CU.USER_NO
+			WHERE
+				SHOP_TYPE = '11'
+				AND CU.USER_TYPE IN ('01','02','97')
+				AND CA.SHOP_ID NOT IN ('ypa0940','funnyD_TEST')
+			GROUP BY SHOP_ID, VENDOR_ID, API_KEY, API_SECRET_KEY -- 혹시 모를 중복 대비
+			ORDER BY USER_NO
+		]]>
+	</select>
+	
+	<!-- 신규회원인 경우 준비완료 업데이트 하기 -->
+	<update id="updateNewUser" parameterType="hashmap">
+		<![CDATA[
+			UPDATE CBCI_ACCOUNT
+			SET USER_NEW_YN1 = 'N',
+				USER_NEW_YN2 = 'N'
+			WHERE SHOP_TYPE = '11' AND SHOP_ID = #{SHOP_ID}
+		]]>
+	</update>
+	
+	<!-- 매출내역 API로 불러왔고, 주문번호로 단건 조회해야 할 주문들 -->
+	<select id="selectDetailSalesUser" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				SHOP_ID,
+				order_id,
+				vendor_item_id
+			FROM CBCI_COUPANG_SALES
+			WHERE SHOP_ID = #{SHOP_ID}
+			AND list_input_date IS NULL
+			AND sale_type <> 'REFUND'
+			AND order_id <> 0
+		]]>
+	</select>
+	
+	<!-- CBCI_COUPANG_SALES에 반품/취소 등록할 데이터 -->
+	<select id="selectReturnList" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				CCS.SHOP_ID,
+				CCS.order_id,
+				CCS.vendor_item_id,
+				CCS.status,
+				CCR.RECEIPT_TYPE,
+				CCR.RECEIPT_STATUS,
+				CCR.UPD_DATE
+			FROM CBCI_COUPANG_SALES CCS, CBCI_COUPANG_RETURN CCR
+			WHERE CCS.order_id = CCR.ORDER_ID
+			AND CCS.vendor_item_id = CCR.VENDOR_ITEM_ID
+			AND CCS.status <> '반품/취소' -- join이 되는데 반품/취소가 아닌거는 아직 데이터 업데이트가 안된 것
+			AND CCR.RECEIPT_TYPE NOT IN ('반품 철회', '교환') -- 반품 철회, 교환은 빼고 sales에 반품/취소라고 업데이트
+		]]>
+	</select>
+	
+	<!-- CBCI_COUPANG_SALES에 반품/취소 등록 -->
+	<update id="updateReturnList" parameterType="hashmap">
+		<![CDATA[
+			UPDATE CBCI_COUPANG_SALES
+			SET status = '반품/취소'
+			WHERE SHOP_ID = #{SHOP_ID}
+			AND order_id = #{order_id}
+			AND vendor_item_id = #{vendor_item_id}
+		]]>
+	</update>
+	
+	<!-- 판매 데이터 등록 -->
+	<insert id="insertSales" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_SALES (
+			SHOP_ID,
+			shipment_box_id,
+			order_id,
+			ordered_at,
+			orderer_name,
+			orderer_email,
+			paid_at,
+			status,
+			shipping_price,
+			remote_price,
+			remote_area,
+			split_shipping,
+			able_split_shipping,
+			receiver_name,
+			receiver_safe_number,
+			receiver_addr1,
+			receiver_addr2,
+			receiver_post_code,
+			vendor_item_package_id,
+			vendor_item_package_name,
+			product_id,
+			vendor_item_id,
+			vendor_item_name,
+			shipping_count,
+			sales_price,
+			order_price,
+			discount_price,
+			instant_coupon_discount,
+			downloadable_coupon_discount,
+			coupang_discount,
+			external_vendor_sku_code,
+			seller_product_id,
+			seller_product_name,
+			seller_product_item_name,
+			cancel_count,
+			hold_count_for_cancel,
+			estimated_shipping_date,
+			planned_shipping_date,
+			invoice_number_upload_date,
+			confirm_date,
+			delivery_charge_type,
+			canceled,
+			delivery_company_name,
+			invoice_number,
+			in_trasit_date_time,
+			delivered_date,
+			refer,
+			list_input_date,
+			sale_type -- 판매 상태
+		) VALUES (
+			#{SHOP_ID},
+			#{shipmentBoxId},
+			#{orderId},
+			#{orderedAt},
+			#{orderername},
+			#{ordereremail},
+			#{paidAt},
+			#{status},
+			${shippingPrice},
+			${remotePrice},
+			#{remoteArea},
+			#{splitShipping},
+			#{ableSplitShipping},
+			#{receivername},
+			#{receiversafeNumber},
+			#{receiveraddr1},
+			#{receiveraddr2},
+			#{receiverpostCode},
+			${vendorItemPackageId},
+			#{vendorItemPackageName},
+			#{productId},
+			#{vendorItemId},
+			#{vendorItemName},
+			${shippingCount},
+			${salesPrice},
+			${orderPrice},
+			${discountPrice},
+			${instantCouponDiscount},
+			${downloadableCouponDiscount},
+			${coupangDiscount},
+			#{externalVendorSkuCode},
+			#{sellerProductId},
+			#{sellerProductName},
+			#{sellerProductItemName},
+			${cancelCount},
+			${holdCountForCancel},
+			#{estimatedShippingDate},
+			#{plannedShippingDate},
+			#{invoiceNumberUploadDate},
+			#{confirmDate},
+			#{deliveryChargeTypeName},
+			#{canceled},
+			#{deliveryCompanyName},
+			#{invoiceNumber},
+			#{inTrasitDateTime},
+			#{deliveredDate},
+			#{refer},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			'' -- 판매 상태,
+		) ON DUPLICATE KEY UPDATE
+			shipment_box_id = #{shipmentBoxId},
+			status = #{status},
+			shipping_price = ${shippingPrice},
+			remote_price = ${remotePrice},
+			remote_area = #{remoteArea},
+			split_shipping = #{splitShipping},
+			able_split_shipping = #{ableSplitShipping},
+			cancel_count = ${cancelCount},
+			hold_count_for_cancel = ${holdCountForCancel},
+			estimated_shipping_date = #{estimatedShippingDate},
+			planned_shipping_date = #{plannedShippingDate},
+			invoice_number_upload_date = #{invoiceNumberUploadDate},
+			confirm_date= #{confirmDate},
+			delivery_charge_type = #{deliveryChargeTypeName},
+			canceled = #{canceled},
+			delivery_company_name = #{deliveryCompanyName},
+			invoice_number = #{invoiceNumber},
+			in_trasit_date_time = #{inTrasitDateTime},
+			delivered_date = #{deliveredDate},
+			list_upd_date = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+	</insert>
+	
+	<!-- 매출내역 API merge -->
+	<insert id="mergeSales" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_SALES (
+			SHOP_ID,
+			order_id,
+			vendor_item_id,
+			paid_at, -- 결제일시
+			confirm_date, -- 구매확정일자
+			status, -- 발주서 상태
+			sale_type,
+			recognition_date,
+			settlement_date,
+			final_settlement_date,
+			delivery_settlement_amount,
+			tax_type,
+			product_name,
+			total_sale_price,
+			quantity,
+			sale_amount,
+			seller_discount_coupon,
+			service_fee,
+			service_fee_vat,
+			service_fee_ratio,
+			settlement_amount,
+			external_seller_sku_code,
+			sales_input_date,
+			sales_upd_date
+		) VALUES (
+			#{SHOP_ID},
+			#{orderId},
+			#{vendorItemId},
+			'', -- 결제일시
+			'', -- 구매확정일자
+			'', -- 상태값
+			#{saleType},
+			#{recognition_date},
+			#{settlementDate},
+			#{finalSettlementDate},
+			${deliverysettlementAmount},
+			#{taxType},
+			#{productName},
+			${salePrice},
+			${quantity},
+			${saleAmount},
+			${sellerDiscountCoupon},
+			${serviceFee},
+			${serviceFeeVat},
+			${serviceFeeRatio},
+			${settlementAmount},
+			#{externalSellerSkuCode},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		) ON DUPLICATE KEY UPDATE
+			sale_type = #{saleType},
+			recognition_date = #{recognitionDate},
+			settlement_date = #{settlementDate},
+			final_settlement_date = #{finalSettlementDate},
+			delivery_settlement_amount = ${deliverysettlementAmount},
+			tax_type = #{taxType},
+			product_name = #{productName},
+			total_sale_price = ${salePrice},
+			quantity = ${quantity},
+			sale_amount = ${saleAmount},
+			seller_discount_coupon= ${sellerDiscountCoupon},
+			service_fee = ${serviceFee},
+			service_fee_vat = ${serviceFeeVat},
+			service_fee_ratio = ${serviceFeeRatio},
+			settlement_amount = ${settlementAmount},
+			external_seller_sku_code = #{externalSellerSkuCode},
+			sales_upd_date = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+	</insert>
+	
+	<!-- 주문번호로 상세조회한 내역 -->
+	<insert id="insertDetailSales" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_SALES (
+			SHOP_ID,
+			order_id,
+			vendor_item_id,
+			sale_type
+		) VALUES (
+			#{SHOP_ID},
+			#{orderId},
+			#{vendorItemId},
+			''
+		) ON DUPLICATE KEY UPDATE
+			shipment_box_id = #{shipmentBoxId},
+			ordered_at = #{orderedAt},
+			<if test = "orderer_name != 'null'">orderer_name = #{orderername},</if>
+			<if test = "orderer_email != 'null'">orderer_email = #{ordereremail},</if>
+			paid_at = #{paidAt},
+			status = #{status},
+			shipping_price =${shippingPrice},
+			remote_price = ${remotePrice},
+			remote_area = #{remoteArea},
+			split_shipping = #{splitShipping},
+			able_split_shipping = #{ableSplitShipping},
+			receiver_name = #{receivername},
+			receiver_safe_number = #{receiversafeNumber},
+			receiver_addr1 = #{receiveraddr1},
+			receiver_addr2 = #{receiveraddr2},
+			receiver_post_code = #{receiverpostCode},
+			vendor_item_package_id = ${vendorItemPackageId},
+			vendor_item_package_name = #{vendorItemPackageName},
+			product_id = #{productId},
+			vendor_item_name = #{vendorItemId},
+			shipping_count = ${shippingCount},
+			sales_price = ${salesPrice},
+			order_price = ${orderPrice},
+			discount_price = ${discountPrice},
+			instant_coupon_discount = ${instantCouponDiscount},
+			downloadable_coupon_discount = ${downloadableCouponDiscount},
+			coupang_discount = ${coupangDiscount},
+			external_vendor_sku_code = #{externalVendorSkuCode},
+			seller_product_id = #{sellerProductId},
+			seller_product_name = #{sellerProductName},
+			seller_product_item_name = #{sellerProductItemName},
+			cancel_count = ${cancelCount},
+			hold_count_for_cancel = ${holdCountForCancel},
+			estimated_shipping_date = #{estimatedShippingDate},
+			planned_shipping_date = #{plannedShippingDate},
+			invoice_number_upload_date = #{invoiceNumberUploadDate},
+			confirm_date = #{confirmDate},
+			delivery_charge_type = #{deliveryChargeTypeName},
+			canceled = #{canceled},
+			delivery_company_name = #{deliveryCompanyName},
+			invoice_number = #{invoiceNumber},
+			in_trasit_date_time = #{inTrasitDateTime},
+			delivered_date = #{deliveredDate},
+			refer = #{refer},
+			list_upd_date = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			list_input_date = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+	</insert>
+	
+	<!-- 정산 데이터 등록 -->
+	<insert id="insertSettlement" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_SETTLEMENT
+		VALUES (
+			#{SHOP_ID},
+			#{settlementType},
+			#{settlementDate},
+			#{revenueRecognitionYearMonth},
+			#{revenueRecognitionDateFrom},
+			#{revenueRecognitionDateTo},
+			${totalSale},
+			${serviceFee},
+			${settlementTargetAmount},
+			${settlementAmount},
+			${lastAmount},
+			${pendingReleasedAmount},
+			${sellerDiscountCoupon},
+			${downloadableCoupon},
+			${sellerServiceFee},
+			${couranteeFee},
+			${couranteeCustomerReward},
+			${deductionAmount},
+			${debtOfLastWeek},
+			${finalAmount},
+			#{bankAccountHolder},
+			#{bankName},
+			#{bankAccount},
+			#{status},
+			${storeFeeDiscount},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		) ON DUPLICATE KEY UPDATE
+			upd_date = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			total_sale = ${totalSale},
+			service_fee = ${serviceFee},
+			settlement_target_amount = ${settlementTargetAmount},
+			settlement_amount = ${settlementAmount},
+			last_amount = ${lastAmount},
+			pending_released_amount = ${pendingReleasedAmount},
+			seller_discount_coupon = ${sellerDiscountCoupon},
+			downloadable_coupon = ${downloadableCoupon},
+			seller_service_fee = ${sellerServiceFee},
+			courantee_fee = ${couranteeFee},
+			courantee_customer_reward = ${couranteeCustomerReward},
+			deduction_amount = ${deductionAmount},
+			debt_of_last_week = ${debtOfLastWeek},
+			final_amount = ${finalAmount},
+			bank_account_holder = #{bankAccountHolder},
+			bank_name = #{bankName},
+			bank_account = #{bankAccount},
+			status = #{status},
+			store_fee_discount = ${storeFeeDiscount}
+	</insert>
+	
+	<!-- 반품/취소 데이터 등록 -->
+	<insert id="insertReturn" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_RETURN
+		VALUES (
+			#{SHOP_ID},
+			#{receiptId},
+			#{orderId},
+			#{paymentId},
+			#{receiptType},
+			#{receiptStatus},
+			#{createdAt},
+			#{modifiedAt},
+			#{requesterName},
+			#{requesterPhoneNumber},
+			#{requesterAddress},
+			#{requesterAddressDetail},
+			#{requesterZipCode},
+			#{cancelReasonCategory1},
+			#{cancelReasonCategory2},
+			#{cancelReason},
+			${cancelCountSum},
+			#{returnDeliveryId},
+			#{returnDeliveryType},
+			#{releaseStopStatus},
+			${enclosePrice},
+			#{faultByType},
+			#{preRefund},
+			#{completeConfirmType},
+			#{completeConfirmDate},
+			${vendorItemPackageId},
+			#{vendorItemPackageName},
+			#{vendorItemId},
+			#{vendorItemName},
+			${cancelCount},
+			${purchaseCount},
+			#{shipmentBoxId},
+			#{sellerProductId},
+			#{sellerProductName},
+			#{releaseStatus},
+			'', -- CANCEL_COMPLETE_USER > 주문 취소처리 담당자
+			#{{reasonCodeText},
+			${returnShippingCharge},
+			#{deliveryCompanyCode},
+			#{deliveryInvoiceNo},
+			'', -- 교환 > 교환 아이템 ID
+			'', -- 교환 > 교환 아이템 이름
+			'', -- 교환 > 재배송 상태
+			'', -- 교환 > 재배송 송장번호
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		) ON DUPLICATE KEY UPDATE
+			RECEIPT_STATUS = #{receiptStatus},
+			MODIFIED_AT = #{modifiedAt},
+			REQUESTER_NAME = #{requesterName},
+			REQUESTER_PHONE_NUMBER = #{requesterPhoneNumber},
+			REQUESTER_ADDRESS = #{requesterAddress},
+			REQUESTER_ADDRESS_DETAIL = #{requesterAddressDetail},
+			CANCEL_COUNT_SUM = ${cancelCountSum},
+			RETURN_DELIVERY_ID = #{returnDeliveryId},
+			RETURN_DELIVERY_TYPE = #{returnDeliveryType},
+			RELEASE_STOP_STATUS = #{releaseStopStatus},
+			ENCLOSE_PRICE = ${enclosePrice},
+			FAULT_BY_TYPE = #{faultByType},
+			PRE_REFUND = #{preRefund},
+			COMPLETE_CONFIRM_TYPE = #{completeConfirmType},
+			COMPLETE_CONFIRM_DATE = #{completeConfirmDate},
+			CANCEL_COUNT = ${cancelCount},
+			RELEASE_STATUS = #{releaseStatus},
+			REASON_CODE_TEXT = #{reasonCodeText},
+			RETURN_SHIPPING_CHARGE = ${returnShippingCharge},
+			DELIVERY_COMPANY_CODE = #{deliveryCompanyCode},
+			DELIVERY_INVOICE_NO = #{deliveryInvoiceNo}
+	</insert>
+	
+	<!-- 반품 철회 데이터 등록 -->
+	<insert id="insertReturnWithdraw" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_RETURN (
+			SHOP_ID,
+			ORDER_ID,
+			VENDOR_ITEM_ID,
+			RECEIPT_ID,
+			RECEIPT_TYPE,
+			FAULT_BY_TYPE,
+			CREATED_AT,
+			MODIFIED_AT,
+			INPUT_DATE
+		) VALUES (
+			#{SHOP_ID},
+			#{orderId},
+			#{vendorItemId},
+			#{receiptId},
+			#{receiptType},
+			#{faultByType},
+			#{createdAt},
+			#{modifiedAt},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		) ON DUPLICATE KEY UPDATE
+			UPD_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			RECEIPT_ID = #{receiptId},
+			RECEIPT_TYPE = #{receiptType},
+			FAULT_BY_TYPE = #{faultByType},
+			MODIFIED_AT = #{modifiedAt}
+	</insert>
+	
+	<!-- 교환 데이터 등록 -->
+	<insert id="insertExchange" parameterType="hashmap">
+		INSERT INTO CBCI_COUPANG_RETURN
+		VALUES (
+			#{SHOP_ID},
+			#{exchangeId},
+			#{orderId},
+			#{PAYMENT_ID},
+			#{receiptType},
+			#{exchangeStatus},
+			#{createdAt},
+			#{modifiedAt},
+			#{requesterreturnCustomerName},
+			#{requesterreturnMobile},
+			#{requesterreturnAddress},
+			#{requesterreturnAddressDetail},
+			#{requesterreturnAddressZipCode},
+			#{CANCEL_REASON_CATEGORY1},
+			#{CANCEL_REASON_CATEGORY2},
+			#{cancelReason},
+			${quantity},
+			#{RETURN_DELIVERY_ID},
+			#{RETURN_DELIVERY_TYPE},
+			#{RELEASE_STOP_STATUS},
+			${enclosePrice},
+			#{FAULT_BY_TYPE},
+			#{PRE_REFUND},
+			#{COMPLETE_CONFIRM_TYPE},
+			#{COMPLETE_CONFIRM_DATE},
+			#{VENDOR_ITEM_PACKAGE_ID},
+			#{VENDOR_ITEM_PACKAGE_NAME},
+			#{orderItemId},
+			#{VENDOR_ITEM_NAME},
+			${quantity},
+			${purchaseCount},
+			#{originalShipmentBoxId},
+			#{SELLER_PRODUCT_ID},
+			#{SELLER_PRODUCT_NAME},
+			#{releaseStatus},
+			'', -- CANCEL_COMPLETE_USER > 주문 취소처리 담당자
+			#{reasonCodeText},
+			${returnShippingCharge},
+			#{deliveryCompanyCode}, -- 회수 택배사 코드
+			#{deliveryInvoiceNo}, -- 회수 운송장 번호
+			#{targetItemId}, -- 교환 > 교환 아이템 ID
+			#{targetItemName}, -- 교환 > 교환 아이템 이름
+			#{deliveryStatus}, -- 교환 > 재배송 상태
+			#{invoiceNumber}, -- 교환 > 재배송 송장번호
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		) ON DUPLICATE KEY UPDATE
+			UPD_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			RECEIPT_STATUS = #{exchangeStatus},
+			MODIFIED_AT = #{modifiedAt},
+			REQUESTER_NAME = #{requesterreturnCustomerName},
+			REQUESTER_PHONE_NUMBER = #{requesterreturnMobile},
+			REQUESTER_ADDRESS = #{requesterreturnAddress},
+			REQUESTER_ADDRESS_DETAIL = #{requesterreturnAddressDetail},
+			CANCEL_COUNT_SUM = ${quantity},
+			RETURN_DELIVERY_ID = #{RETURN_DELIVERY_ID},
+			RETURN_DELIVERY_TYPE = #{RETURN_DELIVERY_TYPE},
+			RELEASE_STOP_STATUS = #{RELEASE_STOP_STATUS},
+			ENCLOSE_PRICE = ${enclosePrice},
+			FAULT_BY_TYPE = #{faultType},
+			PRE_REFUND = #{PRE_REFUND},
+			COMPLETE_CONFIRM_TYPE = #{COMPLETE_CONFIRM_TYPE},
+			COMPLETE_CONFIRM_DATE = #{COMPLETE_CONFIRM_DATE},
+			CANCEL_COUNT = ${quantity},
+			RELEASE_STATUS = #{releaseStatus},
+			REASON_CODE_TEXT = #{reasonCodeText},
+			RETURN_SHIPPING_CHARGE = ${returnShippingCharge},
+			DELIVERY_COMPANY_CODE = #{deliveryCompanyCode},
+			DELIVERY_INVOICE_NO = #{deliveryInvoiceNo},
+			REDELIVERY_STATUS = #{deliveryStatus}, -- 교환 > 재배송 상태
+			REDELIVERY_INVOICE_NO = #{invoiceNumber} -- 교환 > 재배송 송장번호
+	</insert>
+	
+</mapper>

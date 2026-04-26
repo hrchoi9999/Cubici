@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.front.cubici.mapper.CubiciCmmMapper">
+
+	<select id="selectShopInfo" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			CALL shop_info(${user_no})
+		]]>
+	</select>
+	
+	<insert id="insertErrorReport" parameterType="hashmap">
+    	INSERT INTO CBCI_ERR_REPORT
+		VALUES (
+			#{SHOP_ID},
+			#{CODE_ID},
+			#{CODE_NM},
+			#{CAUSE},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+    </insert>
+    
+    <insert id="insertNoticeReport" parameterType="hashmap">
+		INSERT INTO CBCI_NOTICE_REPORT (
+			TITLE,
+			TO_USER,
+			DIVISION,
+			SHOP_TYPE,
+			SHOP_ID,
+			INPUT_DATE,
+			TO_USER_NO
+		) VALUES ( 
+			#{TITLE},
+			#{TO_USER},
+			#{DIVISION},
+			#{SHOP_TYPE},
+			#{SHOP_ID},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			#{USER_NO}
+		)
+	</insert>
+	
+	<insert id="insertAccessRecord" parameterType="hashmap">
+		INSERT INTO CBCI_ACCESS_RECORD (
+			DIVISION,
+			USER_ID,
+			USER_NAME,
+			IP_ADDRESS,
+			ACCESS_URI,
+			INPUT_DATE
+		) VALUES ( 
+			#{DIVISION},
+			#{USER_ID},
+			#{USER_NAME},
+			#{IP_ADDRESS},
+			#{ACCESS_URI},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+	
+	<select id="userBizOverlap" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM CBCI_USER
+		WHERE FIRM_ID = #{FIRM_ID}
+	</select>
+	
+	<select id="partnerBizOverlap" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM CBCI_PARTNER
+		WHERE partner_id = #{FIRM_ID}
+	</select>
+	
+	<!-- 사업자유형 -->
+    <select id="selectBizType" resultType="java.util.HashMap">
+		SELECT
+			TYPE_NO, -- 타입번호
+			TYPE_NAME  -- 타입명	 
+		FROM CBCI_BIZTYPE
+		ORDER BY TYPE_NO ASC	     
+	</select>
+	
+	<!-- 업종 -->
+    <select id="selectSector" resultType="java.util.HashMap">
+		SELECT
+			SEC_NO, -- 업종 ID
+			SEC_NAME -- 업종 이름		 
+		FROM CBCI_SECTOR
+		ORDER BY SEC_NO ASC
+	</select>
+    
+	<!-- 쇼핑몰리스트 -->
+    <select id="selectShop" resultType="java.util.HashMap">
+		SELECT
+			CAST(CODE_ID AS UNSIGNED) AS CODE_ID, -- 코드 ID
+			CODE_NM -- 코드명		 
+		FROM CBCI_CODE
+		WHERE META_ID = 'SHOP_TYPE'
+		AND USE_YN = 'Y'
+		ORDER BY CODE_NM ASC
+	</select>
+	
+	<!-- 파트너 (협력사) -->
+    <select id="selectPartner" resultType="java.util.HashMap">
+		SELECT
+			partner_code AS FIRM_NO, -- 협력사 코드
+			partner_nm AS FIRM_NM -- 협력사명
+		FROM CBCI_PARTNER
+		ORDER BY partner_code ASC
+	</select>
+	
+	<!-- error report data get -->
+	<select id="errorData" resultType="hashmap" parameterType="hashmap" >
+	<if test = "flagCount == 'flagCount'">
+	SELECT COUNT(*) as count
+	FROM(
+	</if>
+	<if test = "selectStatus == 'FAIL' or selectStatus == 'ALL'" >
+	SELECT 
+		SHOP_ID ,CODE_NM ,CAUSE ,DATE_FORMAT(INPUT_DATETIME ,'%Y-%m-%d %H:%i:%s') as INPUT_DATETIME,'실패' as STATUS, RUNTIME, ERROR_LOG
+	FROM CBCI_ERR_REPORT
+	WHERE 
+		CODE_ID in (${selectShop})
+		AND INPUT_DATETIME >= #{fromDate}
+		AND INPUT_DATETIME &lt;= #{toDate}
+		AND CAUSE like #{SCENARIO}
+	</if>
+	<if test="selectStatus == 'ALL'">
+	UNION ALL
+	</if>
+	<if test = "selectStatus == 'SUCCESS' or selectStatus == 'ALL'" >
+	SELECT
+		SHOP_ID, SHOP_NM as CODE_NM, SCHEDULED_NAME as CAUSE, DATE_FORMAT(INPUT_DATE,'%Y-%m-%d %H:%i:%s') as INPUT_DATETIME, '성공' as STATUS, RUNTIME,"-" as ERROR_LOG
+	FROM CBCI_SCHEDULED_REPORT
+	WHERE
+		SHOP_TYPE in (${selectShop})
+		AND INPUT_DATE >= #{fromDate}
+		AND INPUT_DATE &lt;= #{toDate}
+		AND SCHEDULED_NAME like #{SCENARIO}
+	</if>
+	ORDER BY INPUT_DATETIME DESC
+	<if test = "flagCount == 'flagCount'">
+	) RESULT_TB
+	</if>
+	<if test = "flagCount != 'flagCount'">
+	LIMIT ${LIMIT}
+	</if>
+	</select>
+	
+	<select id="selectLinkedWholesale" resultType="hashmap">
+	SELECT
+		GROUP_CONCAT(LINKED_NO SEPARATOR ',') AS CODE_LIST,
+		CONCAT('^', GROUP_CONCAT(FIRM_NM SEPARATOR '|^')) AS FIRM_LIST
+	FROM(
+		SELECT 
+			LINKED_NO, 
+			FIRM_NM
+		FROM CBCI_LINKED_CODE
+		WHERE LINKED_STATUS='운영'
+		AND LINKED_CODE = '0'
+	) B2B_TB
+	</select>
+	<!-- 셀렉트바 CODE 리스트 -->
+	<select id="selectCodeList" resultType="hashmap" parameterType="String">
+	SELECT
+		SELECT_CD,
+		SELECT_NM
+	FROM CBCI_SELECT_CODE
+	WHERE SELECT_CLASS = #{SELECT_CLASS}
+	ORDER BY LENGTH (SELECT_NM) DESC
+	</select>
+	
+	<select id="UserSessionTypePw" resultType="hashmap" parameterType="String">
+		SELECT
+			user_type,
+			user_pw
+		FROM CBCI_USER
+		WHERE USER_CODE = #{value}
+	</select>
+	
+	<select id="UserSessionRole" resultType="String" parameterType="String">
+		SELECT 
+			auth_role
+		FROM CBCI_AUTH
+		WHERE auth_division = 'user' 
+		AND auth_type = #{value}
+	</select>
+	
+	<select id="AdminMoneyBankTypeName" resultType="String" parameterType="String">
+	</select>
+	
+	<select id="authSelectBox" resultType="hashmap" parameterType="String">
+		SELECT
+			auth_type
+			,auth_name
+		FROM CBCI_AUTH
+		WHERE auth_type NOT IN ('00', #{except_type})
+		AND auth_division = 'user'
+	</select>
+	
+	<select id="chargeSelectBox" resultType="hashmap">
+		SELECT
+			charge_code
+			,charge_name
+		FROM CBCI_BILLING_CHARGE cbc
+		ORDER BY cbc.sub_unit desc, charge_code desc
+	</select>
+	
+	<select id="isUseShop" parameterType="String" resultType="hashmap">
+		SELECT
+			cc.code_e_nm,
+			IF(ca.shop_id, 'false', 'true') as isShop
+		FROM CBCI_ACCOUNT ca
+		LEFT JOIN CBCI_CODE cc ON cc.code_id = ca.shop_type
+		WHERE ca.SHOP_TYPE IN ('4', '11', '14')
+		AND ca.user_code = #{userCode}
+		GROUP BY ca.SHOP_TYPE
+	</select>
+	
+	<select id="inUserShop" parameterType="String" resultType="hashmap">
+		SELECT
+			CONCAT("SHOP_", ca.shop_type) as shop_type,
+			GROUP_CONCAT(IF(cu.user_code = #{value}, ca.shop_id, NULL) separator "' , '") as shop_id
+		FROM CBCI_ACCOUNT ca
+		LEFT JOIN CBCI_USER cu
+		ON ca.user_code = cu.user_code
+		GROUP BY ca.shop_type
+	</select>
+	
+	<select id="freePeriodEnd" parameterType="String" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				IF(COUNT(cbpd.user_code) = 1, 'freePeriodEnd', 0) as modalId
+			   	, DATE_FORMAT(cbpd.expire_date, '%Y년 %m월 %d일') as expire_date
+			FROM CBCI_BILLING_PAYMENT_DETAIL cbpd LEFT JOIN CBCI_USER cu ON cbpd.user_code = cu.USER_CODE  
+			WHERE cbpd.status LIKE 'U%'
+			  AND cbpd.USER_CODE = #{user_code}
+			  AND cu.USER_TYPE = '01'
+			  AND cbpd.charge_code IN (SELECT charge_code FROM CBCI_BILLING_CHARGE WHERE charge_type ='F')
+			  AND NOW() >= DATE_SUB(cbpd.expire_date, INTERVAL 5 DAY) 
+			  AND NOW() <= DATE_FORMAT(cbpd.expire_date, '%Y-%m-%d')
+		]]>
+	</select>
+	
+	<select id="periodEnd" parameterType="String" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				IF(COUNT(cbpd.user_code) = 1, 'periodEnd', 0) as modalId
+			  , cbc.charge_name
+			  , DATE_FORMAT(cbpd.start_date, '%Y년 %m월 %d일') as start_date 
+			  , DATE_FORMAT(cbpd.expire_date, '%Y년 %m월 %d일') as expire_date 
+			FROM CBCI_BILLING_PAYMENT_DETAIL cbpd
+				LEFT JOIN CBCI_BILLING_CHARGE cbc ON cbpd.charge_code = cbc.charge_code
+				LEFT JOIN CBCI_USER cu ON cbpd.user_code = cu.USER_CODE 
+			WHERE cbpd.status LIKE 'U%'
+			  AND cbpd.USER_CODE = #{user_code}
+			  AND cu.USER_TYPE = '01'
+			  AND cbpd.charge_code NOT IN (SELECT charge_code FROM CBCI_BILLING_CHARGE WHERE charge_type = 'F')
+			  AND cbpd.expire_date = DATE_FORMAT(NOW(), '%Y-%m-%d') 
+		]]>
+	</select>
+	
+	<select id="MBPeriodEnd" parameterType="String" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				IF(COUNT(cu.USER_CODE) = 1, 'MbPeriodEnd', 0) as modalId
+			  , DATE_FORMAT(mur.mb_contract_date, '%Y년 %m월 %d일') as contract_date
+			  , DATE_FORMAT(mur.mb_contract_expire_date, '%Y년 %m월 %d일') as contract_expire_date
+			FROM MONEYBANK_USER_REQUEST mur
+			 LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+			WHERE cu.USER_TYPE IN ('02', '03')
+			  AND cu.USER_CODE = #{user_code}
+			  AND ((NOW() >= DATE_SUB(mur.mb_contract_expire_date, INTERVAL 1 WEEK)
+			  		AND NOW() <= DATE_FORMAT(mur.mb_contract_expire_date, '%Y-%m-%d'))
+  			   	OR (NOW() >= DATE_SUB(mur.mb_contract_expire_date, INTERVAL 1 MONTH)
+  			   		AND NOW() <= DATE_ADD((DATE_SUB(mur.mb_contract_expire_date, INTERVAL 1 MONTH)), INTERVAL 3 DAY)))
+		]]>
+	</select>
+	
+	<select id="findUserPhone" parameterType="String" resultType="String">
+		SELECT
+			USER_PHONE 
+		FROM CBCI_USER
+		WHERE USER_CODE = #{USER_CODE}
+	</select>
+	
+	<select id="findSmsTemplate" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			SMS_TITLE,
+			SMS_CONTENT
+		FROM CBCI_SMS_TEMPLATE 
+		WHERE SMS_KEY = #{SMS_KEY}
+		AND SMS_CODE = #{SMS_CODE}
+	</select>
+	
+	<select id="getShopInfo" parameterType="String" resultType="hashmap">
+		SELECT
+			@ROWNUM := @ROWNUM + 1 AS RNUM
+		  , (SELECT CODE_NM FROM CBCI_CODE WHERE CODE_ID = ca.SHOP_TYPE) AS SHOP_NM
+		  , SHOP_ID
+		FROM CBCI_ACCOUNT ca, (SELECT @ROWNUM := 0) ROWNUM_TB
+		WHERE ca.USER_CODE = #{USER_CODE}
+	</select>
+
+	<select id="advanceApplication" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				IF(COUNT(USER_CODE) >= 1, 'Y', 'N') as mb_check_success
+			FROM CBCI_USER
+			WHERE USER_CODE = #{user_code}
+			  AND #{mb_business_period} <= DATE_SUB(NOW(), INTERVAL 1 YEAR)
+			  AND #{mb_business_type} NOT IN ('13')
+			  AND #{mb_individual} IN ('1')
+			  AND #{mb_sales_amount} >= 10000000
+			  AND #{mb_user_age} >= 20
+			  AND #{mb_duplicate_check} = 'Y'
+		]]>
+	</select>
+	
+	<insert id="advAppInsert" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO MONEYBANK_ADVANCE_REQUEST_CHECK(
+					  user_code
+					, mb_business_period
+					, mb_business_type
+					, mb_individual
+					, mb_sales_amount
+					, mb_user_age
+					, mb_duplicate_check
+					, mb_check_success
+					, input_date
+			)VALUES(
+					  #{user_code}
+					, IF(#{mb_business_period} <= DATE_SUB(NOW(), INTERVAL 1 YEAR), 'Y', 'N')
+					, IF(#{mb_business_type} NOT IN ('13'), 'Y', 'N')
+					, IF(#{mb_individual} IN ('1'), 'Y', 'N')
+					, IF(#{mb_sales_amount} >= 10000000, 'Y', 'N')
+					, IF(#{mb_user_age} >= 20, 'Y', 'N')
+					, #{mb_duplicate_check}
+					, #{mb_check_success}
+					, NOW()
+			)
+		]]>
+	</insert>
+	
+	<select id="getBankInfo" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				bank_code,
+				bank_name
+			FROM CBCI_BANK_CODE
+		]]>
+	</select>
+
+	<select id="isBizDay" parameterType="hashmap" resultType="String">
+		SELECT
+			IF(COUNT(*) = 0, "true", "false") as result
+		FROM CBCI_HOLIDAY CH
+		WHERE DAY_OF_THE_WEEK IN ('01', '02', '03', '04', '05')
+			AND HOLIDAY_DATE = #{dateStr}
+	</select>
+</mapper>

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="egovframework.azon.front.cubici.mapper.MemberMapper">
+
+	
+	<!-- 회원가입 > 아이디 중복검사 -->
+	<select id="selectIdOverlap" parameterType="hashmap" resultType="hashMap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM CBCI_USER
+		WHERE USER_ID = #{toUser}
+	</select>
+	
+	<!-- 회원가입 > 휴대폰번호 중복검사 -->
+	<select id="selectMobileOverlap" parameterType="hashmap" resultType="hashMap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM CBCI_USER
+		WHERE USER_PHONE = #{USER_PHONE}
+	</select>
+	<!-- 회원가입 > 회원번호 -->
+	<select id="userNoMax" resultType="int">
+		SELECT
+			IFNULL(MAX(USER_NO), 0)+1
+		FROM CBCI_USER
+	</select>
+	<!-- 회원가입 > 회원코드 -->
+	<select id="selectCubiciCodeCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			SELECT 
+				COUNT(*) AS COUNT
+			FROM CBCI_USER
+			WHERE REG_DATE LIKE CONCAT('${regDate}','%')
+		]]>
+	</select>
+	<insert id="insertEmailSmSAuth" parameterType="hashMap">
+		INSERT INTO CBCI_EMAIL_SMS_AUTH_NUM (
+			email,
+			phone,
+			auth_num,
+			input_datetime
+		) VALUES (
+			#{toUser},
+			#{USER_PHONE},
+			#{authCode},
+			now()
+		)
+	</insert>
+	<select id="selectAuthNum" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			auth_num
+		FROM
+			CBCI_EMAIL_SMS_AUTH_NUM
+		WHERE
+		<if test="type == 'mail'">
+			email = #{user}
+		</if>
+		<if test="type == 'sms'">
+			phone = #{user}
+		</if>
+		ORDER BY input_datetime DESC
+		LIMIT 1;
+	</select>
+
+	<insert id="insertUser" parameterType="hashMap">
+		INSERT INTO CBCI_USER (
+			USER_NO,
+			USER_CODE,
+			USER_ID,
+			USER_PW,
+			USER_TYPE,
+			USER_NM,
+			USER_PHONE,
+			FIRM_ID,
+			FIRM_NM,
+			FIRM_ZIP_CODE,
+			FIRM_ADDR,
+			FIRM_SETUP_DATE,
+			BUSINESS_TYPE,
+			SECTORS,
+			LINKED_NUM,
+			RECOMMENDED_NUM,
+			BILLING_YN,
+			MONEYBANK_YN,
+			REG_DATE
+		) VALUES (
+			${user_no},
+			#{user_code},
+			#{USER_ID},
+			#{USER_PW},
+			#{USER_TYPE},
+			#{USER_NM},
+			#{USER_PHONE},
+			#{FIRM_ID},
+			#{FIRM_NM},
+			#{FIRM_ZIP_CODE},
+			#{FIRM_ADDR},
+			#{FIRM_SETUP_DATE},
+			#{BUSINESS_TYPE},
+			#{SECTORS},
+			#{LINKED_NUM},
+			#{RECOMMENDED_NUM},
+			'Y',
+			'N',
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+
+	<!-- 아이디 찾기 -->
+	<select id="checkUserInfo" resultType="hashmap" parameterType="hashmap">
+		SELECT
+		USER_ID
+		FROM CBCI_USER
+		WHERE USER_NM = #{USER_NM}
+		<if test='USER_PHONE != null and USER_PHONE !=""'>
+			AND USER_PHONE = #{USER_PHONE}
+		</if>
+		<if test='USER_ID != null and USER_ID !=""'>
+			AND USER_ID = #{USER_ID}
+		</if>
+	</select>
+
+	<!-- 비밀번호 초기화 -->
+	<update id="resetMemberPwd" parameterType="hashmap">
+		UPDATE CBCI_USER
+		SET
+		USER_PW = #{USER_PW}
+		WHERE USER_NM = #{USER_NM}
+		AND USER_PHONE = #{USER_PHONE}
+		AND USER_ID = #{USER_ID}
+	</update>
+	
+    <!-- 마이페이지 > 회원정보 -->
+    <select id="selectUserInfo" resultType="hashmap" parameterType="hashmap">		
+		SELECT
+			USER_CODE AS user_code,
+			USER_ID AS user_id,
+			USER_TYPE AS user_type,
+			USER_NM AS user_nm,
+			USER_PHONE AS user_phone,
+			FIRM_ID AS firm_id,
+			FIRM_NM AS firm_nm,
+			FIRM_TEL AS firm_tel,
+			FIRM_FAX AS firm_fax,
+			FIRM_ADDR AS firm_addr,
+			FIRM_ZIP_CODE AS firm_zip_code,
+			DATE_FORMAT(FIRM_SETUP_DATE, '%Y-%m-%d') AS firm_setup_date,
+			(SELECT TYPE_NAME FROM CBCI_BIZTYPE CB WHERE CB.TYPE_NO = CUT.BUSINESS_TYPE) AS business_type,
+			(SELECT SEC_NAME FROM CBCI_SECTOR CS WHERE CS.SEC_NO = CUT.SECTORS) AS sectors,
+			HOME_PAGE AS home_page,
+			TONGSIN_NO AS tongsin_no,
+			DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS reg_date,
+			IFNULL(RECOMMENDED_NUM, '') AS partner_code,
+			(SELECT COUNT(*) FROM CBCI_ACCOUNT CA WHERE CA.USER_NO = CUT.USER_NO AND CA.DEL_YN = 'N') AS shop_count
+		FROM CBCI_USER CUT
+		WHERE USER_CODE = #{user_code}
+	</select>
+
+	<!-- 마이페이지 > 쇼핑몰 목록 -->
+	<select id="getShopList" resultType="hashMap">
+		SELECT
+			(SELECT CODE_NM FROM CBCI_CODE WHERE CODE_ID = CA.SHOP_TYPE) AS SHOP_NM,
+			CA.SHOP_TYPE,
+			CA.SHOP_ID,
+			CA.VENDOR_ID,
+			CA.API_KEY,
+			CA.API_SECRET_KEY,
+			CA.DEL_YN
+		FROM CBCI_ACCOUNT CA
+		WHERE CA.USER_CODE = #{USER_CODE}
+			AND CA.USER_NO = #{USER_NO}
+			AND CA.DEL_YN = 'N'
+	</select>
+	
+	<!-- 마이페이지 > 회사 정보 수정 -->
+	<update id="updateUserInfo">
+		UPDATE CBCI_USER
+		SET
+			USER_PHONE = #{USER_PHONE},
+			FIRM_ADDR = #{FIRM_ADDR},
+			FIRM_ZIP_CODE = #{FIRM_ZIP_CODE},
+			UPD_DATE = now()
+		WHERE
+			USER_NO = #{USER_NO}
+		AND USER_CODE = #{USER_CODE}
+	</update>
+
+	<insert id="insertShopAccount" parameterType="hashMap">
+		INSERT INTO CBCI_ACCOUNT (
+			USER_NO,
+			USER_CODE,
+			SHOP_TYPE,
+			SHOP_ID,
+			VENDOR_ID,
+			API_KEY,
+			API_SECRET_KEY,
+			DEL_YN,
+			INPUT_DATETIME
+		) VALUES (
+			#{USER_NO},
+			#{USER_CODE},
+			#{SHOP_TYPE},
+			#{SHOP_ID},
+			#{VENDOR_ID},
+			#{API_KEY},
+			#{API_SECRET_KEY},
+			#{DEL_YN},
+			now()
+		) ON DUPLICATE KEY UPDATE
+			DEL_YN = #{DEL_YN},
+			UPDATE_DATETIME = now()
+	</insert>
+
+	<!-- 회원탈퇴 -->
+	<update id="deleteUser" parameterType="hashmap">
+		<![CDATA[
+			UPDATE CBCI_USER
+			SET
+				WITHDRAW_YN = 'Y',
+				WITHDRAW_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+				WITHDRAW_REASON = #{WITHDRAWREASON}
+			WHERE USER_NO = ${USER_NO}
+		]]>
+	</update>
+
+	<!-- 쇼핑몰 삭제 -->
+	<update id="shopAccountLock" parameterType="hashmap">
+		<![CDATA[
+			UPDATE CBCI_ACCOUNT
+			SET
+				LOGIN_LOCK = 'Y',
+				DEL_YN = 'Y'
+			WHERE USER_NO = ${USER_NO}
+		]]>
+	</update>
+	
+	<!-- 마이페이지 > 사업정보 -->
+	<insert id="insertBusinessInfo" parameterType="hashMap">
+		INSERT INTO CBCI_BUSINESS_LOCATION (
+			USER_NO
+			, BUSINESS_LOCATION_NUMBER
+			, BUSINESS_LOCATION
+			, POST_CODE
+			, ADDRESS
+			, TEL_NO
+			, CHECK_INVENTORY_STORAGE
+			, CHECK_SEND
+			, CHECK_RETURN
+			, CHECK_EXCHANGE
+			, INPUT_DATE
+			, UPD_DATE
+		) VALUES (
+			${USER_NO} -- user_id
+			, ${BUSINESS_LOCATION_NUMBER} -- 영업소재지수
+			, #{BUSINESSLOCATION} -- 사업처
+			, #{POSTCODE} -- 우편번호
+			, #{ADDRESS} -- 주소
+			, #{TELNO} -- 전화번호
+			, #{CHECKINVENTORY} -- 재고보관
+			, #{CHECKSEND} -- 발송
+			, #{CHECKRETURN} -- 반송
+			, 'N' -- 교환
+			, DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') -- input
+			, DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s') -- update
+		)
+	</insert>
+
+	<delete id="deleteBussinessInfo" parameterType="hashMap">
+		DELETE FROM CBCI_BUSINESS_LOCATION
+		WHERE USER_NO = ${USER_NO} 
+		AND BUSINESS_LOCATION_NUMBER = ${BUSINESSLOCATIONNUM}
+	</delete>
+
+	<select id="selectBusienssInfo" parameterType="hashMap" resultType="hashmap">
+		SELECT *
+		FROM CBCI_BUSINESS_LOCATION
+		WHERE USER_NO = ${USER_NO} -- USER_NO
+		ORDER BY BUSINESS_LOCATION_NUMBER -- 영업소재지수
+	</select>
+
+	<select id="businessnoMx" parameterType="hashMap" resultType="int">
+		SELECT
+			IFNULL(MAX(BUSINESS_LOCATION_NUMBER), 0)+1 AS MAX_NO
+		FROM CBCI_BUSINESS_LOCATION
+		WHERE USER_NO = ${USER_NO}
+	</select>
+	
+	<update id="updateBussinessInfo" parameterType="hashMap">
+		UPDATE CBCI_BUSINESS_LOCATION
+		SET 
+			CHECK_SEND = #{CHECKSEND}, -- 발송유무
+			CHECK_INVENTORY_STORAGE = #{CHECKINVENTORY}, -- 재고유무
+			CHECK_RETURN = #{CHECKRETURN}, -- 반송유무
+			UPD_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		WHERE
+			USER_NO = ${USER_NO} 
+			AND BUSINESS_LOCATION_NUMBER = ${BUSINESSLOCATIONNUM}
+	</update>
+	
+	<!-- 쇼핑몰 유효성 체크 SELECT, UPDATE, INSERT -->
+	<select id="authCheckSelect" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			COUNT(*) as auth_count,
+			MAX(upd_date) as auth_max_date 
+		FROM CBCI_AUTH_CHECK
+		WHERE user_id = #{userId}
+		AND shop_type = #{shopType}
+		AND auth_yn = 'N'
+	</select>
+	
+	<insert id="authCheckInsert" parameterType="hashMap">
+		INSERT INTO CBCI_AUTH_CHECK(
+			user_id,
+			shop_type,
+			shop_id,
+			shop_pw,
+			auth_yn,
+			upd_date
+		) VALUES (
+			#{userId},
+			#{shopType},
+			#{shopId},
+			#{shopPwd},
+			'N',
+			now()
+		)
+	</insert>
+	
+	<update id="authCheckUpdate" parameterType="hashMap">
+		UPDATE CBCI_AUTH_CHECK
+		SET
+			auth_yn = 'Y'
+		WHERE user_id = #{userId}
+		AND shop_type = #{shopType}
+		AND auth_yn = 'N'
+	</update>
+</mapper>

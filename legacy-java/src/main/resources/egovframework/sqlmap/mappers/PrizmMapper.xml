@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.prizm.mapper.PrizmMapper">
+
+	<!-- 프리즘 개인정보 조회 -->
+	<select id="selectPrizmUserInfo" parameterType="hashmap" resultType="hashmap">
+	    <![CDATA[
+		SELECT
+			FIRST_CAL.USER_NO,
+			FIRST_CAL.USER_ID,
+			FIRST_CAL.USER_CODE,
+			FIRST_CAL.USER_PHONE,
+			FIRST_CAL.USER_NM,
+			FIRST_CAL.FIRM_NM,
+			FIRST_CAL.FIRM_ID,
+			FIRST_CAL.FIRM_SETUP_DATE,
+			REG_DATETIME,
+			FIRM_PERIOD,
+			SECTORS,
+			BUSINESS_TYPE,
+			COUNT(DISTINCT FIRST_CAL.SHOP_TYPE) AS SHOP_NUM, -- 중복제외 쇼핑몰 수
+			MIN(FIRST_CAL.SHOP_REGIST_DATE) AS SHOP_REGIST_DATE, -- 등록기간이 가장 오래된 쇼핑몰
+			TIMESTAMPDIFF(MONTH,MIN(FIRST_CAL.SHOP_REGIST_DATE),DATE_FORMAT(NOW(),'%Y%m%d')) SHOP_REGIST_MONTH
+		FROM (
+				 SELECT
+					 CU.USER_NO,
+					 CU.USER_ID,
+					 CU.USER_CODE,
+					 CU.USER_PHONE,
+					 CU.USER_NM,
+					 CU.FIRM_NM,
+					 CU.FIRM_ID,
+					 DATE_FORMAT(CU.FIRM_SETUP_DATE, '%Y-%m-%d') AS FIRM_SETUP_DATE,
+					 DATE_FORMAT(CU.REG_DATE, '%Y-%m-%d') AS REG_DATETIME,
+					 TIMESTAMPDIFF(MONTH, CU.FIRM_SETUP_DATE, DATE_FORMAT(NOW(),'%Y%m%d')) AS FIRM_PERIOD,
+					 (SELECT CS.SEC_NAME FROM CBCI_SECTOR CS WHERE CS.SEC_NO = CU.SECTORS) AS SECTORS,
+					 (SELECT CB.TYPE_NAME FROM CBCI_BIZTYPE CB WHERE CB.TYPE_NO = CU.BUSINESS_TYPE) AS BUSINESS_TYPE,
+					 CA.SHOP_TYPE,
+					 IF(CA.SHOP_REGIST_DATE IS NULL OR TRIM(CA.SHOP_REGIST_DATE) = '', DATE_FORMAT(now(), '%Y-%m-%d'), DATE_FORMAT(CA.SHOP_REGIST_DATE, '%Y-%m-%d')) AS SHOP_REGIST_DATE
+				 FROM CBCI_USER CU
+						  LEFT JOIN CBCI_ACCOUNT CA ON CA.USER_NO = CU.USER_NO
+						  LEFT JOIN MONEYBANK_USER_REQUEST MUR ON MUR.user_code  = CA.USER_CODE
+				 WHERE CU.USER_NO = ${USER_NO}
+				   AND CA.DEL_YN <> 'Y' -- 계정 삭제 여부, * 선정산 신청한 아이디만 골라서 가져오는거 추가 필요
+				   AND (CU.WITHDRAW_YN = 'N' OR CU.WITHDRAW_YN IS NULL)
+-- 			AND CU.MONEYBANK_YN = 'Y' -- 선정산 신청여부
+				   AND CA.SHOP_TYPE IN (${request_shop})
+			 ) FIRST_CAL
+		]]>
+    </select>
+
+	<!-- 프리즘 온라인 쇼핑몰 데이터조회 -->
+	<select id="selectShopSalesApi" resultType="hashmap" parameterType="hashmap">
+		SELECT
+		SSA_T.MSQ,
+		SSA_T.MSV,
+		SSA_T.MSA,
+		SSA_T.MSP_SUM,
+		SSA_T.MSP_COUNT,
+		SSA_T.MPR,
+		SSA_T.MDP
+		FROM (
+		SELECT
+		COUNT(SSA.ORDER_NO) as MSQ,
+		<choose>
+			<when test="SHOP_TYPE == '2' or SHOP_TYPE == '3'">
+				(select IFNULL(SUM(ORDER_AMOUNT),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSV,
+			</when>
+			<otherwise>
+				(select IFNULL(SUM(PAYMENT_AMOUNT),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSV,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="SHOP_TYPE == '11'">
+				(select IFNULL(SUM(SETTLEMENT_AMOUNT),0) from SHOP_SETTLEMENT_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLEMENT_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSA,
+			</when>
+			<otherwise>
+				(select IFNULL(SUM(SETTLE_ESTIMATE_AMOUNT),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSA,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="SHOP_TYPE == '2'">
+				(select IFNULL(SUM(DATEDIFF(SETTLE_ESTIMATE_DATE,ADDDATE(DELIVERED_DATE,INTERVAL 1 DAY))),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_SUM,
+			</when>
+			<when test="SHOP_TYPE == '3'">
+				(select IFNULL(SUM(DATEDIFF(SETTLE_ESTIMATE_DATE,ADDDATE(DELIVERED_DATE,INTERVAL 2 DAY))),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_SUM,
+			</when>
+			<when test="SHOP_TYPE == '4' or SHOP_TYPE == '14'">
+				(select IFNULL(SUM(DATEDIFF(CONFIRM_DATE,ADDDATE(DELIVERED_DATE,INTERVAL 2 DAY))),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND CONFIRM_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_SUM,
+			</when>
+			<otherwise>
+				(select IFNULL(SUM(DATEDIFF(SETTLE_COMPLETE_DATE,ADDDATE(DELIVERED_DATE,INTERVAL 2 DAY))),0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_COMPLETE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_SUM,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="SHOP_TYPE == '2' or SHOP_TYPE == '3'">
+				(select COUNT(SHOP_ID) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_COUNT,
+			</when>
+			<when test="SHOP_TYPE == '4' or SHOP_TYPE == '14'">
+				(select COUNT(SHOP_ID) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND CONFIRM_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_COUNT,
+			</when>
+			<otherwise>
+				(select COUNT(SHOP_ID) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND SETTLE_COMPLETE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MSP_COUNT,
+			</otherwise>
+		</choose>
+		<choose>
+			<when test="SHOP_TYPE == '2' or SHOP_TYPE == '3'">
+				(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(order_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MPR,
+			</when>
+			<when test="SHOP_TYPE == '4'">
+				(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MPR,
+			</when>
+			<when test="SHOP_TYPE == '14'">
+				(select IFNULL(SUM(product_instant_discount_amount+product_discount_coupon_amount+product_purchase_discount_amount+seller_discount_coupon_amount+seller_purchase_discount_amount+seller_discounts_amount+seller_purchase_discount_type)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MPR,
+			</when>
+			<otherwise>
+				(select IFNULL(SUM(discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID=#{SHOP_ID} AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MPR,
+			</otherwise>
+		</choose>
+		(SELECT IFNULL(SUM(DATEDIFF(DELIVERED_DATE, ADDDATE(PAID_DATE,INTERVAL 1 DAY)))/COUNT(SHOP_ID),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{SHOP_TYPE} AND SHOP_ID = #{SHOP_ID} AND DELIVERED_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS MDP
+		FROM SHOP_SALES_API SSA
+		WHERE SSA.SHOP_TYPE = #{SHOP_TYPE}
+		AND SSA.SHOP_ID = #{SHOP_ID}
+		AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+		) AS SSA_T;
+	</select>
+
+	<!-- 프리즘 이전 결과 조회 -->
+	<select id="selectPrizmResult" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				USER_NO,
+				SEQ,
+				IFNULL(PRIZM_GRADE, '-') AS PRIZM_GRADE,
+				IFNULL(PRIZM_SCORE, '-') AS PRIZM_SCORE,
+				IFNULL(BUSINESS_PERIOD, '-') AS BUSINESS_PERIOD,
+				IFNULL(OPERATING_PERIOD, '-') AS OPERATING_PERIOD,
+				IFNULL(SHOP_COUNT, '-') AS SHOP_COUNT,
+				IFNULL(SKU_COUNT, '-') AS SKU_COUNT,
+				IFNULL(B2B_OPERATING_PERIOD, '-') AS B2B_OPERATING_PERIOD,
+				IFNULL(MONTH_SALES_VALUE, '-') AS MONTH_SALES_VALUE,
+				IFNULL(MONTH_SALES_COUNT, '-') AS MONTH_SALES_COUNT,
+				IFNULL(CAL_PRICE, '-') AS CAL_PRICE,
+				IFNULL(CAL_RATE, '-') AS CAL_RATE,
+				IFNULL(B2B_SALES_GROWTH_RATE, '-') AS B2B_SALES_GROWTH_RATE,
+				IFNULL(MONTH_SETTLE_VALUE, '-') AS MONTH_SETTLE_VALUE,
+				IFNULL(ORDER_SETTLE_RATE, '-') AS ORDER_SETTLE_RATE,
+				IFNULL(ORDER_SETTLE_PERIOD, '-') AS ORDER_SETTLE_PERIOD,
+				IFNULL(SUM_CAL_PRE_AMOUNT, '-') AS SUM_CAL_PRE_AMOUNT,
+				IFNULL(CUSTOM_COUNT, '-') AS CUSTOM_COUNT,
+				IFNULL(RETURN_RATE, '-') AS RETURN_RATE,
+				IFNULL(CUSTOM_SATISFACTION, '-') AS CUSTOM_SATISFACTION,
+				IFNULL(SHOP_GRADE, '-') AS SHOP_GRADE,
+				IFNULL(inquiry_response_rate, '-') AS inquiry_response_rate,
+				IFNULL(sales_concentration, '-') AS sales_concentration,
+				IFNULL(operating_profit_rate, '-') AS operating_profit_rate,
+				IFNULL(ship_days, '-') AS ship_days,
+				IFNULL(PERSON_CREDIT_SCORE, '-') AS PERSON_CREDIT_SCORE,
+				IFNULL(OVERDUE, '-') AS OVERDUE,
+				IFNULL(default, '-') AS default,
+				IFNULL(TAX_FULL_PAYMENT, '-') AS TAX_FULL_PAYMENT,
+				IFNULL(INPUT_DATE, '-') AS INPUT_DATE
+			FROM CBCI_PRIZM_RESULT
+			WHERE USER_NO = ${USER_NO}
+		]]>
+		<if test='FLAG != null and FLAG == "TOGETHER"'><!-- prizm result > inputdate = moneybank_approval_date -->
+			AND SEQ = #{SEQ}
+			AND DATE_FORMAT(INPUT_DATE, '%Y-%m-%d') = DATE_FORMAT(#{APPROVAL_DATE}, '%Y-%m-%d')
+			ORDER BY INPUT_DATE DESC
+			LIMIT 1
+		</if>
+	</select>
+
+	<insert id="insertPrizmScore" parameterType="hashmap">
+		INSERT INTO PRIZM_PCS_RESULT (
+			mbid,
+			user_code,
+			prizm_grade,
+			prizm_score,
+			business_period,
+			operating_period,
+			shop_count,
+			monthly_sales_value,
+			monthly_sales_quantity,
+			monthly_settlement_amount,
+			monthly_settlement_period,
+			monthly_settlement_to_sales_rate,
+			monthly_promotion_rate,
+			monthly_delivery_period,
+			monthly_return_rate,
+			cb_score_current,
+			cb_score_rank,
+			cb_score_change_rate,
+			input_date
+		) VALUES (
+			#{ID},
+			#{USER_CODE},
+			#{PRIZM_GRADE},
+			#{PRIZM_SCORE},
+			#{BUSINESS_PERIOD},
+			#{OPERATING_PERIOD},
+			#{SHOP_COUNT},
+			#{MSV},
+			#{MSQ},
+			#{MSA},
+			#{MSP},
+			#{MSTSR},
+			#{MPR},
+			#{MDP},
+			#{MRR},
+			#{CB_SCORE},
+			#{CB_SCORE_RANK},
+			#{CB_SCORE_CHANGE_RATE},
+			now()
+		)
+	</insert>
+
+	<select id="selectPrizmPcsResult" parameterType="String" resultType="hashmap">
+		SELECT
+			ppr.prizm_grade
+			 ,ppr.prizm_score
+			 ,ppr.business_period
+			 ,ppr.operating_period
+			 ,ppr.shop_count
+			 ,left(ppr.monthly_sales_value, length(ppr.monthly_sales_value)-3) as monthly_sales_value
+			 ,ppr.monthly_sales_quantity
+			 ,left(ppr.monthly_settlement_amount, length(ppr.monthly_settlement_amount)-3)  as monthly_settlement_amount
+			 ,ppr.monthly_settlement_period
+			 ,ppr.monthly_settlement_to_sales_rate
+			 ,ppr.monthly_promotion_rate
+			 ,ppr.monthly_delivery_period
+			 ,ppr.monthly_return_rate
+			 ,ppr.cb_score_current
+			 ,ppr.cb_score_rank
+			 ,ppr.cb_score_change_rate
+			 ,input_date
+		FROM PRIZM_PCS_RESULT ppr
+		WHERE ppr.mbid = #{mbid}
+	</select>
+
+	<select id="selectMBRequestDetailShop" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		CA.USER_NO,
+		CA.USER_CODE,
+		CA.SHOP_TYPE,
+		CC.CODE_NM,
+		CA.SHOP_ID,
+		CC.INPUT_DATETIME,
+		CASE
+		WHEN CA.SHOP_TYPE = 1 THEN '99991231'
+		WHEN CA.SHOP_TYPE = 2 THEN (SELECT MIN(DATE_FORMAT(CGG.PRODUCT_REG_DATE,'%Y%m%d')) from CBCI_GMARKET_GOODS CGG WHERE CA.SHOP_ID = CGG.SHOP_ID)
+		WHEN CA.SHOP_TYPE = 3 THEN (SELECT MIN(DATE_FORMAT(CAG.ITEM_REGIST_DATE,'%Y%m%d')) from CBCI_AUCTION_GOODS CAG  WHERE CA.SHOP_ID = CAG.SHOP_ID)
+		WHEN CA.SHOP_TYPE = 4 THEN (SELECT MIN(DATE_FORMAT(CSG.PRODUCT_REG_DATE,'%Y%m%d')) from CBCI_11ST_GOODS CSG WHERE CA.SHOP_ID = CSG.SHOP_ID)
+		WHEN CA.SHOP_TYPE = 11 THEN (SELECT MIN(DATE_FORMAT(CCG.CREATED_DATE,'%Y%m%d')) from CBCI_COUPANG_GOODS CCG WHERE CA.SHOP_ID = CCG.SHOP_ID)
+		WHEN CA.SHOP_TYPE = 14 THEN (SELECT MIN(DATE_FORMAT(CNG.PRODUCT_REG_DATE,'%Y%m%d')) from CBCI_NAVER_GOODS CNG WHERE CA.SHOP_ID = CNG.SHOP_ID)
+		END AS PRODUCT_SHOP_REGDATE
+		FROM CBCI_ACCOUNT CA
+		RIGHT JOIN CBCI_CODE CC ON CC.CODE_ID = CA.SHOP_TYPE
+		WHERE CA.USER_CODE = #{USER_CODE}
+		AND CA.DEL_YN !='Y'
+		AND CA.SHOP_TYPE NOT IN (1) <!-- 인터파크제외 -->
+	</select>
+
+	<insert id="inputTerms" parameterType="hashmap">
+		INSERT INTO MONEYBANK_MONEYPLUS(
+			mbid,
+			fee_rate,
+			payment_rate,
+			sales_limit_per_case,
+			input_date
+		) VALUES (
+			 #{ID},
+			 '1.2',
+			 '80',
+			 '3000000',
+			 now()
+		 );
+	</insert>
+</mapper>

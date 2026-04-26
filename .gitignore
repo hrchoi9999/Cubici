@@ -1,0 +1,56 @@
+# Local/private material
+private_local/
+backup_*.sql
+*.sql
+!scripts/*.sql
+*.bak
+*.tmp
+*.log
+
+# Legacy Java secrets/config
+legacy-java/src/main/resources/egovframework/globals.properties
+legacy-java/src/main/resources/egovframework/globals_test.properties
+legacy-java/src/main/resources/egovframework/mailsmsweb.properties
+legacy-java/src/main/resources/egovframework/config.properties
+legacy-java/src/main/java/**/cubicianalytics-*.json
+
+# Build outputs
+target/
+legacy-java/target/
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Archives and binaries
+*.zip
+*.tar.gz
+*.rar
+*.jar
+*.war
+*.ear
+
+# Node
+node_modules/
+website/node_modules/
+website/.vite/
+website/.env
+website/.env.*
+!website/.env.example
+
+# Python
+.venv/
+.venv310/
+analysis/.venv/
+analysis/.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+
+# IDE/OS
+.idea/
+.vscode/
+.settings/
+.classpath
+.project
+.DS_Store
+Thumbs.db

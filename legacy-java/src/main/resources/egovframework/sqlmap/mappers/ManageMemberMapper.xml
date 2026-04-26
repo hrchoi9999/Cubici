@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cmmn.mapper.ManageMemberMapper">
+
+	<select id="userStatusList" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				result_tb.*
+			FROM(SELECT 
+					(SELECT auth_name FROM CBCI_AUTH ca WHERE ca.auth_type  = cu.USER_TYPE AND auth_division = 'user') as auth_name,
+					DATE_FORMAT(IF(cu.USER_TYPE = 02, (SELECT MAX(mb_approval_date) FROM MONEYBANK_USER_REQUEST WHERE user_code = cu.USER_CODE), cu.REG_DATE),'%Y-%m-%d') as reg_date,
+					(SELECT mbid FROM MONEYBANK_USER_REQUEST mur WHERE mur.user_code = cu.user_code group by cu.reg_date) AS mbid,
+					cu.user_id,
+					cu.user_nm,
+					cu.firm_nm,
+					IFNULL((cu.user_phone),'-') AS user_phone,
+					IFNULL((cu.firm_tel),'-') AS firm_tel,
+					(SELECT COUNT(*) FROM CBCI_ACCOUNT ca WHERE ca.USER_CODE = cu.USER_CODE) AS shop_count,
+					cu.firm_addr,
+					cu.user_type,
+					cu.user_code
+				FROM CBCI_USER cu
+				WHERE cu.user_nm like concat('%', #{NKeyword},'%')
+				AND cu.firm_nm like concat('%', #{CKeyword},'%')
+				AND cu.user_id like concat('%', #{IdKeyword},'%')
+				AND cu.user_type like concat('%', #{useService} ,'%')) result_tb
+			WHERE result_tb.reg_date >= #{fromDate}
+			AND result_tb.reg_date <= #{toDate}
+			ORDER BY result_tb.auth_name
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+	
+	<select id="userStatusSum" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				COUNT(result_tb.user_id) as total_count,
+				COUNT(CASE WHEN result_tb.user_type IN ('01') THEN 1 END) as cubici_count,
+				COUNT(CASE WHEN result_tb.user_type IN ('02') THEN 1 END) as mb_count
+			FROM(SELECT 
+					(SELECT auth_name FROM CBCI_AUTH ca WHERE ca.auth_type  = cu.USER_TYPE AND auth_division = 'user') as auth_name,
+					DATE_FORMAT(IF(cu.USER_TYPE = 02, (SELECT MAX(mb_approval_date) FROM MONEYBANK_USER_REQUEST WHERE user_code = cu.USER_CODE), cu.REG_DATE),'%Y-%m-%d') as reg_date,
+					(SELECT mbid FROM MONEYBANK_USER_REQUEST mur WHERE mur.user_code = cu.user_code group by cu.reg_date) AS mbid,
+					cu.user_id,
+					cu.user_nm,
+					cu.firm_nm,
+					IFNULL((cu.user_phone),'-') AS user_phone,
+					IFNULL((cu.firm_tel),'-') AS firm_tel,
+					(SELECT COUNT(*) FROM CBCI_ACCOUNT ca WHERE ca.USER_CODE = cu.USER_CODE) AS shop_count,
+					cu.firm_addr,
+					cu.user_type,
+					cu.user_code
+				FROM CBCI_USER cu
+				WHERE cu.user_nm like concat('%', #{NKeyword},'%')
+				AND cu.firm_nm like concat('%', #{CKeyword},'%')
+				AND cu.user_id like concat('%', #{IdKeyword},'%')
+				AND cu.user_type like concat('%', #{useService} ,'%')) result_tb
+			WHERE result_tb.reg_date >= #{fromDate}
+			AND result_tb.reg_date <= #{toDate}	
+		]]>
+	</select>
+	
+	<select id="userStatusDetail" resultType="hashmap" parameterType="String">
+		SELECT
+			  cu.USER_CODE
+			, (SELECT auth_name FROM CBCI_AUTH WHERE auth_type = user_type AND auth_division = 'user') AS status
+			, cu.user_nm
+			, cu.user_id
+			, DATE_FORMAT(cu.reg_date , '%Y-%m-%d') AS reg_date
+			, cu.firm_nm
+			, cu.firm_id
+			, (SELECT select_nm FROM CBCI_SELECT_CODE WHERE select_cd = business_type AND select_class = 'biztype') AS biz_type
+			, (SELECT select_nm FROM CBCI_SELECT_CODE WHERE select_cd = business_type AND select_class = 'CBCI_SECTOR') AS sector
+			, DATE_FORMAT(cu.firm_setup_date, '%Y-%m-%d') AS firm_setup_date
+			, cu.user_phone
+			, cu.firm_zip_code
+			, cu.firm_addr
+			, mur.mbid
+			, CASE
+			  	WHEN (mur.mb_product_code = 'MP') THEN '머니플러스'
+			  	ELSE ""
+			  END AS mb_product_code
+			, MAX(IFNULL(DATE_FORMAT(mur.mb_contract_expire_date,'%y-%m-%d'), '-')) AS mb_contract_expire_date
+			, mur.mb_demand_acc_number AS demand_acc 
+			, mur.mb_main_acc_number AS main_acc
+			, (SELECT bank_name FROM CBCI_BANK_CODE cbc WHERE bank_code = mur.mb_main_acc_bank_code) as main_bank_name
+			, (SELECT bank_name FROM CBCI_BANK_CODE cbc WHERE bank_code = mur.mb_demand_acc_bank_code ) as demand_bank_name
+		FROM CBCI_USER cu
+		LEFT JOIN MONEYBANK_USER_REQUEST mur ON cu.USER_CODE = mur.user_code
+		WHERE cu.user_code = #{userCode}
+	</select>
+	
+	<select id="userStatusRateDetail" resultType="hashmap" parameterType="String">
+		SELECT
+			cbc.charge_name as charge_name,
+			DATE_FORMAT(cbpd.start_date, '%Y-%m-%d') as start_date, 
+			DATE_FORMAT(cbpd.expire_date, '%Y-%m-%d') as expire_date,
+			FORMAT(cbpd.amount, 0) as amount,
+			IFNULL(cpc.promo_name, '') as promo_name,
+			IFNULL(cp.partner_nm, '') as partner_nm
+		FROM CBCI_BILLING_PAYMENT_DETAIL cbpd 
+		LEFT JOIN CBCI_BILLING_CHARGE cbc ON cbpd.charge_code = cbc.charge_code
+		LEFT JOIN CBCI_PROMOTION_CODE cpc ON cbpd.promotion_code = cpc.promo_code
+		LEFT JOIN CBCI_PARTNER cp ON cp.partner_code = cpc.partner_code
+		WHERE user_code = #{value}
+		ORDER BY cbpd.start_date desc
+		LIMIT 1
+	</select>
+	
+	<select id="userStatusRateTotalDate" resultType="hashmap" parameterType="String">
+		<![CDATA[
+			SELECT
+				SUM(total_day) + SUM(IF(charge_type = 'F', -total_day, -excep_day)) as effective_count
+			FROM(
+				SELECT
+					TIMESTAMPDIFF(day, start_date, next_start_date) as total_day,
+					IF(next_start_date < expire_date, 0, TIMESTAMPDIFF(day, expire_date, next_start_date)) AS excep_day,
+					charge_type
+				FROM(
+					SELECT
+						IFNULL(lead(start_date) over(ORDER BY start_date), expire_date) as next_start_date,
+						fv_tb.*
+					FROM(
+						SELECT
+							IF(now() >= cbpd.start_date, cbpd.start_date, DATE_FORMAT(now(), '%Y-%m-%d 00:00:00')) as start_date,
+							IF(now() >= IFNULL(cancel_date, cbpd.expire_date), IFNULL(cancel_date, cbpd.expire_date) , DATE_FORMAT(now(), '%Y-%m-%d 00:00:00')) as expire_date,
+							cbc.charge_type
+						FROM CBCI_BILLING_PAYMENT_DETAIL cbpd LEFT JOIN CBCI_BILLING_CHARGE cbc ON cbc.charge_code = cbpd.charge_code
+						WHERE user_code = #{value}
+						ORDER BY start_date) fv_tb) sv_tb) result_tb
+		]]>
+	</select>
+	
+	<select id="totalSales" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				FORMAT(IFNULL(SUM(ORDER_PRICE), 0), 0) AS ORDER_PRICE
+			FROM(
+				SELECT
+					ORDER_PRICE
+				FROM CBCI_INTERPARK_SALES FORCE INDEX(idx_interpark_sales)
+				WHERE SHOP_ID IN (${SHOP_1})
+				AND PAID_AT >= #{fromDate}
+				AND PAID_AT < #{toDate}
+				UNION ALL
+				SELECT
+					ORDER_PRICE
+				FROM CBCI_GMARKET_SALES FORCE INDEX(idx_gmarket_sales)
+				WHERE SHOP_ID IN (${SHOP_2})
+				AND PAID_AT >= #{fromDate}
+				AND PAID_AT < #{toDate}
+				UNION ALL				
+				SELECT
+					ORDER_PRICE
+				FROM CBCI_AUCTION_SALES FORCE INDEX(idx_auction_sales)
+				WHERE SHOP_ID IN (${SHOP_3})
+				AND PAID_AT >= #{fromDate}
+				AND PAID_AT < #{toDate}
+				UNION ALL				
+				SELECT
+					판매금액합계 AS ORDER_PRICE
+				FROM CBCI_11ST_SALEACCNT FORCE INDEX(idx_eleven_sales)
+				WHERE SHOP_ID IN (${SHOP_4})
+				AND 주문상태 NOT IN ('구매확정후주문취소','반품완료','취소처리중','클레임진행중')
+				AND 결제완료일 >= DATE_FORMAT(#{fromDate}, '%Y/%m/%d')
+				AND 결제완료일 <  DATE_FORMAT(#{toDate}, '%Y/%m/%d')
+				UNION ALL				
+				SELECT
+					order_price AS ORDER_PRICE
+				FROM CBCI_COUPANG_SALES FORCE INDEX(idx_coupang_sales)
+				WHERE SHOP_ID IN (${SHOP_11})
+				AND paid_at >= #{fromDate}
+				AND paid_at < #{toDate}
+				AND status IN ('ACCEPT','DELIVERING','DEPARTURE','FINAL_DELIVERY','INSTRUCT','NONE_TRACKING')
+				AND sale_type IN ('', 'SALE')
+				UNION ALL
+				SELECT
+					ORDER_PRICE
+				FROM CBCI_NAVER_SALES FORCE INDEX(idx_naver_sales)
+				WHERE SHOP_ID IN (${SHOP_14})
+				AND PAID_AT >= #{fromDate}
+				AND PAID_AT < #{toDate}
+				AND ORDER_STATUS IN ('발송대기', '배송중', '배송완료', '빠른정산', '구매확정', '정산', '일반정산')) result_tb
+		]]>
+	</select>
+	
+	<select id="totalCalculate" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				FORMAT(IFNULL(sum(final_amount), 0), 0) as total_amount
+			FROM(
+				SELECT
+					정산확정금액 as final_amount
+				FROM CBCI_INTERPARK_WITHDRAW_VALUE
+				WHERE SHOP_ID IN (${SHOP_1})
+				AND 정산확정일 >= DATE_FORMAT(#{fromDate}, '%Y.%m.%d')
+				AND 정산확정일 < DATE_FORMAT(#{toDate}, '%Y.%m.%d')
+				UNION ALL
+				SELECT
+					송금액 as final_amount
+				FROM CBCI_GMARKET_WITHDRAW
+				WHERE SHOP_ID IN (${SHOP_2})
+				AND 송금일 >= #{fromDate}
+				AND 송금일 < #{toDate}
+				UNION ALL
+				SELECT
+					송금액 as final_amount
+				FROM CBCI_AUCTION_WITHDRAW
+				WHERE SHOP_ID IN (${SHOP_3})
+				AND 송금일 >= #{fromDate}
+				AND 송금일 < #{toDate}
+				UNION ALL
+				SELECT
+					송금액 as final_amount
+				FROM CBCI_11ST_WITHDRAW
+				WHERE SHOP_ID IN (${SHOP_4})
+				AND 송금일자 >= DATE_FORMAT(#{fromDate}, '%Y/%m/%d')
+				AND 송금일자 < DATE_FORMAT(#{toDate}, '%Y/%m/%d')
+				UNION ALL
+				SELECT
+					final_amount as final_amount
+				FROM CBCI_COUPANG_SETTLEMENT
+				WHERE SHOP_ID IN (${SHOP_11})
+				AND settlement_date >= #{fromDate}
+				AND settlement_date < #{toDate}
+				UNION ALL
+				SELECT
+					정산금액 as final_amount
+				FROM CBCI_NAVER_WITHDRAWDAY
+				WHERE SHOP_ID IN (${SHOP_14})
+				AND 정산완료일 >= DATE_FORMAT(#{fromDate}, '%Y%m%d')
+				AND 정산완료일 < DATE_FORMAT(#{toDate}, '%Y%m%d')) result_tb
+		]]>
+	</select>
+	
+	<select id="totalSku" resultType="hashmap" parameterType="hashmap">
+		SELECT
+			FORMAT(COUNT(DISTINCT MATCHING_CODE) + COUNT(IF(ISNULL(MATCHING_CODE), 1, NULL)), 0) AS TOTAL_SKU
+		FROM(
+			SELECT
+				CIG.MATCHING_CODE
+			FROM CBCI_INTERPARK_GOODS CIG
+			WHERE CIG.SHOP_ID IN (${SHOP_1})
+			AND CIG.CUBICI_CODE IS NOT NULL
+			UNION ALL
+			SELECT
+				CIS.MATCHING_CODE
+			FROM CBCI_INTERPARK_STOCK CIS
+			WHERE CIS.SHOP_ID IN (${SHOP_1})	
+			UNION ALL 
+			SELECT
+				CGG.MATCHING_CODE
+			FROM CBCI_GMARKET_GOODS CGG
+			WHERE CGG.SHOP_ID IN (${SHOP_2})
+			AND CGG.CUBICI_CODE IS NOT NULL
+			UNION ALL
+			SELECT
+				CGS.MATCHING_CODE
+			FROM CBCI_GMARKET_STOCK CGS
+			WHERE CGS.SHOP_ID IN (${SHOP_2})
+			UNION ALL
+			SELECT
+				CAG.MATCHING_CODE
+			FROM CBCI_AUCTION_GOODS CAG
+			WHERE CAG.SHOP_ID IN (${SHOP_3})
+			AND CAG.CUBICI_CODE IS NOT NULL	
+			UNION ALL
+			SELECT
+				CAS.MATCHING_CODE
+			FROM CBCI_AUCTION_STOCK CAS
+			WHERE CAS.SHOP_ID IN (${SHOP_3})
+			UNION ALL
+			SELECT
+				CSG.MATCHING_CODE
+			FROM CBCI_11ST_GOODS CSG
+			WHERE CSG.SHOP_ID IN (${SHOP_4})
+			AND CSG.CUBICI_CODE IS NOT NULL
+			UNION ALL
+			SELECT
+				CSS.MATCHING_CODE
+			FROM CBCI_11ST_STOCK CSS
+			WHERE CSS.SHOP_ID IN (${SHOP_4})
+			UNION ALL
+			SELECT
+				CCS.MATCHING_CODE
+			FROM CBCI_COUPANG_STOCK CCS
+			WHERE CCS.SHOP_ID IN (${SHOP_11})
+			AND CCS.CUBICI_CODE IS NOT NULL
+			UNION ALL
+			SELECT
+				CNG.MATCHING_CODE
+			FROM CBCI_NAVER_GOODS CNG
+			WHERE CNG.SHOP_ID IN (${SHOP_14})
+			AND CNG.CUBICI_CODE IS NOT NULL
+			UNION ALL
+			SELECT
+				CNS.MATCHING_CODE
+			FROM CBCI_NAVER_STOCK CNS
+			WHERE CNS.SHOP_ID IN (${SHOP_14})) result_tb
+	</select>
+	
+	<select id="findEvaluateByObjectNo" parameterType="String" resultType="hashmap">
+		SELECT
+			detail, 
+			object_no
+		FROM CBCI_EVALUATE
+		WHERE object_no = #{code}
+	</select>
+	
+	<insert id="userEvaluateEnroll" parameterType="hashmap">
+		INSERT 
+		INTO CBCI_EVALUATE(
+				division, 
+				object_no, 
+				reviewer, 
+				detail, 
+				input_date
+			)VALUES(
+				'00', 
+				#{code}, 
+				#{reviewer}, 
+				#{detail}, 
+				now())
+	</insert>
+	
+	<update id="userEvaluateModify" parameterType="hashmap" >
+		UPDATE CBCI_EVALUATE 
+		SET 
+			detail = #{detail},
+			update_date = now()
+		WHERE object_no = #{code}
+	</update>
+	
+	<select id="findPaymentList" resultType="hashmap" parameterType="hashmap">
+		<![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT
+			  , RESULT_TB.*
+			FROM(
+				  SELECT
+					    @RNUM := @RNUM + 1 AS rnum,
+						DATE_FORMAT(cbpd.payment_date, '%Y-%m-%d') as payment_date,
+						cbc.charge_name,
+						DATE_FORMAT(cbpd.start_date, '%Y-%m-%d') as start_date,
+						DATE_FORMAT(IFNULL(cbpd.cancel_date, IFNULL(cbpd.change_date, cbpd.expire_date)),'%Y-%m-%d') as end_date,
+						FORMAT(cbc.amount * cbc.sub_period, 0) as amount,
+						DATE_FORMAT(IFNULL(cbpd.cancel_date, cbpd.change_date),'%Y-%m-%d') as change_date,
+						cbpd.promotion_code,
+						IFNULL((SELECT promo_name FROM CBCI_PROMOTION_CODE cpc WHERE cbpd.promotion_code = cpc.promo_code),'') as promo_name,
+						IFNULL(ABS(cbr.refund_amount),'') as refund_amount 
+				  FROM CBCI_BILLING_PAYMENT_DETAIL cbpd
+					LEFT JOIN CBCI_BILLING_CHARGE cbc on cbpd.charge_code = cbc.charge_code
+					LEFT JOIN CBCI_BILLING_REFUND cbr on cbpd.seq = cbr.seq, (SELECT @RNUM := 0) RNUM
+				  WHERE cbpd.user_code = #{user_code}
+				  ORDER BY cbpd.payment_date
+			) RESULT_TB
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>	
+	</select>	
+	
+	<select id="findUsageList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT
+			  , RESULT_TB.*
+			FROM(
+				  SELECT
+					    @BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+					  , cu.USER_CODE
+					  , CASE
+					  		WHEN(mur.mb_status IN ('00', '01', '02', '03')) THEN '신청'
+					  		WHEN(mur.mb_status IN ('04', '05')) THEN '심사'
+					  		WHEN(mur.mb_status IN ('06')) THEN '상환'
+					  		WHEN(mur.mb_status IN ('07')) THEN '만료'
+					  		WHEN(mur.mb_status IN('41')) THEN '거부'
+					  	END AS mb_status
+					  , DATE_FORMAT(mur.mb_request_date,'%Y-%m-%d') AS mb_request_date
+					  , cu.USER_ID
+					  , cu.FIRM_NM 
+					  , cu.USER_NM 
+					  , mur.mbid
+					  , CASE WHEN(mur.mb_product_code = 'MP') THEN '머니플러스' END AS mb_product_code
+					  , IFNULL(DATE_FORMAT(mur.mb_contract_date,'%Y-%m-%d'), '-') AS mb_contract_date
+					  , IFNULL(DATE_FORMAT(mur.mb_contract_expire_date,'%Y-%m-%d'), '-') AS mb_contract_expire_date
+					  , IFNULL(mm.fee_rate, '0.8') as usage_fee
+					  , IF(mrp.calculate_deposit_amount IS NOT NULL, FORMAT(mrp.calculate_deposit_amount, 0), '-') AS calculate_deposit_amount
+					  , IF(mrc.act_principal IS NOT NULL, FORMAT(mrc.act_principal, 0), '-') AS act_principal
+					  , IF(mrp.calculate_deposit_amount - mrc.act_principal IS NOT NULL, FORMAT(mrp.calculate_deposit_amount - mrc.act_principal, 0), '-') AS repayment_balance
+					  , '-' AS PRIZM_SCORE
+				  FROM MONEYBANK_USER_REQUEST mur 
+				    LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE 
+				    LEFT JOIN MONEYBANK_REDEM_PROVISION mrp ON mur.mbid = mrp.mbid 
+				    LEFT JOIN MONEYBANK_REDEM_CALCULATE mrc ON mur.mbid = mrc.mbid
+				    LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+				    , (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				  WHERE mur.mb_status IN (${status})
+				    AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+				    AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+				    AND UPPER(cu.USER_ID) LIKE UPPER('${userIdSearch}%')
+				    AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+				    AND mur.mb_request_date >= #{fromDate}
+				    AND mur.mb_request_date <= #{toDate}
+				  GROUP BY mur.mbid
+			) RESULT_TB
+			ORDER BY mb_request_date ${selectOrderBy}
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+	
+	<select id="getUsageListCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+			    COUNT(mur.mbid) as usageListTotal
+			  , COUNT(CASE WHEN mur.mb_status IN ('00', '01', '02', '03') THEN 1 END) AS acceptCnt
+			  , COUNT(CASE WHEN mur.mb_status IN ('04', '05') THEN 1 END) AS judgeCnt
+			  , COUNT(CASE WHEN mur.mb_status IN ('41') THEN 1 END) AS rejectCnt
+			  , COUNT(CASE WHEN mur.mb_status IN ('06') THEN 1 END) AS repaymentCnt
+			  , COUNT(CASE WHEN mur.mb_status IN ('07') THEN 1 END) AS expireCnt
+			FROM MONEYBANK_USER_REQUEST mur
+			 LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+			WHERE mur.mb_status IN (${status})
+			  AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+		      AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+		      AND UPPER(cu.USER_ID) LIKE UPPER('${userIdSearch}%')
+		      AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+		      AND mur.mb_request_date >= #{fromDate}
+		      AND mur.mb_request_date < #{toDate}
+		]]>
+	</select>
+	
+	<select id="findMbFirstRegDate" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			DATE_FORMAT(MIN(mb_request_date), '%y-%m-%d') AS mb_first_reg_date
+		FROM MONEYBANK_USER_REQUEST 
+		WHERE user_code = #{user_code}
+	</select>
+
+	<select id="findMbInfo" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+		    CASE
+		  		WHEN (mb_product_code = 'MP') THEN '머니플러스'
+		  		ELSE ''
+		  	END AS mb_product_code
+		  , mbid
+		  , DATE_FORMAT(mb_request_date,'%y-%m-%d') AS mb_request_date
+		  , DATE_FORMAT(mb_contract_date,'%y-%m-%d') AS mb_contract_date
+		  , DATE_FORMAT(mb_contract_expire_date,'%y-%m-%d') AS mb_contract_expire_date
+		  , '-' AS PCS
+		  , '-' AS PCM
+		FROM MONEYBANK_USER_REQUEST
+		WHERE user_code = #{user_code}
+		ORDER BY mb_request_date DESC
+		LIMIT 1
+	</select>
+	
+	<select id="findHistoryList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				 RESULT_TB2.*
+			FROM (
+				SELECT
+					 FOUND_ROWS() AS CNT
+				  ,  @BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+				  , RESULT_TB.*
+				FROM(
+					SELECT
+						    mur.mbid AS mbid
+						  , DATE_FORMAT(mur.mb_contract_date,'%y-%m-%d') AS mb_contract_date
+						  , CASE
+						  		WHEN (mur.mb_product_code = 'MP') THEN '머니플러스'
+						  		ELSE ''
+						  	END AS mb_product_code
+						  , IF(mrp.calculate_deposit_amount IS NOT NULL, FORMAT(SUM(mrp.calculate_deposit_amount), 0), '-') AS calculate_deposit_amount
+						  , IF(mur.mb_termi_date IS NULL, DATE_FORMAT(mur.mb_contract_expire_date ,'%y-%m-%d'), DATE_FORMAT(mur.mb_termi_date ,'%y-%m-%d')) AS mb_contract_expire_date 
+						  , IFNULL(mm.fee_rate, '0.8') AS fee_rate
+						  , IF(mur.mb_termi_date IS NULL, DATEDIFF(mur.mb_contract_expire_date, mur.mb_contract_date), DATEDIFF(mur.mb_termi_date, mur.mb_contract_date)) AS service_day
+						  , '-' AS PCS
+						  , '-' AS PCM
+					FROM MONEYBANK_USER_REQUEST mur 
+					    LEFT JOIN MONEYBANK_REDEM_CALCULATE mrc ON mur.mbid = mrc.mbid
+					    LEFT JOIN MONEYBANK_REDEM_PROVISION mrp ON mur.mbid = mrp.mbid
+					    LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+					WHERE mur.user_code = #{user_code}
+					AND (mur.mb_contract_expire_date < NOW() OR mur.mb_termi_date IS NOT NULL) 
+					GROUP BY mur.mbid
+					ORDER BY mur.mb_contract_date DESC
+				) RESULT_TB, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+			) RESULT_TB2
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+	
+	<select id="findFileCheck" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			IF(msc.biz_no IS NOT NULL, 'Y', 'N') AS biz_no_chk
+		  , IF(mur.reg_no_first IS NOT NULL, 'Y', 'N') AS reg_no_chk
+		  , msc.national_tax_full_payment AS national_tax_chk
+		  , msc.local_tax_full_payment AS local_tax_chk
+		  , msc.health_insurance_full_payment AS health_insurance_chk
+		FROM MONEYBANK_USER_REQUEST mur
+		  LEFT JOIN MONEYBANK_SUB_CHECK msc ON mur.mbid = msc.mbid
+		WHERE mur.mbid = #{mbid}
+	</select>
+</mapper>

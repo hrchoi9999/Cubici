@@ -1,0 +1,56 @@
+[계정 정보]
+1. 가비아 ( 도메인 관리 )
+blueskai / viva6373!
+2. aligo ( 문자 API )
+발송 ip변경 될 때  추가 등록 필요함 / 대표님 전화번호 인증 필요함
+cubici2020 / viva673!
+3. koreaidc
+운영서버, 개발서버 ssl
+voisys / viva6373!
+4. 포트원 (구 아임포트)
+빌링시스템 - KG이니시스 결제 연동대행사
+admin@cubici.co.kr / Viva6373!
+5. KG이니시스
+MOIcubici0 / Viva2022!
+6. admin 메일 계정
+admin@cubici.co.kr / viva6373!@
+7. GMAIL (개발팀 용)
+cubici.dev@gmail.com / cubici2021!
+8. 팀뷰어 (현재 사용X)
+admin@cubici.co.kr / cubici2021@ 
+
+[shop api 연동 정보]
+네이버 커머스 api
+문서 : https://apicenter.commerce.naver.com/ko/basic/commerce-api
+계정 : blueskai66 / viva6373!@# (네이버id로 로그인)
+내 정보 > 내 스토어 애플리케이션 > 애플리케이션 등록 후 사용
+쿠팡
+문서 : https://developers.coupangcorp.com/hc/ko
+계정 : voisys / viva6373!@ (최초 로그인시 대표님 인증 필요)
+11번가
+문서 : https://openapi.11st.co.kr/openapi/OpenApiServiceIntroduce.tmall?introduceType=ORDER
+계정 : voisys / viva2020@
+서비스 등록/확인 > seller API 정보 수정 > 상용서버IP에 호출 ip 등록 후 사용
+인터파크
+상품 API : https://shop.interpark.com/openapi/site/APIKeyGuide.jsp
+매출 API : https://shop.interpark.com/apidocjs/partner_order_single/doc/index.html ( www > shop )
+계정 : blueskai / 확인필요
+API 연동 시 메일로 접수. 메일 주소 댓글 공유
+esm
+문서 : https://etapi.gmarket.com/category/%EA%B3%B5%EC%A7%80
+계정 : voisysl / Cubici109!@#  (esmplus 마스터 로그인)
+API 연동 시 메일로 접수 
+인터파크
+[ API 연동 신청 / 승인 ]
+-변경: api@interparkshop.com
+[ 상품 / 전시 / 상품평 / 상품Q&A / 판매자공지사항 API ]
+-변경: api.prod@interparkshop.com
+[ 주문 API ]
+-변경: api.order@interparkshop.com
+[ 긴급알리미 / 반품배송지 / 배송비정책 API ]
+-변경: api.entr@interparkshop.com
+
+[운영서버 SSL]
+(현재)certkorea - 2023-03-27~2024-04-16
+담당자 메일(hrchoi@cubici.co.kr) 만료 전 이메일로 연락옴. 만료된 경우 메일 확인
+인증서 파일 경로 : /etc/pki/tls/certs

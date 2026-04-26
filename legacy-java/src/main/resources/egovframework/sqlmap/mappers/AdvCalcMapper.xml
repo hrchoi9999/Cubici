@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.front.moneybank.mapper.AdvCalcMapper">
+	<select id="advanceRequestCheck" parameterType="String" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				IF(count(user_code) = 0, 'pass', mb_check_success) as advance_req_check
+			FROM MONEYBANK_ADVANCE_REQUEST_CHECK
+			WHERE (input_date, user_code) IN(SELECT 
+												MAX(input_date), 
+												user_code 
+											FROM MONEYBANK_ADVANCE_REQUEST_CHECK 
+											WHERE user_code = #{user_code})
+			AND input_date >= DATE_FORMAT(now(), '%Y-%m-%d 00:00:00')
+		]]>
+	</select>
+	
+	<select id="advanceRequest" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				result_tb.*,
+				IF(CONCAT(mb_business_period, mb_business_type, mb_individual, mb_sales_amount, mb_user_age, mb_duplicate_check) = 'YYYYYY', 'Y', 'N') as mb_check_success
+			FROM (
+				SELECT
+					user_code,
+					IF(firm_setup_date <= DATE_SUB(NOW(), INTERVAL 1 YEAR), 'Y', 'N') as mb_business_period,
+					IF(sectors != '13', 'Y', 'N') as mb_business_type,
+					IF(business_type = '1', 'Y', 'N') as mb_individual,
+					'Y' as mb_sales_amount,
+					IF(#{mb_user_age} >= 20, 'Y', 'N') as mb_user_age,
+					IF(user_type != '02', 'Y', 'N') as mb_duplicate_check
+				FROM CBCI_USER
+				WHERE user_code = #{user_code}) result_tb
+		]]>
+	</select>
+
+	<insert id="advanceReqeustInsert" parameterType="hashmap">
+			INSERT INTO MONEYBANK_ADVANCE_REQUEST_CHECK(
+					user_code,
+					mb_business_period,
+					mb_business_type,
+					mb_individual,
+					mb_sales_amount,
+					mb_user_age,
+					mb_duplicate_check,
+					mb_check_success,
+					input_date
+			)VALUES(
+					#{user_code},
+					#{mb_business_period},
+					#{mb_business_type},
+					#{mb_individual},
+					#{mb_sales_amount},
+					#{mb_user_age},
+					#{mb_duplicate_check},
+					#{mb_check_success},
+					NOW()
+			)
+	</insert>
+	
+	<select id="findMBId" parameterType="String" resultType="String">
+		SELECT
+			MAX(mbid)
+		FROM MONEYBANK_USER_REQUEST
+		WHERE mbid like concat(#{value}, '%')
+	</select>
+
+	<insert id="MBReqeustInsert" parameterType="hashmap">
+		INSERT INTO MONEYBANK_USER_REQUEST(
+			mbid, 
+			user_code, 
+			mb_product_code, 
+			mb_status, 
+			reg_no_first, 
+			reg_no_second, 
+			mb_sales_amount, 
+			input_date
+		) VALUES (
+			#{mbid},
+			#{user_code},
+			#{mb_product_code},
+			'00',
+			#{reg_no_first},
+			#{reg_no_second},
+			#{mb_sales_amount},
+			now()
+		)
+	</insert>
+
+	<select id="findAccountList" parameterType="hashmap" resultType="hashmap">
+		select
+			ca.SHOP_ID ,
+			ca.SHOP_TYPE ,
+			cc.CODE_E_NM
+		from CBCI_ACCOUNT ca
+		left join CBCI_CODE cc
+		on ca.SHOP_TYPE = cc.CODE_ID
+		where ca.USER_CODE = #{userCode}
+		and cc.CODE_E_NM IN <foreach collection="shopArr" item="type" separator="," open="(" close=")">#{type}</foreach>
+	</select>
+	
+	<insert id="requestShopInsert" parameterType="hashmap">
+		INSERT INTO MONEYBANK_USER_REQUEST_SHOP (
+			mbid,
+			mb_request_shop,
+			mb_request_shop_type,
+			mb_request_shop_id,
+			input_date 
+		)VALUES(
+			#{mbid},
+			#{mb_request_shop},
+			#{mb_request_shop_type},
+			#{mb_request_shop_id},
+			now()
+		)
+	</insert>
+	
+	<select id="RequestAcceptCheck" parameterType="String" resultType="hashmap">
+		SELECT
+			mbid,
+			IF(count(mbid) = 1, 'true', 'false') as isAdvanceRequest
+		FROM MONEYBANK_USER_REQUEST
+		WHERE mb_status IN ('00')
+		AND user_code = #{value}
+	</select>
+
+	<!-- 머니뱅크 신청 정보 -->
+	<select id="getMoneybankRequestInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			MUR.mbid,
+			MUR.user_code,
+			MUR.mb_product_code,
+			MUR.mb_status,
+			MUR.mb_request_date,
+			MUR.mb_contract_date,
+			(SELECT bank_name FROM CBCI_BANK_CODE WHERE bank_code = mb_demand_acc_bank_code) AS mb_demand_acc_bank_code,
+			MUR.mb_demand_acc_number,
+			MUR.mb_demand_acc_holder,
+			(SELECT bank_name FROM CBCI_BANK_CODE WHERE bank_code = mb_main_acc_bank_code) AS mb_main_acc_bank_code,
+			MUR.mb_main_acc_number,
+			MUR.mb_main_acc_holder,
+			MM.fee_rate,
+			MM.payment_rate,
+			(MM.sales_limit_per_case / 1000) AS sales_limit_per_case
+		FROM MONEYBANK_USER_REQUEST MUR
+		LEFT JOIN MONEYBANK_MONEYPLUS MM ON MUR.mbid = MM.mbid
+		WHERE MUR.user_code = #{user_code}
+		ORDER BY MUR.mb_request_date DESC LIMIT 1
+	</select>
+	
+	<!-- 머니플러스 계약 진행 상태 업데이트 -->
+	<update id="modifyRequestStatusByMbStatus" parameterType="hashmap">
+		UPDATE
+			MONEYBANK_USER_REQUEST MUR
+		SET
+		<if test="mbStatus == '00'">
+			mb_request_date = now(),
+			mb_demand_acc_bank_code = #{mb_demand_acc_bank_code},
+			mb_demand_acc_holder = #{mb_demand_acc_holder},
+			mb_demand_acc_number = #{mb_demand_acc_number},
+			mb_main_acc_bank_code = #{mb_main_acc_bank_code},
+			mb_main_acc_holder = #{mb_main_acc_holder},
+			mb_main_acc_number = #{mb_main_acc_number},
+		</if>
+		<if test="changeStatus == 05">
+			mb_agree_date = now(),
+		</if>
+			mb_status = LPAD(#{changeStatus}, '2', '0'),
+			upd_date = now()
+		WHERE
+			MUR.mbid = #{mbid}
+	</update>
+
+	<select id="getRedemDetailSum" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+		    COUNT(*) AS total
+		FROM (
+			 SELECT
+				 mrp.mbid,
+				 '입금' AS status,
+				 mrp.calculate_deposit_date AS calc_date,
+				 mrp.calculate_deposit_amount,
+				 '' AS act_principal
+			 FROM
+				 MONEYBANK_REDEM_PROVISION mrp
+			 WHERE
+				 mrp.mbid = #{mbid}
+				 AND DATE_FORMAT(mrp.calculate_deposit_date, '%Y-%m-%d') >= #{fromDate}
+			     AND mrp.calculate_deposit_date <= #{toDate}
+			 UNION
+			 SELECT
+				 mrc.mbid,
+				 '상환',
+				 mrd.deposit_date,
+				 0,
+				 mrc.act_principal
+			 FROM
+				 MONEYBANK_REDEM_CALCULATE mrc
+				 LEFT JOIN MONEYBANK_REDEM_DEPOSIT mrd ON mrc.settlement_code = mrd.settlement_code
+			 WHERE mrc.mbid = #{mbid}
+				AND DATE_FORMAT(mrd.deposit_date, '%Y-%m-%d') >= #{fromDate}
+				AND mrd.deposit_date <= #{toDate}
+			 GROUP BY mrc.settlement_code
+		) result_tb
+		]]>
+		<if test='status neq ""'>
+			WHERE result_tb.status IN (#{status})
+		</if>
+		ORDER BY result_tb.calc_date desc
+	</select>
+
+	<select id="getRedemDetailList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			LIST_LIMIT.*
+		FROM (
+			SELECT
+				@ROWNUM:= @ROWNUM + 1 AS rownum,
+				LIST.*
+			FROM (
+				SELECT
+					*,
+					(SUM(result_tb.calculate_deposit_amount) OVER(order by result_tb.calc_date) -
+					SUM(result_tb.act_principal) OVER(order by result_tb.calc_date)) AS cal_balance
+				FROM (
+					SELECT
+						mrp.mbid,
+						'입금' AS status,
+						DATE_FORMAT(mrp.calculate_deposit_date, '%Y-%m-%d 00:59:59') AS calc_date,
+						mrp.calculate_deposit_amount,
+						'' AS act_principal,
+						'' AS usage_fee,
+						'' AS remittance_fee,
+						'' AS balance_deposit_date	,
+						'' AS balance_remittance_amount,
+						0 AS deposit_amount
+					FROM
+						MONEYBANK_REDEM_PROVISION mrp
+					WHERE
+						mrp.mbid = #{mbid}
+					UNION
+					SELECT
+						mrc.mbid,
+						'상환',
+						DATE_FORMAT(mrd.deposit_date, '%Y-%m-%d 23:59:59'),
+						'',
+						mrc.act_principal,
+						mrc.usage_fee,
+						mrc.remittance_fee,
+						mrc.balance_deposit_date,
+						mrc.balance_remittance_amount,
+						SUM(mrd.deposit_amount)
+					FROM
+						MONEYBANK_REDEM_CALCULATE mrc
+						LEFT JOIN MONEYBANK_REDEM_DEPOSIT mrd ON mrc.settlement_code = mrd.settlement_code
+					WHERE mrc.mbid = #{mbid}
+					GROUP BY mrd.deposit_date
+				)  result_tb
+				ORDER BY result_tb.calc_date desc
+			) LIST, (SELECT @ROWNUM:=0) r
+			<![CDATA[
+			WHERE LIST.calc_date >= #{fromDate}
+				AND LIST.calc_date <= #{toDate}
+			]]>
+			<if test='status neq ""'>
+				AND LIST.status IN (#{status})
+			</if>
+		)LIST_LIMIT
+		LIMIT ${current_data}, ${data_limit}
+	</select>
+</mapper>

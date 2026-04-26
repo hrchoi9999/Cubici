@@ -1,0 +1,13 @@
+# Sanitized sample DB and application settings.
+
+db.driver = com.mysql.jdbc.Driver
+db.url = jdbc:mysql://localhost:3306/cubici_local?useUnicode=true&characterEncoding=utf8
+db.username = cubici_local
+db.password = change-me
+
+Hkey = change-me
+Ekey = change-me
+PBUserKey = change-me
+FilePBUserKey = change-me
+
+file.upload.path = C:/Cubici/private_local/uploads

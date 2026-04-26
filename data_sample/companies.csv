@@ -1,0 +1,6 @@
+﻿company_id,company_name,primary_channel,risk_grade,settlement_cycle_days
+C001,A 커머스,자사몰,A,2
+C002,B 리테일,오픈마켓,B,5
+C003,C 스토어,라이브,C,7
+C004,D 마켓,오픈마켓,B,5
+C005,E 셀렉트,자사몰,A,2

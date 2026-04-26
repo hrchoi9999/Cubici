@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="egovframework.azon.cmmn.mapper.FileMapper">
+	<insert id="fileUpload" parameterType="hashmap">
+		INSERT INTO CBCI_FILE(
+			uuid,
+			file_division,
+			file_division_pk,
+			origin_file_name,
+			store_file_name,
+			file_ext,
+			file_size,
+			file_path,
+			enc_type,
+			input_date
+		) VALUES (
+			#{uuid},
+			#{file_division},
+			#{file_division_pk},
+			#{origin_file_name},
+			#{store_file_name},
+			#{file_ext},
+			#{file_size},
+			#{file_path},
+			#{enc_type},
+			now()
+		)
+	</insert>
+
+	<delete id="fileDelete" parameterType="String">
+		DELETE FROM CBCI_FILE WHERE uuid = #{uuid}
+	</delete>
+
+	<select id="FilePath" parameterType="String" resultType="hashmap">
+		SELECT
+			file_path,
+			concat(origin_file_name, '.', file_ext) as file_name
+		FROM CBCI_FILE
+		WHERE uuid = #{uuid}
+	</select>
+
+	<select id="fileList" parameterType="hashMap" resultType="hashmap">
+		SELECT
+			uuid,
+			concat(origin_file_name, '.', file_ext) as file_name,
+			file_size
+		FROM CBCI_FILE
+		WHERE file_division = #{file_division}
+		AND file_division_pk = #{file_division_pk}
+	</select>
+
+	<select id="fileDelList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			uuid,
+			file_path,
+			concat(store_file_name, '.', file_ext) as file_name
+		FROM CBCI_FILE
+		WHERE file_division = #{file_division}
+		AND file_division_pk = #{file_division_pk}
+	</select>
+	
+    <select id="isFile" parameterType="hashmap" resultType="boolean">
+    	SELECT 
+    		IF(COUNT(uuid) = 0, 'false', 'true')
+		FROM CBCI_FILE
+		WHERE file_division = #{file_division}
+		AND file_division_pk = #{file_division_pk}
+    </select>
+</mapper>

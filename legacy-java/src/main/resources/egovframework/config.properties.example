@@ -1,0 +1,8 @@
+# Sanitized sample config for local reference only.
+
+domain.key = change-me
+domain.returnUrl = http://localhost:3000
+
+iniPay.mid = change-me
+iniPay.signKey = change-me
+iniPay.url = http://localhost

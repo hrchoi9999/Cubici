@@ -1,0 +1,63 @@
+@charset "EUC-KR";
+
+table {
+	width: 100%;
+	border: 1px solid rgba(0, 0, 0, .125);
+	border-left: none;
+	border-right: none;
+}
+
+td {
+	padding-top: 8px;
+	padding-right: 16px;
+	padding-bottom: 8px;
+	padding-left: 16px;
+	border-right: none;
+}
+
+td.col {
+	width: 25%;
+	padding-top: 16px;
+	padding-right: 10px;
+	padding-bottom: 16px;
+	padding-left: 10px;
+	text-align: right;
+	Background: #F9F9F9;
+	border-left: none;
+	font-size: 14px;
+	font-weight: 500;
+	color: #666;
+}
+
+.containerD {
+	border: 1px solid rgba(0, 0, 0, .125);
+	padding-top: 20px;
+	padding-right: 20px;
+	padding-bottom: 20px;
+	padding-left: 20px;
+	Color: #666666;
+	Background: #FFFFFF;
+}
+
+.container {
+	margin: 0px 0px 8px;
+	Color: #666666;
+}
+
+.inputD {
+	padding-top: 6px;
+	padding-right: 12px;
+	padding-bottom: 6px;
+	padding-left: 12px;
+	border: 1px solid rgba(0, 0, 0, .125);
+}
+
+.tbBt {
+	padding-top: 16px;
+	text-align: center;
+	border-left: none;
+}
+
+.lBtn {
+	font-size: 17px;
+}

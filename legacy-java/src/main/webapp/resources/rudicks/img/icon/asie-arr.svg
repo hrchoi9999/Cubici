@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="15" height="9" viewBox="0 0 15 9">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="asie-arr" class="cls-1" d="M270.57,406L278,414.051l-0.737.8-6.7-7.251-6.837,7.4L263,414.2Z" transform="translate(-263 -406)"/>
+</svg>

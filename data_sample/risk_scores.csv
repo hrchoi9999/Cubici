@@ -1,0 +1,6 @@
+﻿company_id,company_name,risk_score,delayed_settlement_count,recommended_limit
+C001,A 커머스,86,1,76000000
+C002,B 리테일,71,2,33000000
+C003,C 스토어,58,1,56000000
+C004,D 마켓,71,0,133000000
+C005,E 셀렉트,82,1,58000000

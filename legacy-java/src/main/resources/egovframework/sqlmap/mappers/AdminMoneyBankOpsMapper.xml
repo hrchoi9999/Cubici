@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.AdminMoneyBankOpsMapper">
+
+	<!-- 신청 & 승인 목록 -->
+	<select id="selectRequestList" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			CU.USER_NO,
+			CU.USER_NM, 
+			CU.FIRM_NM, 
+			(SELECT TYPE_NAME FROM CBCI_BIZTYPE CB WHERE CB.TYPE_NO = CU.BUSINESS_TYPE) AS BUSINESS_TYPE,
+			CU.REG_DATE, 
+			CU.USER_ID , 
+			CU.USER_NM AS REP_NM, 
+			CU.USER_PHONE , 
+			MUI.SEQ,
+			MUI.REQUEST_STATUS , 
+			MUI.MONEYBANK_REQUEST_DATE , 
+			MUI.DIVISION , 
+			MUI.INTEREST_RATE,
+			MUI.FEE_RATE,
+			MUI.BUSINESS_PERIOD , 
+			MUI.SALES_AMOUNT , 
+			IFNULL(MUI.B2B_LIMIT_AMOUNT, 0) AS B2B_LIMIT_AMOUNT, 
+			MUI.REQ_LIMIT_AMOUNT , 
+			MUI.REQUEST_SHOP , 
+			MUI.WHOLESALE_MALL_NM,
+			IFNULL(MUI.PERSON_CREDIT_SCORE, "-") AS PERSON_CREDIT_SCORE
+		FROM MONEYBANK_USER_INFO MUI
+		LEFT JOIN CBCI_USER CU ON CU.USER_NO = MUI.USER_NO 
+		<if test = 'flag != "sum"'>
+		WHERE
+			CU.USER_NM like #{REP_NM} 
+			AND CU.FIRM_NM like #{FIRM_NM}
+			<if test='DIVISION != "-" and DIVISION != null'>
+			AND MUI.DIVISION = #{DIVISION}
+			</if>
+			<if test='STATUS != "-" and STATUS != null'>
+			AND MUI.REQUEST_STATUS IN (${progressStatus})
+			</if>
+			AND CU.USER_NO = MUI.USER_NO
+			<![CDATA[
+			AND MUI.REQ_LIMIT_AMOUNT >= ${minAmount}*1000000
+			AND MUI.REQ_LIMIT_AMOUNT <= ${maxAmount}*1000000
+			AND MUI.MONEYBANK_REQUEST_DATE >= #{fromDate}
+			AND MUI.MONEYBANK_REQUEST_DATE <= #{toDate}
+			]]>
+		</if>
+		ORDER BY 
+			MUI.MONEYBANK_REQUEST_DATE DESC
+		
+		<if test='flag !="sum"'>
+		LIMIT 0, 10
+		</if>
+	</select>
+   
+   <select id="selectMoneybankRepay" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			FOUND_ROWS() AS TOTAL_COUNT, 
+            RESULT_TB.*
+			<if test='flag=="sum"'>
+        	,COUNT(*) AS TOTAL_REQ
+			,SUM(RESULT_TB.B2B_LIMIT_AMOUNT) AS TOTAL_AMOUNTS
+		    ,ROUND(SUM(RESULT_TB.DAILY_USAGE_FEE)/COUNT(*), 3) AS USAGE_FEE_AVG
+		    ,SUM(RESULT_TB.REPAYMENT_REMAINING_AMOUNT) AS REMAINING_AVG
+			</if>
+		FROM(
+			<!-- 헬로페이 선지급 -->
+	        SELECT
+				MUI.SEQ,
+				MUI.USER_NO,
+				CU.USER_NM,
+				CU.FIRM_NM,
+				MUI.DIVISION,
+				MUI.B2B_LIMIT_AMOUNT,
+				"헬로페이 선지급" AS CURR_SERVICE,
+				DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, '%Y-%m-%d') AS MONEYBANK_REQUEST_DATE,
+				DATE_FORMAT(MUI.APPROVAL_DATE, '%Y-%m-%d') AS APPROVAL_DATE,
+				DATE_FORMAT(MUI.CONTRACT_DATE, '%Y-%m-%d') AS CONTRACT_DATE,
+				DATE_FORMAT(MUI.CONTRACT_EXPIRE_DATE, '%Y-%m-%d') AS CONTRACT_EXPIRE_DATE,
+				IFNULL((SELECT CCR.CRA_GRADE FROM CBCI_CRA_RESULT CCR WHERE CCR.USER_NO = MUI.USER_NO ORDER BY str_to_date(CCR.INPUT_DATE, '%Y-%m-%d %k:%i:%s') DESC LIMIT 1), "-") AS CRA_GRADE,
+				IFNULL((SELECT daily_interest_fee FROM HELLOPAY_B2B_EXECUTE_INFO HBR WHERE HBR.SEQ = MUI.SEQ LIMIT 1), 0) AS DAILY_INTEREST_RATE,
+	            IFNULL((SELECT daily_usage_fee FROM HELLOPAY_B2B_EXECUTE_INFO HBR WHERE HBR.seq = MUI.SEQ LIMIT 1), 0) AS DAILY_USAGE_FEE,
+	            IFNULL(MUI.DEMAND_ACC_BANK_NM, "") AS DEMAND_ACC_BANK_NM,
+				IFNULL(MUI.DEMAND_ACC_NUMBER, "-") AS DEMAND_ACC_NUMBER,
+				IFNULL(MUI.MAIN_ACC_BANK_NM, "") AS MAIN_ACC_BANK_NM,
+				IFNULL(MUI.MAIN_ACC_NUMBER, "-") AS MAIN_ACC_NUMBER,
+				IFNULL((SELECT 
+							SUM(INNER_RESULT.REPAY_REMAIN_TTL) 
+					   FROM (
+							SELECT
+								INNER_HBR.seq AS SEQ,
+								MIN(INNER_HBR.repayment_remaining_amount) AS REPAY_REMAIN_TTL
+							FROM HELLOPAY_B2B_REPAYMENT INNER_HBR
+	                        GROUP BY INNER_HBR.entry
+					   ) INNER_RESULT
+	                   WHERE INNER_RESULT.SEQ = MUI.SEQ
+	                ), 0
+				) AS REPAYMENT_REMAINING_AMOUNT
+			FROM MONEYBANK_USER_INFO MUI
+			LEFT JOIN CBCI_USER CU ON MUI.USER_NO = CU.USER_NO
+			WHERE CU.USER_ID LIKE #{USER_ID} 
+			AND CU.USER_NM LIKE #{REP_NM} 
+			AND CU.FIRM_NM LIKE #{FIRM_NM}
+			<if test='fromDate != null and fromDate != ""'>
+			AND MUI.CONTRACT_DATE &gt;= #{fromDate} 
+			</if>
+			<if test='toDate != null and toDate != ""'>
+			AND MUI.CONTRACT_DATE &lt;= #{toDate} 
+			</if>
+			AND MUI.B2B_LIMIT_AMOUNT BETWEEN ${minAmount} AND ${maxAmount}
+			<if test='DIVISION != null and DIVISION != "-"'>
+			AND MUI.DIVISION = #{DIVISION}
+			</if>
+			<if test='STATUS != null and STATUS != "-"'>
+				<if test='listFlag == "approval"'>
+					AND HBRI.request_status != "00" 
+				</if>
+				<if test='listFlag == "approvalLog"'>
+					AND HBRI.request_status = "00"
+				</if>
+			</if>
+			ORDER BY ${ORDER_BY}
+        )RESULT_TB
+        <if test='flag!="sum"'>
+        LIMIT ${LIMIT}
+        </if>
+    </select>
+	
+	<!-- 상환이력 -->
+	<select id="selectRepayHistory" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT
+			result_tb.seq,
+			date_format(result_tb.display_date, "%Y-%m-%d") as display_date,
+			result_tb.status,
+			result_tb.b2b_partner,
+			result_tb.total_amount,
+			result_tb.original_amount,
+			result_tb.interest_amount,
+			result_tb.fee_amount,
+			result_tb.return_amount,
+			result_tb.remain_amount
+		FROM (
+			# 신청 데이터
+			SELECT
+				hbbri.seq,
+				hbbri.execute_req_date AS display_date,
+				'신청' AS status,
+				'비밀특가' AS b2b_partner,
+				hbbri.total_payment AS total_amount,
+				'' AS original_amount,
+				'' AS interest_amount,
+				'' AS fee_amount,
+				'' AS return_amount,
+				'' AS remain_amount
+			FROM HELLOPAY_B2B_EXECUTE_INFO hbbri LEFT JOIN MONEYBANK_USER_INFO mui ON hbbri.seq = mui.SEQ
+			WHERE mui.USER_NO = '1'
+			AND date_format(hbbri.execute_req_date, '%Y-%m-%d') >= #{fromDate} 
+			AND date_format(hbbri.execute_req_date, '%Y-%m-%d') <= #{toDate}
+            UNION ALL
+			# 입금 데이터
+			SELECT
+				hbbri.seq,
+				hbbri.deposit_date AS display_date,
+				'입금' AS status,
+				'비밀특가' AS b2b_partner,
+				hbbri.total_payment AS total_amount,
+				'' AS original_amount,
+				'' AS interest_amount,
+				'' AS fee_amount,
+				'' AS return_amount,
+				'' AS remain_amount
+			FROM HELLOPAY_B2B_EXECUTE_INFO hbbri LEFT JOIN MONEYBANK_USER_INFO mui ON hbbri.seq = mui.SEQ
+			WHERE mui.USER_NO = '1'
+			AND date_format(hbbri.deposit_date, '%Y-%m-%d') >= #{fromDate} 
+			AND date_format(hbbri.deposit_date, '%Y-%m-%d') <= #{toDate}
+            UNION ALL
+			# 상환 데이터
+			SELECT
+				hbbr.seq,
+				hbbr.repayment_date AS display_date,
+				'상환' AS status,
+				'비밀특가' AS b2b_partner,
+				hbbr.total_repayment_amount AS total_amount,
+				hbbr.original_amount,
+				hbbr.interest_amount,
+				hbbr.fee_amount,
+				hbbr.total_return_amount AS return_amount,
+				mui2.AVAILABLE_AMOUNT AS remain_amount
+			FROM HELLOPAY_B2B_REPAYMENT hbbr LEFT JOIN HELLOPAY_B2B_EXECUTE_INFO hbbri ON hbbr.seq = hbbri.seq
+			LEFT JOIN MONEYBANK_USER_INFO mui2 ON hbbr.SEQ = mui2.SEQ
+			WHERE hbbr.seq = mui2.SEQ
+			AND date_format(hbbr.repayment_date, '%Y-%m-%d') >= #{fromDate} 
+		    AND date_format(hbbr.repayment_date, '%Y-%m-%d') <= #{toDate}
+        ) AS result_tb
+		WHERE result_tb.seq = #{SEQ}
+		ORDER BY display_date DESC
+	]]>
+	</select>
+    
+    <!-- 머니뱅크 회원 평가 insert -->
+	<insert id="insertRepayEval" parameterType="hashmap">
+		INSERT INTO CBCI_EVALUATE (
+			division, 
+			object_no, 
+			eval_subject, 
+			reviewer, 
+			title, 
+			detail, 
+			input_date
+		)values(
+			'02',
+			#{SEQ},
+			#{eval_subject},
+			#{reviewer},
+			#{title},
+			#{detail},
+			NOW()
+		)
+	</insert>   
+   
+   <insert id="insertConfirmTel" parameterType="hashmap">
+	   	INSERT INTO MONEYBANK_TEL_HISTORY
+	   	VALUES(#{USER_NO},#{SEQ},#{TELCLAUSE},#{TEL_CONTENT},NOW(),'통화자','Y',#{MANAGER},NOW(),NOW())
+   </insert>
+   
+   <select id="selectTelConfirmList" parameterType="hashmap" resultType="hashmap">
+   		SELECT
+   			user_no,
+   			seq,
+   			inform_type,
+   			tel_inform_detail,
+   			date_format(tel_inform_date,'%Y-%m-%d %H:%i:%s') as tel_inform_date,
+   			informer_id
+   		FROM 
+   			CBCI_ADV_CAL_RECEIPT_TEL
+   		WHERE 
+   			USER_NO = #{USER_NO}
+   			AND SEQ = #{SEQ} 
+   		ORDER BY tel_inform_date DESC 
+   </select>
+   		
+   	<!-- 확인 insert 데이터 -->
+   <select id = "selectInsertTelData" parameterType="hashmap" resultType="hashmap">
+   		SELECT 
+   			user_no, 
+   			seq, 
+   			inform_type, 
+   			tel_inform_detail, 
+   			date_format(tel_inform_date,'%Y-%m-%d %H:%i:%s') as tel_inform_date, 
+   			tel_informer_nm, 
+   			confirm_yn,
+   			informer_id,
+   			input_date,
+   			update_date
+		FROM CBCI_ADV_CAL_RECEIPT_TEL
+		WHERE USER_NO = #{USER_NO}
+		AND SEQ = #{SEQ} 	
+		AND input_date IN (SELECT MAX(input_date) FROM CBCI_ADV_CAL_RECEIPT_TEL)
+   </select>
+   
+</mapper>

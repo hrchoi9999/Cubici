@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.moneybank.operation.mapper.CmmMapper">
+
+	<update id="modifyMbStatus" parameterType="hashMap">
+		UPDATE
+		MONEYBANK_USER_REQUEST
+		SET
+		<if test="mb_status == '04'">
+			mb_approval_date = now(),
+		</if>
+		<if test="mb_status == '72' or mb_status == '73'">
+			mb_termi_date = now(),
+		</if>
+		mb_status = #{mb_status},
+		upd_date = NOW()
+		WHERE
+		mbid = #{mbid}
+	</update>
+
+	<update id="modifyUserType" parameterType="hashMap">
+		UPDATE
+			CBCI_USER
+		SET
+			USER_TYPE = #{userType}
+		WHERE
+			USER_CODE = #{USER_CODE}
+	</update>
+
+	<select id="findUserCodeByMBID" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			cu.USER_CODE
+		FROM
+			CBCI_USER cu, MONEYBANK_USER_REQUEST mur
+		WHERE
+			cu.USER_CODE = mur.user_code
+		  AND mur.mbid = #{mbid}
+	</select>
+</mapper>

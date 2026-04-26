@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.prizm.mapper.PmsMapper">
+    <insert id="accountChangeStatus">
+        insert into PRIZM_PMS_CORE_RISK(
+            mbid,
+            user_code,
+            ssa_shop_type,
+            ssa_bank_account,
+            ssa_bank_name,
+            ssa_bank_account_holder,
+            cbc_bank_name,
+            mur_mb_demand_acc_bank_code,
+            mur_mb_demand_acc_holder,
+            mur_mb_demand_acc_number,
+            balance_remittance_amount,
+            input_date
+        )
+        select
+            mur.mbid as MBID,
+            mur.user_code as USER_CODE,
+            ssa.shop_type AS SSA_SHOP_TYPE,
+            ssa.bank_account AS SSA_BANK_ACCOUNT,
+            ssa.bank_name AS SSA_BANK_NAME,
+            ssa.bank_account_holder AS SSA_BANK_ACCOUNT_HOLDER,
+            cbc.bank_name AS CBC_BANK_NAME,
+            mur.mb_demand_acc_bank_code AS MUR_MB_DEMAND_ACC_BANK_CODE,
+            mur.mb_demand_acc_holder AS MUR_MB_DEMAND_ACC_HOLDER,
+            mur.mb_demand_acc_number AS MUR_MB_DEMAND_ACC_NUMBER,
+            (select balance_remittance_amount from MONEYBANK_REDEM_CALCULATE mrc where mrc.mbid=mur.mbid order by mrc.input_date desc limit 1) as balance_remittance_amount,now() as input_date
+        from MONEYBANK_USER_REQUEST mur
+            left join CBCI_ACCOUNT ca on ca.USER_CODE = mur.user_code
+            left join SHOP_SETTLEMENT_API ssa on ssa.shop_type =ca.SHOP_TYPE and ssa.shop_id = ca.SHOP_ID and DATE_FORMAT(ssa.settlement_date,'%Y%m%d')  = DATE_FORMAT(SUBDATE(NOW(), INTERVAL 38 DAY),'%Y%m%d')
+            left join CBCI_BANK_CODE cbc on cbc.bank_code =mur.mb_demand_acc_bank_code
+        where ca.SHOP_TYPE = 11
+        group by mur.mbid
+    </insert>
+
+    <select id="selectPmsMBUserRequest" resultType="hashmap">
+        select
+            mur.mbid
+             ,mur.user_code
+        from MONEYBANK_USER_REQUEST mur
+        where mur.mb_status in (6,62,63)
+    </select>
+
+    <select id="selectPmsShopList" parameterType="hashmap" resultType="hashmap">
+        select
+            shop_type
+             ,shop_id
+        from CBCI_ACCOUNT
+        where user_code=#{user_code}
+          and shop_type in (2,3,4,11,14)
+    </select>
+
+    <select id="selectPmsDate" resultType="int">
+        select DATEDIFF(now(),input_date) from PRIZM_PMS_RESULT order by input_date DESC limit 1
+    </select>
+
+    <select id="selectPmsCount" resultType="int">
+        select count(*) as cnt from PRIZM_PMS_RESULT
+    </select>
+
+    <select id="selectPmsShopData" parameterType="hashmap" resultType="hashmap">
+        SELECT
+            SSA_T.BSV_2W,
+            SSA_T.BSV_1W,
+            SSA_T.BSQ_2W,
+            SSA_T.BSQ_1W,
+            SSA_T.BPR_2W,
+            SSA_T.BPR_1W,
+            SSA_T.BSTS_2W,
+            SSA_T.BSTS_1W,
+            SSA_T.BDS_2W,
+            SSA_T.BDS_1W,
+            SSA_T.BDLT_2W,
+            SSA_T.BDLT_1W
+        FROM (
+            SELECT
+            <choose>
+                <when test="shop_type==2 or shop_type==3">
+                    (SELECT IFNULL(SUM(PAYMENT_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSV_2W
+                    ,(SELECT IFNULL(SUM(PAYMENT_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSV_1W
+                </when>
+                <otherwise>
+                    (SELECT IFNULL(SUM(ORDER_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSV_2W
+                    ,(SELECT IFNULL(SUM(ORDER_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSV_1W
+                </otherwise>
+            </choose>
+            ,(SELECT COUNT(ORDER_NO) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSQ_2W
+            ,(SELECT COUNT(ORDER_NO) FROM SHOP_SALES_API WHERE SHOP_TYPE=${shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSQ_1W
+            <choose>
+                <when test="shop_type==2 or shop_type==3">
+                    ,(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(order_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BPR_2W
+                    ,(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(order_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BPR_1W
+                </when>
+                <when test="shop_type==4">
+                    ,(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BPR_2W
+                    ,(select IFNULL(SUM(seller_discounts_amount + shopping_mall_discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BPR_1W
+                </when>
+                <when test="shop_type==11">
+                    ,(select IFNULL(SUM(discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BPR_2W
+                    ,(select IFNULL(SUM(discount_amount)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BPR_1W
+                </when>
+                <when test="shop_type==14">
+                    ,(select IFNULL(SUM(product_instant_discount_amount+product_discount_coupon_amount+product_purchase_discount_amount+seller_discount_coupon_amount+seller_purchase_discount_amount+seller_discounts_amount+seller_purchase_discount_type)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BPR_2W
+                    ,(select IFNULL(SUM(product_instant_discount_amount+product_discount_coupon_amount+product_purchase_discount_amount+seller_discount_coupon_amount+seller_purchase_discount_amount+seller_discounts_amount+seller_purchase_discount_type)/sum(payment_amount) ,0) from SHOP_SALES_API where SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BPR_1W
+                </when>
+            </choose>
+            <choose>
+                <when test="shop_type==11">
+                    ,(SELECT IFNULL(SUM(SETTLEMENT_AMOUNT),0) FROM SHOP_SETTLEMENT_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND SETTLEMENT_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSTS_2W
+                    ,(SELECT IFNULL(SUM(SETTLEMENT_AMOUNT),0) FROM SHOP_SETTLEMENT_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND SETTLEMENT_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSTS_1W
+                </when>
+                <when test="shop_type==2 or shop_type==3">
+                    ,(SELECT IFNULL(SUM(SETTLE_ESTIMATE_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND SETTLE_ESTIMATE_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSTS_2W
+                    ,(SELECT IFNULL(SUM(SETTLE_ESTIMATE_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND SETTLE_ESTIMATE_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSTS_1W
+                </when>
+                <when test="shop_type==4 or shop_type==14">
+                    ,(SELECT IFNULL(SUM(SETTLE_ESTIMATE_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BSTS_2W
+                    ,(SELECT IFNULL(SUM(SETTLE_ESTIMATE_AMOUNT),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} AND PAID_DATE  BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BSTS_1W
+                </when>
+            </choose>
+            ,(SELECT COUNT(ORDERER) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} and PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d')) AS BDS_2W
+            ,(SELECT COUNT(ORDERER) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID=#{shop_id} and PAID_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')) AS BDS_1W
+            ,(SELECT IFNULL(SUM(DATEDIFF(DELIVERED_DATE, ADDDATE(PAID_DATE,INTERVAL 1 DAY)))/COUNT(SHOP_ID),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID = #{shop_id} AND DELIVERED_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 4 WEEK),'%Y%m%d') AND DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d'))  AS BDLT_2W
+            ,(SELECT IFNULL(SUM(DATEDIFF(DELIVERED_DATE, ADDDATE(PAID_DATE,INTERVAL 1 DAY)))/COUNT(SHOP_ID),0) FROM SHOP_SALES_API WHERE SHOP_TYPE=#{shop_type} AND SHOP_ID = #{shop_id} AND DELIVERED_DATE BETWEEN DATE_FORMAT(DATE_SUB(NOW(),INTERVAL 2 WEEK),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d'))  AS BDLT_1W
+        ) AS SSA_T;
+    </select>
+
+    <select id="selectPmsResultDetail" parameterType="String" resultType="hashmap">
+        SELECT
+            ppr.MBID,
+            ppr.PMS_GRADE,
+            ppr.PMS_SCORE,
+            ppr.SALES_TOTAL_SCORE,
+            ppr.MANAGE_TOTAL_SCORE,
+            DATE_FORMAT(ppr.INPUT_DATE,'%Y-%m-%d') AS INPUT_DATE,
+            DATE_FORMAT(DATE_SUB(ppr.INPUT_DATE, INTERVAL 13 DAY),'%Y-%m-%d') AS BIWEEK_DATE
+        FROM PRIZM_PMS_RESULT ppr
+        WHERE ppr.MBID = #{mbid}
+        ORDER BY ppr.INPUT_DATE DESC
+            LIMIT 2
+    </select>
+
+    <select id="selectPmsCoreRiskDetail" parameterType="String" resultType="hashmap">
+        SELECT
+            PPCR_NO,
+            MBID,
+            SSA_BANK_ACCOUNT AS SBA,
+            SSA_BANK_NAME AS SBN,
+            SSA_BANK_ACCOUNT_HOLDER AS SBAH,
+            CBC_BANK_NAME AS MBN,
+            MUR_MB_DEMAND_ACC_HOLDER AS MDAH,
+            MUR_MB_DEMAND_ACC_NUMBER AS MDAN,
+            BALANCE_REMITTANCE_AMOUNT AS BRA,
+            DATE_FORMAT(INPUT_DATE,'%m.%d') AS INPUT_DATE
+        FROM PRIZM_PMS_CORE_RISK
+        WHERE MBID = #{mbid}
+        ORDER BY PPCR_NO DESC
+            LIMIT 3
+    </select>
+
+    <insert id="insertPmsResult" parameterType="hashmap">
+    	<![CDATA[
+        INSERT INTO PRIZM_PMS_RESULT (
+            MBID,
+            USER_CODE,
+            PMS_GRADE,
+            PMS_SCORE,
+            SALES_TOTAL_SCORE,
+            MANAGE_TOTAL_SCORE,
+            BSVC,
+            BSQC,
+            BAUPC,
+            BDSR,
+            BPRC,
+            BRRC,
+            BSTSC,
+            BDLTC,
+            INPUT_DATE
+        ) VALUES (
+            #{mbid},
+            #{user_code},
+            #{PMS_GRADE},
+            #{PMS_SCORE},
+            #{SALES_TOTAL_SCORE},
+            #{MANAGE_TOTAL_SCORE},
+            #{BSVC},
+            #{BSQC},
+            #{BAUPC},
+            #{BDSR},
+            #{BPRC},
+            #{BRRC},
+            #{BSTSC},
+            #{BDLTC},
+            DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+        )
+        ]]>
+    </insert>
+</mapper>

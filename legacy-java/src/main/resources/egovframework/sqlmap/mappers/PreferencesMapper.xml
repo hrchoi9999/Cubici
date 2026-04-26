@@ -1,0 +1,1494 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.PreferencesMapper">
+	
+	<!-- 관리자 신청 -->
+	<insert id="requestAdmin" parameterType="hashmap">
+	 	<![CDATA[
+		INSERT INTO CBCI_ADMIN (
+			ADMIN_TYPE,
+			ADMIN_NAME,
+			ADMIN_PHONE,
+			ADMIN_EMAIL,
+			ADMIN_DEPARTMENT,
+			ADMIN_ID,
+			ADMIN_REG_DATE,
+			ADMIN_GRADE
+		) VALUE (
+			#{ADMIN_TYPE},
+			#{ADMIN_NAME},
+			#{ADMIN_PHONE},
+			#{ADMIN_EMAIL},
+			#{ADMIN_DEPARTMENT},
+			#{ADMIN_ID},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+			"02"
+		)
+    	]]>
+	</insert>
+	
+	<!-- 관리자 전체 갯수.. -->
+	<select id="selectAdminCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM
+			CBCI_ADMIN
+	</select>
+	
+	<!-- 관리자 목록 -->
+	<select id="selectAdminAccountList" parameterType="hashmap" resultType="hashmap">
+		<if test='flag == "total"'>
+		SELECT
+			COUNT(SECOND_CAL.ADMIN_ID) AS COUNT
+		FROM(
+		</if>
+		<![CDATA[
+		SELECT
+			FIRST_CAL.*
+		FROM(
+			SELECT
+				@row_no := @row_no + 1 AS RNUM,
+				CBCI_ADMIN.*
+			FROM
+				CBCI_ADMIN
+			WHERE ADMIN_TYPE IN (${ADMIN_TYPE})
+			AND ADMIN_GRADE IN (${ADMIN_GRADE})
+			AND ADMIN_NAME LIKE '%${ADMIN_NAME}%'
+		)FIRST_CAL, (SELECT @row_no := 0) SALES_ROW_NO 
+		]]>	
+		<if test='flag != "total"'>
+		LIMIT ${dataCnt},${dataPerPage}
+		</if>
+		<if test='flag == "total"'>
+		)SECOND_CAL
+		</if>
+		
+	</select>
+	
+	<!-- 관리자 아이디 중복확인 -->
+	<select id="adminIdCheck" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM
+			CBCI_ADMIN
+		WHERE ADMIN_ID = #{ADMIN_ID}
+	</select>
+	
+	<!-- 관리자 승인 -->
+	<update id="approvalAdmin" parameterType="hashmap">
+	 	<![CDATA[
+			UPDATE CBCI_ADMIN
+			SET ADMIN_ID = #{ADMIN_ID},
+				ADMIN_PASSWORD = #{ADMIN_PASSWORD},
+				ADMIN_GRADE = #{ADMIN_GRADE},
+				ADMIN_APPROVAL_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+			WHERE ADMIN_ID = #{ADMIN_TEMP_ID}
+    	]]>
+	</update>
+
+	<!-- 관리자 정보 수정 -->
+	<update id="updateAdmin" parameterType="hashmap">
+	 	<![CDATA[
+			UPDATE CBCI_ADMIN
+			SET ADMIN_TYPE = #{ADMIN_TYPE},
+				ADMIN_NAME = #{ADMIN_NAME},
+				ADMIN_PHONE = #{ADMIN_PHONE},
+				ADMIN_EMAIL = #{ADMIN_EMAIL},
+				ADMIN_GRADE = #{ADMIN_GRADE},
+				ADMIN_DEPARTMENT = #{ADMIN_DEPARTMENT},
+				ADMIN_PASSWORD = #{ADMIN_PASSWORD}
+			WHERE ADMIN_ID = #{ADMIN_ID}
+    	]]>
+	</update>
+	
+	<!-- 관리자 삭제 -->
+	<delete id="deleteAdmin" parameterType="hashmap">
+		DELETE FROM CBCI_ADMIN
+		WHERE ADMIN_ID = #{ADMIN_ID}
+	</delete>
+
+
+	<!-- 프리즘 평가 리스트 -->
+    <select id="selectPrizmEvalList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			SUBJECT_NO,
+			(SELECT SUBJECT_NM FROM CBCI_PRIZM_SUBJECT CPS WHERE CPS.SUBJECT_NO = CPID.SUBJECT_NO AND CPS.DIVISION = ${DIVISION}) AS SUBJECT_NM,
+			ITEM_NO,
+			(SELECT ITEM_NM FROM CBCI_PRIZM_ITEM CPI WHERE CPI.SUBJECT_NO = CPID.SUBJECT_NO AND CPI.ITEM_NO = CPID.ITEM_NO AND CPI.DIVISION = ${DIVISION}) AS ITEN_NM,
+			(SELECT ITEM_DEFINITION FROM CBCI_PRIZM_ITEM CPI WHERE CPI.SUBJECT_NO = CPID.SUBJECT_NO AND CPI.ITEM_NO = CPID.ITEM_NO AND CPI.DIVISION = ${DIVISION}) AS ITEM_DEFINITION,
+			(SELECT ITEM_WEIGHT FROM CBCI_PRIZM_ITEM CPI WHERE CPI.SUBJECT_NO = CPID.SUBJECT_NO AND CPI.ITEM_NO = CPID.ITEM_NO AND CPI.DIVISION = ${DIVISION}) AS ITEM_WEIGHT,
+			ITEM_SCORE,
+			IFNULL(ITEM_STANDARD1, '-') AS ITEM_STANDARD1,
+			IFNULL(OPERATOR1, '-') AS OPERATOR1,
+			IFNULL(ITEM_STANDARD2, '-') AS ITEM_STANDARD2,
+			IFNULL(OPERATOR2, '-') AS OPERATOR2
+		FROM CBCI_PRIZM_ITEM_DETAIL CPID
+		WHERE DIVISION = ${DIVISION}
+		<if test='detail != null and detail.equals("Y")'> <!-- 세부지표 내역 INSERT할 때 before 데이터 -->
+		AND SUBJECT_NO = ${SUBJECT_NO} AND ITEM_NO = ${ITEM_NO}
+		</if>
+		ORDER BY SUBJECT_NO, ITEM_NO, ITEM_SCORE
+    </select>
+    
+    <!-- 평가주제 리스트 -->
+	<select id="selectSubjectList" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				*
+			FROM CBCI_PRIZM_SUBJECT
+			WHERE DIVISION = ${DIVISION}
+			ORDER BY SUBJECT_NO
+		]]>
+	</select>
+    
+    <!-- 평가항목 리스트 -->
+    <select id="selectItemList" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				SUBJECT_NO,
+				(SELECT SUBJECT_NM FROM CBCI_PRIZM_SUBJECT CPS WHERE CPS.SUBJECT_NO = CPI.SUBJECT_NO AND DIVISION = ${DIVISION}) AS SUBJECT_NM,
+				ITEM_NO,
+				ITEM_NM
+			FROM CBCI_PRIZM_ITEM CPI
+			WHERE DIVISION = ${DIVISION}
+			ORDER BY SUBJECT_NO, ITEM_NO
+		]]>
+    </select>
+    
+    <!-- 프리즘 평가 항목 업데이트 기록 불러오기 -->
+    <select id="selectPrizmUpdRecord" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				*
+			FROM(
+				SELECT
+					@ROWNUM := @ROWNUM + 1 AS RNUM,
+					UPD_SEQ,
+					ADMIN_ID,
+					(SELECT CA.ADMIN_NAME FROM CBCI_ADMIN CA WHERE CA.ADMIN_ID = CPUR.ADMIN_ID) AS USER_NM,
+					SUBJECT_NM,
+					ITEM_NM,
+					UPD_MEMO,
+					UPD_DATE
+				FROM CBCI_PRIZM_UPD_RECORD CPUR, (SELECT @ROWNUM := 0) ROWNUM_TB
+				WHERE DIVISION = ${DIVISION}
+				ORDER BY UPD_SEQ DESC
+			) RESULT_TB
+			ORDER BY RNUM
+		]]>
+    </select>
+    
+    <!-- 프리즘 세부지표 업데이트 시퀀스 -->
+    <select id="selectPrizmUpdSeq" parameterType="hashmap" resultType="integer">
+	    <![CDATA[
+	    	SELECT
+	    		IFNULL(MAX(UPD_SEQ), 0) AS UPD_SEQ
+			FROM CBCI_PRIZM_UPD_RECORD
+			WHERE DIVISION = ${DIVISION}
+		]]>
+    </select>
+    
+    <!-- 프리즘 평가항목 업데이트 -->
+    <update id="prizmEvalItemUpdate" parameterType="hashmap">
+    	<![CDATA[
+	    	UPDATE CBCI_PRIZM_ITEM
+			SET ITEM_DEFINITION = #{ITEM_DEFINITION},
+				ITEM_WEIGHT = ${ITEM_WEIGHT},
+				UPD_SEQ = ${UPD_SEQ}
+			WHERE SUBJECT_NO = ${SUBJECT_NO} AND ITEM_NO = ${ITEM_NO} AND DIVISION = ${DIVISION}
+		]]>
+    </update>
+    
+    <!-- 프리즘 세부지표 업데이트 -->
+    <update id="prizmEvalDetailUpdate" parameterType="hashmap">
+    	<![CDATA[
+	    	UPDATE CBCI_PRIZM_ITEM_DETAIL
+			SET ITEM_STANDARD1 = ${ITEM_STANDARD1},
+				OPERATOR1 = #{OPERATOR1},
+				ITEM_STANDARD2 = ${ITEM_STANDARD2},
+				OPERATOR2 = #{OPERATOR2},
+				UPD_SEQ = ${UPD_SEQ}
+			WHERE SUBJECT_NO = ${SUBJECT_NO} AND ITEM_NO = ${ITEM_NO} AND ITEM_SCORE = ${ITEM_SCORE} AND DIVISION = ${DIVISION}
+		]]>
+    </update>
+    
+    <!-- 프리즘 세부지표 업데이트 기록 남기기 -->
+    <insert id="insertPrizmEvalUpdRecord" parameterType="hashmap">
+    	<![CDATA[
+	    	INSERT INTO CBCI_PRIZM_UPD_RECORD (
+	    		UPD_SEQ,
+	    		ADMIN_ID,
+	    		UPD_DATE,
+	    		UPD_MEMO,
+	    		SUBJECT_NM,
+	    		ITEM_NM,
+	    		DIVISION
+	    	) VALUES (
+	    		${UPD_SEQ},
+	    		#{ADMIN_ID},
+	    		DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+	    		#{UPD_MEMO},
+	    		#{SUBJECT_NM},
+	    		#{ITEM_NM},
+	    		${DIVISION}
+	    	)
+    	]]>
+    </insert>
+    
+    <!-- 프리즘 세부지표 업데이트 상세 내역 -->
+    <insert id="insertPrizmEvalUpdDetail" parameterType="hashmap">
+	    <![CDATA[
+	    	INSERT INTO CBCI_PRIZM_UPD_DETAIL (
+	    		UPD_SEQ,
+	    		DIVISION,
+				SUBJECT_NO,
+				ITEM_NO,
+				ITEM_SCORE,
+				ITEM_DEFINITION_BEFORE,
+				ITEM_DEFINITION_AFTER,
+				ITEM_WEIGHT_BEFORE,
+				ITEM_WEIGHT_AFTER,
+				ITEM_STANDARD1_BEFORE,
+				OPERATOR1_BEFORE,
+				ITEM_STANDARD2_BEFORE,
+				OPERATOR2_BEFORE,
+				ITEM_STANDARD1_AFTER,
+				OPERATOR1_AFTER,
+				ITEM_STANDARD2_AFTER,
+				OPERATOR2_AFTER,
+				INPUT_DATE
+	    	) VALUES (
+				${UPD_SEQ},
+				${DIVISION},
+				${SUBJECT_NO},
+				${ITEM_NO},
+				${ITEM_SCORE},
+				#{ITEM_DEFINITION_BEFORE},
+				#{ITEM_DEFINITION},
+				${ITEM_WEIGHT_BEFORE},
+				${ITEM_WEIGHT},
+				${ITEM_STANDARD1_BEFORE},
+				#{OPERATOR1_BEFORE},
+				${ITEM_STANDARD2_BEFORE},
+				#{OPERATOR2_BEFORE},
+				${ITEM_STANDARD1},
+				#{OPERATOR1},
+				${ITEM_STANDARD2},
+				#{OPERATOR2},
+				DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+			)
+		]]>
+    </insert>
+    
+    <!-- 프리즘 업데이트 상세내역 불러오기 -->
+    <select id="selectPrizmUpdDetailList" parameterType="hashmap" resultType="hashmap">
+    	<![CDATA[
+	    	SELECT
+				UPD_SEQ,
+				SUBJECT_NO,
+				ITEM_NO,
+				ITEM_SCORE,
+				ITEM_DEFINITION_BEFORE,
+				ITEM_DEFINITION_AFTER,
+				ITEM_WEIGHT_BEFORE,
+				ITEM_WEIGHT_AFTER,
+				IFNULL(ITEM_STANDARD1_BEFORE, '-') AS ITEM_STANDARD1_BEFORE,
+				IFNULL(OPERATOR1_BEFORE, '-') AS OPERATOR1_BEFORE,
+				IFNULL(ITEM_STANDARD2_BEFORE, '-') AS ITEM_STANDARD2_BEFORE,
+				IFNULL(OPERATOR2_BEFORE, '-') AS OPERATOR2_BEFORE,
+				IFNULL(ITEM_STANDARD1_AFTER, '-') AS ITEM_STANDARD1_AFTER,
+				IFNULL(OPERATOR1_AFTER, '-') AS OPERATOR1_AFTER,
+				IFNULL(ITEM_STANDARD2_AFTER, '-') AS ITEM_STANDARD2_AFTER,
+				IFNULL(OPERATOR2_AFTER, '-') AS OPERATOR2_AFTER,
+				INPUT_DATE,
+				DIVISION
+			FROM CBCI_PRIZM_UPD_DETAIL
+			WHERE UPD_SEQ = ${UPD_SEQ} AND DIVISION = ${DIVISION}
+		]]>
+    </select>
+    
+    <!-- 프리즘 RawData -->   
+    <select id="rawDataColList" parameterType="hashmap" resultType="hashmap">
+    	SELECT column_name, column_comment
+		FROM information_schema.columns
+		WHERE table_schema = 'cubici'
+		AND table_name = #{table_name}
+		AND column_comment != ''
+    </select>
+    
+    <select id="rawDataListSelect" parameterType="hashmap" resultType="hashmap">
+    	SELECT
+    		raw_data_no,
+    		raw_data_id,
+			raw_data_title,
+    		raw_data_content
+    	FROM CBCI_RAW_DATA
+    	WHERE raw_data_division IN (#{raw_data_division})
+    	<choose>
+    		<when test="flag == 'calcul'">
+    	AND raw_data_id = #{raw_data_id}
+    	AND raw_data_shop = ${raw_data_shop}
+    		</when>
+    		<when test="flag == 'content'">
+    	AND raw_data_no = #{raw_data_no}
+    		</when>
+    	</choose>
+    </select>
+	
+	<insert id="rawDataCalculInsert" parameterType="hashmap">
+		INSERT INTO CBCI_RAW_DATA (
+			raw_data_division,
+			raw_data_id,
+			raw_data_shop,
+			raw_data_title,
+			raw_data_content,
+			input_date
+		)VALUES(
+			'05',
+			#{raw_data_id},
+			#{raw_data_shop},
+			#{raw_data_title},
+			#{raw_data_content},
+			DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'))
+	</insert>
+	
+	<update id="rawDataCalculUpdate" parameterType="hashmap">
+		UPDATE CBCI_RAW_DATA SET
+			raw_data_title = #{raw_data_title},
+			raw_data_content = #{raw_data_content},
+			upd_date = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+		WHERE raw_data_no = ${raw_data_no}
+	</update>
+	
+	<delete id="rawDataCalculDelete" parameterType="hashmap">
+		DELETE FROM CBCI_RAW_DATA WHERE raw_data_no = ${raw_data_no}
+	</delete>
+	
+	<select id="rawDataExcelList" parameterType="String" resultType="java.util.LinkedHashMap">
+		${value}
+	</select>
+	<!-- 연계 코드 등록하기 -->
+	<insert id="insertLinkedCode" parameterType="hashmap">
+	INSERT INTO CBCI_LINKED_CODE(
+		LINKED_CODE, -- 연계인증 번호
+		RECOMMENDED_CODE, -- 추천기관 번호
+		LINKED_NM, -- 연계명
+		LINKED_STATUS, -- 운영상태
+		FIRM_NM, -- 회사명
+		FIRM_ID, -- 사업자번호
+		REP_NAME, -- 대표이사
+		FIRM_ZIP_CODE, -- 주소(우편번호)
+		FIRM_ADDR, -- 상세주소
+		REGI_DATE, -- 등록일자
+		START_DATE, -- 시작일자
+		END_DATE, -- 종료일자
+		TASK_MANAGER, -- 책임자
+		TASK_MANAGER_POSITION, -- 책임자 직급
+		TASK_MANAGER_TEL, -- 책임자 연락처
+		CS_MANAGER, -- 고객지원 담당자
+		CS_MANAGER_POSITION, -- 고객지원 담당자 직급
+		CS_MANAGER_TEL, -- 고객지원 담당자 전화번호
+		CS_TEL, -- 고객지원 전화
+		CS_FAX, -- 고객지원 팩스
+		CS_EMAIL, -- 고객지원 이메일
+		LINKED_CONTENTS, -- 연계 내역
+		INPUT_DATE
+		)
+	VALUES (
+		NULLIF(#{LINKED_CODE},''),
+		NULLIF(#{RECOMMENDED_CODE},''),
+		#{LINKED_NM},
+		#{LINKED_STATUS},
+		#{FIRM_NM},
+		#{FIRM_ID},
+		#{REP_NAME},
+		#{FIRM_ZIP_CODE},
+		#{FIRM_ADDR},
+		#{REGI_DATE},
+		#{START_DATE},
+		#{END_DATE},
+		NULLIF(#{TASK_MANAGER}, ''),
+		NULLIF(#{TASK_MANAGER_POSITION}, ''),
+		NULLIF(#{TASK_MANAGER_TEL}, ''),
+		NULLIF(#{CS_MANAGER}, ''),
+		NULLIF(#{CS_MANAGER_POSITION}, ''),
+		NULLIF(#{CS_MANAGER_TEL}, ''),
+		NULLIF(#{CS_TEL}, ''),
+		NULLIF(#{CS_FAX}, ''),
+		NULLIF(#{CS_EMAIL}, ''),
+		NULLIF(#{LINKED_CONTENTS}, ''),
+		DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'))
+	</insert>
+	
+	<update id="updateLinkedCode" parameterType="hashmap">
+	UPDATE 
+		CBCI_LINKED_CODE
+	SET
+		LINKED_CODE = #{LINKED_CODE}, -- 연계인증 번호
+		RECOMMENDED_CODE = #{RECOMMENDED_CODE}, -- 추천기관 번호
+		LINKED_NM = #{LINKED_NM}, -- 연계명
+		LINKED_STATUS = #{LINKED_STATUS}, -- 운영상태
+		FIRM_NM = #{FIRM_NM}, -- 회사명
+		FIRM_ID = #{FIRM_ID}, -- 사업자번호
+		REP_NAME = #{REP_NAME}, -- 대표이사
+		FIRM_ZIP_CODE = #{FIRM_ZIP_CODE}, -- 주소(우편번호)
+		FIRM_ADDR = #{FIRM_ADDR}, -- 상세주소
+		REGI_DATE = #{REGI_DATE}, -- 등록일자
+		START_DATE = #{START_DATE}, -- 시작일자
+		END_DATE = #{END_DATE}, -- 종료일자
+		TASK_MANAGER = #{TASK_MANAGER}, -- 책임자
+		TASK_MANAGER_POSITION = #{TASK_MANAGER_POSITION}, -- 책임자 직급
+		TASK_MANAGER_TEL = #{TASK_MANAGER_TEL}, -- 책임자 연락처
+		CS_MANAGER = #{CS_MANAGER}, -- 고객지원 담당자
+		CS_MANAGER_POSITION = #{CS_MANAGER_POSITION}, -- 고객지원 담당자 직급
+		CS_MANAGER_TEL = #{CS_MANAGER_TEL}, -- 고객지원 담당자 전화번호
+		CS_TEL = #{CS_TEL}, -- 고객지원 전화
+		CS_FAX = #{CS_FAX}, -- 고객지원 팩스
+		CS_EMAIL = #{CS_EMAIL}, -- 고객지원 이메일
+		LINKED_CONTENTS = #{LINKED_CONTENTS} -- 연계 내역
+	WHERE
+		LINKED_NO = #{LINKED_NO}
+
+	</update>
+
+	<select id="selectLinkedCode" parameterType="hashmap" resultType="hashmap">
+	<if test="FLAG == 'COUNT'">
+	SELECT COUNT(*) AS CNT
+	</if>
+	<if test="FLAG != 'COUNT'">
+	SELECT
+		LINKED_NO,
+		LINKED_CODE, -- 연계인증 번호
+		RECOMMENDED_CODE, -- 추천기관 번호
+		LINKED_NM, -- 연계명
+		LINKED_STATUS, -- 운영상태
+		FIRM_NM, -- 회사명
+		FIRM_ID, -- 사업자번호
+		REP_NAME, -- 대표이사
+		FIRM_ZIP_CODE, -- 주소(우편번호)
+		FIRM_ADDR, -- 상세주소
+		DATE_FORMAT(REGI_DATE,"%Y-%m-%d") AS REGI_DATE, -- 등록일자
+		DATE_FORMAT(START_DATE,"%Y-%m-%d") AS START_DATE, -- 시작일자
+		DATE_FORMAT(END_DATE,"%Y-%m-%d") AS END_DATE, -- 종료일자
+		TASK_MANAGER, -- 책임자
+		TASK_MANAGER_POSITION, -- 책임자 직급
+		TASK_MANAGER_TEL, -- 책임자 연락처
+		CS_MANAGER, -- 고객지원 담당자
+		CS_MANAGER_POSITION, -- 고객지원 담당자 직급
+		CS_MANAGER_TEL, -- 고객지원 담당자 전화번호
+		CS_TEL, -- 고객지원 전화
+		CS_FAX, -- 고객지원 팩스
+		CS_EMAIL, -- 고객지원 이메일
+		LINKED_CONTENTS, -- 연계 내역
+		INPUT_DATE
+	</if>
+	FROM CBCI_LINKED_CODE
+	WHERE 
+		<if test="FIRM_NM != 'ALL' ">
+		FIRM_NM like #{FIRM_NM} AND
+		</if>
+		LINKED_NM like #{LINKED_NM}
+		AND TASK_MANAGER like #{TASK_MANAGER}
+	ORDER BY REGI_DATE ${ORDER_BY}
+		<if test="FLAG != 'COUNT'">
+		LIMIT ${LIMIT}
+		</if>
+	</select>
+
+	<select id="gotoTab2" parameterType="hashmap" resultType="hashmap">
+	SELECT
+		LINKED_NO,
+		LINKED_CODE, -- 연계인증 번호
+		RECOMMENDED_CODE, -- 추천기관 번호
+		LINKED_NM, -- 연계명
+		LINKED_STATUS, -- 운영상태
+		FIRM_NM, -- 회사명
+		FIRM_ID, -- 사업자번호
+		REP_NAME, -- 대표이사
+		FIRM_ZIP_CODE, -- 주소(우편번호)
+		FIRM_ADDR, -- 상세주소
+		DATE_FORMAT(REGI_DATE,"%Y-%m-%d") AS REGI_DATE, -- 등록일자
+		DATE_FORMAT(START_DATE,"%Y-%m-%d") AS START_DATE, -- 시작일자
+		DATE_FORMAT(END_DATE,"%Y-%m-%d") AS END_DATE, -- 종료일자
+		TASK_MANAGER, -- 책임자
+		TASK_MANAGER_POSITION, -- 책임자 직급
+		TASK_MANAGER_TEL, -- 책임자 연락처
+		CS_MANAGER, -- 고객지원 담당자
+		CS_MANAGER_POSITION, -- 고객지원 담당자 직급
+		CS_MANAGER_TEL, -- 고객지원 담당자 전화번호
+		CS_TEL, -- 고객지원 전화
+		CS_FAX, -- 고객지원 팩스
+		CS_EMAIL, -- 고객지원 이메일
+		LINKED_CONTENTS, -- 연계 내역
+		INPUT_DATE
+	FROM CBCI_LINKED_CODE
+	WHERE 
+		LINKED_NO = #{LINKED_NO}
+	</select>
+
+	<select id = "selectMoneybankList" parameterType="hashmap" resultType="hashmap">
+	<if test="FLAG == 'COUNT'">
+	SELECT COUNT(*) AS CNT
+	</if>
+	<if test="FLAG != 'COUNT'">
+	SELECT 
+		MP.FIRM_ID,
+		MP.FIRM_NM,
+		MP.REP_NM,
+		MP.FIRM_ADDRESS,
+		MP.MANAGER_NM,
+		MP.MANAGER_RANK,
+		MP.MANAGER_PHONE,
+		MP.CS_NM,
+		MP.CS_RANK,
+		MP.CS_PHONE,
+		MP.INPUT_DATE,
+		MP.UPDATE_DATE,
+		MP.FIRM_TEL,
+		MP.FIRM_FAX,
+		MP.FIRM_EMAIL,
+		MP.FIRM_ZIP,
+		MP2.DIVISION,
+		MP2.FIRM_NO,
+		MP2.PRODUCT_NAME,
+		MP2.PRODUCT_STATUS,
+		MP2.MIN_SALES_AMOUNT,
+		MP2.MIN_BUSINESS_PERIOD,
+		MP2.MIN_CALC_AMOUNT,
+		MP2.CREDIT_RATE,
+		MP2.CBCI_PERIOD,
+		MP2.AMOUNT_LIMIT,
+		MP2.OTHER_CONDITIONS,
+		MP2.SERVICE_AMOUNT_STANDARD,
+		MP2.SERVICE_AMOUNT_MIN,
+		MP2.SERVICE_AMOUNT_MAX,
+		MP2.SERVICE_FEE_STANDARD,
+		MP2.SERVICE_FEE_MIN,
+		MP2.SERVICE_FEE_MAX,
+		MP2.SERVICE_REPAY_PERIOD,
+		MP2.SERVICE_REPAY_MIN,
+		MP2.SERVICE_REPAY_MAX,
+		MP2.SERVICE_REPAY_METHOD,
+		MP2.EXTENTION_YN,
+		MP2.INPUT_DATE,
+		MP2.LAUNCH_DATE,
+		MP2.EXPIRE_DATE,
+		MP2.UPDATE_DATE,
+		MP2.REPAYMENT_COUNT,
+		MP2.REPAY_AMOUNT,
+		MP2.MID_REPAY_YN,
+		MP2.LIMIT_CHANGE_YN,
+		MP2.B2B_FIRM_NO,
+		MP2.PRODUCT_TYPE
+		</if>
+	FROM 
+		CBCI_PARTNER MP , MONEYBANK_PRODUCT MP2
+	WHERE 
+	<if test="FIRM_NM != 'ALL'">
+		MP.FIRM_NM = #{FIRM_NM} AND
+	</if>
+		MP.MANAGER_NM like #{TASK_MANAGER} AND
+	<if test="PRODUCT_NAME != 'ALL'">
+		MP2.PRODUCT_NAME = #{PRODUCT_NAME} AND
+	</if>
+		MP.FIRM_NO = MP2.FIRM_NO
+		ORDER BY MP2.INPUT_DATE ${ORDER_BY}
+		<if test="FLAG != 'COUNT'">
+		LIMIT ${LIMIT}
+		</if>
+	</select>
+	
+	<insert id="insertMoneybankProduct" parameterType="hashmap">
+	INSERT INTO MONEYBANK_PRODUCT(
+		FIRM_NO, -- 회사번호
+		B2B_FIRM_NM, -- 도매업체번호
+		PRODUCT_TYPE, -- 서비스 종류
+		PRODUCT_NAME, -- 상품명
+		PRODUCT_STATUS, -- 운영상태
+		MIN_SALES_AMOUNT, -- 가입조건(최소매출)
+		MIN_BUSINESS_PERIOD, -- 가입조건(최소 사업기간)
+		MIN_CALC_AMOUNT, -- 가입조건(최소 정산)
+		CREDIT_RATE, -- 신용평가
+		CBCI_PERIOD, -- 큐빅아이 가입기간
+		AMOUNT_LIMIT, -- 정산금 중 제외할 한도금액
+		OTHER_CONDITIONS, -- 기타조건
+		SERVICE_AMOUNT_STANDARD, -- 서비스금액 신청조건
+		SERVICE_AMOUNT_MIN, -- 최소 서비스금액
+		SERVICE_AMOUNT_MAX, -- 최대 서비스금액
+		SERVICE_AMOUNT_UNIT, -- 서비스금액 단위
+		EXECUTE_AMOUNT_STANDARD, -- 실행금액 신청조건
+		EXECUTE_AMOUNT_MIN, -- 최소 실행금액
+		EXECUTE_AMOUNT_MAX, -- 최대 실행금액
+		EXECUTE_AMOUNT_UNIT, -- 실행금액 단위
+		SERVICE_FEE_STANDARD, -- 수수료 산정조건
+		SERVICE_FEE_MIN, -- 최소 수수료
+		SERVICE_FEE_MAX, -- 최대 수수료
+		ANNUAL_FEE_RATE, -- 연수수료율
+		INTEREST_STANDARD, -- 수수료 산정조건
+		INTEREST_MIN, -- 최소 수수료
+		INTEREST_MAX, -- 최대 수수료
+		LIMIT_CHANGE_YN, -- 한도금액 변경가능여부
+		SERVICE_REPAY_PERIOD, -- 상환기간 방식
+		SERVICE_REPAY_MIN, -- 최소 상환기간
+		SERVICE_REPAY_MAX, -- 최대 상환기간
+		SERVICE_REPAY_METHOD, -- 상환방식
+		EXTENTION_YN, -- 상환 연장가능 여부
+		LAUNCH_DATE, -- 시작일자
+		EXPIRE_DATE, -- 종료일자
+		REPAYMENT_COUNT, -- 상환횟수
+		REPAY_AMOUNT, -- 회당 상환금액
+		MID_REPAY_YN, -- 중도상환 가능여부
+		INPUT_DATE, -- 등록일자
+		UPDATE_DATE -- 수정일자
+		)
+	VALUES (
+		#{FIRM_NO},
+		#{B2B_FIRM_NM},
+		#{PRODUCT_TYPE},
+		#{PRODUCT_NAME},
+		#{PRODUCT_STATUS},
+		#{MIN_SALES_AMOUNT},
+		#{MIN_BUSINESS_PERIOD},
+		#{MIN_CALC_AMOUNT},
+		#{CREDIT_RATE},
+		#{CBCI_PERIOD},
+		NULLIF(#{AMOUNT_LIMIT},''),
+		#{OTHER_CONDITIONS},
+		NULLIF(#{SERVICE_AMOUNT_STANDARD},''),
+		NULLIF(#{SERVICE_AMOUNT_MIN},''),
+		NULLIF(#{SERVICE_AMOUNT_MAX},''),
+		NULLIF(#{SERVICE_AMOUNT_UNIT},''),
+		NULLIF(#{EXECUTE_AMOUNT_STANDARD},''),
+		NULLIF(#{EXECUTE_AMOUNT_MIN},''),
+		NULLIF(#{EXECUTE_AMOUNT_MAX},''),
+		NULLIF(#{EXECUTE_AMOUNT_UNIT},''),
+		NULLIF(#{SERVICE_FEE_STANDARD},''),
+		NULLIF(#{SERVICE_FEE_MIN},''),
+		NULLIF(#{SERVICE_FEE_MAX},''),
+		NULLIF(#{ANNUAL_FEE_RATE},''),
+		NULLIF(#{INTEREST_STANDARD},''),
+		NULLIF(#{INTEREST_MIN},''),
+		NULLIF(#{INTEREST_MAX},''),
+		#{LIMIT_CHANGE_YN},
+		NULLIF(#{SERVICE_REPAY_PERIOD},''),
+		NULLIF(#{SERVICE_REPAY_MIN},''),
+		NULLIF(#{SERVICE_REPAY_MAX},''),
+		NULLIF(#{SERVICE_REPAY_METHOD},''),
+		NULLIF(#{EXTENTION_YN},''),
+		#{LAUNCH_DATE},
+		#{EXPIRE_DATE},
+		NULLIF(#{REPAYMENT_COUNT},''),
+		NULLIF(#{REPAY_AMOUNT},''),
+		#{MID_REPAY_YN},
+		#{INPUT_DATE},
+ 		DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+	
+	<select id = "selectMoneybankFirmNo" parameterType="hashmap" resultType="hashmap">
+	SELECT FIRM_NO
+	FROM 
+		MONEYBANK_PARTNER
+	WHERE
+		FIRM_ID = #{FIRM_ID}
+		AND FIRM_NM = #{FIRM_NM}
+		AND REP_NM = #{REP_NAME}
+	</select>
+	
+	<insert id="insertMoneybankPartner" parameterType="hashmap">
+	INSERT INTO MONEYBANK_PARTNER (
+		FIRM_ID, -- 사업자등록번호
+		FIRM_NM, -- 회사명
+		REP_NM, -- 대표자명
+		FIRM_ADDRESS, -- 회사주소
+		MANAGER_NM, -- 책임자명
+		MANAGER_RANK, -- 책임자 직급
+		MANAGER_PHONE, -- 책임자 번호
+		DEVELOPER_NM, -- 개발담당자 명
+		DEVELOPER_RANK, -- 개발담당자 직급
+		DEVELOPER_PHONE, -- 개발담당자 번호
+		CS_NM, -- 고객지원 담당자 명
+		CS_RANK, -- 고객지원 담당자 직급
+		CS_PHONE, -- 고객지원 담당자 번호
+		INPUT_DATE, -- 등록일자
+		UPDATE_DATE, -- 수정일자
+		FIRM_TEL, -- 회사 전화번호
+		FIRM_FAX, -- 회사 팩스번호
+		FIRM_EMAIL, -- 회사 이메일
+		FIRM_ZIP -- 회사 우편번호
+		)
+	VALUES (
+		#{FIRM_ID},
+		#{FIRM_NM},
+		#{REP_NAME},
+		#{FIRM_ADDR},
+		NULLIF(#{MANAGER_NM},''),
+		NULLIF(#{MANAGER_RANK},''),
+		NULLIF(#{MANAGER_PHONE},''),
+		NULLIF(#{DEVELOPER_NM},''),
+		NULLIF(#{DEVELOPER_RANK},''),
+		NULLIF(#{DEVELOPER_PHONE},''),
+		NULLIF(#{CS_NM},''),
+		NULLIF(#{CS_RANK},''),	
+		NULLIF(#{CS_PHONE},''),		
+		DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'),
+		DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'),
+		NULLIF(#{FIRM_TEL},''),
+		NULLIF(#{FIRM_FAX},''),
+		NULLIF(#{FIRM_EMAIL},''),
+		#{FIRM_ZIP}
+		)
+	</insert>
+	
+	<select id="gotoMoneybankTab2" parameterType="hashmap" resultType="hashmap">
+	SELECT 
+		MP.FIRM_ID,
+		MP.FIRM_NM,
+		MP.REP_NM,
+		MP.FIRM_ADDRESS,
+		MP.MANAGER_NM,
+		MP.MANAGER_RANK,
+		MP.MANAGER_PHONE,
+		MP.DEVELOPER_NM,
+		MP.DEVELOPER_RANK,
+		MP.DEVELOPER_PHONE,
+		MP.CS_NM,
+		MP.CS_RANK,
+		MP.CS_PHONE,
+		MP.UPDATE_DATE,
+		MP.FIRM_TEL,
+		MP.FIRM_FAX,
+		MP.FIRM_EMAIL,
+		MP.FIRM_ZIP,
+		MP2.DIVISION,
+		MP2.FIRM_NO,
+		MP2.PRODUCT_NAME,
+		MP2.PRODUCT_STATUS,
+		MP2.MIN_SALES_AMOUNT,
+		MP2.MIN_BUSINESS_PERIOD,
+		MP2.MIN_CALC_AMOUNT,
+		MP2.CREDIT_RATE,
+		MP2.CBCI_PERIOD,
+		MP2.OTHER_CONDITIONS,
+		MP2.SERVICE_AMOUNT_STANDARD,
+		MP2.SERVICE_AMOUNT_MIN,
+		MP2.SERVICE_AMOUNT_MAX,
+		MP2.SERVICE_AMOUNT_UNIT,
+		MP2.EXECUTE_AMOUNT_STANDARD,
+		MP2.EXECUTE_AMOUNT_MIN,
+		MP2.EXECUTE_AMOUNT_MAX,
+		MP2.EXECUTE_AMOUNT_UNIT,
+		MP2.SERVICE_FEE_STANDARD,
+		MP2.SERVICE_FEE_MIN,
+		MP2.SERVICE_FEE_MAX,
+		MP2.ANNUAL_FEE_RATE,
+		MP2.INTEREST_STANDARD,
+		MP2.INTEREST_MIN,
+		MP2.INTEREST_MAX,
+		MP2.LIMIT_CHANGE_YN
+		MP2.SERVICE_REPAY_PERIOD,
+		MP2.SERVICE_REPAY_MIN,
+		MP2.SERVICE_REPAY_MAX,
+		MP2.SERVICE_REPAY_METHOD,
+		MP2.EXTENTION_YN,
+		MP2.INPUT_DATE,
+		MP2.LAUNCH_DATE,
+		MP2.EXPIRE_DATE,
+		MP2.UPDATE_DATE,
+		MP2.REPAYMENT_COUNT,
+		MP2.REPAY_AMOUNT
+	FROM 
+		MONEYBANK_PARTNER MP , MONEYBANK_PRODUCT MP2
+	WHERE 
+		MP.FIRM_NO = #{FIRM_NO}
+		AND MP2.FIRM_NO = #{FIRM_NO}
+	</select>
+	
+	<update id="updateMoneybankProudct" parameterType="hashmap">
+	UPDATE MONEYBANK_PRODUCT 
+	SET
+		PRODUCT_NAME = #{PRODUCT_NAME},
+		PRODUCT_STATUS = #{PRODUCT_STATUS},
+		MIN_SALES_AMOUNT = #{MIN_SALES_AMOUNT},
+		MIN_BUSINESS_PERIOD = #{MIN_BUSINESS_PERIOD},
+		MIN_CALC_AMOUNT = #{MIN_CALC_AMOUNT},
+		CREDIT_RATE = #{CREDIT_RATE},
+		CBCI_PERIOD = #{CBCI_PERIOD},
+		AMOUNT_LIMIT = #{AMOUNT_LIMIT},
+		OTHER_CONDITIONS = #{OTHER_CONDITIONS},
+		SERVICE_AMOUNT_STANDARD = #{SERVICE_AMOUNT_STANDARD},
+		SERVICE_AMOUNT_MIN = #{SERVICE_AMOUNT_MIN},
+		SERVICE_AMOUNT_MAX = #{SERVICE_AMOUNT_MAX},
+		SERVICE_FEE_STANDARD = #{SERVICE_FEE_STANDARD},
+		SERVICE_FEE_MIN = #{SERVICE_FEE_MIN},
+		SERVICE_FEE_MAX = #{SERVICE_FEE_MAX},
+		SERVICE_REPAY_PERIOD = #{SERVICE_REPAY_PERIOD},
+		SERVICE_REPAY_MIN = #{SERVICE_REPAY_MIN},
+		SERVICE_REPAY_MAX = #{SERVICE_REPAY_MAX},
+		SERVICE_REPAY_METHOD = #{SERVICE_REPAY_METHOD},
+		EXTENTION_YN  = #{EXTENTION_YN},
+		INPUT_DATE = #{INPUT_DATE},
+		LAUNCH_DATE = #{LAUNCH_DATE},
+		EXPIRE_DATE = #{EXPIRE_DATE},
+		UPDATE_DATE = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'),
+		REPAYMENT_COUNT = #{REPAYMENT_COUNT},
+		REPAY_AMOUNT = #{REPAY_AMOUNT}
+	WHERE
+		FIRM_NO = #{FIRM_NO}	
+	</update>
+	
+	<update id="updateMoneybankPartner" parameterType="hashmap">
+	UPDATE MONEYBANK_PARTNER 
+	SET
+		FIRM_ID = #{FIRM_ID},
+		FIRM_NM = #{FIRM_NM},
+		REP_NM = #{REP_NAME},
+		FIRM_ADDRESS = #{FIRM_ADDR},
+		MANAGER_NM = #{MANAGER_NM},
+		MANAGER_RANK = #{MANAGER_RANK},
+		MANAGER_PHONE = #{MANAGER_PHONE},
+		DEVELOPER_NM  = #{DEVELOPER_NM},
+		DEVELOPER_RANK = #{DEVELOPER_RANK},
+		DEVELOPER_PHONE = #{DEVELOPER_PHONE},
+		CS_NM = #{CS_NM},
+		CS_RANK = #{CS_RANK},
+		CS_PHONE = #{CS_PHONE},
+		UPDATE_DATE = DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s'),
+		FIRM_TEL = #{FIRM_TEL},
+		FIRM_EMAIL = #{FIRM_EMAIL},
+		FIRM_ZIP = #{FIRM_ZIP}
+	WHERE
+		FIRM_ID = #{FIRM_ID}
+	</update>
+	<!-- 요금제 시작-->
+	<select id="chargeList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			FOUND_ROWS() AS CNT
+		  , RESULT_TB.*
+		FROM(
+			SELECT
+				@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+			  , cbc.charge_code
+			<![CDATA[
+			  , (SELECT IF(cbc.start_date <= NOW() AND cbc.expire_date >= NOW(), '운영', '종료')) AS status
+			]]>
+			  , DATE_FORMAT(cbc.start_date, '%Y-%m-%d') AS start_date
+			  , DATE_FORMAT(cbc.expire_date, '%Y-%m-%d') AS expire_date
+			  , DATE_FORMAT(cbc.regi_date,'%Y-%m-%d') AS regi_date
+			  , cbc.charge_name
+			  , cbc.amount
+			  , cbc.sub_id
+			  , cbc.sales_count
+			FROM CBCI_BILLING_CHARGE cbc, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+			WHERE cbc.charge_code LIKE '${CKeyword}%'
+			<choose>
+				<when test="OKeyword == '00'">
+				<![CDATA[
+					AND cbc.start_date <= NOW() AND cbc.expire_date >= NOW()
+				]]>
+				</when>
+		  		<when test="OKeyword == '01'">
+		  		<![CDATA[
+			  	 	AND (cbc.start_date > NOW() OR cbc.expire_date < NOW())
+			  	 ]]>
+				</when>
+			</choose>
+			  AND cbc.charge_name LIKE UPPER('%${NKeyword}%')
+			ORDER BY cbc.regi_date DESC
+		) RESULT_TB
+		LIMIT ${dataCnt}, ${dataPerPage}
+	</select>
+	
+	<select id="chargeCount" parameterType="hashmap" resultType="java.util.LinkedHashMap">
+		<![CDATA[	
+			SELECT  COUNT(charge_code) AS chargeTotal 
+				  , COUNT(CASE WHEN start_date <= NOW() AND expire_date >= NOW() THEN 1 END) AS chargeOpr
+				  , COUNT(CASE WHEN start_date >= NOW() OR expire_date <= NOW() THEN 1 END) AS chargeEnd
+		]]>
+			FROM CBCI_BILLING_CHARGE
+			WHERE charge_code LIKE '${CKeyword}%'
+		<choose>
+			<when test="OKeyword == '00'">
+			<![CDATA[
+				AND start_date <= NOW() AND expire_date >= NOW()
+			]]>
+			</when>
+		  	<when test="OKeyword == '01'">
+		  	<![CDATA[
+			 	AND (start_date > NOW() OR expire_date < NOW())
+			]]>
+			</when>
+		</choose>
+		  AND charge_name LIKE UPPER('%${NKeyword}%')
+	</select>
+	
+	<select id="chargeCodeList" parameterType="String" resultType="String">
+		<![CDATA[	
+			SELECT MAX(charge_code) AS chargeCode
+			FROM CBCI_BILLING_CHARGE
+			WHERE charge_code LIKE CONCAT ('${charge_type}', '${sub_period}', '%')
+		]]>
+	</select>
+	
+	<select id="chargeDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				  charge_code
+				, charge_name
+				, charge_type
+				, DATE_FORMAT(start_date, '%Y-%m-%d') AS start_date
+				, DATE_FORMAT(expire_date, '%Y-%m-%d') AS expire_date
+				, sub_id
+				, sales_count
+				, product_count
+				, amount
+				, sub_period
+				, sub_unit
+				, charge_detail
+				, DATE_FORMAT(regi_date, '%Y-%m-%d') AS regi_date
+			FROM CBCI_BILLING_CHARGE
+			WHERE charge_code = #{charge_code}
+		]]>
+	</select>
+	
+	<insert id="chargeinsert" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO CBCI_BILLING_CHARGE(
+				  charge_code
+				, charge_name
+				, charge_type
+				, start_date
+				, expire_date
+				, sub_id
+				, sales_count
+				, product_count
+				, amount
+				, sub_period
+				, sub_unit
+				, charge_detail
+				, regi_date
+			) 
+			VALUES (
+				  #{charge_code}
+				, #{charge_name}
+				, #{charge_type}  
+				, #{start_date}
+				, #{expire_date}
+				, #{sub_id}
+				, #{sales_count}
+				, #{product_count}
+				, #{amount}
+				, #{sub_period}
+				, #{sub_unit}
+				, #{charge_detail}
+				, DATE_FORMAT(NOW(), '%Y-%m-%d %H:%i:%s')
+			)
+		]]>
+	</insert>
+	
+	<update id="chargeupdate" parameterType="hashmap">
+		<![CDATA[	
+			UPDATE CBCI_BILLING_CHARGE
+			SET
+			    charge_code = #{charge_code}
+			  , charge_type = #{charge_type}
+			  , charge_name = #{charge_name}
+			  , start_date = #{start_date}
+			  , expire_date = #{expire_date}
+			  , sub_id = #{sub_id}
+			  , sales_count = #{sales_count}
+			  , product_count = #{product_count}
+			  , amount = #{amount}
+			  , sub_period = #{sub_period}
+			  , sub_unit = #{sub_unit}
+			  , charge_detail = #{charge_detail}
+			  , update_date = NOW()
+			WHERE charge_code = #{charge_code}
+		]]>
+	</update>
+	
+	<delete id="chargedelete" parameterType="hashmap">
+		<![CDATA[
+    		DELETE 
+    		FROM CBCI_BILLING_CHARGE 
+    		WHERE charge_code = #{charge_code}
+    	]]>
+	</delete>
+	
+	<select id="promotionlist" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT
+			  , RESULT_TB.*
+			FROM(
+				  SELECT
+					    @BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+					  , (SELECT IF(cpc.start_date <= NOW() AND cpc.end_date > NOW(), '운영', '종료')) AS status
+					  , DATE_FORMAT(cpc.start_date,'%Y-%m-%d') AS start_date
+					  , IFNULL(cp.partner_code, 'CBCI') AS partner_code 
+		  			  , IFNULL(cp.partner_nm, '자체') AS partner_nm 
+					  , cpc.promo_name
+					  , cpc.promo_code
+					  , (SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = cpc.promo_target AND SELECT_CLASS = 'promotionTarget') as promo_target
+					  , (SELECT GROUP_CONCAT(DISTINCT ccpc.charge_code ORDER BY ccpc.charge_code) AS charge_code_group
+ 						 FROM CBCI_BILLING_CHARGE cbc JOIN CBCI_CHARGE_PROMOTION_CONNECTION ccpc ON cbc.charge_code = ccpc.charge_code
+ 						 WHERE ccpc.promo_code = cpc.promo_code) AS charge_code
+ 					  , (SELECT GROUP_CONCAT(DISTINCT cbc.charge_name ORDER BY ccpc.charge_code) AS charge_name_group
+ 						 FROM CBCI_BILLING_CHARGE cbc JOIN CBCI_CHARGE_PROMOTION_CONNECTION ccpc ON cbc.charge_code = ccpc.charge_code
+ 						 WHERE ccpc.promo_code = cpc.promo_code) AS charge_name
+					  , IFNULL(cpc.discount_rate, '') AS discount_rate
+	  				  , IFNULL(cpc.discount_amount, '') AS discount_amount
+					  , IFNULL(cpc.free_period, "") AS free_period
+					  , CASE 
+					  		WHEN (cpc.free_period_unit = 'M') THEN '개월'
+					  		WHEN (cpc.free_period_unit = 'W') THEN '주'
+					  		ELSE ""
+					  	END AS free_period_unit
+					  , CASE
+					  		 WHEN (cpc.sub_id = '99') THEN '무제한'
+					  		 ELSE cpc.sub_id
+					  	END AS sub_id
+				  FROM CBCI_PROMOTION_CODE cpc LEFT JOIN CBCI_PARTNER cp ON cpc.partner_code = cp.partner_code, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				  WHERE cpc.promo_code LIKE '%${PCKeyword}%'
+				    AND cpc.status LIKE '%${SKeyword}%'
+				  ORDER BY cpc.start_date DESC
+				) RESULT_TB
+			WHERE RESULT_TB.partner_nm LIKE '%${PNKeyword}%'
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+		
+	<select id="promotionCount" parameterType="hashmap" resultType="java.util.LinkedHashMap">
+		<![CDATA[
+			SELECT COUNT(RESULT_TB.promo_code) AS promoTotal 
+				 , COUNT(CASE WHEN RESULT_TB.status = 'Y' THEN 1 END) AS promoOpr
+				 , COUNT(CASE WHEN RESULT_TB.status = 'N' THEN 1 END) AS promoEnd
+			FROM 
+				( SELECT
+					  cpc.promo_code
+					, cpc.status
+					, IFNULL(cp.partner_nm, '자체') AS partner_nm
+				  FROM CBCI_PROMOTION_CODE cpc LEFT JOIN CBCI_PARTNER cp ON cpc.partner_code = cp.partner_code
+				) RESULT_TB
+			WHERE RESULT_TB.promo_code LIKE '%${PCKeyword}%'
+			  AND RESULT_TB.status LIKE '%${SKeyword}%'
+			  AND RESULT_TB.partner_nm LIKE '%${PNKeyword}%'
+		]]>
+	</select>
+	
+	<select id="promotionDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[	
+			SELECT 
+				  cpc.promo_code
+				, cpc.promo_name
+				, DATE_FORMAT(cpc.start_date, '%Y-%m-%d') AS start_date
+				, DATE_FORMAT(cpc.end_date, '%Y-%m-%d') AS end_date
+				, DATE_FORMAT(cpc.input_date, '%Y-%m-%d') AS input_date
+				, cpc.promo_target
+				, (SELECT DISTINCT csc.SELECT_NM 
+				   FROM CBCI_PROMOTION_CODE cpc JOIN CBCI_SELECT_CODE csc ON SUBSTRING(cpc.partner_code, -4,2) = csc.SELECT_CD 
+				   WHERE cpc.promo_code = #{promo_code}) AS partner_division
+				, cpc.partner_code 
+				, IFNULL(cpc.free_period, '') AS free_period
+				, IFNULL(cpc.free_period_unit, '') AS free_period_unit
+				, cpc.sub_id
+				, IFNULL(cpc.discount_rate, '') AS discount_rate
+				, IFNULL(cpc.discount_amount, '') AS discount_amount
+				, cpc.promo_detail
+				, GROUP_CONCAT(DISTINCT ccpc.charge_code ORDER BY ccpc.charge_code) AS charge_code_group
+			FROM CBCI_PROMOTION_CODE cpc LEFT JOIN CBCI_CHARGE_PROMOTION_CONNECTION ccpc ON cpc.promo_code = ccpc.promo_code
+			WHERE cpc.promo_code = #{promo_code}
+			GROUP BY cpc.promo_code
+		]]>
+	</select>
+	
+	<select id="partnerDivisionSelect" resultType="hashmap">
+		<![CDATA[
+			SELECT  
+				SELECT_CD
+			  , SELECT_NM
+			FROM CBCI_SELECT_CODE
+			WHERE SELECT_CLASS = 'partnerType'
+		]]>	
+	</select>
+	
+	<select id="chargeNameSelect" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				  charge_code
+				, charge_name
+			FROM CBCI_BILLING_CHARGE
+			WHERE 
+				start_date <= NOW() AND expire_date > NOW()
+			ORDER BY sub_id DESC
+		]]>
+	</select>
+	
+	<select id="partnerCodeSelect" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				  partner_code
+				, partner_nm
+			FROM CBCI_PARTNER
+			WHERE partner_status = '00' 
+			  AND partner_code LIKE '${partner_division}%'
+		]]>		  
+	</select>
+	
+	<insert id="promotionInsert">
+		<![CDATA[
+			INSERT INTO CBCI_PROMOTION_CODE(
+				  promo_code
+				, promo_name
+				, promo_target
+				, partner_code
+				, status
+				, start_date
+				, end_date
+				, sub_id
+				, discount_rate
+				, discount_amount
+				, free_period
+				, free_period_unit
+				, promo_detail
+				, input_date
+			) 
+			VALUES (
+				  #{promo_code}
+				, #{promo_name}
+				, #{promo_target}
+		]]>
+				, <choose>
+					<when test="partner_code != '' or partner_code != null">
+						#{partner_code}
+					</when>
+					<otherwise>
+						'CBCI'
+					</otherwise>
+				  </choose>
+		<![CDATA[
+				, (SELECT IF(#{start_date} <= NOW() AND #{end_date} > NOW(), 'Y', 'N'))
+				, #{start_date}
+				, #{end_date}
+				, #{sub_id}
+				, #{discount_rate}
+				, #{discount_amount}
+				, #{free_period}
+				, #{free_period_unit}
+				, #{promo_detail}
+				, NOW()
+			)
+		]]>
+	</insert>
+		
+	<select id="promotionCodeSelect" parameterType="String" resultType="String">
+		SELECT MAX(SUBSTR(promo_code, 8, 9)) AS promoCode
+		FROM CBCI_PROMOTION_CODE
+	</select>
+	
+	<update id="promotionUpdate" parameterType="hashmap">
+		<![CDATA[
+			UPDATE CBCI_PROMOTION_CODE cpc LEFT JOIN CBCI_CHARGE_PROMOTION_CONNECTION ccpc ON cpc.promo_code = ccpc.promo_code
+			SET
+			    cpc.promo_code = #{promo_code}
+			  , cpc.promo_name = #{promo_name}
+			  , cpc.promo_target = #{promo_target}
+			  , cpc.partner_code = #{partner_code}
+			  , cpc.status = (SELECT IF(#{start_date} <= NOW() AND #{end_date} > NOW(), 'Y', 'N'))
+			  , cpc.start_date = #{start_date}
+			  , cpc.end_date = #{end_date}
+			  , cpc.free_period = #{free_period}
+			  , cpc.free_period_unit = #{free_period_unit}
+			  , cpc.sub_id = #{sub_id}
+			  , cpc.discount_rate = #{discount_rate}
+			  , cpc.discount_amount = #{discount_amount}
+			  , cpc.promo_detail = #{promo_detail}
+			  , cpc.upd_date = NOW()
+			WHERE cpc.promo_code = #{promo_code}
+		]]>
+	</update>
+	
+	<delete id="promotionDelete" parameterType="hashmap">
+   		DELETE 
+   		FROM CBCI_PROMOTION_CODE 
+   		WHERE promo_code = #{promo_code}
+	</delete>
+	
+	<insert id="connectionInsert" parameterType="hashmap">
+		INSERT INTO CBCI_CHARGE_PROMOTION_CONNECTION(	
+			charge_code
+		  , promo_code
+		)
+		VALUES (
+			#{charge_code}
+		  , #{promo_code}
+		 )
+	</insert>
+	
+	<delete id="connectionDelete" parameterType="hashMap">
+		DELETE
+		FROM CBCI_CHARGE_PROMOTION_CONNECTION
+		WHERE promo_code = #{promo_code}
+	</delete>
+	
+	<select id="partnerList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			 SELECT
+		        FOUND_ROWS() AS CNT
+		       , RESULT_TB.*
+		     FROM(
+		          SELECT
+		               @BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUMa
+		             , (SELECT IF(cp.partner_status = '00', '운영', '종료')) AS partner_status
+		             , DATE_FORMAT(cp.input_date,'%Y-%m-%d') AS input_date
+		             , (SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = SUBSTRING(cp.partner_code, -4, 2) AND SELECT_CLASS = 'partnerType') AS partner_type
+		             , cp.partner_nm
+		             , cp.partner_code
+		             , cp.rep_nm
+		             , cp.partner_id
+		             , cmi.manager_type
+		             , IFNULL(cmi.manager_nm, '') AS manager_nm
+		             , IFNULL(cmi.manager_phone, '') AS manager_phone
+		          FROM CBCI_PARTNER cp LEFT JOIN CBCI_MANAGER_INFO cmi ON cp.partner_code = cmi.partner_code AND cmi.manager_nm NOT IN (''), (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+		          WHERE UPPER(cp.partner_nm) LIKE UPPER('%${PNKeyword}%')
+		            AND UPPER(cp.partner_status) LIKE UPPER('%${PSKeyword}%')
+		            AND UPPER(cp.rep_nm) LIKE UPPER('%${RNKeyword}%')
+		            AND UPPER(cp.partner_code) LIKE UPPER('%${PCKeyword}%')
+		            AND IF((SELECT COUNT(IF(manager_nm = '', NULL, 1)) FROM CBCI_MANAGER_INFO WHERE partner_code = cp.partner_code) = 2, cmi.manager_type ='01', 1=1)
+		          ORDER BY cp.input_date DESC
+		        ) RESULT_TB
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+	
+	<select id="partnerCodeCount" parameterType="hashmap" resultType="java.util.LinkedHashMap">
+		<![CDATA[	
+			SELECT 
+					COUNT(partner_id) AS partnerTotal 
+				  ,	COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="BA" THEN 1 END) AS partnerTypeBA
+				  , COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="BB" THEN 1 END) AS partnerTypeBB
+				  , COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="CO" THEN 1 END) AS partnerTypeCO
+				  , COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="FI" THEN 1 END) AS partnerTypeFI
+				  , COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="MN" THEN 1 END) AS partnerTypeMN
+				  , COUNT(CASE WHEN SUBSTRING(partner_code, -4, 2)="TH" THEN 1 END) AS partnerTypeTH
+			FROM CBCI_PARTNER
+			WHERE 
+					UPPER(partner_nm) LIKE UPPER('%${PNKeyword}%')
+				AND UPPER(partner_status) LIKE UPPER('%${PSKeyword}%')
+			   	AND UPPER(rep_nm) LIKE UPPER('%${RNKeyword}%')
+			    AND UPPER(partner_code) LIKE UPPER('%${PCKeyword}%')
+		]]>
+	</select>
+	
+	<select id="divisionCodeAuth" parameterType="String" resultType="int">
+		<![CDATA[
+			SELECT COUNT(partner_code) AS COUNT
+			FROM CBCI_PARTNER
+			WHERE partner_code = #{value}
+		]]>
+	</select>
+	
+	<select id="partnerDetail" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				  cp.partner_id
+				, cp.partner_code
+				, cp.partner_nm
+				, cp.rep_nm
+				, cp.partner_zip
+				, cp.partner_address
+				, DATE_FORMAT(cp.input_date, '%Y-%m-%d') AS input_date
+				, cp.partner_status
+				, cp.partner_type
+				, cmi.manager_type
+				, cmi.manager_nm
+				, cmi.manager_rank
+				, cmi.manager_email
+				, cmi.manager_phone
+				, cp.detail
+			FROM CBCI_PARTNER cp LEFT JOIN CBCI_MANAGER_INFO cmi ON cp.partner_code = cmi.partner_code
+			WHERE cp.partner_id = #{partner_id}
+		]]>
+	</select>
+	
+	<insert id="partnerInsert">
+		<![CDATA[
+			INSERT INTO CBCI_PARTNER(
+				  partner_id
+				, partner_code
+				, partner_nm
+				, rep_nm
+				, partner_zip
+				, partner_address
+				, partner_status
+				, partner_type
+				, detail
+				, input_date
+			) 
+			VALUES (
+				  #{partner_id}
+				, #{partner_code}
+				, #{partner_nm}
+				, #{rep_nm}
+				, #{partner_zip}
+				, #{partner_address}
+				, #{partner_status}
+				, #{partner_type}
+				, #{detail}
+				, NOW()
+			)
+		]]>
+	</insert>
+		
+	<update id="partnerUpdate" parameterType="hashmap">
+		<![CDATA[	
+			UPDATE CBCI_PARTNER
+			SET
+			  	partner_code = #{partner_code}
+			  , update_date = NOW()
+			  , partner_nm = #{partner_nm}
+			  , partner_id = #{partner_id}
+			  , rep_nm = #{rep_nm}
+			  , partner_zip = #{partner_zip}
+			  , partner_address = #{partner_address}
+			  , partner_status = #{partner_status}
+			  , detail = #{detail}
+			WHERE partner_id = #{partner_id}
+		]]>
+	</update>
+	
+	<insert id="managerInsertUpdate" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO CBCI_MANAGER_INFO (
+				partner_code
+			  , manager_type
+			  , manager_nm
+			  , manager_rank 
+			  , manager_email 
+			  , manager_phone 
+			  , input_date
+			) VALUES(
+			    #{partner_code}
+			  , #{manager_type}
+			  , #{manager_nm}
+			  , #{manager_rank}
+			  , #{manager_email}
+			  , #{manager_phone}
+			  , NOW()
+			) ON DUPLICATE KEY UPDATE 
+			    partner_code = #{partner_code}
+			  , manager_type = #{manager_type}
+			  , manager_nm = #{manager_nm}
+			  , manager_rank = #{manager_rank}
+			  , manager_email = #{manager_email}
+			  , manager_phone = #{manager_phone}
+			  , update_date = NOW()
+		]]>
+	</insert>
+	
+	<delete id="partnerDelete" parameterType="hashmap">
+		<![CDATA[
+    		DELETE 
+    		FROM CBCI_PARTNER 
+    		WHERE partner_id = #{partner_id}
+    	]]>
+	</delete>
+	
+	<update id="EvalUpdate" parameterType="hashmap">
+		UPDATE CBCI_EVALUATE 
+		SET
+			object_no = #{FIRM_ID},
+			update_date =  DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		WHERE
+			object_no = #{B_FIRM_ID}
+	</update>
+	
+	
+	<!-- 협력사 평가 테이블 -->
+	<select id="partnerEvalList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			FOUND_ROWS() AS CNT,
+			RESULT_TB.*
+		FROM(
+			SELECT
+				@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM,
+				CE.eval_no,
+				CE.reviewer,
+				CE.title,
+				CE.detail,
+				DATE_FORMAT(IF(CE.INPUT_DATE >= IFNULL(CE.UPDATE_DATE, CE.INPUT_DATE), CE.INPUT_DATE , CE.UPDATE_DATE ), '%Y-%m-%d %H:%i:%s') AS SORT_DATE
+			FROM CBCI_EVALUATE CE, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+			WHERE 
+				CE.division = #{DIVISION} 
+				AND CE.object_no = #{FIRM_ID}
+			ORDER BY SORT_DATE desc
+			) RESULT_TB
+		ORDER BY RNUM LIMIT ${dataCnt}, ${dataPerPage}
+	</select>
+	
+	<insert id="partnerEvalInsert" parameterType="hashmap">
+		INSERT INTO CBCI_EVALUATE (
+			division, 
+			object_no, 
+			reviewer, 
+			title,
+			detail, 
+			input_date
+		)VALUES (
+			#{DIVISION},
+			#{FIRM_ID},
+			#{REVIEWER}, 
+			#{TITLE},
+			#{DETAIL}, 
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'));
+	</insert>
+	
+	<update id="partnerEvalUpdate" parameterType="hashmap">
+		UPDATE CBCI_EVALUATE 
+		SET
+			reviewer = #{REVIEWER},
+			title = #{TITLE},
+			detail = #{DETAIL},
+			update_date =  DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		WHERE
+			eval_no = #{EVAL_NO}
+	</update>
+	
+	<delete id="partnerEvalDelete" parameterType="hashmap">
+		DELETE FROM CBCI_EVALUATE WHERE eval_no = #{EVAL_NO}
+	</delete>
+	
+	
+	<select id="selectChargeList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			charge_code,
+			charge_name,
+			charge_detail,
+			amount,
+			sub_period,
+			sub_unit,
+			sub_id,
+			etc,
+			status,
+			DATE_FORMAT(regi_date, '%Y-%m-%d') as regi_date
+		FROM
+			CBCI_BILLING_CHARGE CBC
+	</select>
+	
+	<select id="selectPromotionList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			charge_code,
+			charge_name,
+			charge_detail,
+			amount,
+			sub_period,
+			sub_unit,
+			sub_id,
+			etc,
+			status,
+			DATE_FORMAT(regi_date, '%Y-%m-%d') as regi_date
+		FROM
+			CBCI_BILLING_CHARGE CBC
+	</select>
+	
+</mapper>

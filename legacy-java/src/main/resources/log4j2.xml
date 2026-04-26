@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+
+	<Properties>
+		<Property name="logNM">scheduledLog</Property>
+		<Property name="SlogNM">SpringSecurity</Property>
+		<Property name="ClogNM">CBCLog</Property>
+		<Property name="ElogNM">ErrorLog</Property>
+		<Property name="BlogNM">billingPayment</Property>
+		<property name="FlogNM">FileLog</property>
+		<property name="MBAlogNM">MoneyBankApiLog</property>
+		<property name="SlogNM">ShopApiLog</property>
+		<Property name="layoutPattern">[ %d{yyyy-MM-dd HH:mm:ss} ] [%p] [ %F - %L ] [ %r ] [ %t ] %m%n</Property>
+	</Properties>
+	
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d %5p [%c] %m%n"/>
+        </Console>
+		<File name="scheduledLog" fileName="/data/was/scheduledLogs/${logNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>
+		<File name="SpringSecurity" fileName="/data/was/SpringSecuritys/${SlogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>
+		<File name="ErrorLog" fileName="/data/was/ErrorLogs/${ElogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>		
+		<File name="CBClog" fileName="/data/was/CBC/${ClogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>	
+		<File name="FileLog" fileName="/data/was/File/${FlogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>
+		<File name="MoneyBankApiLog" fileName="/data/was/MBApi/${MBAlogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>
+		<File name="ShopApiLog" fileName="/data/was/ShopApi/${SlogNM}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+		</File>
+		 <RollingFile name="billingPayment" fileName="/data/was/billingPayments/${BlogNM}.log" filePattern="/data/was/billingPayments/logs/${BlogNM}_%d{yyyy-MM-dd}.log">
+			<PatternLayout>
+				<Pattern>${layoutPattern}</Pattern>
+			</PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="/data/was/billingPayments/logs" maxDepth="1">
+                    <IfAccumulatedFileCount exceeds="31"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+    </Appenders>
+    
+    <Loggers>
+    
+    	<Root level="warn" additivity="false">
+            <AppenderRef ref="console"/>
+        </Root>
+        
+        <!-- application log -->
+        <Logger name="egovframework.azon" level="debug" additivity="false"><!-- level="info" -->
+            <AppenderRef ref="console" />
+        </Logger>
+        
+        <!-- SpringSecurity -->
+        <Logger name="egovframework.azon.cmmn.security" level="debug" additivity="false">
+        	<AppenderRef ref="SpringSecurity"/>
+        </Logger>
+        
+        <!-- ErrorLog -->
+        <Logger name="egovframework.azon.cmmn.ExceptionController" level="debug" additivity="false">
+        	<AppenderRef ref="ErrorLog"/>
+        </Logger>
+        
+        <!-- Scheduled Log -->
+        <!-- CRA 로그 -->
+        <Logger name="egovframework.azon.admin.cubici.service" level="trace" additivity="false" >
+            <AppenderRef ref="scheduledLog"/>
+        </Logger>
+        <!-- 공통 스케줄 로그 -->
+        <Logger name="egovframework.azon.cmmn.service" level="trace" additivity="false" >
+            <AppenderRef ref="scheduledLog"/>
+        </Logger>
+        <!-- 쿠팡 스케줄 로그 -->
+        <Logger name="egovframework.azon.cmmn.api" level="trace" additivity="false" >
+            <AppenderRef ref="scheduledLog"/>
+        </Logger>
+        <!-- 알림(SMS, EMAIL) 로그 -->
+        <Logger name="egovframework.azon.cmmn.component" level="trace" additivity="false" >
+            <AppenderRef ref="scheduledLog"/>
+        </Logger>
+        
+        <!-- 암복호화 로그 -->
+        <Logger name="egovFramework.azon.cmmn.cbc" level="trace" additivity="false">
+        	<AppenderRef ref="CBClog"/>
+        </Logger>
+        
+        <!-- 공통, 파일 로그 -->
+        <Logger name="egovframework.azon.cmmn.controller" level="debug" additivity="false">
+        	<AppenderRef ref="FileLog"/>
+        </Logger>
+        <Logger name="egovframework.azon.cmmn.service.FileService" level="debug" additivity="false">
+        	<AppenderRef ref="FileLog"/>
+        </Logger>
+        <Logger name="egovframework.azon.cmmn.moneybank.api" level="debug" additivity="false">
+        	<AppenderRef ref="MoneyBankApiLog"/>
+        </Logger>
+        
+        <!-- billingPayment -->
+        <!-- 빌링 결제 로그 -->
+        <Logger name="egovframework.azon.front.cubici.service" level="trace" additivity="false">
+        	<AppenderRef ref="billingPayment"/>
+        </Logger>
+        
+		<!-- shop API -->
+		<Logger name="egovframework.azon.shop" level="debug" additivity="false">
+			<AppenderRef ref="ShopApiLog"/>
+		</Logger>
+		
+		<!-- etc log -->
+        <Logger name="org.springframework" level="fatal" additivity="false">
+            <AppenderRef ref="console" />
+        </Logger>
+		<Logger name="org.apache.http" level="fatal" additivity="false" >
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="org.mybatis" level="fatal" additivity="false" >
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="java.sql" level="fatal" additivity="false" >
+			<AppenderRef ref="console"/>
+		</Logger>
+		
+        <!-- sql log -->
+        <Logger name="jdbc.sqlonly" level="info" additivity="false"><!-- level="fatal" -->
+            <AppenderRef ref="console"/>
+        </Logger>
+		<Logger name="jdbc.connection" level="fatal" additivity="false" >
+ 			<AppenderRef ref="console" />
+ 		</Logger>
+		<Logger name="jdbc.sqltiming" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="jdbc.audit" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="jdbc.resultset" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		<Logger name="jdbc.resultsettable" level="fatal" additivity="false">
+			<AppenderRef ref="console" />
+		</Logger>
+		
+    </Loggers>
+    
+</Configuration>
