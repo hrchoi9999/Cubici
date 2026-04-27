@@ -83,13 +83,13 @@ function Hero() {
         <div className="hero-copy">
           <h1>큐빅아이</h1>
           <p>
-            인공지능 기반의 온라인 쇼핑몰 통합관리 서비스
+            인공지능 기반 온라인 쇼핑몰 통합관리 서비스
             <br />
-            복잡하고 어려웠던 쇼핑몰 관리를 쉽고 편리하게
+            복잡한 쇼핑몰 관리를 쉽고 편리하게
             <br />
-            바로 확인할 수 있는 차세대 서비스를 경험하세요.
+            한 화면에서 바로 확인하세요.
           </p>
-          <strong>새로운 e-Commerce 큐빅아이가 시작합니다!</strong>
+          <strong>새로운 e-Commerce 큐빅아이를 경험하세요.</strong>
         </div>
 
         <div className="monitor" aria-label="큐빅아이 서비스 화면 예시">
@@ -168,13 +168,13 @@ function SummaryPanel() {
 
           <div className="promo-card" id="integrated">
             <div>
-              <h3>큐빅아이의 스마트한 쇼핑몰 관리시스템을 체험하고 싶으시다면?</h3>
-              <p>한 달 무료 이용기간을 통해 충분히 이용 후 신청하세요!</p>
+              <h3>스마트한 쇼핑몰 관리를 체험해 보세요.</h3>
+              <p>한 달 무료 이용 후 신청하실 수 있습니다.</p>
               <a href="#trial">1달 무료체험 바로가기</a>
             </div>
             <div>
-              <h3>지금 큐빅아이에 가입하시면?</h3>
-              <p>1년 이용료 할인을 받으실 수 있습니다.</p>
+              <h3>지금 큐빅아이에 가입하세요.</h3>
+              <p>1년 이용료 할인 혜택을 받으실 수 있습니다.</p>
               <a href="#signup">회원가입 바로가기</a>
             </div>
           </div>
