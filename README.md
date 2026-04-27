@@ -14,8 +14,8 @@ This workspace separates the legacy Java service from the new public website, an
 
 ## Current Environment Notes
 
-- Node.js is available on this PC.
-- Python is not currently discoverable through `python` or `py`.
-- Git is not currently discoverable through `git`.
-
-Install Git and Python before initializing the new private GitHub repository and running analysis scripts.
+- Frontend deploys from `website` to Cloudflare Pages.
+- Local backend runs from `cubici_redem` on `http://127.0.0.1:18080`.
+- Local MySQL runs on `127.0.0.1:3307`, database `cubici`.
+- Python 3.10 analysis environment is available at `.venv310`.
+- See `docs/ENVIRONMENT_SETUP.md` and `docs/PRODUCTION_DEPLOYMENT.md` for current setup and deployment notes.

@@ -1,8 +1,10 @@
 (function () {
   var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocal) return;
+  var configuredApiBase = String(window.CUBICI_API_BASE || '').trim();
+  if (configuredApiBase.indexOf('%VITE_') === 0) configuredApiBase = '';
+  if (!isLocal && !configuredApiBase) return;
 
-  var apiBase = window.CUBICI_API_BASE || 'http://127.0.0.1:18080';
+  var apiBase = configuredApiBase || 'http://127.0.0.1:18080';
   var numberFormatter = new Intl.NumberFormat('ko-KR');
 
   function formatAmount(value) {

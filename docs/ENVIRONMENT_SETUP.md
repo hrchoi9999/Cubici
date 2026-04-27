@@ -9,7 +9,7 @@
 - Node.js from Codex app: `v24.14.0`, available as `node`
 - Node.js local toolchain for website: `v24.15.0` with npm `11.12.1` at `C:\Cubici\private_local\tools\node-v24.15.0-win-x64`
 - MySQL Community Server: `8.0.45`, portable install at `C:\Cubici\private_local\tools\mysql-8.0.45-winx64`
-- MySQL local instance: `127.0.0.1:3307`, database `cubici_local`
+- MySQL local instance: `127.0.0.1:3307`, database `cubici`
 - DBeaver Community: portable install at `C:\Cubici\private_local\tools\dbeaver`
 - OpenJDK: `13.0.2`, portable install at `C:\Cubici\private_local\tools\jdk-13.0.2`
 - Apache Maven: `3.9.11`, portable install at `C:\Cubici\private_local\tools\apache-maven-3.9.11`
@@ -80,7 +80,7 @@ Connection settings:
 
 - Host: `127.0.0.1`
 - Port: `3307`
-- Database: `cubici_local`
+- Database: `cubici`
 - Dev user: `cubici_dev`
 
 Credentials are stored only in:
