@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--고객지원: Q&A-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">고객지원</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li><a href="#n"><span>요금안내</span></a></li>
+      <li><a href="#n"><span>서비스 공지</span></a></li>
+      <li class="active"><a href="#n"><span>Q&A</span></a></li>
+      <li><a href="#n"><span>FAQ</span></a></li>
+      <li><a href="#n"><span>블로그</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap qnawrite" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">Q&A</h2>
+      <div class="inner">
+        <div class="form-wrap write-box">
+          <form>
+            <div class="input-group align-center">
+              <h4 class="input-tit">작성자</h4>
+              <input type="text" class="qna-input">
+            </div>
+            <div class="input-group align-center select-z-index">
+              <h4 class="input-tit">구분</h4>
+              <div class="select-wrap col-3">
+                <div class="select-box input-item">
+                  <span class="select"></span>
+                  <button class="select-btn" type="button">
+                    <i class="fi icon-angle-down"></i>
+                  </button>
+                </div>
+                <ul class="option">
+                  <li class="selected" tabindex="0">큐빅아이</li>
+                  <li data-value="STREET11" tabindex="0">가입해지</li>
+                  <li data-value="COUPANG" tabindex="0">서비스 소개</li>
+                  <li data-value="NAVER" tabindex="0">머니뱅크</li>
+                  <li data-value="AUCTION" tabindex="0">고객지원</li>
+                  <li data-value="GMARKET" tabindex="0">회원가입</li>
+                  <li data-value="LOTTEON" tabindex="0">기타</li>
+                  <li data-value="IAMWEB" tabindex="0">아용요금</li>
+                  <li data-value="BLOGPAY" tabindex="0">서비스이용</li>
+                </ul>
+              </div>
+            </div>
+            <div class="input-group align-center">
+              <h4 class="input-tit">제목</h4>
+              <input type="text" placeholder="제목을 입력해 주세요. (50자 이내)" class="qna-input">
+            </div>
+            <div class="input-group align-center">
+              <h4 class="input-tit">내용</h4>
+              <div class="txt-box"></div>
+            </div>
+          </form>
+        </div>
+        <div class="btn-box txt-center">
+          <a class="btn m-btn btn-color1" href="./c5p3.html" role="button">등록</a>
+          <a class="btn m-btn btn-color2" href="./c5p3.html" role="button">취소</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+</body>
+
+</html>

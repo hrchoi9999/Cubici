@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--통합정보:상품분석-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">매출정보</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li><a href="./c1p1.html"><span>당월현황</span></a></li>
+      <li><a href="./c1p2.html"><span>매출분석</span></a></li>
+      <li class="active"><a href="./c1p3.html"><span>상품분석</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c1p3" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">당월현황</h2>
+      <div class="inner">
+        <div class="table-top flex-end">
+          <div class="date-wrap">
+            <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+            <strong class="fw-600">기준</strong>
+            <span class="data-in">2023년 11월 07일</span>
+          </div>
+        </div>
+        <div class="form-wrap select-z-index">
+          <form>
+            <div class="top-form-wrap color-r-box ">
+              <div class="input-group select-z-index">
+                <div class="select-wrap col-4">
+                  <div class="select-box input-item">
+                    <h4 class="tit">쇼핑몰</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">전체</li>
+                    <li data-value="STREET11" tabindex="0">11번가</li>
+                    <li data-value="COUPANG" tabindex="0">쿠팡</li>
+                    <li data-value="NAVER" tabindex="0">네이버</li>
+                    <li data-value="AUCTION" tabindex="0">옥션</li>
+                    <li data-value="GMARKET" tabindex="0">지마켓</li>
+                    <li data-value="LOTTEON" tabindex="0">롯데온</li>
+                    <li data-value="IAMWEB" tabindex="0">아이엠웹</li>
+                    <li data-value="BLOGPAY" tabindex="0">블로그페이</li>
+                    <li data-value="CAFE24" tabindex="0">카페24</li>
+                    <li data-value="KAKAO" tabindex="0">카카오쇼핑</li>
+                    <li data-value="SSG" tabindex="0">신세계스토어</li>
+                    <li data-value="GRIP" tabindex="0">그립</li>
+                  </ul>
+                </div>
+                <div class="select-wrap col-4">
+                  <div class="select-box input-item">
+                    <h4 class="tit">기준</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" data-value="" tabindex="0">금액</li>
+                  </ul>
+                </div>
+                <div class="input-box col-4">
+                  <div class="docs-datepicker input-item">
+                    <h4 class="tit">시작</h4>
+                    <input type="text" class="calendar" data-toggle="datepicker" placeholder="시작기간">
+                    <i class="fi icon-calendar-check-o"></i>
+                    <div class="docs-datepicker-container"></div>
+                  </div>
+                </div>
+                <div class="input-box col-4">
+                  <div class="docs-datepicker input-item">
+                    <h4 class="tit">종료</h4>
+                    <input type="text" class="calendar" data-toggle="datepicker" placeholder="종료기간">
+                    <i class="fi icon-calendar-check-o"></i>
+                    <div class="docs-datepicker-container"></div>
+                  </div>
+                </div>
+                <button class="btn btn-color1 r-btn" type="button">검색<i class="fi icon-search-1 ml-10"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="chart-wrap mb-100">
+          <div class="chart-header">
+            <h3 class="chart-tit">쇼핑몰 결제 비중</h3>
+            <a class="btn sm-btn line-btn1" download="download" role="button" href="#n"><i
+                class="fi excel-b mr-10"></i>엑셀 다운로드
+            </a>
+          </div>
+          <div class="chart-over">
+            <div class="chart-con" style="min-width: 600px;">
+              <img src="./static/img/sub/chart-3.png" alt="차트">
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap mb-100">
+          <div class="chart-header">
+            <h3 class="chart-tit">쇼핑몰 가격할인 및 판촉</h3>
+            <a class="btn sm-btn line-btn1" download="download" role="button" href="#n"><i
+                class="fi excel-b mr-10"></i>엑셀 다운로드
+            </a>
+          </div>
+          <div class="chart-over">
+            <div class="chart-con" style="min-width: 600px;">
+              <img src="./static/img/sub/chart-4.png" alt="차트">
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-header">
+            <h3 class="chart-tit">TOP 10 매출상품</h3>
+            <a class="btn sm-btn line-btn1" download="download" role="button" href="#n"><i
+                class="fi excel-b mr-10"></i>엑셀 다운로드
+            </a>
+          </div>
+          <div class="chart-over">
+            <div class="chart-con" style="min-width: 600px;">
+              <img src="./static/img/sub/chart-5.png" alt="차트">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+</body>
+
+</html>

@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <script src="./static/js/calendar.js"></script>
+
+  <title>큐빅아이</title>
+</head>
+
+<body>
+   <!--매출정보:정산캘린더-->
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">정산정보</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li class="active"><a href="./c3p1.html"><span>정산 캘린더</span></a></li>
+      <li><a href="./c3p2.html"><span>정산 상세</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c3p1" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">정산 캘린더</h2>
+      <div class="inner">
+        <div class="calendar-top">
+          <button class="btn prev-month" type="button"><span class="fi icon-left-open-1"></span></button>
+          <div class="top-wrap">
+            <div class="year-wrap">
+              <span class="year"></span>년
+              <span class="month"></span>월
+            </div>
+            <div class="total-data">TOTAL<span class="data-in">76000</span>원</div>
+          </div>
+          <button class="btn next-month" type="button"><span class="fi icon-right-open-1"></span></button>
+        </div>
+        <div class="table-top flex-end">
+          <button class="btn r-btn btn-color1 today-btn" type="button">오늘</button>
+          <div class="select-wrap col-3">
+            <div class="select-box r-style">
+              <h4 class="tit">쇼핑몰</h4>
+              <button class="select-btn" type="button">
+                <span class="select"></span>
+                <i class="fi icon-angle-down"></i>
+              </button>
+            </div>
+            <ul class="option">
+              <li class="selected" tabindex="0">전체</li>
+              <li tabindex="0">11번가</li>
+              <li tabindex="0">쿠팡</li>
+              <li tabindex="0">네이버</li>
+              <li tabindex="0">옥션</li>
+              <li tabindex="0">지마켓</li>
+              <li tabindex="0">롯데온</li>
+              <li tabindex="0">아이엠웹</li>
+              <li tabindex="0">블로그페이</li>
+              <li tabindex="0">카페24</li>
+              <li tabindex="0">카카오쇼핑</li>
+              <li tabindex="0">신세계스토어</li>
+              <li tabindex="0">그립</li>
+            </ul>
+          </div>
+          <button class="btn info-btn" type="button" title="내용">
+            <svg xmlns="http://www.w3.org/2000/svg" class="bi bi-info-lg" fill="currentColor" height="16"
+              viewBox="0 0 16 16" width="16">
+              <path
+                d="m9.708 6.075-3.024.379-.108.502.595.108c.387.093.464.232.38.619l-.975 4.577c-.255 1.183.14 1.74 1.067 1.74.72 0 1.554-.332 1.933-.789l.116-.549c-.263.232-.65.325-.905.325-.363 0-.494-.255-.402-.704l1.323-6.208Zm.091-2.755a1.32 1.32 0 1 1-2.64 0 1.32 1.32 0 0 1 2.64 0Z" />
+            </svg>
+          </button>
+          <a class="btn download-btn btn-color1 r-btn" download="download" role="button" href="#n">엑셀다운드<i
+              class="fi excel ml-10"></i></a>
+        </div>
+        <div class="calendar-wrap table-r-border">
+          <ul class="calendar-header th-bg-1">
+            <li>일</li>
+            <li>월</li>
+            <li>화</li>
+            <li>수</li>
+            <li>목</li>
+            <li>금</li>
+            <li>토</li>
+          </ul>
+          <ul class="calendar-body">
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <ul class="day-body">
+                <li></li>
+              </ul>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day holiday sun">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+            <li class="day saturday">
+              <div class="day-header"><span class="date"></span></div>
+              <div class="day-body">
+                <div class="item1"></div>
+                <div class="item2"></div>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+
+
+  <!--모달 24.01.30-->
+  <div class="modal-wrap calculate d-none" id="Calculate">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>일일 정산 상세내역</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="date-wrap">
+          <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+          <strong class="fw-600">기준</strong>
+          <span class="data-in">2023년 11월 07일</span>
+        </div>
+        <div class="table-wrap mg-24">
+          <div class="table-r-border">
+            <div class="table basic-table auto-xy-scroll" style="max-height: 400px;">
+              <table class="fix-table">
+                <colgroup>
+                  <col style="width: 35%;">
+                  <col style="width: 30%;">
+                  <col style="width: 35%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">쇼핑몰</th>
+                    <th scope="col">수량</th>
+                    <th scope="col">정산금액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Total</td>
+                    <td><span class="data-in">3</span></td>
+                    <td><span class="data-in">19,680원</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">11번가</span></td>
+                    <td><span class="data-in">0</span>개</td>
+                    <td><span class="data-in">0</span>원</td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">쿠팡</span></td>
+                    <td><span class="data-in">0</span>개</td>
+                    <td><span class="data-in">0</span>원</td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">네이버</span></td>
+                    <td><span class="data-in">0</span>개</td>
+                    <td><span class="data-in">0</span>원</td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">옥션</span></td>
+                    <td><span class="data-in">3</span>개</td>
+                    <td><span class="data-in">19,680</span>원</td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">지마켓</span></td>
+                    <td><span class="data-in">0</span>개</td>
+                    <td><span class="data-in">0</span>원</td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">롯데온</span></td>
+                    <td><span class="data-in">0</span>개</td>
+                    <td><span class="data-in">0</span>원</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

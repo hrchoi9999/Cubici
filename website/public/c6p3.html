@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--마이페이지:가입해지-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">마이페이지</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li><a href="./c6p1.html"><span>가입 정보</span></a></li>
+      <li><a href="./c6p2.html"><span>나의 요금</span></a></li>
+      <li class="active"><a href="./c6p3.html"><span>가입 해지</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c6p3" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">가입해지</h2>
+      <div class="inner">
+        <article class="table-wrap">
+          <div class="sub-tit-wrap">
+            <h3 class="sub-tit">기본 정보</h3>
+          </div>
+          <div class="table-r-border2">
+            <div class="info-table">
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>아이디</span></dt>
+                <dd class="table-dd"><span class="data-in">brave@cubici.co.kr</span></dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>대표자명</span></dt>
+                <dd class="table-dd"><span class="data-in">더브레이브</span></dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>회사명</span></dt>
+                <dd class="table-dd"><span class="data-in">(주)테스트</span></dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>사업자등록번호</span></dt>
+                <dd class="table-dd"><span class="data-in">5678800419</span></dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>주소</span></dt>
+                <dd class="table-dd"><span class="data-in">서울특별시 영등포구 의사당대로 38, 큐빅테스트 (여의도동)</span></dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>전화번호</span></dt>
+                <dd class="table-dd"><span class="data-in">01028847588</span></dd>
+              </dl>
+            </div>
+          </div>
+        </article>
+        <article class="table-wrap mt-30">
+          <!-- 24.01.05-->
+          <div class="sub-tit-wrap">
+            <h3 class="sub-tit">이용정보</h3>
+          </div>
+          <div class="table-top flex-bt align-end">
+            <h4 class="table-caption">머니뱅크 이용현황</h4>
+            <div class="date-wrap">
+              <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+              <strong class="fw-600">기준</strong>
+              <span class="data-in">2023년 11월 07일</span>
+            </div>
+          </div>
+          <!--24.01.25-->
+          <div class="table-wrap">
+            <div class="table-r-border">
+              <div class="table basic-table auto-x-table">
+                <table>
+                  <colgroup>
+                    <col style="width: 16%;">
+                    <col style="width: 16%;">
+                    <col style="width: 16%;">
+                    <col style="width: 20%;">
+                    <col style="width: 16%;">
+                    <col style="width: 16%;">
+                  </colgroup>
+                  <thead class="th-bg-1 fc-03">
+                    <tr>
+                      <th scope="col">이용서비스</th>
+                      <th scope="col">계약일자</th>
+                      <th scope="col">만기일자</th>
+                      <th scope="col">상환잔액</th>
+                      <th scope="col">상태</th>
+                      <th scope="col">해지신청</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="data-in">선지급</span></td>
+                      <td><span class="data-in">2023-11-14</span></td>
+                      <td><span class="data-in">2024-11-11</span></td>
+                      <td><span class="data-in">12,000</span></td>
+                      <td><span class="data-in">이용중</span></td>
+                      <td><button class="btn s-btn btn-color2" type="button">서비스 해지</button></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in">선지급</span></td>
+                      <td><span class="data-in">2023-11-14</span></td>
+                      <td><span class="data-in">2024-11-11</span></td>
+                      <td><span class="data-in">12,000</span></td>
+                      <td><span class="data-in">이용중</span></td>
+                      <td><button class="btn s-btn btn-color2 dis" type="button">서비스 해지</button></td>
+                    </tr>
+                    <tr>
+                      <td colspan="6">
+                        이용중인 서비스가 없습니다.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="table-wrap mt-30">
+            <div class="table-top flex-bt align-end">
+              <h4 class="table-caption">머니뱅크 이용현황</h4>
+              <label class="radio-wrap">
+                <input type="checkbox" checked>
+                <span class="label">전체서비스해지</span>
+              </label>
+            </div>
+            <div class="table-wrap">
+              <div class="table-r-border">
+                <div class="table basic-table auto-x-table">
+                  <table>
+                    <colgroup>
+                      <col style="width: 16%;">
+                      <col style="width: 16%;">
+                      <col style="width: 16%;">
+                      <col style="width: 20%;">
+                      <col style="width: 16%;">
+                      <col style="width: 16%;">
+                    </colgroup>
+                    <thead class="th-bg-1 fc-03">
+                      <tr>
+                        <th scope="col">이용서비스</th>
+                        <th scope="col">계약일자</th>
+                        <th scope="col">만기일자</th>
+                        <th scope="col">상환잔액</th>
+                        <th scope="col">상태</th>
+                        <th scope="col">해지신청</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="data-in">선지급</span></td>
+                        <td><span class="data-in">2023-11-14</span></td>
+                        <td><span class="data-in">2024-11-11</span></td>
+                        <td><span class="data-in">12,000</span></td>
+                        <td><span class="data-in">이용중</span></td>
+                        <td><button class="btn s-btn btn-color2" type="button">서비스 해지</button></td>
+                      </tr>
+                      <tr>
+                        <td><span class="data-in">선지급</span></td>
+                        <td><span class="data-in">2023-11-14</span></td>
+                        <td><span class="data-in">2024-11-11</span></td>
+                        <td><span class="data-in">12,000</span></td>
+                        <td><span class="data-in">이용중</span></td>
+                        <td><button class="btn s-btn btn-color2 dis" type="button">서비스 해지</button></td>
+                      </tr>
+                      <tr>
+                        <td colspan="6">
+                          이용중인 서비스가 없습니다.
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+
+
+  <!-- 모달-->
+
+  <!-- 전체서비스 해지-->
+  <div class="modal-wrap d-none all-sv" id="All-sv"><!--감춤 d-none 클래스 추가-->
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>머니뱅크 전체서비스 해지</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <p class="txt">
+          <span>홍길동 회원님,</span><br>
+          이용하고 계시는 머니뱅크 000 모든 서비스의 해지를 위해서는 아래 상환잔액을 먼저 입금하셔야 합니다. 신청일자 기준 상환입금 필요금액은 다음과 같습니다.
+        </p>
+        <div class="info-wrap">
+          <div class="info">
+            <h4>서비스명</h4>
+            <p>: <span class="data-info">머니뱅크 전체서비스</span></p>
+          </div>
+          <div class="info">
+            <h4>선지급 이용총액</h4>
+            <p>: <span class="data-info">2,000,000</span>원</p>
+          </div>
+          <div class="info">
+            <h4>상환입금 필요금액</h4>
+            <p>: <span class="data-info">875,000</span>원</p>
+          </div>
+        </div>
+        <p class="txt">
+          보다 상세한 상환내역 및 직접상환을 위해서는 <b>"전액상환신청"</b> 페이지를 통해서 진행해주시면 됩니다. 보다 자세한 내용은 Q&A 게시판을 총해 문의하시면 보다 자세하게 안내드리도록
+          하겠습니다.<br>
+          감사합니다.<br>
+          큐빅아이
+        </p>
+      </div>
+      <div class="btn-wrap">
+        <button class="cancel b-btn">취소</button>
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+  <!-- 이용서비스 해지-->
+  <div class="modal-wrap d-none all-sv" id="Ut-sv"><!--감춤 d-none 클래스 추가-->
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>머니뱅크 이용서비스 해지</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <p class="txt">
+          <span>홍길동 회원님,</span><br>
+          이용하고 계시는 머니뱅크 000 모든 서비스의 해지를 위해서는 아래 상환잔액을 먼저 입금하셔야 합니다. 신청일자 기준 상환입금 필요금액은 다음과 같습니다.
+        </p>
+        <div class="info-wrap">
+          <div class="info">
+            <h4>서비스명</h4>
+            <p>: <span class="data-info">머니뱅크 전체서비스</span></p>
+          </div>
+          <div class="info">
+            <h4>선지급 이용총액</h4>
+            <p>: <span class="data-info">2,000,000</span>원</p>
+          </div>
+          <div class="info">
+            <h4>상환입금 필요금액</h4>
+            <p>: <span class="data-info">875,000</span>원</p>
+          </div>
+        </div>
+        <p class="txt">
+          보다 상세한 상환내역 및 직접상환을 위해서는 <b>"중도상환신청"</b> 페이지를 통해서 진행해주시면 됩니다. 보다 자세한 내용은 Q&A 게시판을 총해 문의하시면 보다 자세하게 안내드리도록
+          하겠습니다.<br>
+          감사합니다.<br>
+          큐빅아이
+        </p>
+      </div>
+      <div class="btn-wrap">
+        <button class="cancel b-btn">취소</button>
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+  <!-- 서비스해지 -->
+  <div class="modal-wrap d-none cancel-sv" id="Cancel-sv">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>서비스 해지</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <p class="txt">
+          <span>홍길동 회원님,</span><br>
+          회원님께서는 큐빅아이 서비스 해지를 신청하셨습니다. 아래와 서비스 해지를 원하시는 일자를 선택하시고 해지 사유를 선택해 주시면 대단히 감사하겠습니다. 향후 더 좋은 서비스로 다시 뵐 수 있기를
+          희망합니다.
+        </p>
+        <div class="form-wrap service">
+          <div class="line-bg"></div>
+          <div class="date-wrap">
+            <p class="date-ch blue">해지일자 지정</p>
+            <div class="docs-datepicker input-style-5">
+              <input class="calendar wid-100p" type="text" data-toggle="datepicker" readonly placeholder="해지일자 지정">
+              <div class="docs-datepicker-container"></div>
+            </div>
+          </div>
+          <dl class="table-item col-2 mt-7">
+            <dt class="table-dt date-ch blue"><span>해지사유</span></dt>
+            <dd class="table-dd">
+              <div class="select-wrap col-3 select-z-index">
+                <div class="select-box input-item wid-210">
+                  <button class="select-btn" type="button">
+                    <span class="select"></span>
+                    <i class="fi icon-angle-down"></i>
+                  </button>
+                </div>
+                <ul class="option">
+                  <li class="selected" tabindex="0">해지사유 선택</li>
+                </ul>
+              </div>
+            </dd>
+          </dl>
+          <!--24.01.12-->
+          <dl class="table-item col-2 mt-7 block">
+            <dt class="table-dt"><span class="mr-24 blue date-ch">서비스 잔액 발생 시, 입금요청 통장</span></dt>
+            <dd class="table-dd flex-1">
+              <div class="dd-wrap">
+                <div class="select-wrap col-3 select-z-index">
+                  <div class="select-box input-item bank">
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">은행</li>
+                  </ul>
+                </div>
+                <input class="flex-1 ml-10" type="text" placeholder="계좌번호 입력">
+              </div>
+            </dd>
+          </dl>
+          <!--//24.01.12 태그 수정 있습니다.-->
+        </div>
+        <p class="txt">
+          만일 머니뱅크 서비스를 이용하고 계셨다면, 큐빅아이 서비스 해지와 함깨 머니뱅크의 모든 서비드의 계약도 함께 자동적으로 해지 됩니다.
+        </p>
+        <p class="txt">그동안 큐빅아이와 함께해 주셔서 대단히 감사합니다.
+          <br>
+          큐빅아이
+        </p>
+      </div>
+      <div class="btn-wrap">
+        <button class="cancel b-btn">취소</button>
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 서비스 해지불가-->
+  <div class="modal-wrap d-none cancel" id="CancelN">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>서비스 해지</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <p class="txt">
+          <span>홍길동 회원님,</span><br>
+          기회원님께서는 아래와 같은 이유로 해지진행이 어려운 것으로 판단됩니다. 아래 내용을 확인하시고 이후 진행 부탁드립니다.
+        </p>
+        <div class="info-wrap">
+          <div class="info">
+            <h4>머니뱅크 미정산금</h4>
+            <p>: <span class="data-in">1,0000,000</span>원</p>
+          </div>
+        </div>
+        <p class="txt">
+          보다 상세한 상환내역 및 직접상환을 위해서는 <b>"전액상환신청"</b> 페이지를 통해서 진행해주시면 됩니다. 보다 자세한 내용은 Q&A 게시판을 총해 문의하시면 보다 자세하게 안내드리도록
+          하겠습니다.<br>
+          감사합니다.<br>
+          큐빅아이
+        </p>
+      </div>
+      <div class="btn-wrap">
+        <button class="cancel b-btn">취소</button>
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 직접 상환 -->
+  <div class="modal-wrap d-none directly" id="Directly">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>직접 상환 신청</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="date-wrap">
+          <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+          <strong class="fw-600">기준</strong>
+          <span class="data-in">2023년 11월 07일</span>
+        </div>
+        <p class="txt">
+          선택하신 실행금의 상환금액은 이용기간 및 상환잔액에 따라 변동되고 있습니다. 선택 실행금을 상환 완료 이전 직접 상환하기 위해서는 기준 일자를 확인하시고 아래 상환잔액을 입금해 주십시오.
+        </p>
+        <div class="table-wrap mg-24">
+          <div class="table-r-border">
+            <div class="table basic-table auto-x-table">
+              <table>
+                <colgroup>
+                  <col style="width: 21%;">
+                  <col style="width: 15%;">
+                  <col style="width: 21%;">
+                  <col style="width: 21%;">
+                  <col style="width: 22%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">선지급계약일</th>
+                    <th scope="col">실행금코드</th>
+                    <th scope="col">선지급입금액</th>
+                    <th scope="col">선지기준일자</th>
+                    <th scope="col">중도상환필요액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">21/09/20</span></td>
+                    <td><span class="data-in">AA014</span></td>
+                    <td><span class="data-in">765,000원</span></td>
+                    <td><span class="data-in">21/09/20</span></td>
+                    <td><span class="data-in"><b>765,000</b>원</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="txt">
+          중도상환 입금 시, 등록하신 주거래계좌룰 통해서 아래 계좌의 집금번호란에 회원명을 입력하시고 정확한 중도상환 필요액을 입금해 주십시오.
+        </p>
+        <div class="info-wrap">
+          <div class="info">
+            <h4>중도상환 입금 계좌</h4>
+            <p>: <span class="data-in">OO은행 123456-00-123456</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 일시 상환 -->
+  <div class="modal-wrap d-none once" id="Once">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>전액 일시 상환</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="date-wrap">
+          <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+          <strong class="fw-600">기준</strong>
+          <span class="data-in">2023년 11월 07일</span>
+        </div>
+        <p class="txt">
+          기상환금액은 이용기간 및 상환금액에 따라 변동되고 있습니다. 전액상환을 위해서는 상환기준 일자에 아래 상환잔액을 입금해 주십시오.
+        </p>
+        <div class="table-wrap mg-24">
+          <div class="table-r-border">
+            <div class="table basic-table auto-x-table">
+              <table>
+                <colgroup>
+                  <col style="width: 20%;">
+                  <col style="width: 30%;">
+                  <col style="width: 20%;">
+                  <col style="width: 30%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">회원명</th>
+                    <th scope="col">선지급 계약일</th>
+                    <th scope="col">상환기준일자</th>
+                    <th scope="col">중도상환 필요액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">홍길동</span></td>
+                    <td><span class="data-in">2021년 7월 15일</span></td>
+                    <td><span class="data-in">21/09/20</span></td>
+                    <td><span class="data-in">765,000원</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <p class="txt">
+          중도상환 입금 시, 등록하신 주거래계좌룰 통해서 아래 계좌의 집금번호란에 회원명을 입력하시고 정확한 중도상환 필요액을 입금해 주십시오.
+        </p>
+        <div class="info-wrap">
+          <div class="info">
+            <h4>중도상환 입금 계좌</h4>
+            <p>: <span class="data-in">OO은행 123456-00-123456</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상세상환내역 -->
+  <div class="modal-wrap d-none detail" id="Detail">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>상세 상환 내역</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="date-wrap">
+          <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+          <strong class="fw-600">기준</strong>
+          <span class="data-in">2023년 11월 07일</span>
+        </div>
+        <h4 class="t-tit">
+          실행금 상황현황
+        </h4>
+        <div class="table-wrap mg-24">
+          <div class="table-r-border">
+            <div class="table basic-table auto-x-table">
+              <table>
+                <colgroup>
+                  <col style="width: 9%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                  <col style="width: 13%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">No.</th>
+                    <th scope="col">실행코드</th>
+                    <th scope="col">입금일자</th>
+                    <th scope="col">선지급입금</th>
+                    <th scope="col">정산입금총액</th>
+                    <th scope="col">상환금액</th>
+                    <th scope="col">전액반환입금</th>
+                    <th scope="col">상환입금산액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">1</span></td>
+                    <td><span class="data-in">AA014</span></td>
+                    <td><span class="data-in">21/08/15</span></td>
+                    <td><span class="data-in">1,000,000</span></td>
+                    <td><span class="data-in">850,000</span></td>
+                    <td><span class="data-in">2,000,000</span></td>
+                    <td><span class="data-in">8,000,000</span></td>
+                    <td><span class="data-in">500,000</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <h4 class="t-tit">
+          정산입금 상세내역
+        </h4>
+        <div class="table-wrap mg-24">
+          <div class="table-r-border">
+            <div class="table basic-table auto-x-table m-scroll">
+              <table>
+                <colgroup>
+                  <col style="width: 8%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 11%;">
+                  <col style="width: 15%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">No.</th>
+                    <th scope="col">기준일자</th>
+                    <th scope="col">상환구분</th>
+                    <th scope="col">쇼핑몰</th>
+                    <th scope="col">주문건수</th>
+                    <th scope="col">정산입금액</th>
+                    <th scope="col">상환금액</th>
+                    <th scope="col">잔액반환</th>
+                    <th scope="col">상환잔액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">1</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in">자동상환</span></td>
+                    <td><span class="data-in">옥션</span></td>
+                    <td><span class="data-in">10건</span></td>
+                    <td><span class="data-in">600,000</span></td>
+                    <td><span class="data-in">480,000</span></td>
+                    <td><span class="data-in">120,000</span></td>
+                    <td><span class="data-in">200,000</span></td>
+
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">2</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">3</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">4</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">5</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">6</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">7</span></td>
+                    <td><span class="data-in">21/09/12</span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                    <td><span class="data-in"></span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <small class="small">쇼핑몰 별 구체 정산입금 주문번호 및 금액은 <a class="fc-red" href="./c3p2.html">"정산정보/정산상세”</a>에서
+          확인하세요.</small><!--24.01.14 추가-->
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 이용한도 조정 -->
+  <div class="modal-wrap d-none limit" id="Limit">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>이용한도 조정 신청</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="c-tit">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/cash.png" alt="">
+          </div>
+          <p>현재 선지급 이용한도: 30백만원</p>
+        </div>
+        <div class="form-wrap">
+          <div class="input-box">
+            <div class="input-item wid-250">
+              <h4 class="tit">조정 요청한도</h4>
+              <input class="flex-1 ml-10" type="text" placeholder="요청금액 입력">
+            </div>
+            <p>(단위:백만원)</p>
+          </div>
+        </div>
+        <div class="btn-wrap mg-30">
+          <button class="check b-btn">신청</button>
+        </div>
+        <p class="txt before">
+          선지급 이용한도는 최소 5백만원에서 최대 50백만원 입니다.
+        </p>
+        <p class="txt before none">
+          조정요청 금액을 백만원 단위로 입력해 주세요.
+        </p>
+        <p class="txt before">
+          조정 신청을 하시면 심사를 통하여 24시간 이내에 그 결과를 알려드립니다
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 회원평가 -->
+  <div class="modal-wrap d-none n-pad" id="Evaluate">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>회원평가</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <form>
+          <div class="table-wrap">
+            <div class="table-r-border2">
+              <div class="info-table">
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>작성일자</span></dt>
+                  <dd class="table-dd">
+                    <input class="flex-1" type="text" placeholder="2000 / 00 / 00">
+                  </dd>
+                </dl>
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>구분</span></dt>
+                  <dd class="table-dd">
+                    <div class="select-wrap col-3 select-z-index">
+                      <div class="select-box input-item">
+                        <button class="select-btn" type="button">
+                          <span class="select"></span>
+                          <i class="fi icon-angle-down"></i>
+                        </button>
+                      </div>
+                      <ul class="option">
+                        <li class="selected" tabindex="0">상환</li>
+                      </ul>
+                    </div>
+                  </dd>
+                </dl>
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>작성자</span></dt>
+                  <dd class="table-dd">
+                    <input class="flex-1" type="text" placeholder="홍길동">
+                  </dd>
+                </dl>
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>구분</span></dt>
+                  <dd class="table-dd">
+                    <div class="select-wrap col-3 select-z-index">
+                      <div class="select-box input-item">
+                        <button class="select-btn" type="button">
+                          <span class="select"></span>
+                          <i class="fi icon-angle-down"></i>
+                        </button>
+                      </div>
+                      <ul class="option">
+                        <li class="selected" tabindex="0">신청</li>
+                      </ul>
+                    </div>
+                  </dd>
+                </dl>
+                <dl class="table-item col-1">
+                  <dt class="table-dt"><span>제목</span></dt>
+                  <dd class="table-dd">
+                    <input class="flex-1 wid-100p" type="text" placeholder="상환입금 연체">
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div><!--24.01.12 태그 수정 있습니다.-->
+        </form>
+        <!--24.01.12-->
+        <button class="warning">
+          <span class="icon-wrap">
+            <img src="./static/img/sub/c6/check.png" alt="">
+          </span>
+          <span>주의거래처</span>
+        </button>
+        <!--//24.01.12 태그 수정 있습니다.-->
+        <div class="text-box">
+          <textarea cols="30" rows="10"></textarea>
+        </div>
+      </div>
+      <!--평가하기 버튼 위치이동 24.01.12-->
+    </div>
+    <div class="btn-wrap">
+      <button class="check b-btn">평가하기</button>
+    </div><!--버튼 위치이동 24.01.12-->
+  </div>
+
+  <!-- 등록 쇼핑몰 변경 -->
+  <div class="modal-wrap d-none shop-ch" id="ShopCh">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>등록 쇼핑몰 변경</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content select-z-index">
+        <h4 class="t-tit">
+          회원정보
+        </h4>
+        <div class="table-wrap">
+          <div class="table-r-border2">
+            <div class="info-table">
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>아이디</span></dt>
+                <dd class="table-dd">
+                  <input class="flex-1" type="text">
+                </dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>회사명</span></dt>
+                <dd class="table-dd">
+                  <input class="flex-1" type="text">
+                </dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>사업자등록번호</span></dt>
+                <dd class="table-dd">
+                  <input class="flex-1" type="text">
+                </dd>
+              </dl>
+              <dl class="table-item col-2">
+                <dt class="table-dt"><span>대표자명</span></dt>
+                <dd class="table-dd">
+                  <input class="flex-1" type="text">
+                </dd>
+              </dl>
+              <dl class="table-item col-1">
+                <dt class="table-dt"><span>주소</span></dt>
+                <dd class="table-dd">
+                  <input class="flex-1" type="text">
+                </dd>
+              </dl>
+            </div>
+          </div>
+        </div>
+        <h4 class="t-tit">
+          등록 쇼핑몰 변경
+        </h4>
+        <div class="wrap-type-2 py-0 select-z-index">
+          <article class="form-card select-z-index">
+            <h5 class="tit mb-0">기존 등록 B2B 도매몰의 온라인 쇼핑몰이 변경된 경우 해당 B2B도매몰의 온라인 쇼핑몰 선택을 통해 수정해 주십시오. 신규 B2B 도매몰 등록의 경우 B2B도매몰과
+              아이디를 입력하시고 온라인 쇼핑몰을 선택해주십시오.</h5>
+            <div class="form-wrap">
+              <form>
+                <fieldset class="fieldset">
+                  <div class="input-group select-z-index">
+                    <h6 class="tit fc-05">· B2B도매몰</h6>
+                    <div class="select-wrap select-type-2">
+                      <div class="select-box">
+                        <button class="select-btn" type="button">
+                          <span class="select">−−−− B2B몰 선택
+                            −−−−</span>
+                          <i class="fi select-arrow"></i>
+                        </button>
+                      </div>
+                      <ul class="option">
+                        <li class="selected first" tabindex="0">−−−− B2B몰 선택
+                          −−−−</li>
+                        <li data-value="STREET11" tabindex="0">11번가</li>
+                        <li data-value="COUPANG" tabindex="0">쿠팡</li>
+                        <li data-value="NAVER" tabindex="0">네이버</li>
+                        <li data-value="AUCTION" tabindex="0">옥션</li>
+                        <li data-value="GMARKET" tabindex="0">지마켓</li>
+                        <li data-value="LOTTEON" tabindex="0">롯데온</li>
+                        <li data-value="IAMWEB" tabindex="0">아이엠웹</li>
+                        <li data-value="BLOGPAY" tabindex="0">블로그페이</li>
+                        <li data-value="CAFE24" tabindex="0">카페24</li>
+                        <li data-value="KAKAO" tabindex="0">카카오쇼핑</li>
+                        <li data-value="SSG" tabindex="0">신세계스토어</li>
+                        <li data-value="GRIP" tabindex="0">그립</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div class="input-group">
+                    <h6 class="tit fc-05">· B2B아이디</h6>
+                    <div class="select-wrap select-type-2">
+                      <div class="select-box">
+                        <button class="select-btn" type="button">
+                          <span class="select">hoho123</span>
+                          <i class="fi select-arrow"></i>
+                        </button>
+                      </div>
+                      <ul class="option">
+                        <li class="selected" tabindex="0">hoho123</li>
+                      </ul>
+                    </div>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+          </article>
+          <article class="form-card pt-0">
+            <h5 class="tit mb-0">선택하신 B2B 도매몰의 제품을 판매하는 온라인 쇼핑몰을 선택해주세요.</h5>
+            <div class="form-wrap mt-0">
+              <form>
+                <fieldset class="fieldset flex-start align-center">
+                  <div class="checkbox-group">
+                    <label class="check-wrap">
+                      <input class="hidden checkbox" type="checkbox">
+                      <span class="label">
+                        <img src="./static/img/logo/coupang-s.jpg" alt="쿠팡">
+                      </span>
+                    </label>
+                    <label class="check-wrap">
+                      <input class="hidden checkbox" type="checkbox">
+                      <span class="label">
+                        <img src="./static/img/logo/naver.png" alt="네이버">
+                      </span>
+                    </label>
+                    <label class="check-wrap">
+                      <input class="hidden checkbox" type="checkbox">
+                      <span class="label">
+                        <img src="./static/img/logo/11st-s.png" alt="11번가">
+                      </span>
+                    </label>
+                  </div>
+                </fieldset>
+              </form>
+            </div>
+          </article>
+        </div>
+        <small class="small">
+          선지급 대상 도매몰 정보의 등록 및 변경은 해당 정보 확인을 위해서 통상 24시간이 필요합니다.
+        </small>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

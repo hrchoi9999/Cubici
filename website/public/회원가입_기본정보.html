@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+</head>
+<!--회원가입: 기본정보-->
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">회원가입</h2>
+      </div>
+    </div>
+  </div>
+
+  <!--콘텐츠-->
+  <main class="content-wrap join-form" id="Main">
+    <section class="section sec-1 bg-gray">
+      <div class="inner">
+        <div class="app-step">
+          <ul class="step">
+            <li>약관동의</li>
+            <li class="active">기본정보</li>
+            <li>가입완료</li>
+          </ul>
+        </div>
+
+        <div class="sub-tit-wrap">
+          <h3 class="sub-tit">기본정보</h3>
+        </div>
+        <div class="form-wrap select-z-index">
+          <form>
+            <fieldset class="fieldset select-z-index">
+              <div class="input-group">
+                <div class="input-box col-2">
+                  <h4 class="tit">회사명</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="회사명">
+                </div>
+
+                <div class="input-box col-2">
+                  <h4 class="tit">사업자등록 번호</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="사업자등록번호">
+                  <button class="btn btn-color4" type="button">확인</button>
+                </div>
+              </div>
+              <div class="input-group">
+                <div class="input-box col-2">
+                  <h4 class="tit">대표자명</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="대표자명">
+                </div>
+                <div class="input-box col-2">
+                  <h4 class="tit">설립연도</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="설립연도">
+                </div>
+              </div>
+              <div class="input-group select-z-index">
+                <div class="input-box col-2 select-z-index">
+                  <h4 class="tit">사업자 유형</h4>
+                  <div class="select-wrap select-type-2 flex-1">
+                    <div class="select-box">
+                      <button class="select-btn" type="button">
+                        <span class="select"></span>
+                        <i class="fi icon-angle-down"></i>
+                      </button>
+                    </div>
+                    <ul class="option">
+                      <li class="selected" data-value="" tabindex="0">일반(개인)사업자</li>
+                      <li data-value="" tabindex="0">일반(간이)사업자</li>
+                      <li data-value="" tabindex="0">법인사업자</li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="input-box col-2 select-z-index">
+                  <h4 class="tit">업종</h4>
+                  <div class="select-wrap select-type-2 flex-1">
+                    <div class="select-box">
+                      <button class="select-btn" type="button">
+                        <span class="select"></span>
+                        <i class="fi icon-angle-down"></i>
+                      </button>
+                    </div>
+                    <ul class="option">
+                      <li class="selected" data-value="" tabindex="0">의류</li>
+                      <li data-value="" tabindex="0">잡화</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <div class="input-group post-box">
+                <div class="input-box col-2">
+                  <h4 class="tit">주소</h4>
+                  <input class="input-style-4 col-1" type="text" placeholder="우편번호">
+                  <button class="btn btn-color4" type="button">찾기</button>
+                  <input class="input-style-4 flex-1" type="text" placeholder="주소">
+                  <input class="input-style-4 col-3" type="text" placeholder="상세주소">
+                </div>
+              </div>
+            </fieldset>
+            <hr>
+            <fieldset class="fieldset">
+              <div class="input-group id-box">
+                <div class="input-box col-2">
+                  <h4 class="tit">아이디</h4>
+                  <input class="input-style-4 flex-1" type="text" readonly>
+                  <button class="btn btn-color4" type="button">중복확인</button>
+                  <button class="btn btn-color4" type="button">이메일 인증</button>
+                  <div>
+                    <input class="input-style-4 flex-1" type="text" placeholder="인증번호 입력">
+                    <button class="btn btn-color4" type="button">인증하기</button>
+                  </div>
+                </div>
+              </div>
+              <div class="input-group">
+                <div class="input-box col-2">
+                  <h4 class="tit">암호</h4>
+                  <input class="input-style-4 flex-1" type="password" readonly>
+                </div>
+                <div class="input-box col-2">
+                  <h4 class="tit">암호확인</h4>
+                  <input class="input-style-4 flex-1" type="password">
+                </div>
+              </div>
+              <div class="input-group">
+                <div class="input-box col-2">
+                  <h4 class="tit">대표자 핸드폰</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="숫자만 입력">
+                  <button class="btn btn-color4" type="button">SMS 인증</button>
+                </div>
+                <div class="input-box col-2">
+                  <h4 class="tit">인증번호 입력</h4>
+                  <input class="input-style-4 flex-1" type="text" placeholder="인증번호 입력">
+                  <button class="btn btn-color4" type="button">인증하기</button>
+                </div>
+              </div>
+              <div class="input-group select-z-index">
+                <div class="input-box col-2 select-z-index">
+                  <h4 class="tit">협력사 (선택)</h4>
+                  <div class="select-wrap select-type-2 flex-1">
+                    <div class="select-box">
+                      <button class="select-btn" type="button">
+                        <span class="select"></span>
+                        <i class="fi icon-angle-down"></i>
+                      </button>
+                    </div>
+                    <ul class="option">
+                      <li class="selected" data-value="" tabindex="0">선택</li>
+                      <li data-value="" tabindex="0">협력사</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+
+        <div class="btn-box txt-center">
+          <a class="btn lg-btn line-btn1" href="#n">이전</a>
+          <a class="btn lg-btn btn-color2" href="#n">회원가입 확인</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+</body>
+
+</html>

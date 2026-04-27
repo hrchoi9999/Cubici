@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--마이페이지:나의 요금-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">마이페이지</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li><a href="./c6p1.html"><span>가입 정보</span></a></li>
+      <li class="active"><a href="./c6p2.html"><span>나의 요금</span></a></li>
+      <li><a href="./c6p3.html"><span>가입 해지</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c6p2" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">나의요금</h2>
+      <div class="inner">
+        <article class="charge-wrap">
+          <div class="charge-twrap">
+            <h3 class="charge-tit">현재 요금제</h3>
+            <div class="date-wrap">
+              <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+              <strong class="fw-600">기준</strong>
+              <span class="data-in">2023년 11월 07일</span>
+            </div>
+          </div>
+          <div class="all-charge">
+            <div class="charge">
+              <div class="img-wrap">
+                <img src="./static/img/icon/charge1.png" alt="icon">
+              </div>
+              <div class="txt-wrap">
+                <h4>요금제</h4>
+                <p class="data-in">무료 요금제</p>
+              </div>
+            </div>
+            <div class="charge">
+              <div class="img-wrap">
+                <img src="./static/img/icon/charge2.png" alt="icon">
+              </div>
+              <div class="txt-wrap">
+                <h4>사용기간</h4>
+                <p class="data-in">21/06/01 ~ 21/06/31</p>
+              </div>
+            </div>
+            <div class="charge">
+              <div class="img-wrap">
+                <img src="./static/img/icon/charge3.png" alt="icon">
+              </div>
+              <div class="txt-wrap">
+                <h4>잔여 이용가능 기간</h4>
+                <p class="data-in">50일</p>
+              </div>
+            </div>
+          </div>
+        </article>
+        <article class="charge-wrap">
+          <div class="charge-twrap">
+            <h3 class="charge-tit">변경 요금제 선택</h3>
+          </div>
+          <div class="all-change">
+            <article class="change choose">
+              <div class="change-header">
+                <div class="icon-wrap">
+                  <img src="./static/img/icon/change-date.png" alt="icon">
+                </div>
+                <p>1개월<span>(VAT 별도)</span></p>
+              </div>
+              <div class="month">
+                <p>29,000 <span>원/월</span></p>
+              </div>
+              <h4 class="change-tit">매월 이용 요금 결제</h4>
+              <label class="radio-wrap">
+                <input type="checkbox" checked>
+                <span class="label"></span>
+              </label>
+            </article>
+            <article class="change">
+              <div class="change-header">
+                <div class="icon-wrap">
+                  <img src="./static/img/icon/change-date.png" alt="icon">
+                </div>
+                <p>3개월<span>(VAT 별도)</span></p>
+              </div>
+              <div class="month">
+                <p>27,000 <span>원/월</span></p>
+              </div>
+              <h4 class="change-tit">3개월마다 요금 결제</h4>
+              <label class="radio-wrap">
+                <input type="checkbox">
+                <span class="label"></span>
+              </label>
+            </article>
+            <article class="change">
+              <div class="change-header">
+                <div class="icon-wrap">
+                  <img src="./static/img/icon/change-date.png" alt="icon">
+                </div>
+                <p>6개월<span>(VAT 별도)</span></p>
+              </div>
+              <div class="month">
+                <p>25,000 <span>원/월</span></p>
+              </div>
+              <h4 class="change-tit">6개월마다 요금 결제</h4>
+              <label class="radio-wrap">
+                <input type="checkbox">
+                <span class="label"></span>
+              </label>
+            </article>
+            <article class="change">
+              <div class="change-header">
+                <div class="icon-wrap">
+                  <img src="./static/img/icon/change-date.png" alt="icon">
+                </div>
+                <p>12개월<span>(VAT 별도)</span></p>
+              </div>
+              <div class="month">
+                <p>20,000 <span>원/월</span></p>
+              </div>
+              <h4 class="change-tit">1년마다 요금 결제</h4>
+              <label class="radio-wrap">
+                <input type="checkbox">
+                <span class="label"></span>
+              </label>
+            </article>
+          </div>
+        </article>
+      </div>
+    </section>
+    <section class="section sec-2">
+      <div class="inner">
+        <div class="charge-twrap">
+          <div class="charge-tit">요금제 변경</div>
+        </div>
+        <!--요금제 변경-->
+        <div class="all-payment"><!-- d-none 클래스로 감춰 두었습니다.-->
+          <div class="pay-tit">
+            <div class="img-wrap">
+              <img src="./static/img/icon/bank-icon3.png" alt="icon">
+            </div>
+            <h4>선택하신 요금제에 따라 아래 내역을 확인하시고 해당 금액을 결제해 주십시오.</h4>
+          </div>
+          <div class="payment">
+            <div class="pay-awrap">
+              <div class="pay-wrap">
+                <p>현재 요금제</p>
+                <div class="now"><span>무료</span></div>
+              </div>
+              <div class="img-wrap">
+                <img src="./static/img/icon/for.png" alt="icon">
+              </div>
+              <div class="pay-wrap change-pay">
+                <p>변경 요금제</p>
+                <div class="now point"><span>6개월</span></div>
+              </div>
+            </div>
+            <div class="pay-wrap">
+              <p>결제 요청액</p>
+              <div class="now point"><span>165,000원</span></div>
+              <span class="plus">(부가가치세 포함)</span>
+            </div>
+            <div class="pay-wrap">
+              <p>결제 후 이용기간</p>
+              <div class="now mr-20"><span>22년 1월 1일</span></div>
+              <div class="now"><span>22년 5월 31일</span></div>
+            </div>
+          </div>
+          <p class="info">서비스 유료이용 기간 중 서비스 해지가 필요하신 경우, 마이페이지를 통해 언제든지 요금제 변경 또는 서비스 해지가 가능합니다.</p>
+          <button class="pay">결제하기</button>
+        </div>
+        <!--요금제 변경 환급-->
+        <div class="all-payment pay2 d-none">
+          <div class="pay-tit">
+            <div class="img-wrap">
+              <img src="./static/img/icon/bank-icon3.png" alt="icon">
+            </div>
+            <h4>선택하신 요금제에 따라 아래 내역을 확인하시고 환급계좌를 입력해 주십시오.</h4>
+          </div>
+          <div class="payment">
+            <div class="pay-awrap">
+              <div class="pay-wrap">
+                <p>현재 요금제</p>
+                <div class="now"><span>무료</span></div>
+              </div>
+              <div class="img-wrap">
+                <img src="./static/img/icon/for.png" alt="icon">
+              </div>
+              <div class="pay-wrap change-pay">
+                <p>변경 요금제</p>
+                <div class="now point"><span>6개월</span></div>
+              </div>
+            </div>
+            <div class="pay-wrap">
+              <p>이용료 환급액</p>
+              <div class="now point"><span>165,000원</span></div>
+              <span class="plus">(부가가치세 포함)</span>
+            </div>
+            <div class="pay-wrap after">
+              <p>결제 후 이용기간</p>
+              <div class="now mr-20"><span>22년 1월 1일</span></div>
+              <div class="now"><span>22년 5월 31일</span></div>
+            </div>
+            <div class="pay-wrap last">
+              <span class="small">(환급금액이 송금을 위한 환급 계좌 정보를 입력해 주십시오)</span>
+              <p>환급계좌 정보</p>
+              <div class="input-wrap">
+                <input type="text" placeholder="이름 입력" class="wid-110">
+                <div class="select-wrap select-z-index">
+                  <div class="select-box input-item">
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">은행 선택</li>
+                  </ul>
+                </div>
+                <input type="text" placeholder="계좌번호 입력" class="wid-150">
+              </div>
+            </div>
+          </div>
+          <p class="info">서비스 유료이용 기간 중 서비스 해지가 필요하신 경우, 마이페이지를 통해 언제든지 요금제 변경 또는 서비스 해지가 가능합니다.</p>
+          <button class="pay">변경 신청</button>
+        </div>
+
+        <article class="table-wrap">
+          <div class="sub-tit-wrap">
+            <h3 class="sub-tit">서비스 이용 내역</h3>
+          </div>
+          <div class="table-r-border">
+            <div class="table basic-table auto-xy-scroll">
+              <table>
+                <colgroup>
+                  <col style="width: 6%;">
+                  <col style="width: 12%;">
+                  <col style="width: 12%;">
+                  <col style="width: 17%;">
+                  <col style="width: 12%;">
+                  <col style="width: 17%;">
+                  <col style="width: 12%;">
+                  <col style="width: 12%;">
+                </colgroup>
+                <thead class="th-bg-1 fc-03">
+                  <tr>
+                    <th scope="col">회차</th>
+                    <th scope="col">구분</th>
+                    <th scope="col">이용료</th>
+                    <th scope="col">서비스 기간</th>
+                    <th scope="col">결제일자</th>
+                    <th scope="col">결제금액</th>
+                    <th scope="col">잔여일자</th>
+                    <th scope="col">영수증</th><!--23.01.08 텍스트 수정-->
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">10</span></td>
+                    <td><span class="data-in">22년 1월</span></td>
+                    <td><span class="data-in">3개월</span></td>
+                    <td><span class="data-in">22/12/01 ~ 23/21/08</span></td>
+                    <td><span class="data-in">21년 12월 30일</span></td>
+                    <td><span class="data-in">800,000</span>원</td>
+                    <td><span class="data-in">7일</span></td>
+                    <td><button class="btn s-btn-2 btn-color2 dis" type="button">확인</button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">9</span></td>
+                    <td><span class="data-in">22년 1월</span></td>
+                    <td><span class="data-in">3개월</span></td>
+                    <td><span class="data-in">22/12/01 ~ 23/21/08</span></td>
+                    <td><span class="data-in">21년 12월 30일</span></td>
+                    <td><span class="data-in">800,000</span>원</td>
+                    <td><span class="data-in">-</span></td>
+                    <td><button class="btn s-btn-2 btn-color2" type="button">신청</button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">8</span></td>
+                    <td><span class="data-in">22년 1월</span></td>
+                    <td><span class="data-in">3개월</span></td>
+                    <td><span class="data-in">22/12/01 ~ 23/21/08</span></td>
+                    <td><span class="data-in">21년 12월 30일</span></td>
+                    <td><span class="data-in">800,000</span>원</td>
+                    <td><span class="data-in">-</span></td>
+                    <td><button class="btn s-btn-2 btn-color2 dis" type="button">확인</button></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">7</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">6</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">5</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">4</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">3</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">2</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">1</span></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                  </tr>
+                  <tr class="d-none">
+                    <td colspan="8">
+                      이용중인 서비스가 없습니다.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+</body>
+
+</html>

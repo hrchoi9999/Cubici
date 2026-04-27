@@ -1,5 +1,7 @@
 # Local/private material
 private_local/
+thebrave/
+desktop.ini
 backup_*.sql
 *.sql
 !scripts/*.sql

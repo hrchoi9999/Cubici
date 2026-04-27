@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <title>큐빅아이</title>
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <!--콘텐츠-->
+  <main class="login-content-wrap" id="Main">
+    <div class="login-box">
+      <h2>LOGIN</h2>
+      <h3>큐빅아이에 오신것을 환영합니다!</h3>
+      <form>
+        <div class="input-box id r-30">
+          <label for="user-id">
+            <img src="./static/img/icon/id.svg" alt="아이디">
+          </label>
+          <input id="user-id" type="text" placeholder="hoho123">
+        </div>
+        <div class="input-box pw r-30">
+          <label for="user-pw">
+            <img src="./static/img/icon/pw.svg" alt="비밀번호">
+          </label>
+          <input id="user-pw" type="password" placeholder="********">
+        </div>
+        <a class="big-btn r-30" href="#n">로그인</a>
+        <a class="big-btn r-30" href="#n" target="_blank">회원가입</a>
+        <fieldset>
+          <div class="f-left">
+            <input id="id-save" type="checkbox"><label class="id-save" for="id-save">아이디 저장</label>
+          </div>
+          <div class="f-right">
+            <a class="btn modal-open" data-id="#IdFind" href="#n">아이디 찾기</a>
+            <a class="btn modal-open" data-id="#PwFind" href="#n">비밀번호 찾기</a>
+          </div>
+        </fieldset>
+      </form>
+      <hr>
+      <div class="cs-box">
+        <b>큐빅아이 고객지원</b>
+        <span>02-6925-6373 / 카톡 ID : cubici</span>
+      </div>
+    </div>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+
+  <!-- 아이디 찾기 -->
+  <div class="modal-wrap d-none id-find" id="IdFind">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>아이디 찾기</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <form>
+          <fieldset class="fieldset">
+            <h5 class="tit">이름</h5>
+            <div class="input-group">
+              <input class="input-style-4" type="text" placeholder="이름">
+            </div>
+          </fieldset>
+          <fieldset class="fieldset">
+            <h5 class="tit">휴대폰 번호</h5>
+            <div class="input-group flex-column">
+              <div class="input-box">
+                <input class="input-style-4" type="text" placeholder="숫자만 입력">
+                <button class="btn btn-color4" type="button">인증요청</button>
+              </div>
+              <div class="input-box">
+                <input class="input-style-4" type="text" placeholder="인증번호 입력">
+                <button class="btn btn-color4" type="button">확인</button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn fix-w">닫기</button>
+      </div>
+    </div>
+  </div>
+  <!-- 비밀번호 찾기 -->
+  <div class="modal-wrap d-none pw-find" id="PwFind">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>비밀번호 찾기</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <form>
+          <fieldset class="fieldset">
+            <h5 class="tit">이름</h5>
+            <div class="input-group">
+              <input class="input-style-4" type="text" placeholder="이름">
+            </div>
+          </fieldset>
+          <fieldset class="fieldset">
+            <h5 class="tit">아이디</h5>
+            <div class="input-group">
+              <input class="input-style-4" type="text" placeholder="아이디">
+            </div>
+          </fieldset>
+          <fieldset class="fieldset">
+            <h5 class="tit">휴대폰 번호</h5>
+            <div class="input-group flex-column">
+              <div class="input-box">
+                <input class="input-style-4" type="text" placeholder="숫자만 입력">
+                <button class="btn btn-color4" type="button">인증요청</button>
+              </div>
+              <div class="input-box">
+                <input class="input-style-4" type="text" placeholder="인증번호 입력">
+                <button class="btn btn-color4" type="button">확인</button>
+              </div>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn fix-w">닫기</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>

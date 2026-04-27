@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--매출정보:반품/교환-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">매출정보</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li><a href="./c2p1.html"><span>판매현황</span></a></li>
+      <li class="active"><a href="./c2p2.html"><span>반품/교환</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c2p2" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">반품/교환</h2>
+      <div class="inner">
+        <div class="form-wrap select-z-index">
+          <form>
+            <div class="top-form-wrap color-r-box ">
+              <div class="input-group select-z-index">
+                <div class="select-wrap col-3">
+                  <div class="select-box input-item">
+                    <h4 class="tit">진행상태</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">전체</li>
+                    <li tabindex="0">반품</li>
+                    <li tabindex="0">교환</li>
+                  </ul>
+                </div>
+                <div class="select-wrap col-3">
+                  <div class="select-box input-item">
+                    <h4 class="tit">쇼핑몰</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">선택</li>
+                  </ul>
+                </div>
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit ">제품명</h4>
+                    <input class="flex-1 ml-10" type="text" placeholder="제품명">
+                  </div>
+                </div>
+                <a class="btn btn-color1 r-btn" download="download" role="button" href="#n">엑셀다운드<i
+                    class="fi excel ml-10"></i></a>
+              </div>
+              <div class="input-group">
+                <div class="input-box col-3">
+                  <div class="docs-datepicker input-item">
+                    <h4 class="tit">시작</h4>
+                    <input type="text" class="calendar" data-toggle="datepicker" placeholder="시작기간">
+                    <i class="fi icon-calendar-check-o"></i>
+                    <div class="docs-datepicker-container"></div>
+                  </div>
+                </div>
+                <div class="input-box col-3">
+                  <div class="docs-datepicker input-item">
+                    <h4 class="tit">종료</h4>
+                    <input type="text" class="calendar" data-toggle="datepicker" placeholder="종료기간">
+                    <i class="fi icon-calendar-check-o"></i>
+                    <div class="docs-datepicker-container"></div>
+                  </div>
+                </div>
+                <div class="select-wrap col-3">
+                  <div class="select-box input-item">
+                    <h4 class="tit">보기설정</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">신청일자</li>
+                    <li tabindex="0">주문일자</li>
+                    <li tabindex="0">쇼핑몰</li>
+                  </ul>
+                </div>
+                <button class="btn btn-color1 r-btn" type="button">검색<i class="fi icon-search-1 ml-10"></i></button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <div class="table-wrap">
+          <!--테이블 top-->
+          <div class="form-wrap select-z-index">
+            <form>
+              <div class="table-top flex-end">
+                <div class="select-wrap mr-10">
+                  <div class="select-box r-style">
+                    <h4 class="tit mr-20">보기설정</h4>
+                    <button class="select-btn" type="button">
+                      <span class="select"></span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <ul class="option">
+                    <li class="selected" tabindex="0">10개</li>
+                    <li tabindex="0">20개</li>
+                    <li tabindex="0">50개</li>
+                  </ul>
+                </div>
+                <div class="select-wrap wid-150">
+                  <div class="select-box wid-100p r-style">
+                    <button class="select-btn wid-100p flex-bt align-center" type="button">
+                      <span class="fw-600 fc-main">선택옵션</span>
+                      <i class="fi icon-angle-down"></i>
+                    </button>
+                  </div>
+                  <div class="option">
+                    <fieldset class="fieldset">
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">주문일자</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">쇼핑몰</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">주문번호</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">진행상태</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">상품명</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">쇼핑몰상품번호</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">송장번호</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">배송완료일자</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">구매자명</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">구매자ID</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">배송완료일자</span></label>
+                      <label class="checkbox-wrap"><input class="checkbox" type="checkbox" checked><span
+                          class="label">구매확정일자</span></label>
+                    </fieldset>
+                    <button class="btn s-btn btn-color1 wid-100p" type="button">옵션확인</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="table-r-border">
+            <div class="wide-table" style="max-height: 681px;">
+              <div class="table fix-table">
+                <table>
+                  <colgroup>
+                    <col class="wid-26p">
+                    <col class="wid-21p">
+                    <col class="wid-27p">
+                    <col class="wid-26p">
+                  </colgroup>
+                  <thead class="th-mid th-bg-1">
+                    <tr>
+                      <th>주문일자</th>
+                      <th>쇼핑몰</th>
+                      <th>주문번호</th>
+                      <th>진행상태</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="data-in">2023-11-12</span></td>
+                      <td><span class="data-in">네이버</span></td>
+                      <td><a class="data-in btn modal-open" href="#n" data-id="#ReturnDetail">2023111612661261</a></td>
+                      <td>
+                        <span class="data-in"><span class="swap"></span></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in">2023-11-12</span></td>
+                      <td><span class="data-in">네이버</span></td>
+                      <td><a class="data-in btn modal-open" href="#n" data-id="#ReturnDetail">2023111612661261</a></td>
+                      <td>
+                        <span class="data-in"><span class="return"></span></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><button class="data-in btn modal-open"></button></td>
+                      <td>
+                        <span class="data-in"></span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="table move-table">
+                <table>
+                  <thead class="th-mid th-bg-1">
+                    <tr>
+                      <th>상품명</th>
+                      <th>쇼핑몰상품번호</th>
+                      <th>송장번호</th>
+                      <th>배송완료일자</th>
+                      <th>구매자명</th>
+                      <th>구매자ID</th>
+                      <th>수령자</th>
+                      <th>주문금액</th>
+                      <th>판매수량</th>
+                      <th>(반품/교환)신청일</th>
+                      <th>수거송장번호</th>
+                      <th>재배송송장번호</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="data-in" title="남성화 앞막힌 통슬리퍼남성화 앞막힌 통슬리퍼">남성화 앞막힌 통슬리퍼남성화 앞막힌
+                          통슬리퍼</span></td>
+                      <td><span class="data-in">7100702496</span></td>
+                      <td><span class="data-in">65252601215</span></td>
+                      <td><span class="data-in">2022-11-19</span></td>
+                      <td><span class="data-in">권소정</span></td>
+                      <td><span class="data-in">miiji***</span></td>
+                      <td><span class="data-in">권소정</span></td>
+                      <td><span class="data-in">7,900</span></td>
+                      <td><span class="data-in">2</span></td>
+                      <td><span class="data-in">2022-11-22</span></td>
+                      <td><span class="data-in">843438478061</span></td>
+                      <td><span class="data-in">-</span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                    <tr>
+                      <td><span class="data-in"></span>
+                      </td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                      <td><span class="data-in"></span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="bottom-table">
+              <dl class="col-3">
+                <dt class="tit">총 주문건수 합계</dt>
+                <dd><span class="result">1,000</span></dd>
+              </dl>
+              <dl class="col-3">
+                <dt class="tit">반품금액 합계</dt>
+                <dd><span class="result">1,500건/156,226,000</span></dd>
+              </dl>
+              <dl class="col-3">
+                <dt class="tit">교환금액 합계</dt>
+                <dd><span class="result">3건/191,222</span>
+                  <button class="btn tooltip-btn top"><i class="fi icon-question"></i>
+                    <span class="pop-up">금액 계산은 판매단가를 기준으로 산정하였습니다. 따라서 실제 금액과 차이가 있을 수 있습니다.</span>
+                  </button>
+                </dd>
+              </dl>
+            </div>
+          </div>
+          <ul class="pagination">
+            <li><a class="page-start" href="#n"><i class="fi icon-angle-double-left"></i></a></li>
+            <li><a class="page-prev" href="#n"><i class="fi icon-angle-left"></i></a></li>
+            <li class="active"><a href="#n">1</a></li>
+            <li><a href="#n">2</a></li>
+            <li><a href="#n">3</a></li>
+            <li><a href="#n">4</a></li>
+            <li><a href="#n">5</a></li>
+            <li><a class="page-next" href="#n"><i class="fi icon-angle-right"></i></a></li>
+            <li><a class="page-end" href="#n"><i class="fi icon-angle-double-right"></i></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+
+
+  <!--모달 24.01.05-->
+  <div class="modal-wrap d-none return-detail" id="ReturnDetail">
+    <div class="modal small">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>반품교환 상세정보</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <div class="form-wrap select-z-index">
+          <form>
+            <div class="top-form-wrap color-r-box ">
+              <div class="input-group">
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">쇼핑몰</h4>
+                    <p><span>네이버</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">주문번호</h4>
+                    <p><span>2024010183943741</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">핸드폰</h4>
+                    <p><span>010-1111-1111</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="input-group">
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">구매자</h4>
+                    <p><span>xody****</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">구매자ID</h4>
+                    <p><span>박태용</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+                <div class="input-box col-3">
+                  <div class="input-item">
+                    <h4 class="tit">전화번호</h4>
+                    <p><span>010-1111-1111</span></p>
+                    <div class="input flex-1 ml-10">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <div class="table-r-border">
+            <div class="table basic-table auto-xy-scroll" style="max-height: 300px;"><!-- 최대 높이 초과시 세로스크롤 됩니다. 필요없을시 삭제하셔도 됩니다.-->
+              <table>
+                <colgroup>
+                  <col style="width: 10%;">
+                  <col style="width: 31%;">
+                  <col style="width: 12%;">
+                  <col style="width: 12%;">
+                  <col style="width: 12%;">
+                  <col style="width: 5%;">
+                  <col style="width: 9%;">
+                  <col style="width: 9%;">
+                </colgroup>
+                <thead class="th-bg-1">
+                  <tr>
+                    <th scope="col">주문일시</th>
+                    <th scope="col">상품명</th>
+                    <th scope="col">쇼핑몰상품번호</th>
+                    <th scope="col">상품주문번호</th>
+                    <th scope="col">내부관리번호</th>
+                    <th scope="col">수량</th>
+                    <th scope="col">판매단가</th>
+                    <th scope="col">주문금액</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">2023-11-14</span></td>
+                    <td><span class="data-in">남성화 방한 털슬리퍼 할아버지 아빠 중년 어르신 시골 기모슬리퍼</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">1</span></td>
+                    <td><span class="data-in">1,202,000</span></td>
+                    <td><span class="data-in">17,100</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">2023-11-14</span></td>
+                    <td><span class="data-in">남성화 방한 털슬리퍼 할아버지 아빠 중년 어르신 시골 기모슬리퍼</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">7238510294</span></td>
+                    <td><span class="data-in">1</span></td>
+                    <td><span class="data-in">1,202,000</span></td>
+                    <td><span class="data-in">17,100</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">확인</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

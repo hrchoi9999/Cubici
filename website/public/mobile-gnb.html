@@ -1,0 +1,62 @@
+<nav class="mobile-gnb">
+  <ul>
+    <li class="active">
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/m-home.svg" alt="홈">
+        </i>
+        <b>홈</b>
+      </a>
+    </li>
+    <li>
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/chart-histogram.svg" alt="통합정보">
+        </i>
+        <b>통합정보</b>
+      </a>
+    </li>
+    <li>
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/box-alt.svg" alt="매출정보">
+        </i>
+        <b>매출정보</b>
+      </a>
+    </li>
+    <li>
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/calendar.svg" alt="정산정보">
+        </i>
+        <b>정산정보</b>
+      </a>
+    </li>
+    <li>
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/bank.svg" alt="머니뱅크">
+        </i>
+        <b>머니뱅크</b>
+      </a>
+    </li>
+    <li>
+      <a href="#n">
+        <i class="icon">
+          <img src="./static/img/icon/phone-call.svg" alt="고객정보">
+        </i>
+        <b>고객정보</b>
+      </a>
+    </li>
+  </ul>
+</nav>
+
+
+<script>
+  $(function () {
+    // 모바일 gnb action
+    $('.mobile-gnb li').click(function () {
+      $(this).closest('li').addClass('active').siblings().removeClass('active');
+    });
+  });
+</script>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--통합정보:당월현황-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">매출정보</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li class="active"><a href="./c1p1.html"><span>당월현황</span></a></li>
+      <li><a href="./c1p2.html"><span>매출분석</span></a></li>
+      <li><a href="./c1p3.html"><span>상품분석</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c1p1" id="Main">
+    <section class="section sec-1">
+      <h2 class="hidden">당월현황</h2>
+      <div class="inner">
+        <div class="table-wrap">
+          <div class="table-top flex-end">
+            <div class="date-wrap">
+              <i class="icon mr-5"><img src="./static/img/icon/calendar-s.png" alt="icon"></i>
+              <strong class="fw-600">기준</strong>
+              <span class="data-in">2023년 11월 07일</span>
+            </div>
+          </div>
+          <div class="table-r-border2">
+            <div class="table trans-table">
+              <table>
+                <colgroup class="pc">
+                  <col style="width: 17.4%;">
+                  <col style="width: 20.65%;">
+                  <col style="width: 20.65%;">
+                  <col style="width: 20.65%;">
+                  <col style="width: 20.65%;">
+                </colgroup>
+                <thead>
+                  <tr class="th-bg-2">
+                    <th></th>
+                    <th scope="col">결제액(원)</th>
+                    <th scope="col">주문건수(개)</th>
+                    <th scope="col">정산입금액(원)</th>
+                    <th scope="col">등록상품수(개)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th scope="row">당월</th>
+                    <td>2,634,460</td>
+                    <td>92</td>
+                    <td>5,363,656</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">전월 동기</th>
+                    <td>6,961,990</td>
+                    <td>165</td>
+                    <td>165</td>
+                    <td>0</td>
+                  </tr>
+                  <tr>
+                    <th scope="row">증감</th>
+                    <td>-4,327,530</td>
+                    <td>-73</td>
+                    <td>-93</td>
+                    <td>0</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <div class="chart-header">
+            <h3 class="chart-tit">결제추이 비교</h3>
+          </div>
+          <div class="chart-over">
+            <div class="chart-con" style="min-width: 600px;">
+              <img src="./static/img/sub/chart-1.jpg" alt="차트">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+</body>
+
+</html>

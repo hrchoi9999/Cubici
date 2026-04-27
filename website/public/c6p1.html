@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--css-->
+  <link href="./static/fonts/fonts.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/reset.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/common.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/table.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/style-sub.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/modal.css" type="text/css" rel="stylesheet">
+  <link href="./static/css/jquery-ui.css" type="text/css" rel="stylesheet">
+
+  <!--libs-->
+  <!--css-->
+  <link href="./static/js/libs/swiper/swiper.min.css" type="text/css" rel="stylesheet">
+  <link href="./static/js/libs/datepicker-master/dist/datepicker.min.css" type="text/css" rel="stylesheet">
+  <!--js-->
+  <script src="./static/js/libs/jquery-3.6.0.js"></script>
+  <script src="./static/js/libs/jquery-ui.js"></script>
+  <script src="./static/js/libs/swiper/swiper.min.js"></script>
+  <script src="./static/js/libs/datepicker-master/dist/datepicker.min.js"></script>
+
+  <!--js-->
+  <script src="./static/js/publishing.js"></script>
+  <script src="./static/js/publishing-main.js"></script>
+  <title>큐빅아이</title>
+  <!--마이페이지:가입정보-->
+</head>
+
+<body>
+  <!--헤더-->
+  <div id="Header" class="header-wrap"></div>
+  <div class="visual-wrap">
+    <div class="inner">
+      <div class="visual">
+        <h2 class="visual-tit">마이페이지</h2>
+      </div>
+    </div>
+  </div>
+  <nav class="sub-nav-wrap">
+    <ul class="sub-nav">
+      <li class="active"><a href="./c6p1.html"><span>가입 정보</span></a></li>
+      <li><a href="./c6p2.html"><span>나의 요금</span></a></li>
+      <li><a href="./c6p3.html"><span>가입 해지</span></a></li>
+    </ul>
+  </nav>
+  <!--콘텐츠-->
+  <main class="content-wrap c6p1" id="Main">
+    <section class="section sec-1">
+      <div class="inner">
+        <div class="join-wrap">
+          <h2 class="join-tit">
+            가입 정보 접속 안내
+          </h2>
+          <p class="join-txt">
+            회원님의 소중한 정보보호를 위해 인증번호 입력이 필요합니다.<br>
+            "인증번호 받기"를 클릭하시면 등록하신 핸드폰 번호로 인증번호를 보내드립니다.
+          </p>
+          <form>
+            <div class="input-btn">
+              <input class="auth-input" type="text" placeholder="******"><button class="btn auth-num-btn btn-color2"
+                type="button">인증번호 받기</button>
+            </div>
+            <button class="btn llg-btn btn-color2" type="button">확인</button>
+          </form>
+        </div>
+      </div>
+    </section>
+    <section class="section sec-2">
+      <div class="inner">
+        <h2 class="hidden">가입정보</h2>
+        <article class="table-wrap">
+          <div class="sub-tit-wrap">
+            <h3 class="sub-tit">기본 정보</h3>
+          </div>
+          <div class="table-r-border2">
+            <div class="info-table">
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>회사명</span></dt>
+                <dd class="table-dd"><input type="text" value="큐빅아이" readonly></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>아이디</span></dt>
+                <dd class="table-dd"><input type="text" value="aaa1234@cubici.co.kr"></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>대표자명</span></dt>
+                <dd class="table-dd"><input type="text" value="문경남" readonly></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>사업자등록번호</span></dt>
+                <dd class="table-dd"><input type="text" value="123-456-789100" readonly></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>설립일자</span></dt>
+                <dd class="table-dd"><input type="text" value="2022-11-11" readonly></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>사업자 유형</span></dt>
+                <dd class="table-dd"><input type="text" value="간이사업자" readonly></dd>
+              </dl>
+              <dl class="table-item col-3">
+                <dt class="table-dt"><span>주요 판매품목</span></dt>
+                <dd class="table-dd"><input type="text" value="종합상품 셀러" readonly></dd>
+              </dl>
+            </div>
+          </div>
+          <div class="form-wrap">
+            <form>
+              <div class="table-r-border2">
+                <div class="info-table">
+                  <dl class="table-item col-1">
+                    <dt class="table-dt"><span>등록핸드폰 변경</span></dt>
+                    <dd class="table-dd">
+                      <div>
+                        <input type="text" value="010-1234-5678">
+                        <button class="btn btn-color3 rs-btn fw-600" type="button">인증요청</button>
+                      </div>
+                      <div>
+                        <input type="text" placeholder="인증번호 입력">
+                        <button class="btn btn-color3 rs-btn fw-600" type="button">인증하기</button>
+                      </div>
+                    </dd>
+                  </dl>
+                  <dl class="table-item col-1">
+                    <dt class="table-dt"><span>주소 변경</span></dt>
+                    <dd class="table-dd">
+                      <input class="post" type="text" value="10070">
+                      <button class="btn btn-color3 rs-btn fw-600" type="button">찾기</button>
+                      <input class="flex-1" type="text" value="서울특별시 영등포구 의사당대로 38, 큐빅테스트 (여의도동)">
+                    </dd>
+                  </dl>
+                </div>
+              </div>
+            </form>
+          </div>
+        </article>
+      </div>
+    </section>
+    <section class="section sec-3 select-z-index">
+      <div class="inner">
+        <div class="sub-tit-wrap">
+          <h3 class="sub-tit">쇼핑몰 등록</h3>
+        </div>
+        <div class="forem-wrap">
+          <form>
+            <div class="table-r-border3">
+              <div class="info-table">
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>추가쇼핑몰</span></dt>
+                  <dd class="table-dd">
+                    <div class="select-wrap select-type-4">
+                      <div class="select-box">
+                        <button class="select-btn" type="button">
+                          <span class="select txt-left"></span>
+                          <i class="fi select-arrow"></i>
+                        </button>
+                      </div>
+                      <ul class="option">
+                        <li class="selected" tabindex="0">쇼핑몰</li>
+                        <li data-value="" tabindex="0">네이버</li>
+                        <li data-value="" tabindex="0">쿠팡</li>
+                        <li data-value="" tabindex="0">11번가</li>
+                      </ul>
+                    </div>
+                  </dd>
+                </dl>
+                <dl class="table-item col-2">
+                  <dt class="table-dt"><span>쇼핑몰ID</span></dt>
+                  <dd class="table-dd flex-1">
+                    <input class="input-style-2" type="text">
+                    <button class="btn btn-color3 rs-btn fw-600" type="button">등록</button>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <section class="section sec-4">
+      <div class="inner">
+        <article class="table-wrap">
+          <div class="sub-tit-wrap">
+            <h3 class="sub-tit">쇼핑몰 정보</h3>
+          </div>
+          <div class="table-r-border">
+            <div class="table basic-table auto-xy-scroll">
+              <table>
+                <colgroup>
+                  <col class="wid-20p">
+                  <col class="wid-20p">
+                  <col class="wid-20p">
+                  <col class="wid-20p">
+                  <col class="wid-20p">
+                </colgroup>
+                <thead class="th-bg-4 fc-03">
+                  <tr>
+                    <th scope="col">운영 쇼핑몰</th>
+                    <th scope="col">쇼핑몰 ID</th>
+                    <th scope="col">선정산 대상</th>
+                    <th scope="col">API 연결</th>
+                    <th scope="col">정보수정</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="data-in">네이버</span></td>
+                    <td><span class="data-in">leem</span></td>
+                    <td><span class="data-in not"></span></td>
+                    <td><button class="btn" type="button">연결</button></td>
+                    <td><button class="btn rs-btn btn-color3" type="button">수정</button><button
+                        class="btn rs-btn btn-color3" type="button">삭제</button>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span class="data-in">11번가</span></td>
+                    <td><span class="data-in">leem</span></td>
+                    <td><span class="data-in yes"></span></td>
+                    <td><button class="btn" type="button">연결</button></td>
+                    <td><button class="btn rs-btn btn-color3" type="button">수정</button><button
+                        class="btn rs-btn btn-color3" type="button">삭제</button>
+                    </td>
+                  </tr>
+                  <tr class="d-none">
+                    <td colspan="5">
+                      이용중인 서비스가 없습니다.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!--24.01.23-->
+          <ul class="pagination">
+            <li><a class="page-start" href="#n"><i class="fi icon-angle-double-left"></i></a></li>
+            <li><a class="page-prev" href="#n"><i class="fi icon-angle-left"></i></a></li>
+            <li class="active"><a href="#n">1</a></li>
+            <li><a href="#n">2</a></li>
+            <li><a href="#n">3</a></li>
+            <li><a href="#n">4</a></li>
+            <li><a href="#n">5</a></li>
+            <li><a class="page-next" href="#n"><i class="fi icon-angle-right"></i></a></li>
+            <li><a class="page-end" href="#n"><i class="fi icon-angle-double-right"></i></a></li>
+          </ul>
+          <div class="btn-box txt-center">
+            <button class="btn llg-btn btn-color1" type="button">취소</button>
+            <button class="btn llg-btn btn-color2" type="button">수정 확인</button>
+          </div>
+          <!--24.01.23-->
+        </article>
+      </div>
+    </section>
+  </main>
+  <!--//콘텐츠wrap-->
+  <!--페이지top-->
+  <a class="page-top" href="#n" aria-label="pageTop"></a>
+  <!--푸터-->
+  <div class="footer-wrap" id="Footer"></div>
+  <!--모바일 바닥 메뉴-->
+  <div id="mobileGnb" class="mobile-gnb-wrap"></div>
+
+  <!-- 모달-->
+  <!-- Api 인증 요청 24.01.16-->
+  <div class="modal-wrap api" id="Api">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="h-wrap">
+          <div class="icon-wrap">
+            <img src="./static/img/sub/c6/icon.png" alt="">
+          </div>
+          <p>API 인증 요청</p>
+        </div>
+        <button class="btn modal-close" type="button"><img src="./static/img/icon/close-w.svg" alt="닫기"></button>
+      </div>
+      <div class="modal-content">
+        <p class="txt txt-center">
+          큐빅아이에서는 회원님 쇼핑몰 정보를 쉽고 정확하게 확인하기 위해 11번가에서 제공하는 API방식을 사용하고 있습니다.<br>
+          11번가 쇼핑몰 정보 확인을 위해서는 아래 "API 키 받기(쇼핑몰 로고)" 버튼을 클릭해 주세요.
+        </p>
+        <div class="btn-box">
+          <button class="btn lg-btn line-btn1"><img src="./static/img/logo/11st-s.jpg" alt="11번가"><span>11번가 API 키
+              받기</span></button>
+        </div>
+        <p class="txt txt-center">
+          11번가에서 제공하는 API 키를 아래와 같이 엑세스 키,
+          11번가 계정 ID, 11번가 계정 비밀번호 3가지를 호가인하시고, 해당 란에 입력해 주십시오. 감사합니다.
+        </p>
+        <div class="form-wrap">
+          <div class="input-group">
+            <h4 class="tit">엑세스 키</h4>
+            <input class="input-style-2" type="text" placeholder="엑세스 키">
+          </div>
+          <div class="input-group">
+            <h4 class="tit">11번가 계정 ID</h4>
+            <input class="input-style-2" type="text" placeholder="11번가 계정 ID">
+          </div>
+          <div class="input-group">
+            <h4 class="tit">11번가 계정 비밀번호</h4>
+            <input class="input-style-2" type="text" placeholder="11번가 계정 비밀번호">
+          </div>
+        </div>
+        <p class="txt">
+          정보 입력 후, 해당 쇼핑몰 데이터 수집 시작을 위해서는 "수정확인" 버튼을 클릭해 주십시오. 데이터 취합까지는 다소 시간이 소요됩니다.
+        </p>
+      </div>
+      <div class="btn-wrap">
+        <button class="check b-btn">연동</button>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
