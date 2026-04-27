@@ -1,83 +1,117 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import {
-  Banknote,
-  BarChart3,
-  CalendarCheck,
-  ChevronRight,
-  Database,
-  MonitorCog,
-  PackageCheck,
-  ShieldCheck,
-  TrendingUp
-} from "lucide-react";
 import "./styles.css";
 
-const img = "/resources/rudicks/img";
-const mainImg = `${img}/main`;
+const rudicksImg = "/resources/rudicks/img";
+const rudicksMain = `${rudicksImg}/main`;
+const latestMain = "/resources/img/main";
+const icon = "/resources/img/icon";
 
-const navItems = ["통합정보", "매출정보", "정산관리", "재고정보", "머니뱅크", "고객지원"];
+const navItems = ["통합정보", "매출정보", "정산관리", "재고정보", "머니뱅크"];
 
-const tabs = [
-  { icon: MonitorCog, title: "통합정보", desc: "온라인 사업 현황을 한눈에" },
-  { icon: BarChart3, title: "매출정보", desc: "채널별 매출과 추이 분석" },
-  { icon: CalendarCheck, title: "정산관리", desc: "입금 예정과 누락 점검" },
-  { icon: PackageCheck, title: "재고정보", desc: "상품 흐름과 재고 리스크" },
-  { icon: Banknote, title: "머니뱅크", desc: "자금 흐름 통합 관리" }
-];
-
-const features = [
+const heroSlides = [
   {
-    kicker: "Integrated management",
-    title: "흩어진 쇼핑몰 데이터를 하나의 화면으로",
-    desc: "자사몰, 오픈마켓, 소셜커머스, 라이브 채널의 주문과 정산 데이터를 연결해 매출, 상품, 고객 흐름을 빠르게 확인합니다.",
-    image: `${mainImg}/panel2/av01-p01-2.png`,
-    points: ["채널별 매출 현황", "상품별 성과 분석", "주문/취소/반품 추적"]
+    className: "visual01",
+    label: "01",
+    title: "인공지능 기반 온라인 쇼핑몰 통합관리 서비스",
+    desc: "복잡하고 어려웠던 쇼핑몰 관리를 쉽고 편리하게 바로 확인할 수 있는 차세대 서비스입니다."
   },
   {
-    kicker: "Sales intelligence",
-    title: "매출 변화와 회수 가능 금액을 바로 확인",
-    desc: "일자별, 채널별, 상품별 매출 지표를 정리하고 정산 예정 금액과 실제 입금 흐름을 비교해 이상 징후를 줄입니다.",
-    image: `${mainImg}/av02-ipad2.png`,
-    points: ["매출 추이 리포트", "미정산 금액 관리", "입금 지연 알림"]
+    className: "visual02",
+    label: "02",
+    title: "상상이상의 혁신적 기능",
+    desc: "쇼핑몰 현황을 한눈에 확인하고 판매부터 재고까지 한 번에 관리합니다."
   },
   {
-    kicker: "Settlement control",
-    title: "정산 누락과 지연을 놓치지 않는 운영 체계",
-    desc: "복잡한 판매 채널 정산 구조를 캘린더와 리포트로 정리해 운영자가 매일 확인해야 할 항목을 명확하게 보여줍니다.",
-    image: `${mainImg}/av03-calendar01.png`,
-    points: ["정산 캘린더", "누락 항목 점검", "증빙 자료 관리"]
+    className: "visual03",
+    label: "03",
+    title: "상품정보 입력 없이 판매재고를 관리합니다",
+    desc: "회원가입만으로 상품정보를 자동 취합하고 재고정보를 바로 업데이트합니다."
   },
   {
-    kicker: "Inventory signal",
-    title: "재고 흐름까지 연결되는 사업 분석",
-    desc: "판매 속도와 재고 변화를 함께 보며 품절, 과재고, 채널별 상품 편차를 더 빠르게 파악할 수 있습니다.",
-    image: `${mainImg}/av04-phone.png`,
-    points: ["상품 회전율", "채널별 재고 비교", "리스크 상품 감지"]
+    className: "visual04",
+    label: "04",
+    title: "운영자금이 필요할 때 바로 연결되는 머니뱅크",
+    desc: "온라인 금융 서비스 머니뱅크가 비대면 방식으로 사업 운영자금을 지원합니다."
   }
 ];
 
-const metrics = [
-  { label: "연결 채널", value: "12+", note: "쇼핑몰, 마켓, 내부 시스템" },
-  { label: "데이터 범위", value: "5개", note: "매출, 정산, 재고, 고객, 자금" },
-  { label: "운영 방식", value: "통합", note: "분석과 보고를 한 화면에서" }
+const featureTabs = [
+  { id: "integrated", title: "통합정보", icon: `${icon}/tab-con01-hover.png` },
+  { id: "sales", title: "매출정보", icon: `${icon}/tab-con02-hover.png` },
+  { id: "settlement", title: "정산관리", icon: `${icon}/calendar.svg` },
+  { id: "stock", title: "재고정보", icon: `${icon}/store.png` },
+  { id: "moneybank", title: "머니뱅크", icon: `${icon}/money-get.svg` }
+];
+
+const featureSections = [
+  {
+    id: "integrated",
+    title: "경영상황을 한눈에, 직관적으로 표시합니다.",
+    image: `${rudicksMain}/panel2/av01-p01-2.png`,
+    className: "integrated",
+    points: ["당월 주요지표", "상품 분석", "매출 분석"]
+  },
+  {
+    id: "sales",
+    title: "매출관리의 모든 정보를 한 곳에서 편리하게",
+    image: `${rudicksMain}/av02-ipad2.png`,
+    className: "sales",
+    points: ["판매상태 검색", "상품별 매출 분석", "엑셀 다운로드"]
+  },
+  {
+    id: "settlement",
+    title: "쇼핑몰 정산금액을 캘린더로 편리하게",
+    image: `${rudicksMain}/av03-calendar01-2.png`,
+    className: "settlement",
+    points: ["정산 캘린더", "상세 정산내역", "정산 검색"]
+  },
+  {
+    id: "stock",
+    title: "상품정보 입력 없이 재고정보를 확인합니다.",
+    image: `${rudicksMain}/av04-phone-2.png`,
+    className: "stock",
+    points: ["자동 상품 취합", "같은 상품 묶음 관리", "상세 상품정보 확인"]
+  },
+  {
+    id: "moneybank",
+    title: "온라인 금융의 새로운 사업자금 확보 방식",
+    image: `${rudicksMain}/av05-macbook.png`,
+    className: "moneybank",
+    points: ["비대면 신청", "운영자금 지원", "제휴 금융 서비스"]
+  }
+];
+
+const partners = [
+  "지마켓",
+  "옥션",
+  "11번가",
+  "쿠팡",
+  "인터파크",
+  "스마트스토어",
+  "SSG",
+  "티몬",
+  "위메프",
+  "CJ Mall",
+  "롯데ON",
+  "GS Shop"
 ];
 
 function Header() {
   return (
     <header className="site-header">
-      <a className="brand" href="#home" aria-label="Cubici home">
-        <img src={`${img}/logo-w.svg`} alt="Cubici" />
+      <a href="#top" className="brand" aria-label="Cubici">
+        <img src={`${rudicksImg}/logo-w.svg`} alt="Cubici" />
       </a>
       <nav aria-label="주요 메뉴">
         {navItems.map((item) => (
-          <a href={`#${item}`} key={item}>
+          <a href={`#${featureTabs.find((tab) => tab.title === item)?.id ?? "top"}`} key={item}>
             {item}
           </a>
         ))}
       </nav>
-      <a className="trial-link" href="#contact">
-        무료체험
+      <a className="header-cta" href="#start">
+        1개월 무료이용
       </a>
     </header>
   );
@@ -85,74 +119,90 @@ function Header() {
 
 function Hero() {
   return (
-    <section className="hero" id="home">
-      <div className="hero-bg" />
+    <section className="hero" id="top">
       <Header />
-      <div className="hero-inner">
+      <div className="hero-layout">
         <div className="hero-copy">
-          <p className="eyebrow">Business analysis solution</p>
+          <p className="eyebrow">Cubici e-Commerce management</p>
           <h1>온라인 사업의 모든 흐름을 하나로 연결합니다.</h1>
           <p>
-            Cubici는 매출, 정산, 재고, 자금 흐름을 통합해 운영자가 매일 봐야 하는 지표를
-            빠르고 선명하게 보여주는 데이터 분석 서비스입니다.
+            Cubici는 쇼핑몰 통합관리, 매출, 정산, 재고, 자금 흐름을 한 화면에 담아
+            온라인 사업자가 더 빠르고 정확하게 운영 현황을 판단하도록 돕습니다.
           </p>
-          <div className="hero-actions">
-            <a className="primary-action" href="#통합정보">
-              주요 기능 보기
-              <ChevronRight size={18} />
+          <div className="hero-actions" id="start">
+            <a href="#moneybank" className="primary-action">
+              머니뱅크 보기
             </a>
-            <a className="secondary-action" href="#contact">
-              도입 문의
+            <a href="#integrated" className="secondary-action">
+              주요 기능 보기
             </a>
           </div>
         </div>
 
-        <div className="hero-visual" aria-label="Cubici dashboard preview">
-          <div className="monitor">
-            <img className="monitor-screen" src={`${mainImg}/main-pc-slide01-1.jpg`} alt="" />
-            <img className="monitor-glare" src={`${mainImg}/main-slide01-glare.png`} alt="" />
-          </div>
-          <img className="monitor-bottom" src={`${mainImg}/main-slide01-bottom.png`} alt="" />
+        <div className="latest-visual" aria-label="2023 latest MoneyBank visual">
+          <span className="visual-bg" />
+          <img className="money-img i01" src={`${latestMain}/main-slide04-img04.png`} alt="" />
+          <img className="money-img i02" src={`${latestMain}/main-slide04-img01.png`} alt="" />
+          <img className="money-img i03" src={`${latestMain}/main-slide04-img02.png`} alt="" />
+          <img className="money-img i04" src={`${latestMain}/main-slide04-img03.png`} alt="" />
         </div>
+      </div>
+
+      <div className="slide-summary" aria-label="main slide summary">
+        {heroSlides.map((slide, index) => (
+          <article className={slide.className} key={slide.title}>
+            <span>{slide.label}</span>
+            <strong>{slide.title}</strong>
+            <p>{slide.desc}</p>
+            <i>{index === 3 ? "2023.03 추가 슬라이드" : "기존 메인 슬라이드"}</i>
+          </article>
+        ))}
       </div>
     </section>
   );
 }
 
-function FeatureTabs() {
+function FeatureNav() {
   return (
-    <section className="feature-tabs" aria-label="Cubici 기능 분류">
-      {tabs.map(({ icon: Icon, title, desc }, index) => (
-        <a className={index === 0 ? "active" : ""} href={`#${title}`} key={title}>
-          <Icon size={28} />
-          <strong>{title}</strong>
-          <span>{desc}</span>
+    <section className="feature-nav" aria-label="서비스 영역">
+      {featureTabs.map((tab, index) => (
+        <a className={index === 0 ? "active" : ""} href={`#${tab.id}`} key={tab.id}>
+          <img src={tab.icon} alt="" />
+          <span>{tab.title}</span>
         </a>
       ))}
     </section>
   );
 }
 
-function FeatureSection() {
+function FeatureRows() {
   return (
-    <section className="feature-list">
-      {features.map((feature, index) => (
-        <article className="feature-row" id={tabs[index]?.title} key={feature.title}>
+    <section className="feature-rows">
+      {featureSections.map((feature) => (
+        <article className={`feature-row ${feature.className}`} id={feature.id} key={feature.id}>
+          <div className="feature-media">
+            <img src={feature.image} alt="" />
+            {feature.id === "integrated" && (
+              <>
+                <img className="overlay-card card-one" src={`${rudicksMain}/panel2/av01-p02.png`} alt="" />
+                <img className="overlay-card card-two" src={`${rudicksMain}/panel2/av01-p03.png`} alt="" />
+              </>
+            )}
+            {feature.id === "stock" && (
+              <img className="overlay-card bubble" src={`${rudicksMain}/av04-bubble01-2.png`} alt="" />
+            )}
+          </div>
           <div className="feature-copy">
-            <p className="eyebrow dark">{feature.kicker}</p>
+            <p className="eyebrow">Cubici service</p>
             <h2>{feature.title}</h2>
-            <p>{feature.desc}</p>
             <ul>
-              {feature.points.map((point) => (
+              {feature.points.map((point, index) => (
                 <li key={point}>
-                  <ShieldCheck size={18} />
-                  {point}
+                  <img src={`${icon}/icon-0${Math.min(index + 1, 9)}.png`} alt="" />
+                  <span>{point}</span>
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="feature-image">
-            <img src={feature.image} alt="" />
           </div>
         </article>
       ))}
@@ -160,36 +210,18 @@ function FeatureSection() {
   );
 }
 
-function InsightPanel() {
+function PartnerArea() {
   return (
-    <section className="insight-panel" id="머니뱅크">
-      <div className="insight-copy">
-        <p className="eyebrow">Cubici dashboard</p>
-        <h2>보고서가 아니라, 바로 움직일 수 있는 운영 화면</h2>
-        <p>
-          필요한 데이터만 모아 보여주고, 정산 지연과 상품 리스크처럼 액션이 필요한 항목을
-          먼저 드러내 운영 시간을 줄입니다.
-        </p>
-        <div className="metric-grid">
-          {metrics.map((metric) => (
-            <div key={metric.label}>
-              <span>{metric.label}</span>
-              <strong>{metric.value}</strong>
-              <p>{metric.note}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="mockup-card">
-        <img src={`${mainImg}/visual-mac-mockup.png`} alt="" />
-        <div className="floating-stat top">
-          <TrendingUp size={18} />
-          매출 추이 분석
-        </div>
-        <div className="floating-stat bottom">
-          <Database size={18} />
-          정산 데이터 통합
-        </div>
+    <section className="partner-area">
+      <h2>
+        주요 쇼핑몰과의 연동을
+        <br />
+        지속적으로 확대하고 있습니다.
+      </h2>
+      <div className="partner-grid">
+        {partners.map((partner) => (
+          <span key={partner}>{partner}</span>
+        ))}
       </div>
     </section>
   );
@@ -197,12 +229,9 @@ function InsightPanel() {
 
 function Footer() {
   return (
-    <footer className="footer" id="contact">
-      <img src={`${img}/logo-w.svg`} alt="Cubici" />
-      <div>
-        <strong>데이터 기반 온라인 사업 관리, Cubici</strong>
-        <p>기존 Cubici 디자인 자산을 기반으로 Cloudflare Pages 배포 준비가 된 홈페이지입니다.</p>
-      </div>
+    <footer className="footer">
+      <img src={`${rudicksImg}/logo-w.svg`} alt="Cubici" />
+      <p>온라인 쇼핑몰 통합관리와 사업자금 흐름을 연결하는 Cubici 서비스입니다.</p>
       <a href="mailto:contact@cubici.co.kr">contact@cubici.co.kr</a>
     </footer>
   );
@@ -212,9 +241,9 @@ function App() {
   return (
     <main>
       <Hero />
-      <FeatureTabs />
-      <FeatureSection />
-      <InsightPanel />
+      <FeatureNav />
+      <FeatureRows />
+      <PartnerArea />
       <Footer />
     </main>
   );
