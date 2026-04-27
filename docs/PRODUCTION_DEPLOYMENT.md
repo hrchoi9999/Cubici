@@ -18,6 +18,39 @@
 - Local backend API is running on `http://127.0.0.1:18080`.
 - Local frontend can read dashboard values from `/api/dashboard/summary`.
 
+## Temporary Local Backend/DB Server
+
+Until the real production server is selected, this PC is the backend and DB server for development and investor demo preparation.
+
+Start both MySQL and the Spring Boot backend:
+
+```bat
+scripts\local-server-start.cmd
+```
+
+Check status:
+
+```bat
+scripts\local-server-status.cmd
+```
+
+Stop both services:
+
+```bat
+scripts\local-server-stop.cmd
+```
+
+Local endpoints:
+
+```text
+MySQL:   127.0.0.1:3307, database cubici
+Backend: http://127.0.0.1:18080
+Health:  http://127.0.0.1:18080/api/health
+Data:    http://127.0.0.1:18080/api/dashboard/summary
+```
+
+Important: Cloudflare Pages visitors cannot call `127.0.0.1` on this PC. For public demos from `cubici.co.kr`, expose this PC with Cloudflare Tunnel or use a real hosted backend. Do not open MySQL directly to the internet.
+
 ## Required Production Decisions
 
 Choose one backend/database option before live API launch.

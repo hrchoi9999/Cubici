@@ -103,6 +103,36 @@ Open DBeaver:
 scripts\dbeaver.cmd
 ```
 
+## Local Backend/DB Server
+
+For the current development phase, this PC is used as the temporary backend and DB server.
+
+Start both MySQL and the Spring Boot backend:
+
+```bat
+scripts\local-server-start.cmd
+```
+
+Check status:
+
+```bat
+scripts\local-server-status.cmd
+```
+
+Stop both services:
+
+```bat
+scripts\local-server-stop.cmd
+```
+
+Backend-only helpers:
+
+```bat
+scripts\backend-start.cmd
+scripts\backend-status.cmd
+scripts\backend-stop.cmd
+```
+
 ## Legacy Java Tooling
 
 The legacy Java project is configured with Maven compiler `source` and `target` set to `13`, so the workspace uses OpenJDK 13.0.2 for compatibility.
