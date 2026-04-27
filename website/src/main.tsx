@@ -212,15 +212,11 @@ function Footer() {
     <footer className="site-footer" id="support">
       <div>
         <img src={`${rudicks}/logo-w.svg`} alt="Cubici" />
-        <p>인공지능 기반의 온라인 쇼핑몰 통합관리 서비스 + 온라인 금융 서비스</p>
       </div>
       <address>
-        법인명: (주)큐빅아이&nbsp;&nbsp; 대표: 최형락&nbsp;&nbsp; 대표전화: 02-6925-6373&nbsp;&nbsp;
-        이메일: admin@cubici.co.kr&nbsp;&nbsp; 사업자등록번호: 567-88-00419
-        <br />
-        본사주소: (07325) 서울 영등포구 의사당대로 83 오투타워 서울핀테크랩 5층 107호
+        법인명: (주)한국공급망데이터&nbsp;&nbsp; 대표전화: 02-6925-6373&nbsp;&nbsp;
+        이메일: admin@koreascf.com&nbsp;&nbsp; 사업자등록번호: 412-87-03180
       </address>
-      <small>Copyright © 2023 by Cubici INC ALL RIGHT RESERVED.</small>
       <a className="top-button" href="#top" aria-label="맨 위로 이동">
         ↑
       </a>
