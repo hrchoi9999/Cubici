@@ -51,6 +51,62 @@ Data:    http://127.0.0.1:18080/api/dashboard/summary
 
 Important: Cloudflare Pages visitors cannot call `127.0.0.1` on this PC. For public demos from `cubici.co.kr`, expose this PC with Cloudflare Tunnel or use a real hosted backend. Do not open MySQL directly to the internet.
 
+## External Demo With This PC
+
+This PC can temporarily expose the local backend through Cloudflare Tunnel:
+
+```text
+https://api.cubici.co.kr -> Cloudflare Tunnel -> http://127.0.0.1:18080
+```
+
+Start local DB/backend first:
+
+```bat
+scripts\local-server-start.cmd
+```
+
+Start the tunnel:
+
+```bat
+scripts\tunnel-start.cmd
+```
+
+Check the tunnel:
+
+```bat
+scripts\tunnel-status.cmd
+```
+
+Stop the tunnel:
+
+```bat
+scripts\tunnel-stop.cmd
+```
+
+Cloudflare Tunnel details:
+
+```text
+Tunnel name: cubici-local-api
+Tunnel ID: 4c188499-0737-405e-a24d-4bb809e91e35
+Public API: https://api.cubici.co.kr
+Local origin: http://127.0.0.1:18080
+```
+
+Private Cloudflare credentials are stored outside Git:
+
+```text
+C:\Users\PC\.cloudflared\
+C:\Cubici\private_local\cloudflared\config.yml
+```
+
+For `cubici.co.kr`, the frontend defaults to `https://api.cubici.co.kr`.
+
+You can still override the API URL in Cloudflare Pages with:
+
+```text
+VITE_CUBICI_API_BASE=https://api.cubici.co.kr
+```
+
 ## Required Production Decisions
 
 Choose one backend/database option before live API launch.

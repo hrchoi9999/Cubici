@@ -133,6 +133,24 @@ scripts\backend-status.cmd
 scripts\backend-stop.cmd
 ```
 
+## External Demo Tunnel
+
+Use Cloudflare Tunnel when `cubici.co.kr` must call this PC's temporary backend during an external demo.
+
+```bat
+scripts\tunnel-start.cmd
+scripts\tunnel-status.cmd
+scripts\tunnel-stop.cmd
+```
+
+Public API URL:
+
+```text
+https://api.cubici.co.kr
+```
+
+Keep this PC powered on and connected to the internet while demoing. Do not expose MySQL directly.
+
 ## Legacy Java Tooling
 
 The legacy Java project is configured with Maven compiler `source` and `target` set to `13`, so the workspace uses OpenJDK 13.0.2 for compatibility.

@@ -2,6 +2,9 @@
   var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
   var configuredApiBase = String(window.CUBICI_API_BASE || '').trim();
   if (configuredApiBase.indexOf('%VITE_') === 0) configuredApiBase = '';
+  if (!configuredApiBase && /(^|\.)cubici\.co\.kr$/.test(window.location.hostname)) {
+    configuredApiBase = 'https://api.cubici.co.kr';
+  }
   if (!isLocal && !configuredApiBase) return;
 
   var apiBase = configuredApiBase || 'http://127.0.0.1:18080';
