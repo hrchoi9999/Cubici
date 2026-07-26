@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.moneybank.operation.mapper.JudgeMapper">
+
+	<select id="loadApprovalList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			FOUND_ROWS() AS CNT
+			 , RESULT_TB.*
+		FROM(
+				SELECT
+					@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+					  , mur.mbid
+					  , mm.adj_yn
+					  , CASE
+					  		WHEN (mur.mb_status IN ('04', '05') AND mm.adj_yn = "N") THEN '401'
+					  		WHEN (mur.mb_status IN ('04', '05') AND mm.adj_yn = "Y") THEN '402'
+					  		ELSE mur.mb_status
+					  	END AS mb_status
+					  , DATE_FORMAT(mur.mb_request_date,'%y/%m/%d') AS mb_request_date
+					  , cu.USER_NM
+					  , cu.FIRM_NM 
+					  , CASE
+					  		WHEN (mur.mb_product_code = 'MP') THEN '머니플러스'
+					  		ELSE ''
+					  	END AS mb_product_code
+					  , TRUNCATE(TIMESTAMPDIFF(YEAR, cu.FIRM_SETUP_DATE, NOW()),1) AS periodYear
+			  		  , SUBSTR(TRUNCATE(TIMESTAMPDIFF(MONTH, cu.FIRM_SETUP_DATE, NOW())/12,1), -1) AS periodMonth 
+					  , TRUNCATE(mur.mb_sales_amount/1000,0) AS mb_sales_amount
+					  , IFNULL(TRUNCATE(ppr.prizm_score, 0), '-') AS prizm_score
+					  , IF(IFNULL(ppr.prizm_score, 0) > 500, '승인', '거부') AS prizm_accept
+					  , mm.fee_rate AS fee_rate
+					  , mm.payment_rate AS payment_rate
+				FROM MONEYBANK_USER_REQUEST mur
+					LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+					LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+					LEFT JOIN PRIZM_PCS_RESULT ppr ON ppr.mbid = mur.mbid
+					, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				WHERE mur.mb_status IN (${status})
+				  AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+				  AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+				  AND UPPER(cu.USER_ID) LIKE UPPER('${userIdSearch}%')
+				  AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+				  AND mur.mb_request_date >= #{fromDate}
+				  AND mur.mb_request_date < #{toDate}
+			) RESULT_TB
+		ORDER BY mb_request_date ${selectOrderBy}
+			LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+
+	<select id="approvalCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			COUNT(mur.mbid) AS approvalTotal
+			 , COUNT(CASE WHEN mur.mb_status IN ('03') THEN 1 END) AS waitCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('04', '05', '41') THEN 1 END) AS completeCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('04', '05') AND mm.adj_yn = "N" THEN 1 END) AS acceptCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('04', '05') AND mm.adj_yn = "Y" THEN 1 END) AS rearrangeCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('41') THEN 1 END) AS refuseCnt
+			 , IFNULL(ROUND(COUNT(CASE WHEN mur.mb_status IN ('41') THEN 1 END)/COUNT(CASE WHEN mur.mb_status IN ('04', '05', '41') THEN 1 END)*100,1), "0") AS refusePercent
+		FROM MONEYBANK_USER_REQUEST mur
+				 LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+				 LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+		WHERE mur.mb_status IN (${status})
+		  AND mm.adj_yn IN (${adj_yn})
+		  AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+		  AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+		  AND UPPER(cu.USER_ID) LIKE UPPER('${userIdSearch}%')
+		  AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+		  AND mur.mb_request_date >= #{fromDate}
+		  AND mur.mb_request_date < #{toDate}
+		]]>
+	</select>
+
+	<select id="loadApprovalDetail" parameterType="String" resultType="hashmap">
+	   <![CDATA[
+		SELECT
+			   mur.mbid
+			 , cu.USER_NM
+			 , cu.USER_ID
+			 , cu.FIRM_NM
+			 , cu.USER_PHONE
+			 , csc1.SELECT_NM AS BUSINESS_TYPE
+			 , csc2.SELECT_NM AS SECTORS
+			 , TRUNCATE(TIMESTAMPDIFF(YEAR, cu.FIRM_SETUP_DATE, NOW()),1) AS periodYear
+			 , SUBSTR(TRUNCATE(TIMESTAMPDIFF(MONTH, cu.FIRM_SETUP_DATE, NOW())/12,1), -1) AS periodMonth
+			 , TRUNCATE(mur.mb_sales_amount/1000,0) AS mb_sales_amount
+			 , DATE_FORMAT(mur.mb_approval_date, '%Y/%m/%d %H:%m') AS mb_approval_date
+			 , DATE_FORMAT(mur.mb_request_date, '%Y/%m/%d') AS mb_request_date
+			 , mur.mbid
+			 , mur.mb_status
+			 , mm.fee_rate
+			 , mm.payment_rate
+			 , TRUNCATE(mm.sales_limit_per_case/1000,0) AS sales_limit_per_case
+			 , adj_fee_rate
+			 , adj_payment_rate
+			 , TRUNCATE(mm.adj_sales_limit_per_case/1000,0) AS adj_sales_limit_per_case
+			 , adj_reason
+			 , IFNULL(ppr.prizm_score, '-') AS pcs_score
+			 , IfNULL(ppr.cb_score_current, '-') AS cb_score_current
+		FROM MONEYBANK_USER_REQUEST mur
+			 LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+			 LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+			 LEFT JOIN PRIZM_PCS_RESULT ppr ON ppr.mbid = mur.mbid
+			 LEFT JOIN CBCI_SELECT_CODE csc1 ON csc1.SELECT_CD = cu.BUSINESS_TYPE AND csc1.SELECT_CLASS = 'biztype'
+			 LEFT JOIN CBCI_SELECT_CODE csc2 ON csc2.SELECT_CD = cu.BUSINESS_TYPE AND csc2.SELECT_CLASS = 'CBCI_SECTOR'
+		WHERE mur.mbid = #{mbid}
+		]]>
+   </select>
+
+	<select id="findByRequestShops" parameterType="String" resultType="String">
+		SELECT
+			GROUP_CONCAT((SELECT cc.CODE_NM FROM CBCI_CODE cc  WHERE cc.CODE_ID = murs.mb_request_shop_type)) AS shop_list
+		FROM
+			MONEYBANK_USER_REQUEST_SHOP murs
+		WHERE
+			murs.mbid = #{mbid}
+	</select>
+
+	<update id="inputAdjustment" parameterType="hashmap">
+		UPDATE MONEYBANK_MONEYPLUS
+		SET
+			adj_yn = #{adj_yn},
+			adj_fee_rate = #{adj_fee_rate},
+			adj_payment_rate = #{adj_payment_rate},
+			adj_sales_limit_per_case = #{adj_sales_limit_per_case},
+			adj_reason = #{adj_reason}
+		WHERE
+			mbid = #{mbid}
+	</update>
+
+	<select id="getHistoryOfUsage" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			FOUND_ROWS() AS CNT
+			, RESULT_TB.*
+			FROM (
+				SELECT
+					  @BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+					, DATE_FORMAT(mur.mb_contract_date,'%Y-%m-%d') AS contract_date
+					, CASE
+						WHEN (mur.mb_product_code = 'MP') THEN '머니플러스'
+						ELSE ''
+					  END AS mb_product_code
+					, IFNULL(DATE_FORMAT(mur.mb_termi_date,'%Y-%m-%d'), DATE_FORMAT(mur.mb_contract_expire_date,'%Y-%m-%d')) AS expire_date
+					, mm.fee_rate
+					, ppr.prizm_score
+					, pmr.pms_score
+				FROM MONEYBANK_USER_REQUEST mur
+					LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+					LEFT JOIN PRIZM_PCS_RESULT ppr ON mur.mbid = ppr.mbid
+					LEFT JOIN PRIZM_PMS_RESULT pmr ON mur.mbid = pmr.mbid
+					, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				WHERE (mur.mb_contract_expire_date < now() OR mur.mb_termi_date < now())
+				  AND mur.user_code = #{USER_CODE}
+			) RESULT_TB
+		]]>
+	</select>
+
+	<update id="modifyAdjStatus" parameterType="hashmap">
+		<![CDATA[
+		UPDATE MONEYBANK_USER_REQUEST
+		SET
+			mb_status = #{mb_status}
+		  , mb_approval_date = NOW()
+		  , upd_date = NOW()
+		WHERE mbid = #{mbid}
+		]]>
+	</update>
+
+	<select id="loadContractList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			FOUND_ROWS() AS CNT
+			 , RESULT_TB.*
+		FROM(
+				SELECT
+					@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM
+					  , mur.mbid
+					  , cu.USER_CODE
+					  , mur.mb_status
+					  , DATE_FORMAT(mur.mb_approval_date,'%y/%m/%d') AS mb_approval_date
+					  , cu.USER_NM
+					  , cu.FIRM_NM
+					  , CASE
+					  		WHEN (mur.mb_product_code = 'MP') THEN '머니플러스'
+					  		ELSE ''
+					  	END AS mb_product_code
+				   	  , IFNULL(ppr.prizm_score, '-') AS pcs_score
+					  , (SELECT COUNT(mbid) FROM MONEYBANK_USER_REQUEST_SHOP WHERE mbid = mur.mbid) AS request_shop
+					  , TRUNCATE(mur.mb_sales_amount/1000,0) AS mb_sales_amount
+					  , IF(adj_yn = 'N', mm.fee_rate, mm.adj_fee_rate) AS fee_rate
+					  , IF(adj_yn = 'N', mm.payment_rate, mm.adj_payment_rate) AS payment_rate
+					  , IFNULL(DATE_FORMAT(mur.mb_contract_date,'%y/%m/%d'), '-') AS mb_contract_date
+					  , '-' AS estimated_amount
+				FROM MONEYBANK_USER_REQUEST mur
+					LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+					LEFT JOIN MONEYBANK_MONEYPLUS mm ON mur.mbid = mm.mbid
+					LEFT JOIN PRIZM_PCS_RESULT ppr ON ppr.mbid = mur.mbid
+					, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				WHERE (mur.mb_status BETWEEN '04' AND '07' OR mur.mb_status = '81')
+				  AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+				  AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+				  AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+				  AND mur.mb_status LIKE ('${status}%')
+				  AND mur.mb_approval_date >= #{fromDate}
+				  AND mur.mb_approval_date < #{toDate}
+			) RESULT_TB
+		ORDER BY mb_approval_date ${selectOrderBy}
+		LIMIT ${dataCnt}, ${dataPerPage}
+		]]>
+	</select>
+
+	<select id="contractCount" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			COUNT(mur.mbid) AS contractTotal
+			 , COUNT(CASE WHEN mur.mb_status IN ('04', '05') THEN 1 END) AS acceptCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('06') THEN 1 END) AS contractCnt
+			 , COUNT(CASE WHEN mur.mb_status IN ('07') THEN 1 END) AS endCnt
+		FROM  MONEYBANK_USER_REQUEST mur
+				  LEFT JOIN CBCI_USER cu ON mur.user_code = cu.USER_CODE
+		WHERE (mur.mb_status BETWEEN '04' AND '07' OR mur.mb_status = '81')
+		  AND UPPER(cu.USER_NM) LIKE UPPER('${userNmSearch}%')
+		  AND UPPER(cu.FIRM_NM) LIKE UPPER('${firmNmSearch}%')
+		  AND UPPER(mur.mb_product_code) LIKE UPPER('${selectDivSearch}%')
+		  AND mur.mb_status LIKE ('${status}%')
+		  AND mur.mb_approval_date >= #{fromDate}
+		  AND mur.mb_approval_date < #{toDate}
+		]]>
+	</select>
+</mapper>

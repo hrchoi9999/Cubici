@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.moneybank.mapper.MoneybankCmmMapper">
+	
+	<!-- 머니뱅크 회원 신청상태 UPDATE -->
+	<update id="updateMoneybankPrizmStatus" parameterType="hashmap">
+		UPDATE MONEYBANK_USER_REQUEST SET
+			request_status = #{request_status},
+			business_period = #{BUSINESS_PERIOD},
+			sales_amount = #{MONTH_SALES_VALUE},
+			upd_date = NOW()
+		WHERE seq = #{seq}
+	</update>
+	
+	<update id="modifyUserTypeByMbStatus" parameterType="hashMap">
+		UPDATE
+			CBCI_USER
+		SET
+			USER_TYPE = #{user_type}
+		WHERE
+			USER_CODE = #{user_code}
+	</update>
+	
+</mapper>

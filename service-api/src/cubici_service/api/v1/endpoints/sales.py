@@ -1,0 +1,39 @@
+"""Sales and returns read-only API skeleton."""
+
+from fastapi import APIRouter, Query
+
+from cubici_service.api.v1.schemas import DomainStatus
+from cubici_service.sales.repository import (
+    SaleListResponse,
+    SaleReturnListResponse,
+    list_sale_returns,
+    list_sales,
+)
+
+router = APIRouter(prefix="/sales", tags=["sales"])
+
+
+@router.get("", response_model=DomainStatus)
+def sales_status() -> DomainStatus:
+    return DomainStatus(
+        domain="sales",
+        mode="read-only-skeleton",
+        source_tables=["sale"],
+        next_action="Implement paginated sales list and order detail queries.",
+    )
+
+
+@router.get("/orders", response_model=SaleListResponse)
+def sale_orders(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> SaleListResponse:
+    return list_sales(limit=limit, offset=offset)
+
+
+@router.get("/returns", response_model=SaleReturnListResponse)
+def sale_returns(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> SaleReturnListResponse:
+    return list_sale_returns(limit=limit, offset=offset)

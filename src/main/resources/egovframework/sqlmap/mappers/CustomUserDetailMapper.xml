@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.security.CustomUserDetailMapper">
+
+	<select id="getUser" resultType="egovframework.azon.cmmn.security.dto.SecurityUser" parameterType="String">
+		SELECT
+			USER_NO as user_no,
+			USER_ID as user_id,
+			USER_CODE as user_code,
+			USER_NM as username,
+			USER_PW as password,
+			USER_TYPE as user_type,
+			FIRM_ID as firm_id,
+			FIRM_NM as firm_nm,
+			BUSINESS_TYPE as business_type,
+			REG_DATE as reg_date,
+			IFNULL(WITHDRAW_YN, 'N') as withdraw,
+			IFNULL(MONEYBANK_YN, 'N') AS money_bank,
+			IFNULL((SELECT mb_product_code FROM MONEYBANK_USER_REQUEST WHERE CU.USER_CODE = user_code AND mb_request_date IS NOT NULL ORDER BY input_date DESC LIMIT 1), '-') AS mb_product_code,
+			IFNULL((SELECT mb_status FROM MONEYBANK_USER_REQUEST WHERE CU.USER_CODE = user_code AND mb_request_date IS NOT NULL ORDER BY input_date DESC LIMIT 1), '-') AS mb_status
+		FROM CBCI_USER CU
+		WHERE BINARY(USER_ID) = TRIM(#{value})
+	</select>
+	
+	<select id="AdmingetUser" resultType="egovframework.azon.cmmn.security.dto.AdminSecurityUser" parameterType="String">
+		SELECT
+			ADMIN_TYPE as admin_type,
+			ADMIN_ID as admin_id,
+			ADMIN_PASSWORD as password,
+			ADMIN_FIRM_NO as admin_firm_no,
+			ADMIN_GRADE as admin_grade,
+			ADMIN_NAME as username
+		FROM CBCI_ADMIN
+		WHERE BINARY(ADMIN_ID) = TRIM(#{value})
+	</select>
+	
+	<select id="getRole" resultType="hashmap" parameterType="hashmap">
+		SELECT 
+			auth_role
+		FROM CBCI_AUTH
+		WHERE auth_division = #{division} 
+		AND auth_type = #{type}
+	</select>
+	
+	<select id="getUri" resultType="String" parameterType="String">
+		SELECT
+			role_uri
+		FROM CBCI_ROLE_URI
+		WHERE auth_role = #{value}
+	</select>
+</mapper>

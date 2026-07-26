@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="11" height="14" viewBox="0 0 11 14">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #fff;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="write-btn" class="cls-1" d="M477,393v14h6.319L488,402.266V393H477Zm0.764,0.811h9.472v8.052l-4.451.019v4.307h-5.021V393.811Zm8.32,1.544h-7.168v0.811h7.168v-0.811Zm0,2.065h-7.168v0.811h7.168V397.42Zm0,2.138h-7.168v0.811h7.168v-0.811Zm-7.168,2.319v0.811h2.408v-0.811h-2.408Zm0,2.949h2.408v-0.811h-2.408v0.811Z" transform="translate(-477 -393)"/>
+</svg>

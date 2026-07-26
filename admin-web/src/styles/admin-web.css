@@ -1,0 +1,380 @@
+#root {
+  min-height: 100vh;
+}
+
+.searchArea {
+  margin-bottom: 20px;
+}
+
+.searchArea .line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.searchArea .inputBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.searchArea label {
+  font-size: 13px;
+  color: #333;
+}
+
+.searchArea input {
+  width: 140px;
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+}
+
+.searchArea .checkBoxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  font-size: 13px;
+}
+
+.searchArea .checkBoxLabel input {
+  width: auto;
+  height: auto;
+  padding: 0;
+}
+
+.resultArea {
+  display: flex;
+  gap: 20px;
+  margin: 0 0 12px;
+  font-size: 14px;
+}
+
+.resultArea .result {
+  margin-left: 4px;
+  color: #002e6e;
+}
+
+#fixTbody td {
+  text-align: center;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.redemptionTable,
+.settlementTable {
+  min-width: 1180px;
+}
+
+.redemptionTable th,
+.redemptionTable td,
+.settlementTable th,
+.settlementTable td {
+  text-align: center;
+  white-space: nowrap;
+}
+
+#pagingButton {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#pagingButton ul {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+#pagingButton button {
+  min-width: 32px;
+  min-height: 28px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+}
+
+#pagingButton button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.linkButton {
+  color: #002e6e;
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.detailPanel {
+  margin-top: 28px;
+}
+
+.detailSection {
+  margin-top: 22px;
+}
+
+.detailSection h3 {
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.detailPanel table {
+  width: 100%;
+  border-top: 2px solid #002e6e;
+}
+
+.detailPanel th,
+.detailPanel td {
+  height: 42px;
+  border-bottom: 1px solid #ddd;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+.detailPanel th {
+  width: 140px;
+  background: #f5f8fb;
+  color: #333;
+  text-align: left;
+}
+
+.detailMessage {
+  padding: 16px 0;
+  color: #333;
+  font-size: 13px;
+}
+
+.statusActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.contractFeeForm {
+  padding: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.contractFeeGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.contractFeeGrid label {
+  display: grid;
+  gap: 5px;
+  color: #333;
+  font-size: 13px;
+}
+
+.contractFeeGrid input,
+.contractFeeRateTable input {
+  width: 100%;
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.contractFeeRateTable th,
+.contractFeeRateTable td {
+  text-align: center;
+}
+
+.contractFeeActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.redemptionOperationForms {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.redemptionOperationHistory {
+  margin-top: 16px;
+}
+
+.redemptionOperationHistory h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #222;
+}
+
+.redemptionOperationHistoryTable {
+  min-width: 1180px;
+}
+
+.redemptionOperationHistoryTable th,
+.redemptionOperationHistoryTable td {
+  text-align: center;
+}
+
+.redemptionOperationForm {
+  padding: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.redemptionOperationForm h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: #222;
+}
+
+.redemptionOperationGuide {
+  margin: 0 0 10px;
+  color: #555;
+  font-size: 13px;
+}
+
+.redemptionOperationGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(135px, 1fr));
+  gap: 10px;
+}
+
+.redemptionOperationGrid label {
+  display: grid;
+  gap: 5px;
+  color: #333;
+  font-size: 13px;
+}
+
+.redemptionOperationGrid input {
+  width: 100%;
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.redemptionOperationActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.documentCheckForm {
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  background: #fafafa;
+}
+
+.documentCheckGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.documentCheckGrid label {
+  display: grid;
+  gap: 5px;
+  color: #333;
+  font-size: 13px;
+}
+
+.documentCheckGrid input,
+.documentCheckGrid select {
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+  background: #fff;
+  font-size: 13px;
+}
+
+.documentCheckActions {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.documentFiles {
+  margin-top: 16px;
+}
+
+.documentUpload {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.documentUpload select,
+.documentUpload input {
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.documentUpload input {
+  padding-top: 4px;
+}
+
+.documentConfirm {
+  margin: 8px 0 12px;
+  text-align: right;
+}
+
+.documentConfirm button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.documentFileTable th,
+.documentFileTable td {
+  text-align: center;
+}
+
+.reviewNotePanel {
+  margin-top: 10px;
+}
+
+.reviewNoteForm {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 140px minmax(220px, 2fr) 70px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reviewNoteForm input {
+  height: 30px;
+  border: 1px solid #ccc;
+  padding: 0 8px;
+  font-size: 13px;
+}
+
+.reviewNoteTable th,
+.reviewNoteTable td {
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .contractFeeGrid,
+  .redemptionOperationGrid,
+  .documentCheckGrid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .reviewNoteForm {
+    grid-template-columns: 1fr;
+  }
+}

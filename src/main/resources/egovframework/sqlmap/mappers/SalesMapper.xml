@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.shop.mapper.SalesMapper">
+
+	<select id="findByShopTypeAndShopIdOrderByOrderDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			ORDERED_DATE as orderedDate
+		FROM SHOP_SALES_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY ORDERED_DATE DESC LIMIT 1
+	</select>
+
+	<select id="findByShopTypeAndShopIdOrderByUpdDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			UPD_DATE as updDate
+		FROM SHOP_SALES_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY UPD_DATE DESC LIMIT 1
+	</select>
+
+	<select id="findByShopTypeAndShopIdOrderByInputDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			INPUT_DATE as inputDate
+		FROM SHOP_SALES_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY INPUT_DATE DESC LIMIT 1
+	</select>
+
+	<insert id="saveAll" parameterType="SalesDTO">
+		INSERT INTO SHOP_SALES_API(
+			shop_type, shop_id, sub_store, order_no, status, ordered_date, paid_date, shipment_date, delivered_date, confirm_date, settle_estimate_date, settle_complete_date, product_no, option_no, product_name, option_name, quantity, sales_unit_price, sales_amount, discount_amount, payment_amount, settle_estimate_amount, settlement_amount, pcc, shipment_no, seller_product_no, canceled, orderer_id, orderer_name, shipment_box_no, option_sales_amount, delivery_method, deduction_amount, oversea_delivery_yn, shipping_policy, input_date, upd_date, delivery_charges, delivery_charges_2, instant_discount_coupon, downloadable_coupon, product_instant_discount_amount, product_discount_coupon_amount, product_purchase_discount_amount, seller_discount_coupon_amount, seller_purchase_discount_amount, seller_discounts_amount, seller_purchase_discount_type, shopping_mall_discount_amount, order_amount
+		) VALUES
+		    (
+		   #{shopType},
+		   #{shopId},
+		   #{subStore},
+		   #{orderNo},
+		   #{status},
+		   #{orderedDate},
+		   #{paidDate},
+		   #{shipmentDate},
+		   #{deliveredDate},
+		   #{confirmDate},
+		   #{settleEstimateDate},
+		   #{settleCompleteDate},
+		   #{productNo},
+		   #{optionNo},
+		   #{productName},
+		   #{optionName},
+		   #{quantity},
+		   #{salesUnitPrice},
+		   #{salesAmount},
+		   #{discountAmount},
+		   #{paymentAmount},
+		   #{settleEstimateAmount},
+		   #{settlementAmount},
+		   #{pcc},
+		   #{shipmentNo},
+		   #{sellerProductNo},
+		   #{canceled},
+		   #{ordererId},
+		   #{ordererName},
+		   #{shipmentBoxNo},
+		   #{optionSalesAmount},
+		   #{deliveryMethod},
+		   #{deductionAmount},
+		   #{overseaDeliveryYn},
+		   #{shippingPolicy},
+		   #{inputDate},
+		   #{updDate},
+		   #{deliveryCharges},
+		   #{deliveryCharges_2},
+		   #{instantDiscountCoupon},
+		   #{downloadableCoupon},
+		   #{productInstantDiscountAmount},
+		   #{productDiscountCouponAmount},
+		   #{productPurchaseDiscountAmount},
+		   #{sellerDiscountCouponAmount},
+		   #{sellerPurchaseDiscountAmount},
+		   #{sellerDiscountsAmount},
+		   #{sellerPurchaseDiscountType},
+		   #{shoppingMallDiscountAmount},
+		   #{orderAmount}
+	   ) ON DUPLICATE KEY UPDATE
+		   sub_store = IFNULL(#{subStore}, sub_store),
+		   status = IFNULL(#{status}, status),
+		   ordered_date = IFNULL(#{orderedDate}, ordered_date),
+		   paid_date = IFNULL(#{paidDate}, paid_date),
+		   shipment_date = IFNULL(#{shipmentDate}, shipment_date),
+		   delivered_date = IFNULL(#{deliveredDate}, delivered_date),
+		   confirm_date = IFNULL(#{confirmDate}, confirm_date),
+		   settle_estimate_date = IFNULL(#{settleEstimateDate}, settle_estimate_date),
+		   settle_complete_date = IFNULL(#{settleCompleteDate}, settle_complete_date),
+		   product_name = IFNULL(#{productName}, product_name),
+		   option_name = IFNULL(#{optionName}, option_name),
+		   quantity = IFNULL(#{quantity}, quantity),
+		   sales_unit_price = IFNULL(#{salesUnitPrice}, sales_unit_price),
+		   sales_amount = IFNULL(#{salesAmount}, sales_amount),
+		   discount_amount = IFNULL(#{discountAmount}, discount_amount),
+		   payment_amount = IFNULL(#{paymentAmount}, payment_amount),
+		   settle_estimate_amount = IFNULL(#{settleEstimateAmount}, settle_estimate_amount),
+		   settlement_amount = IFNULL(#{settlementAmount}, settlement_amount),
+		   pcc = IFNULL(#{pcc}, pcc),
+		   shipment_no = IFNULL(#{shipmentNo}, shipment_no),
+		   seller_product_no = IFNULL(#{sellerProductNo}, seller_product_no),
+		   canceled = IFNULL(#{canceled}, canceled),
+		   orderer_id = IFNULL(#{ordererId}, orderer_id),
+		   orderer_name = IFNULL(#{ordererName}, orderer_name),
+		   shipment_box_no = IFNULL(#{shipmentBoxNo}, shipment_box_no),
+		   option_sales_amount = IFNULL(#{optionSalesAmount}, option_sales_amount),
+		   delivery_method = IFNULL(#{deliveryMethod}, delivery_method),
+		   deduction_amount = IFNULL(#{deductionAmount}, deduction_amount),
+		   oversea_delivery_yn = IFNULL(#{overseaDeliveryYn}, oversea_delivery_yn),
+		   shipping_policy = IFNULL(#{shippingPolicy}, shipping_policy),
+		   upd_date = IFNULL(#{updDate}, NOW()),
+		   delivery_charges = IFNULL(#{deliveryCharges}, delivery_charges),
+		   delivery_charges_2 = IFNULL(#{deliveryCharges_2}, delivery_charges_2),
+		   instant_discount_coupon = IFNULL(#{instantDiscountCoupon}, instant_discount_coupon),
+		   downloadable_coupon = IFNULL(#{downloadableCoupon}, downloadable_coupon),
+		   product_instant_discount_amount = IFNULL(#{productInstantDiscountAmount}, product_instant_discount_amount),
+		   product_discount_coupon_amount = IFNULL(#{productDiscountCouponAmount}, product_discount_coupon_amount),
+		   product_purchase_discount_amount = IFNULL(#{productPurchaseDiscountAmount}, product_purchase_discount_amount),
+		   seller_discount_coupon_amount = IFNULL(#{sellerDiscountCouponAmount}, seller_discount_coupon_amount),
+		   seller_purchase_discount_amount = IFNULL(#{sellerPurchaseDiscountAmount}, seller_purchase_discount_amount),
+		   seller_discounts_amount = IFNULL(#{sellerDiscountsAmount}, seller_discounts_amount),
+		   seller_purchase_discount_type = IFNULL(#{sellerPurchaseDiscountType}, seller_purchase_discount_type),
+		   shopping_mall_discount_amount = IFNULL(#{shoppingMallDiscountAmount}, shopping_mall_discount_amount),
+		   order_amount = IFNULL(#{orderAmount}, order_amount)
+	</insert>
+
+	<select id="findByShopTypeAndShopIdAndInputDateIsNull" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			ORDER_NO as orderNo
+		FROM SHOP_SALES_API
+		WHERE INPUT_DATE = ' '
+	</select>
+	
+	<select id="findPaymentAmountByOrderId" parameterType="String" resultType="String">
+		SELECT
+			payment_amount
+		FROM
+			SHOP_SALES_API
+		WHERE
+			shop_type = #{shopType}
+		  AND shop_id = #{shopId}
+		  AND order_no = #{orderNo}
+	</select>
+	
+	<select id="findSalesDatabyordererIdIsNull" parameterType="String" resultType="String">
+		SELECT
+		    order_no as orderNo
+		FROM SHOP_SALES_API
+		WHERE status is null
+		AND input_date >= 
+		AND shop_type = #{shopType}
+		AND shop_id = #{shopId}
+	</select>
+</mapper>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.shop.mapper.ReturnMapper">
+
+	<select id="findByShopTypeAndShopIdOrderByInputDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			INPUT_DATE
+		FROM SHOP_RETURN_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY INPUT_DATE DESC LIMIT 1
+	</select>
+
+	<select id="findByShopTypeAndShopIdOrderByRegDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			REG_DATE
+		FROM SHOP_RETURN_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY REG_DATE DESC LIMIT 1
+	</select>
+
+	<insert id="saveAll" parameterType="ReturnDTO">
+		INSERT INTO SHOP_RETURN_API(
+			shop_type, shop_id, sub_store, order_no, status, payment_amount, receipt_no, claim_status, payment_no, receipt_type, total_cancel_count, return_delivery_no, release_stop_status, pre_refund, complete_comfirm_type, cancel_count, order_count, release_status, reason_code, product_no, option_no, reg_date, claim_complete_date, input_date, upd_date
+		)
+		VALUES (
+			#{shopType},
+			#{shopId},
+			#{subStore},
+			#{orderNo},
+			#{status},
+		    #{paymentAmount},
+			#{receiptNo},
+			#{claimStatus},
+			#{paymentNo},
+			#{receiptType},
+			#{totalCancelCount},
+			#{returnDeliveryNo},
+			#{releaseStopStatus},
+			#{preRefund},
+			#{completeConfirmType},
+			#{cancelCount},
+			#{orderCount},
+			#{releaseStatus},
+			#{reasonCode},
+			#{productNo},
+			#{optionNo},
+			#{regDate},
+			#{claimCompleteDate},
+			#{inputDate},
+			#{updDate}
+		) ON DUPLICATE KEY UPDATE
+			sub_store = IFNULL(#{subStore}, sub_store),
+			status = IFNULL(#{status}, status),
+			payment_amount = IFNULL(#{paymentAmount}, payment_amount),
+			receipt_no = IFNULL(#{receiptNo}, receipt_no),
+			claim_status = IFNULL(#{claimStatus}, claim_status),
+			payment_no = IFNULL(#{paymentNo}, payment_no),
+			receipt_type = IFNULL(#{receiptType}, receipt_type),
+			total_cancel_count = IFNULL(#{totalCancelCount}, total_cancel_count),
+			return_delivery_no = IFNULL(#{returnDeliveryNo}, return_delivery_no),
+			release_stop_status = IFNULL(#{releaseStopStatus}, release_stop_status),
+			pre_refund = IFNULL(#{preRefund}, pre_refund),
+			complete_comfirm_type = IFNULL(#{completeConfirmType}, complete_comfirm_type),
+			cancel_count = IFNULL(#{cancelCount}, cancel_count),
+			order_count = IFNULL(#{orderCount}, order_count),
+			release_status = IFNULL(#{releaseStatus}, release_status),
+			reason_code = IFNULL(#{reasonCode}, reason_code),
+			reg_date = IFNULL(#{regDate}, reg_date),
+			claim_complete_date = IFNULL(#{claimCompleteDate}, claim_complete_date),
+			upd_date = IFNULL(#{updDate}, NOW())
+	</insert>
+</mapper>

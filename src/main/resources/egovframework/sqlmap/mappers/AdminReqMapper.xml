@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.moneybank.operation.mapper.ReqMapper">
+	<select id="selectMBRequestList" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT
+			MUR.mbid,
+			(SELECT COUNT(mbid) FROM MONEYBANK_USER_REQUEST WHERE user_code = MUR.user_code and mb_request_date <= MUR.mb_request_date and mb_status = '07') AS use_cnt,
+			IF(MUR.mb_status < '02', '신청', '완료') AS mb_status,
+			DATE_FORMAT(MUR.mb_request_date, '%Y-%m-%d') AS mb_request_date,
+			MUR.mb_sales_amount,
+			CU.USER_ID AS user_id,
+			CU.USER_NM AS user_nm,
+			CU.USER_NO,
+			IFNULL(MSC.sub_complete, 'N') AS sub_complete,
+			PPR.prizm_grade AS prizm_score,
+			(SELECT COUNT(*) FROM MONEYBANK_USER_REQUEST_SHOP MURS WHERE MURS.mbid = MUR.mbid) AS request_shop
+		FROM
+			CBCI_USER CU, MONEYBANK_USER_REQUEST MUR
+			LEFT JOIN MONEYBANK_SUB_CHECK MSC ON MUR.mbid = MSC.mbid
+			LEFT JOIN PRIZM_PCS_RESULT PPR ON MUR.mbid = PPR.mbid
+		WHERE
+			MUR.user_code = CU.USER_CODE
+			AND CU.USER_NM LIKE #{user_nm}
+			AND CU.FIRM_NM LIKE #{firm_nm}
+			AND CU.USER_ID LIKE #{user_id}
+			AND MUR.mb_status <= '07'
+			AND MUR.mb_sales_amount >= #{minAmount}
+			AND MUR.mb_sales_amount < #{maxAmount}
+			AND MUR.mb_request_date >= #{fromDate}
+			AND MUR.mb_request_date < #{toDate}
+		ORDER BY ${order_by}, MUR.mbid DESC
+			LIMIT ${limit}, 10
+		]]>
+	</select>
+
+	<select id="selectMBRequestSum" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			SUM(CASE WHEN MUR.mb_status < '02' THEN 1 ELSE 0 END) AS request,
+			SUM(CASE WHEN MUR.mb_status >= '02' and MUR.mb_status <= '07' THEN 1 ELSE 0 END) AS finish,
+			COUNT(*) as total
+		FROM
+			CBCI_USER CU, MONEYBANK_USER_REQUEST MUR
+		    LEFT JOIN MONEYBANK_SUB_CHECK MSC ON MUR.mbid = MSC.mbid
+		    LEFT JOIN PRIZM_PCS_RESULT PPR ON MUR.mbid = PPR.mbid
+		WHERE
+			MUR.user_code = CU.USER_CODE
+		    AND MUR.mb_status <= '07'
+		    AND MUR.mb_status <> '00'
+		    AND MUR.mb_sales_amount >= #{minAmount}
+		    AND MUR.mb_sales_amount < #{maxAmount}
+		    AND MUR.mb_request_date >= #{fromDate}
+		    AND MUR.mb_request_date < #{toDate}
+		]]>
+	</select>
+
+	<select id="selectMBRequestDetail" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			MUR.mb_product_code,
+			MUR.mbid,
+			CU.USER_NM,
+			CU.USER_NO,
+			CU.USER_CODE,
+			CU.USER_ID,
+			CU.FIRM_NM,
+			CU.FIRM_SETUP_DATE,
+			MUR.mb_status,
+			MUR.mb_request_date,
+			MUR.reg_no_first,
+			MUR.reg_no_second,
+			MUR.mb_demand_acc_number,
+			MUR.mb_main_acc_bank_code,
+			MUR.mb_main_acc_holder,
+			MUR.mb_main_acc_number
+		FROM MONEYBANK_USER_REQUEST MUR, CBCI_USER CU
+		WHERE
+			MUR.user_code = CU.USER_CODE
+		  AND MUR.mbid = #{mbid}
+	</select>
+
+	<select id="selectShopPaymentAmountMonthTotal" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(SSA.ORDER_NO) as MSQ,
+			IFNULL(SUM(SSA.PAYMENT_AMOUNT),0) as PAYMENT_AMOUNT,
+			IFNULL(SUM(SSA.ORDER_AMOUNT),0) as ORDER_AMOUNT
+		FROM SHOP_SALES_API SSA
+		WHERE SSA.SHOP_TYPE IN <foreach collection="shopType" item="type" separator="," open="(" close=")">#{type}</foreach>
+			AND SSA.SHOP_ID IN <foreach collection="shopId" item="shopid" separator="," open="(" close=")">#{shopid}</foreach>
+			AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d');
+	</select>
+
+	<select id="selectShopPaymentAmountMonth" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			COUNT(SSA.ORDER_NO) as MSQ,
+			IFNULL(SUM(SSA.PAYMENT_AMOUNT),0) as PAYMENT_AMOUNT,
+			IFNULL(SUM(SSA.ORDER_AMOUNT),0) as ORDER_AMOUNT,
+			IFNULL(SUM(SSA.product_instant_discount_amount),0)  as PROD_INST_DISC_AMOUNT,
+			IFNULL(SUM(SSA.product_discount_coupon_amount),0) as PROD_DISC_COUPON_AMOUNT,
+			IFNULL(SUM(SSA.product_purchase_discount_amount),0) as PROD_PURCHASE_DISC_AMOUNT,
+			IFNULL(SUM(SSA.seller_discount_coupon_amount),0) as SELLER_DISC_COUPON_AMOUNT,
+			IFNULL(SUM(SSA.seller_purchase_discount_amount),0) as SELLER_PURCHASE_DISC_AMOUNT,
+			IFNULL(SUM(SSA.seller_discounts_amount),0) as SELLER_DISCS_AMOUNT,
+			IFNULL(SUM(SSA.seller_purchase_discount_type),0) as SELLER_PURCHASE_DISC_TYPE,
+			IFNULL(SUM(SSA.discount_amount),0) as DSIC_AMOUNT,
+			IFNULL(SUM(SSA.shopping_mall_discount_amount),0) as SHOPPING_MALL_DISC_AMOUNT
+		FROM SHOP_SALES_API SSA
+		WHERE SSA.SHOP_TYPE = #{SHOP_TYPE}
+			AND SSA.SHOP_ID = #{SHOP_ID}
+			AND PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+	</select>
+
+	<select id="selectMonthlySettlementAmountSales" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			IFNULL(SUM(SSA.SETTLE_ESTIMATE_AMOUNT),0) AS MSA,
+			COUNT(SSA.SETTLE_ESTIMATE_AMOUNT) AS COUNT_MSA
+		FROM SHOP_SALES_API SSA
+		WHERE SSA.SHOP_TYPE =#{SHOP_TYPE}
+			AND SSA.SHOP_ID = #{SHOP_ID}
+		<choose>
+			<when test='SHOP_TYPE =="4" or SHOP_TYPE =="14"'>
+		  		AND SSA.PAID_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+		  	</when>
+			<when test='SHOP_TYPE =="2" or SHOP_TYPE =="3"'>
+		  		AND SSA.SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+			</when>
+		</choose>
+	</select>
+
+	<select id="selectMonthlySettlementAmountSettlement" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			IFNULL(SUM(SSA.SETTLEMENT_AMOUNT),0) AS MSA,
+			COUNT(SSA.SETTLEMENT_AMOUNT) AS COUNT_MSA
+		FROM SHOP_SETTLEMENT_API SSA
+		WHERE SSA.SHOP_TYPE =#{SHOP_TYPE}
+			AND SSA.SHOP_ID = #{SHOP_ID}
+			AND SSA.SETTLEMENT_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+	</select>
+
+	<select id="selectMonthlySettlementPeriod" parameterType="hashmap" resultType="hashmap">
+	SELECT
+		CASE
+			WHEN SSA.SHOP_TYPE=2 THEN IFNULL(SUM(DATEDIFF(SSA.SETTLE_ESTIMATE_DATE,ADDDATE(SSA.DELIVERED_DATE,INTERVAL 1 DAY))),0)
+			WHEN SSA.SHOP_TYPE=3 THEN IFNULL(SUM(DATEDIFF(SSA.SETTLE_ESTIMATE_DATE,ADDDATE(SSA.DELIVERED_DATE,INTERVAL 2 DAY))),0)
+			WHEN SSA.SHOP_TYPE=4 THEN IFNULL(SUM(DATEDIFF(ADDDATE(SSA.DELIVERED_DATE,INTERVAL 9 DAY),SSA.DELIVERED_DATE)),0)
+			WHEN SSA.SHOP_TYPE=11 THEN IFNULL(SUM(DATEDIFF(SSA.SETTLE_COMPLETE_DATE,ADDDATE(SSA.DELIVERED_DATE,INTERVAL 2 DAY))),0)
+			WHEN SSA.SHOP_TYPE=14 THEN IFNULL(SUM(DATEDIFF(SSA.CONFIRM_DATE,ADDDATE(SSA.DELIVERED_DATE,INTERVAL 1 DAY))),0)
+			END AS SUM_MSP
+		 , COUNT(SSA.ID) as COUNT_MSP
+	FROM SHOP_SALES_API SSA
+	WHERE SSA.SHOP_TYPE=#{SHOP_TYPE}
+		AND SSA.SHOP_ID = #{SHOP_ID}
+		AND
+		CASE
+			WHEN SSA.SHOP_TYPE=2 THEN SSA.SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+			WHEN SSA.SHOP_TYPE=3 THEN SSA.SETTLE_ESTIMATE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+			WHEN SSA.SHOP_TYPE=4 THEN SSA.DELIVERED_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+			WHEN SSA.SHOP_TYPE=11 THEN SSA.SETTLE_COMPLETE_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+			WHEN SSA.SHOP_TYPE=14 THEN SSA.CONFIRM_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+		END
+	</select>
+
+	<select id="selectMonthlyDeliveryPeriod" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			IFNULL(SUM(DATEDIFF(SSA.DELIVERED_DATE, ADDDATE(SSA.PAID_DATE,INTERVAL 1 DAY))),0) AS SUM_MDP,
+			COUNT(ID) AS COUNT_MDP
+		FROM SHOP_SALES_API SSA
+		WHERE SSA.SHOP_TYPE=#{SHOP_TYPE}
+			AND SSA.SHOP_ID = #{SHOP_ID}
+			AND SSA.DELIVERED_DATE BETWEEN DATE_FORMAT(ADDDATE(SUBDATE(NOW(), INTERVAL 1 MONTH),INTERVAL 1 DAY),'%Y%m%d') AND DATE_FORMAT(NOW(),'%Y%m%d')
+	</select>
+
+	<select id="selectMBSubDocDetail" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			MSC.mbid,
+			MSC.biz_no,
+			DATE_FORMAT(MSC.biz_start_date, '%Y-%m-%d') AS biz_start_date,
+			MSC.tax_type,
+			MSC.biz_type,
+			MSC.cb_score_current,
+			MSC.cb_score_rank,
+			MSC.cb_score_past,
+			MSC.default_status,
+			MSC.financial_disorder_status,
+			MSC.public_information_status,
+			MSC.overdue_status,
+			MSC.cb_check,
+			MSC.national_tax_full_payment,
+			MSC.local_tax_full_payment,
+			MSC.health_insurance_full_payment,
+			MSC.health_insurance_paid_amount,
+			MSC.sub_complete,
+			MSC.cb_confirm_admin
+		FROM MONEYBANK_SUB_CHECK MSC
+		WHERE MSC.mbid = #{mbid}
+	</select>
+
+	<select id="selectInfoCallList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			CE.eval_no,
+			CE.object_no,
+			CE.eval_subject,
+			CE.reviewer,
+			CE.title,
+			CE.detail,
+			CE.input_date
+		FROM
+			CBCI_EVALUATE CE
+		WHERE
+			division = '02'
+		  AND object_no = #{mbid}
+	</select>
+
+	<insert id="insertCBInfo" parameterType="hashmap">
+		INSERT INTO MONEYBANK_SUB_CHECK (
+			mbid,
+			cb_score_current,
+			cb_score_rank,
+			cb_score_past,
+			default_status,
+			financial_disorder_status,
+			public_information_status,
+			overdue_status,
+			cb_check,
+			cb_confirm_admin,
+			input_date
+		) VALUES (
+			#{mbid},
+			#{cbScoreCurrent},
+			#{cbScoreRank},
+			#{cbScorePast},
+			#{defaultStatus},
+			#{financialDisorderStatus},
+			#{publicInformationStatus},
+			#{overdueStatus},
+			'Y',
+			#{userId},
+			now()
+		) ON DUPLICATE KEY UPDATE
+			cb_score_current = #{cbScoreCurrent},
+			cb_score_rank = #{cbScoreRank},
+			cb_score_past = #{cbScorePast},
+			default_status = #{defaultStatus},
+			financial_disorder_status = #{financialDisorderStatus},
+			public_information_status = #{publicInformationStatus},
+			overdue_status = #{overdueStatus},
+			cb_check = 'Y',
+			cb_confirm_admin = #{userId},
+			upd_date = now()
+	</insert>
+
+	<insert id="insertInfoCallDetail" parameterType="hashmap">
+		INSERT INTO	CBCI_EVALUATE(
+			division,
+			object_no,
+			eval_subject,
+			reviewer,
+			title,
+			detail,
+			input_date
+		) VALUES (
+			'02',
+			#{mbid},
+			'신청',
+			#{reviewer},
+			#{title},
+			#{detail},
+			now()
+		)
+	</insert>
+
+	<update id="updateSubStatus" parameterType="hashmap">
+		UPDATE
+			MONEYBANK_SUB_CHECK
+		SET
+			sub_complete = 'Y',
+			final_confirm_admin = #{userId}
+		WHERE mbid = #{mbid}
+	</update>
+</mapper>

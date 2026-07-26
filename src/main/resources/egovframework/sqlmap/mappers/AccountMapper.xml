@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.shop.mapper.AccountMapper">
+
+	<select id="findByShopType" parameterType="hashmap" resultType="AccountDTO">
+		SELECT
+		    
+			SHOP_TYPE as shopType,
+			SHOP_ID as shopId,
+			VENDOR_ID as vendorId,
+			API_KEY as apiKey,
+			API_SECRET_KEY as apiSecretKey,
+			SUB_STORE_01 as subStore01,
+			SUB_STORE_02 as subStore02,
+			SUB_STORE_03 as subStore03
+		FROM CBCI_ACCOUNT
+		WHERE SHOP_TYPE = #{shopType}
+		  AND API_KEY != ''
+		  AND DEL_YN = 'N'
+		GROUP BY API_KEY
+	</select>
+</mapper>

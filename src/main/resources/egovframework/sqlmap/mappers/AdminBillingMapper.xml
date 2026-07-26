@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.AdminBillingMapper">
+	
+	<select id="selectPaymentList" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			FOUND_ROWS() AS CNT,
+		<if test="sum">
+			SUM(LIST2.amount) AS SUM_AMOUNT,
+			SUM(LIST2.payment_fee) AS SUM_PAYMENT_FEE,
+			SUM(LIST2.vat) AS SUM_VAT,
+			SUM(LIST2.profit) AS SUM_PROFIT
+		</if>
+		<if test="!sum">
+			LIST2.*
+		</if>
+		FROM (
+			SELECT
+				@sales_row_no := @sales_row_no + 1 AS RNUM,
+				LIST.*
+			FROM (
+				SELECT
+					CBC.charge_name,
+					DATE_FORMAT(CU.REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE,
+					CU.USER_ID,
+					CU.USER_NM,
+					CU.FIRM_NM,
+					CU.USER_PHONE,
+					CU.FIRM_TEL,
+					(SELECT COUNT(*) FROM CBCI_ACCOUNT CA WHERE CA.USER_NO = CU.USER_NO) AS shop_count,
+					CU.FIRM_ADDR,
+					DATE_FORMAT(CBPD.expire_date, '%Y-%m-%d %H:%i:%s') AS expire_date,
+					DATE_FORMAT(CBPD.payment_date, '%Y-%m-%d %H:%i:%s') AS payment_date,
+					CBPD.amount,
+					TRUNCATE(CBPD.amount * 0.032, 0) AS payment_fee,
+					TRUNCATE(CBPD.amount / 11, 0) AS vat,
+					CBPD.amount - TRUNCATE((CBPD.amount * 0.032), 0) - TRUNCATE((CBPD.amount / 11), 0) AS profit
+				FROM
+					CBCI_BILLING_PAYMENT_DETAIL CBPD
+					LEFT JOIN CBCI_BILLING_CHARGE CBC ON CBC.charge_code = CBPD.charge_code
+					LEFT JOIN CBCI_USER CU ON CBPD.user_code = CU.USER_CODE, (SELECT @ROWNUM := 0) TMP
+				WHERE
+					CBPD.pg_id IS NOT NULL
+					AND CU.USER_NM LIKE '%${user_nm}%'
+					AND CU.FIRM_NM LIKE '%${firm_nm}%'
+					AND CU.USER_ID LIKE '%${user_id}%'
+					AND CU.USER_TYPE LIKE '${userType}%'
+				<![CDATA[
+					AND DATE_FORMAT(CBPD.payment_date, '%Y-%m-%d') >= #{fromDate}
+					AND DATE_FORMAT(CBPD.payment_date, '%Y-%m-%d') <= #{toDate}
+				]]>
+			) LIST, (SELECT @sales_row_no := 0) SALES_ROW_NO
+			ORDER BY LIST.payment_date DESC
+		) LIST2
+		LIMIT ${dataCnt}, 10
+	</select>
+	
+	<select id="selectChangeChargeList" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			FOUND_ROWS() AS CNT,
+			LIST2.*
+		FROM (
+			SELECT
+				@sales_row_no := @sales_row_no + 1 AS RNUM,
+				LIST.*
+			FROM (
+				SELECT
+					CBPD.seq,
+					IF(CBR.refund_type IS NULL, "변경", IF(CBR.refund_type = 'C', "변경", "해지")) AS status,
+					IFNULL(CBC.charge_name, '') AS charge_name,
+					DATE_FORMAT(CBPD.start_date, '%Y-%m-%d') as start_date,
+					CU.USER_ID,
+					CU.USER_NM,
+					CU.FIRM_NM,
+					CU.USER_CODE,
+				 	CU.USER_PHONE,
+				 	CU.FIRM_TEL,
+				 	(SELECT COUNT(*) FROM CBCI_ACCOUNT CA WHERE CA.USER_NO = CU.USER_NO) AS shop_count,
+				 	CU.FIRM_ADDR,
+				 	DATE_FORMAT(IFNULL(CBPD.cancel_date, CBPD.change_date), '%Y-%m-%d') AS change_date,				 
+					IF(CBR.refund_type IS NULL, '추가', '환급') AS pay_status,
+					IFNULL(CBR.refund_amount, CBPD.amount) AS amount,	 
+					CBR.refund_amount,
+					CBR.refund_card,
+					CBR.refund_user_name,
+					CBR.refund_bank,
+					CBR.refund_account,
+					CBPD.imp_uid,
+					DATE_FORMAT(CBR.refund_date, '%Y-%m-%d') as refund_date,
+					CBPD.payment_date
+				FROM
+					CBCI_BILLING_PAYMENT_DETAIL CBPD
+					LEFT JOIN CBCI_BILLING_REFUND CBR ON CBPD.seq = CBR.new_seq
+					LEFT JOIN CBCI_BILLING_CHARGE CBC ON CBC.charge_code = CBPD.charge_code
+					LEFT JOIN CBCI_USER CU ON CBPD.user_code = CU.USER_CODE, (SELECT @ROWNUM := 0) TMP
+				WHERE
+					CU.USER_NM LIKE '%${user_nm}%'
+					AND CU.FIRM_NM LIKE '%${firm_nm}%'
+					AND CU.USER_ID LIKE '%${user_id}%'
+					AND CBR.refund_type LIKE '${division}%'
+					AND CBPD.charge_code LIKE '${chargeCode}%'
+				<![CDATA[
+					AND DATE_FORMAT(IFNULL(CBPD.change_date, CBPD.cancel_date), '%Y-%m-%d') >= #{fromDate}
+					AND DATE_FORMAT(IFNULL(CBPD.change_date, CBPD.cancel_date), '%Y-%m-%d') <= #{toDate}
+		 			AND INSTR(CBPD.charge_code, 'F') <= 0
+				]]>
+			) LIST, (SELECT @sales_row_no := 0) SALES_ROW_NO
+		) LIST2
+		LIMIT ${dataCnt}, 10
+	</select>
+	
+	<select id="selectRefundData" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			cbpd.status,
+			cbpd.seq,
+			cbr.new_seq,
+			cbr.user_code,
+			cbpd2.rest_date,
+			cu.USER_NM,
+			cu.FIRM_NM,
+			IFNULL(cu.USER_PHONE, '-') AS USER_PHONE,
+		 	cbc.charge_name as ex_charge_name,
+			IFNULL(cbc2.charge_name, "해지") AS charge_name,
+		 	IFNULL(ROUND(cbc.amount*cbc.sub_period*1.1), 0) AS ex_amount,
+			IFNULL(ROUND(cbc2.amount*cbc2.sub_period *1.1), 0) AS new_amount,
+			cbpd.payment_base_amount + cbpd.payment_base_vat + cbr.refund_amount AS balance,
+			DATE_FORMAT(cbpd.expire_date, '%Y-%m-%d') AS expire_date,
+			IFNULL(cbr.refund_amount, 0) AS refund_amount,
+			IFNULL(cbr.refund_card, 0) AS refund_card,
+			IFNULL(cbr.refund_amount, 0) + IFNULL(cbr.refund_card, 0) AS refund_cash,
+			cbr.refund_user_name,
+			cbr.refund_bank,
+			cbr.refund_account,
+			cbpd.imp_uid
+		FROM CBCI_BILLING_REFUND cbr
+			LEFT JOIN CBCI_BILLING_PAYMENT_DETAIL cbpd ON cbpd.seq = cbr.seq
+			LEFT JOIN CBCI_BILLING_PAYMENT_DETAIL cbpd2 ON cbpd2.seq = cbr.new_seq
+		 	LEFT JOIN CBCI_USER cu ON cbpd.user_code = cu.USER_CODE 
+		 	LEFT JOIN CBCI_BILLING_CHARGE cbc ON cbpd.charge_code = cbc.charge_code
+			LEFT JOIN CBCI_BILLING_CHARGE cbc2 ON cbpd2.charge_code = cbc2.charge_code	
+		WHERE
+			cbpd2.seq = #{seq}
+	</select>
+	
+	<update id="updateRefundData" parameterType="hashMap">
+		UPDATE
+			CBCI_BILLING_REFUND
+		SET
+			refund_date = now(),
+			status = 'C'
+		WHERE
+			seq = #{seq}
+	</update>
+	
+	<update id="updateDetailData" parameterType="hashMap">
+		UPDATE
+			CBCI_BILLING_PAYMENT_DETAIL
+		SET
+			status = IF(status = 'RR', 'RC', 'CC')
+		WHERE
+			seq = #{new_seq}
+	</update>
+</mapper>

@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.mapper.SalesMdateScheduledMapper">
+	
+	<!-- 쇼핑몰 sales 리스트 -->
+	<select id="interparkSalesList" resultType="hashmap">
+		SELECT
+			VALUE_TABLE.ORDER_NO,
+			VALUE_TABLE.PRODUCT_NO,
+			VALUE_TABLE.OPTION_NAME,
+			DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d %H:%i:%s') AS EXACT_DATE_VAL
+		FROM(
+		SELECT
+			ORDER_NO,
+			PRODUCT_NO,
+			OPTION_NAME,
+			IFNULL(SETTLEMENT_DATE,IFNULL(CONFIRM_DATE,AUTO_CONFIRM_DATE)) AS EXACT_DATE_VAL,
+			EXACT_SETTLE_DATE 
+		FROM CBCI_INTERPARK_SALES
+		WHERE ORDER_STATUS IN ('배송완료','구매확정')) AS VALUE_TABLE
+		WHERE IF(VALUE_TABLE.EXACT_SETTLE_DATE IS NULL , VALUE_TABLE.EXACT_SETTLE_DATE IS NULL,
+			DATE_FORMAT(VALUE_TABLE.EXACT_SETTLE_DATE, '%Y-%m-%d') != DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d'))
+	</select>
+	
+	<select id="gmarketSalesList" resultType="hashmap">
+		SELECT
+			VALUE_TABLE.ORDER_NO,
+			VALUE_TABLE.PRODUCT_NO,
+			DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d %H:%i:%s') AS EXACT_DATE_VAL
+		FROM(
+		SELECT
+			ORDER_NO,
+			PRODUCT_NO,
+			IFNULL(SETTLEMENT_DATE, IFNULL(IF(CONFIRM_DATE='', NULL , CONFIRM_DATE),DATE_ADD(DELIVERED_DATE, INTERVAL 8 DAY))) AS EXACT_DATE_VAL,
+			EXACT_SETTLE_DATE
+		FROM CBCI_GMARKET_SALES
+		WHERE DELIVERY_STATUS IN ('배송완료')) AS VALUE_TABLE
+		WHERE IF(VALUE_TABLE.EXACT_SETTLE_DATE IS NULL , VALUE_TABLE.EXACT_SETTLE_DATE IS NULL,
+			DATE_FORMAT(VALUE_TABLE.EXACT_SETTLE_DATE, '%Y-%m-%d') != DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d'));
+	</select>
+	
+	<select id="auctionSalesList" resultType="hashmap">
+		SELECT
+			VALUE_TABLE.ORDER_NO,
+			VALUE_TABLE.PRODUCT_NO,
+			DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d %H:%i:%s') AS EXACT_DATE_VAL
+		FROM(
+		SELECT
+			ORDER_NO,
+			PRODUCT_NO,
+			IFNULL(SETTLEMENT_DATE, IFNULL(IF(CONFIRM_DATE='', NULL , CONFIRM_DATE),DATE_ADD(DELIVERED_DATE, INTERVAL 8 DAY))) AS EXACT_DATE_VAL,
+			EXACT_SETTLE_DATE
+		FROM CBCI_AUCTION_SALES
+		WHERE DELIVERY_STATUS IN ('배송완료')) AS VALUE_TABLE
+		WHERE IF(VALUE_TABLE.EXACT_SETTLE_DATE IS NULL , VALUE_TABLE.EXACT_SETTLE_DATE IS NULL,
+			DATE_FORMAT(VALUE_TABLE.EXACT_SETTLE_DATE, '%Y-%m-%d') != DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d'))
+	</select>
+	
+	<select id="elevenSalesList" resultType="hashmap">
+		SELECT
+			VALUE_TABLE.주문번호 AS ORDER_NO,
+			VALUE_TABLE.주문순번 AS ORDER_TURN,
+			VALUE_TABLE.선결제배송비 AS PAYDEL_AMOUNT,
+			VALUE_TABLE.반품보험료 AS RETURN_INSUR,
+			DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d %H:%i:%s') AS EXACT_DATE_VAL
+		FROM(
+		SELECT
+			주문번호,
+			주문순번,
+			선결제배송비,
+			반품보험료,
+			IF(송금완료일 = '',
+				IF(수취확인일 = '', 
+					IF(TRIM(송장번호) = '', DATE_ADD(발송처리일, INTERVAL 29 DAY), DATE_ADD(배송완료일, INTERVAL 8 DAY))
+				, DATE_FORMAT(수취확인일, '%Y-%m-%d'))
+			, DATE_FORMAT(송금완료일, '%Y-%m-%d')) AS EXACT_DATE_VAL,
+			EXACT_SETTLE_DATE
+		FROM CBCI_11ST_SALEACCNT
+		WHERE 주문상태 IN ('배송완료', '구매확정')) AS VALUE_TABLE
+		WHERE IF(VALUE_TABLE.EXACT_SETTLE_DATE IS NULL , VALUE_TABLE.EXACT_SETTLE_DATE IS NULL,
+			DATE_FORMAT(VALUE_TABLE.EXACT_SETTLE_DATE, '%Y-%m-%d') != DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d'))
+	</select>
+	
+	<select id="naverSalesList" resultType="hashmap">
+		SELECT 
+			VALUE_TABLE.ORDER_NO,
+			VALUE_TABLE.PRODUCT_ORDER_NO,
+			VALUE_TABLE.COLLECT_YN,
+			DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d %H:%i:%s') AS EXACT_DATE_VAL
+		FROM(
+		SELECT 
+			ORDER_NO,
+			PRODUCT_ORDER_NO,
+			COLLECT_YN,
+			IFNULL(SETTLEMENT_DATE, 
+				IF(CONFIRM_DATE = '', 
+					IF(AUTO_CONFIRM_DATE = '', 
+						IF(DELIVERED_DATE = '', DATE_ADD(DATE_FORMAT(SHIPMENT_DATE, '%Y-%m-%d'), INTERVAL 20 DAY),DATE_ADD(DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d'), INTERVAL 8 DAY))
+					, AUTO_CONFIRM_DATE)
+				, CONFIRM_DATE)) AS EXACT_DATE_VAL,
+			EXACT_SETTLE_DATE
+		FROM CBCI_NAVER_SALES
+		WHERE ORDER_STATUS IN ('일반정산','빠른정산','배송완료','구매확정','정산후 취소','교환','빠른정산 회수')) AS VALUE_TABLE
+		WHERE IF(VALUE_TABLE.EXACT_SETTLE_DATE IS NULL , VALUE_TABLE.EXACT_SETTLE_DATE IS NULL,
+			DATE_FORMAT(VALUE_TABLE.EXACT_SETTLE_DATE, '%Y-%m-%d') != DATE_FORMAT(VALUE_TABLE.EXACT_DATE_VAL, '%Y-%m-%d'))
+	</select>
+	
+	<!-- EXACT_DATE_VAL 업데이트 및 로그 INSERT -->
+	<update id="interparkSalesExactUpdate" parameterType="hashmap">
+		UPDATE CBCI_INTERPARK_SALES 
+		SET EXACT_SETTLE_DATE = #{EXACT_DATE_VAL}
+		WHERE ORDER_NO = #{ORDER_NO}
+		AND PRODUCT_NO = #{PRODUCT_NO}
+		AND OPTION_NAME = #{OPTION_NAME}
+	</update>
+	
+	<update id="gmarketSalesExactUpdate" parameterType="hashmap">
+		UPDATE CBCI_GMARKET_SALES 
+		SET EXACT_SETTLE_DATE = #{EXACT_DATE_VAL}
+		WHERE ORDER_NO = #{ORDER_NO}
+		AND PRODUCT_NO = #{PRODUCT_NO}
+	</update>
+	
+	<update id="auctionSalesExactUpdate" parameterType="hashmap">
+		UPDATE CBCI_AUCTION_SALES
+		SET EXACT_SETTLE_DATE = #{EXACT_DATE_VAL}
+		WHERE ORDER_NO = #{ORDER_NO}
+		AND PRODUCT_NO = #{PRODUCT_NO}
+	</update>
+	
+	<update id="elevenSalesExactUpdate" parameterType="hashmap">
+		UPDATE CBCI_11ST_SALEACCNT
+		SET EXACT_SETTLE_DATE = #{EXACT_DATE_VAL}
+		WHERE 주문번호 = #{ORDER_NO}
+		AND 주문순번 = #{ORDER_TURN}
+		AND 선결제배송비 = #{PAYDEL_AMOUNT}
+		AND 반품보험료 = #{RETURN_INSUR};
+	</update>
+	
+	<update id="naverSalesExactUpdate" parameterType="hashmap">
+		UPDATE CBCI_NAVER_SALES
+		SET EXACT_SETTLE_DATE = #{EXACT_DATE_VAL}
+		WHERE PRODUCT_ORDER_NO = #{PRODUCT_ORDER_NO}
+		AND ORDER_NO = #{ORDER_NO}
+		AND COLLECT_YN = #{COLLECT_YN}
+	</update>
+	<!-- 현재 미사용 -->
+	<insert id="insertLogScheduler" parameterType="hashmap">
+		INSERT INTO CBCI_SCHEDULED_REPORT(
+			SCHEDULED_NAME,
+			SHOP_TYPE,
+			SHOP_NM,
+			SHOP_ID,
+			CAUSE,
+			RUNTIME,
+			INPUT_DATE
+		) VALUES (
+			#{SCHEDULED_NAME},
+			#{SHOP_TYPE},
+			#{SHOP_NM},
+			'SERVER',
+			#{CAUSE},
+			#{RUNTIME},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+	
+	<insert id="insertLogError" parameterType="hashmap">
+		INSERT INTO CBCI_ERR_REPORT(
+			SHOP_ID,
+			CODE_ID,
+			CODE_NM,
+			CAUSE,
+			RUNTIME,
+			ERROR_LOG,
+			INPUT_DATETIME
+		) VALUES (
+			'SERVER',
+			#{SHOP_TYPE},
+			#{SHOP_NM},
+			#{SCHEDULED_NAME},
+			#{RUNTIME},
+			#{CAUSE}, 
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+	</insert>
+	
+	<!-- SHOP CODE 와 SHOP NAME 가져오기 -->
+	<select id="ShopList" resultType="hashmap">
+		SELECT
+			CODE_ID AS SHOP_CODE,
+			CODE_NM AS SHOP_NAME
+		FROM CBCI_CODE
+		WHERE CODE_ID NOT IN (12,13,11)
+	</select>
+	
+</mapper>

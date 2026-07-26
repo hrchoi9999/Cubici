@@ -1,0 +1,1874 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.AdminCubiciMapper">
+
+	<!-- 큐빅아이 관리자 메인페이지  MKC 2021.05.11 -->
+	<select id="selectMemberData" resultType="hashmap" parameterType="hashmap">
+		SELECT
+		<if test="dateFlag == 'MONTH' ">
+		    DATE_FORMAT(CU.WITHDRAW_DATE,"%Y-%m") AS WITHDRAW_DATE,
+		    DATE_FORMAT(CU.REG_DATE, "%Y-%m") AS REG_DATE,
+		    DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, "%Y-%m") AS MONEYBANK_REQUEST_DATE,
+		</if>
+		<if test="dateFlag == 'DAY' ">
+		    DATE_FORMAT(CU.WITHDRAW_DATE,"%Y-%m-%d") AS WITHDRAW_DATE,
+		    DATE_FORMAT(CU.REG_DATE, "%Y-%m-%d") AS REG_DATE,
+		    DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, "%Y-%m-%d") AS MONEYBANK_REQUEST_DATE,
+		</if>
+			CU.USER_NO,
+		    CU.USER_ID,
+		    CU.USER_TYPE,
+		    CU.USER_NM,
+		    WITHDRAW_YN,
+		    MUI.SEQ,
+		    MUI.DIVISION,
+		    MUI.INPUT_DATE
+		FROM CBCI_USER CU LEFT JOIN MONEYBANK_USER_INFO MUI ON CU.USER_NO = MUI.USER_NO
+		<if test="flag == 'member' and dateFlag == 'DAY'">
+		WHERE DATE_FORMAT(CU.REG_DATE, '%Y-%m-%d') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		</if>
+		<if test="flag == 'withdraw' and dateFlag == 'DAY'">
+		WHERE DATE_FORMAT(CU.WITHDRAW_DATE, '%Y-%m-%d') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		</if>
+		<if test="flag == 'moneybank' and dateFlag == 'DAY'">
+		WHERE DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, '%Y-%m-%d') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		   <if test = "serviceDivision != 'all'">
+		   AND MUI.DIVISION = ${serviceDivision}
+		   </if>
+   		   <if test = "serviceDivision == 'all' and partnerFirm != 'all' ">
+		   AND MUI.DIVISION in (select DIVISION FROM MONEYBANK_PRODUCT WHERE FIRM_NO =#{partnerFirm})
+			</if>
+		</if>
+		<if test="flag == 'member' and dateFlag == 'MONTH'">
+		WHERE DATE_FORMAT(CU.REG_DATE, '%Y-%m') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		</if>
+		<if test="flag == 'withdraw' and dateFlag == 'MONTH'">
+		WHERE DATE_FORMAT(CU.WITHDRAW_DATE, '%Y-%m') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		</if>
+		<if test="flag == 'moneybank' and dateFlag == 'MONTH'">
+		WHERE DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, '%Y-%m') BETWEEN #{fromDate} AND #{toDate} -- 추후 날짜 수정예정
+		   <if test = "serviceDivision != 'all'">
+		   AND MUI.DIVISION = ${serviceDivision}
+		   </if>
+   		   <if test = "serviceDivision == 'all' and partnerFirm != 'all' ">
+		   AND MUI.DIVISION in (select DIVISION FROM MONEYBANK_PRODUCT WHERE FIRM_NO =#{partnerFirm})
+			</if>
+		</if>
+		ORDER BY REG_DATE
+	</select>
+	
+	<!-- 누적 회원 수 -->
+	<select id="cumulateUserData" resultType="Integer" parameterType = "hashmap">
+		SELECT
+		   COUNT(*) AS COUNT
+		FROM
+		   <if test="flag == 'member' or flag=='withdraw' or flag=='member_yesterday' or flag=='withdraw_yesterday' or flag=='member_today' or flag=='withdraw_today'">
+		   CBCI_USER CU
+		   </if>
+		   <if test="flag == 'moneybank'  or flag=='moneybank_yesterday'  or flag=='moneybank_today'">
+		   MONEYBANK_USER_INFO MUI
+		   </if>
+	   <if test="flag == 'member' and dateFlag == 'DAY'">
+	   WHERE DATE(CU.REG_DATE) &lt; #{fromDate} -- 누적큐빅아이(일)
+	   </if>
+	   <if test="flag == 'member' and dateFlag == 'MONTH'">
+	   WHERE DATE_FORMAT(CU.REG_DATE, '%Y-%m') &lt; #{fromDate} -- 누적큐빅아이(월)
+	   </if>
+	   <if test="flag == 'member_yesterday'">
+	   WHERE DATE(CU.REG_DATE) = CURDATE() - INTERVAL 1 DAY -- 어제증가
+	   </if>
+	   <if test="flag == 'member_today'">
+	   WHERE DATE(CU.REG_DATE) &lt;= CURDATE() -- 오늘누적
+	   </if>
+       <if test="flag == 'withdraw' and dateFlag == 'DAY'">
+       WHERE DATE(CU.WITHDRAW_DATE) &lt; #{fromDate} -- 누적해지(일)
+       </if>   
+       <if test="flag == 'withdraw' and dateFlag == 'MONTH'">
+       WHERE DATE_FORMAT(CU.WITHDRAW_DATE, '%Y-%m') &lt; #{fromDate} -- 누적큐해지(월)
+       </if>   
+       <if test="flag == 'withdraw_yesterday'">
+       WHERE DATE(CU.WITHDRAW_DATE) = CURDATE() - INTERVAL 1 DAY -- 어제증가
+       </if>   
+       <if test="flag == 'withdraw_today'">
+       WHERE DATE(CU.WITHDRAW_DATE) &lt;= CURDATE() -- 오늘해지누적
+       </if>   
+	   <if test="flag == 'moneybank' and dateFlag == 'DAY'">
+	   WHERE DATE(MUI.MONEYBANK_REQUEST_DATE) &lt;= #{fromDate} -- 누적머니뱅크(일)
+		   <if test = "serviceDivision != 'all'">
+		   AND MUI.DIVISION = ${serviceDivision}
+		   </if>
+		   <if test = "serviceDivision == 'all' and partnerFirm != 'all' ">
+		   AND MUI.DIVISION in (select DIVISION FROM MONEYBANK_PRODUCT WHERE FIRM_NO = #{partnerFirm})
+			</if>
+	   </if>
+	   <if test="flag == 'moneybank' and dateFlag == 'MONTH'">
+	   WHERE DATE_FORMAT(MUI.MONEYBANK_REQUEST_DATE, '%Y-%m') &lt; #{fromDate} -- 누적머니뱅크(월)
+		   <if test = "serviceDivision != 'all'">
+		   AND MUI.DIVISION = ${serviceDivision}
+		   </if>
+   		   <if test = "serviceDivision == 'all' and partnerFirm != 'all' ">
+		   AND MUI.DIVISION in (select DIVISION FROM MONEYBANK_PRODUCT WHERE FIRM_NO =#{partnerFirm})
+			</if>
+	   </if>
+	   <if test="flag == 'moneybank_yesterday'">
+	   WHERE DATE(MUI.MONEYBANK_REQUEST_DATE) = CURDATE() - INTERVAL 1 DAY -- 어제증가
+	   </if>
+	   <if test="flag == 'moneybank_today'">
+	   WHERE DATE(MUI.MONEYBANK_REQUEST_DATE) &lt;= CURDATE() -- 오늘머니뱅크누적
+	   </if>
+	</select>
+	
+	<!-- 전체 회원 수 -->
+	<select id="selectUserCount" resultType="hashmap">
+	<![CDATA[
+		SELECT
+			COUNT(CU.USER_ID) AS CUBICI_USER,
+			COUNT(MUI.SEQ) AS MONEY_USER
+		FROM
+			CBCI_USER CU
+		LEFT JOIN MONEYBANK_USER_INFO MUI
+		ON CU.USER_NO = MUI.USER_NO
+		WHERE
+		(CU.WITHDRAW_YN IS NULL OR CU.WITHDRAW_YN <> 'Y')
+		AND CU.USER_TYPE = 2
+	]]>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 종합지표 신규 -->
+	<select id="selectNewMemCount" resultType="hashmap" parameterType="hashmap">		
+		<if test="flag == 'topData'">
+		SELECT
+			SUM(CAL.COUNT) AS COUNT,
+		<if test='PARTNER == "" and PRODUCT_TYPE == ""'>
+			<![CDATA[
+			(SELECT COUNT(CU.REG_DATE) FROM CBCI_USER CU WHERE USER_TYPE = 2 AND LEFT(CU.REG_DATE,10) < #{fromDate}) AS TOTAL
+			]]>
+		</if>
+		<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			<![CDATA[
+			(SELECT COUNT(CU.USER_NO) FROM CBCI_USER CU 
+				WHERE USER_TYPE = 2 
+				AND LEFT(CU.REG_DATE,10) < #{fromDate} 
+				AND CU.USER_NO IN (SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI 
+					WHERE MUI.DIVISION IN (SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE})))) AS TOTAL
+			]]>
+		</if>	
+		FROM(
+		</if>
+		SELECT
+		<if test="dateFlag == 'day'">
+			FIRST_CAL.REG_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(FIRST_CAL.REG_DATE, INTERVAL WEEKDAY(FIRST_CAL.REG_DATE) DAY), '%Y-%m-%d') AS REG_DATE,
+			WEEK(FIRST_CAL.REG_DATE,5) - WEEK(DATE_SUB(FIRST_CAL.REG_DATE,INTERVAL DAYOFMONTH(FIRST_CAL.REG_DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(FIRST_CAL.REG_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			FIRST_CAL.REG_DATE AS YEARMONTH,
+		</if>
+			IFNULL(COUNT(FIRST_CAL.USER_NO),0) AS COUNT
+		FROM (
+			SELECT
+				LEFT(REG_DATE ,10) AS REG_DATE,
+				CU.USER_NO
+			FROM CBCI_USER CU
+			WHERE CU.REG_DATE BETWEEN #{fromDate} AND #{toDate}
+		<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CU.USER_NO IN (SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE})))
+		</if>
+		UNION ALL 
+			SELECT A.DATE AS REG_DATE, null AS USER_NO FROM (
+			    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+			    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+			) A WHERE A.DATE BETWEEN #{fromDate} AND #{toDate}
+		) FIRST_CAL
+		<if test="dateFlag == 'day'">
+		GROUP BY FIRST_CAL.REG_DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(FIRST_CAL.REG_DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(FIRST_CAL.REG_DATE,7)
+		</if>
+		ORDER BY FIRST_CAL.REG_DATE
+		<if test="flag == 'topData'">
+		)CAL
+		</if>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 종합지표 해지 -->
+	<select id="selectWdMemCount" parameterType="hashmap" resultType="hashmap">
+		<if test="flag == 'topData'">
+		SELECT
+			SUM(CAL.COUNT) AS COUNT,
+		<if test='PARTNER == "" and PRODUCT_TYPE == ""'>
+		<![CDATA[
+			(SELECT COUNT(CU.WITHDRAW_DATE) FROM CBCI_USER CU WHERE CU.WITHDRAW_YN = 'Y' AND USER_TYPE = 2 AND LEFT(CU.WITHDRAW_DATE,10) < #{fromDate}) AS TOTAL
+		]]>
+		</if>
+		<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+		<![CDATA[
+			(SELECT COUNT(CU.USER_NO) FROM CBCI_USER CU 
+				WHERE USER_TYPE = 2 
+				AND CU.WITHDRAW_YN = 'Y' 
+				AND LEFT(CU.WITHDRAW_DATE ,10) < #{fromDate}
+				AND CU.USER_NO IN (SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI
+				WHERE MUI.DIVISION IN (SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP ('') AND MP.PRODUCT_TYPE REGEXP ('')))) AS TOTAL
+		]]>
+		</if>		
+		FROM(
+		</if>
+		SELECT
+		<if test="dateFlag == 'day'">
+			FIRST_CAL.WITHDRAW_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(FIRST_CAL.WITHDRAW_DATE, INTERVAL WEEKDAY(FIRST_CAL.WITHDRAW_DATE) DAY), '%Y-%m-%d') AS REG_DATE,
+			WEEK(FIRST_CAL.WITHDRAW_DATE,5) - WEEK(DATE_SUB(FIRST_CAL.REG_DATE,INTERVAL DAYOFMONTH(FIRST_CAL.WITHDRAW_DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(FIRST_CAL.WITHDRAW_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			FIRST_CAL.WITHDRAW_DATE AS YEARMONTH,
+		</if>
+			IFNULL(COUNT(FIRST_CAL.USER_NO),0) AS COUNT
+		FROM (
+			SELECT
+				DATE_FORMAT(WITHDRAW_DATE , '%Y-%m-%d') AS WITHDRAW_DATE,
+				CU.USER_NO
+			FROM CBCI_USER CU
+			WHERE CU.WITHDRAW_DATE BETWEEN #{fromDate} AND #{toDate}
+		<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CU.USER_NO IN (SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE})))
+		</if>
+		UNION ALL
+			SELECT A.DATE AS WITHDRAW_DATE, null AS USER_NO FROM (
+				SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+		    	FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+		    	CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+		    	CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+			) A WHERE A.DATE BETWEEN #{fromDate} AND #{toDate}
+		)FIRST_CAL
+		<if test="dateFlag == 'day'">
+		GROUP BY FIRST_CAL.WITHDRAW_DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(FIRST_CAL.WITHDRAW_DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY DATE_FORMAT(FIRST_CAL.WITHDRAW_DATE, '%Y-%m')
+		</if>
+		ORDER BY FIRST_CAL.WITHDRAW_DATE
+		<if test="flag == 'topData'">
+		)CAL
+		</if>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 종합지표 매출, 수량 -->
+	<select id="selectSalesCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+	<if test="flag == 'topData'">
+	<![CDATA[
+			FOUND_ROWS() AS TOTAL_COUNT,
+			CONVERT(IFNULL(SUM(CAL.QUANTITY), 0), SIGNED INTEGER) AS QUANTITY,
+			CONVERT(IFNULL(SUM(CAL.ORDER_PRICE), 0), SIGNED INTEGER) AS ORDER_PRICE,
+			CAL.SHOP_TYPE
+	]]>
+	</if>
+	<if test="flag != 'topData'">
+		<if test="dateFlag == 'day'">
+			CAL.PAID_AT,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(CAL.PAID_AT, INTERVAL WEEKDAY(CAL.PAID_AT) DAY), '%Y-%m-%d') AS ORDERED_AT,
+			WEEK(CAL.PAID_AT,5) - WEEK(DATE_SUB(CAL.PAID_AT,INTERVAL DAYOFMONTH(CAL.PAID_AT)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(CAL.PAID_AT,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(CAL.PAID_AT,7) AS YEARMONTH,
+		</if>
+		<if test="salesFlag != 'avg'">
+			CONVERT(IFNULL(SUM(CAL.QUANTITY), 0), SIGNED INTEGER) AS QUANTITY,
+			CONVERT(IFNULL(SUM(CAL.ORDER_PRICE), 0), SIGNED INTEGER) AS ORDER_PRICE
+		</if>
+		<if test="salesFlag == 'avg'">
+			CONVERT(SUM(CAL.QUANTITY) / ${COUNT}, SIGNED INTEGER) AS QUANTITY,
+			CONVERT(SUM(CAL.ORDER_PRICE) / ${COUNT}, SIGNED INTEGER) AS ORDER_PRICE
+		</if>
+	</if>
+		FROM(
+			<![CDATA[
+			SELECT
+				1 AS SHOP_TYPE,
+				'인터파크' AS SHOP,
+				DATE_FORMAT(PAID_AT, '%Y-%m-%d') AS PAID_AT,
+				QUANTITY,
+				ORDER_PRICE
+			FROM CBCI_INTERPARK_SALES
+			WHERE PAID_AT >= STR_TO_DATE(#{fromDate}, '%Y-%m-%d')
+			AND PAID_AT < STR_TO_DATE(DATE_ADD(#{toDate}, INTERVAL 1 DAY), '%Y-%m-%d')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '1' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				2 AS SHOP_TYPE,
+				'지마켓' AS SHOP,
+				DATE_FORMAT(PAID_AT, '%Y-%m-%d') AS PAID_AT,
+				QUANTITY,
+				ORDER_PRICE-(PURCHASE_COUPON_PRICE+SELLER_DISCOUNT_PRICE+SMILE_CASH) AS ORDER_PRICE
+			FROM CBCI_GMARKET_SALES
+			WHERE PAID_AT >= #{fromDate}
+			AND PAID_AT < DATE_ADD(#{toDate}, INTERVAL 1 DAY)
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '2' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				3 AS SHOP_TYPE,
+				'옥션' AS SHOP,
+				DATE_FORMAT(PAID_AT, '%Y-%m-%d') AS PAID_AT,
+				QUANTITY,
+				ORDER_PRICE-(SELLER_DISCOUNT_PRICE+EXCELLENT_MEM_DISCOUNT+SMILE_CASH) AS ORDER_PRICE
+			FROM CBCI_AUCTION_SALES
+			WHERE PAID_AT >= STR_TO_DATE(#{fromDate}, '%Y-%m-%d') 
+			AND PAID_AT < STR_TO_DATE(DATE_ADD(#{toDate}, INTERVAL 1 DAY), '%Y-%m-%d')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '3' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT -- 선결제 배송비 합치기 불가
+				4 AS SHOP_TYPE,
+				'11번가' AS SHOP,
+				DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT,
+				수량 AS QUANTITY,
+				판매금액합계-(할인쿠폰이용료+복수구매할인비용+판매자부담카드추가할인+공제_스토어묶음쿠폰할인+후불광고비) AS ORDER_PRICE
+			FROM CBCI_11ST_SALEACCNT
+			WHERE 결제완료일 >= DATE_FORMAT(#{fromDate},'%Y/%m/%d')
+			AND 결제완료일 < DATE_FORMAT(DATE_ADD(#{toDate},INTERVAL 1 DAY),'%Y/%m/%d')
+			AND 주문상태 NOT IN ('구매확정후주문취소','반품완료','취소처리중','클레임진행중')
+			AND 선결제배송비 = 0
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '4' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				11 AS SHOP_TYPE,
+				'쿠팡' AS SHOP,
+				DATE_FORMAT(paid_at, '%Y-%m-%d') AS PAID_AT,
+				shipping_count AS QUANTITY,
+				order_price AS ORDER_PRICE
+			FROM CBCI_COUPANG_SALES
+			WHERE paid_at >= #{fromDate}
+			AND paid_at < DATE_ADD(#{toDate}, INTERVAL 1 DAY)
+			AND status IN ('ACCEPT','DELIVERING','DEPARTURE','FINAL_DELIVERY','INSTRUCT','NONE_TRACKING')
+			AND sale_type IN ('', 'SALE')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '11' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				14 AS SHOP_TYPE,
+				'네이버' AS SHOP,
+				IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d')) AS PAID_AT,
+				IFNULL(QUANTITY, 0) AS QUANTITY,
+				ORDER_PRICE
+			FROM CBCI_NAVER_SALES
+			WHERE PAID_AT >= STR_TO_DATE(#{fromDate}, '%Y-%m-%d') 
+			AND PAID_AT < STR_TO_DATE(DATE_ADD(#{toDate}, INTERVAL 1 DAY), '%Y-%m-%d')
+			AND ORDER_STATUS IN ('발송대기', '배송중', '배송완료', '빠른정산', '구매확정', '정산', '일반정산')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '14' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			UNION ALL
+			SELECT '0' AS SHOP_TYPE, '0' AS SHOP, A.DATE AS ORDERED_AT, '0' AS QUANTITY, '0' AS ORDER_PRICE FROM (
+			    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+			    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+			) A WHERE A.DATE BETWEEN #{fromDate} AND #{toDate} )CAL
+		<if test="dateFlag == 'day'">
+		GROUP BY CAL.PAID_AT
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(CAL.PAID_AT)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(CAL.PAID_AT,7)
+		</if>
+		<if test="sortType == 'shop'">
+		GROUP BY CAL.SHOP_TYPE
+		</if>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 가입기간  -->
+	<select id="selectUserRegiPeriod" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			A.DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(A.DATE, INTERVAL WEEKDAY(A.DATE) DAY), '%Y-%m-%d') AS DATE,
+			WEEK(A.DATE,5) - WEEK(DATE_SUB(A.DATE,INTERVAL DAYOFMONTH(A.DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+			avgRegPeriod(A.DATE, #{flag}, #{PARTNER}, #{PRODUCT_TYPE}) AS period
+		FROM (
+		    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+		    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+		    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+		    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+		) A
+		WHERE A.DATE BETWEEN #{fromDate} AND #{toDate}
+		<if test="dateFlag == 'day'">
+		GROUP BY A.DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(A.DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(A.DATE,7)
+		</if>
+		ORDER BY A.DATE
+	
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 종합지표 상단 정산(예정) -->
+	<select id="selectSettlementPre" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT
+			RESULT_TB.TOTAL_COUNT,
+			RESULT_TB.SETTLEMENT_DATE_PRE AS SETTLEMENT_DATE,
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT_PRE), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+			SELECT
+				FOUND_ROWS() AS TOTAL_COUNT,
+				SECOND_CAL.*
+			FROM (
+				SELECT
+					@pre_row_no := @pre_row_no + 1 AS RNUM,
+					COMBINE_TB.*
+				FROM (
+					SELECT
+						1 AS SHOP_TYPE,
+						'인터파크' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.SETTLEMENT_AMOUNT_PRE,
+						FIRST_CAL.QUANTITY,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY, -- 구매확정이면 S-Money 지급일 사용
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @interpark_std_date,
+								bDay_interpark(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @interpark_bDay_count DAY))
+						) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							'-' AS SETTLEMENT_DATE,
+							QUANTITY,
+							SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							IF(SETTLEMENT_DATE IS NULL,
+								IF(CONFIRM_DATE IS NULL,
+									DATE_FORMAT(AUTO_CONFIRM_DATE, '%Y-%m-%d'),
+								DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')),
+							DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+						FROM CBCI_INTERPARK_SALES
+						WHERE ORDER_STATUS IN ('배송완료','구매확정')
+					) FIRST_CAL, (SELECT @interpark_std_date := '') STANDARD_DATE, (SELECT @interpark_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						2 AS SHOP_TYPE,
+						'지마켓' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.SETTLEMENT_AMOUNT_PRE,
+						FIRST_CAL.QUANTITY,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY, -- 이미 정산된 데이터가 있기 때문에 사용
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @gmarket_std_date,
+								bDay_gmarket(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @gmarket_bDay_count DAY))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							'-' AS SETTLEMENT_DATE,
+							QUANTITY,
+							SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							IF(SETTLEMENT_DATE IS NULL,
+								IF(CONFIRM_DATE = '',
+									DATE_ADD(DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d'), INTERVAL 8 DAY),
+								DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')),
+					        DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+						FROM CBCI_GMARKET_SALES
+						WHERE DELIVERY_STATUS IN ('배송완료')
+					    ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @gmarket_std_date := '') STANDARD_DATE, (SELECT @gmarket_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						3 AS SHOP_TYPE,
+						'옥션' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.SETTLEMENT_AMOUNT_PRE,
+						FIRST_CAL.QUANTITY,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(1 = 0, FIRST_CAL.PRE_STANDARD_DAY, -- 판매예치금이면 구매결정일자 그대로
+								IF(FIRST_CAL.PRE_STANDARD_DAY <> @auction_std_date,
+									bDay_auction(1, FIRST_CAL.PRE_STANDARD_DAY),
+								DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @auction_bDay_count DAY)))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							'-' AS SETTLEMENT_DATE,
+							QUANTITY,
+							SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							IF(SETTLEMENT_DATE IS NULL,
+								IF(CONFIRM_DATE = '',
+									DATE_ADD(DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d'), INTERVAL 8 DAY),
+								DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')),
+					        DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+						FROM CBCI_AUCTION_SALES
+						WHERE DELIVERY_STATUS IN ('배송완료')
+					    ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @auction_std_date := '') STANDARD_DATE, (SELECT @auction_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate} -- 옥션은 판매예치금 때문에 당일날 정산 가능
+					UNION ALL
+					SELECT
+						4 AS SHOP_TYPE,
+						'11번가' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.SETTLEMENT_AMOUNT_PRE,
+						FIRST_CAL.QUANTITY,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @eleven_std_date,
+								bDay_11st(2, FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @eleven_bDay_count DAY))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							'-' AS SETTLEMENT_DATE,
+							수량 AS QUANTITY,
+							정산금액 AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							IF(송금완료일 = '', 1, 2) AS FLAG, # 1은 함수계산 필요, 2는 함수 안들려도 됨
+							IF(송금완료일 = '',
+								IF(수취확인일 = '',
+									IF(TRIM(송장번호) = '',
+										DATE_ADD(DATE_FORMAT(발송처리일, '%Y-%m-%d'), INTERVAL 29 DAY),
+									DATE_ADD(DATE_FORMAT(배송완료일, '%Y-%m-%d'), INTERVAL 8 DAY)),
+								DATE_FORMAT(수취확인일, '%Y-%m-%d')),
+							DATE_FORMAT(송금완료일, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+						FROM CBCI_11ST_SALEACCNT
+						WHERE 주문상태 IN ('배송완료', '구매확정') # 배송완료 기준으로 정산예정일 계산 -> 송장번호가 없으면 배송추적 불가로 설정
+						ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @eleven_std_date := '') STANDARD_DATE, (SELECT @eleven_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						14 AS SHOP_TYPE,
+						'네이버' AS SHOP,
+						'정산예정(일반정산)' AS STATUS,
+						FIRST_CAL.SETTLEMENT_AMOUNT_PRE,
+						FIRST_CAL.QUANTITY,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @naver_std_date,
+								bDay_naver(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @naver_bDay_count DAY))
+					    ) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							'-' AS SETTLEMENT_DATE, -- 정산입금 날짜
+							IFNULL(QUANTITY, 0) AS QUANTITY,
+							IF(SETTLEMENT_AMOUNT = 0, ROUND(ORDER_PRICE*0.975), SETTLEMENT_AMOUNT) AS SETTLEMENT_AMOUNT_PRE,
+					        '-' AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG, # 1은 정산완료 날짜 없음, 함수 사용
+							IF(SETTLEMENT_DATE IS NULL,
+								IF(CONFIRM_DATE = '', # 구매확정 날짜가 없으면
+									IF(AUTO_CONFIRM_DATE = '', # 자동구매확정일 확인
+										IF(DELIVERED_DATE = '',  # 배송완료일이 있으면 +8
+											DATE_ADD(DATE_FORMAT(SHIPMENT_DATE, '%Y-%m-%d'), INTERVAL 20 DAY), -- 배송정보가 없으면 발송처리일 +20
+										DATE_ADD(DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d'), INTERVAL 8 DAY)), 
+									DATE_FORMAT(AUTO_CONFIRM_DATE, '%Y-%m-%d')),
+								DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')),
+					        DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+						FROM CBCI_NAVER_SALES
+						WHERE ORDER_STATUS IN ('배송완료', '구매확정')
+						ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @naver_std_date := '') STANDARD_DATE, (SELECT @naver_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT # 네이버 오늘 빠른정산 해줄 금액
+						14 AS SHOP_TYPE,
+						'네이버' AS SHOP,
+						'정산예정(빠른정산)' AS STATUS,
+						SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+						IFNULL(QUANTITY, 0) AS QUANTITY,
+						'-' AS TEMP_DATE,
+					    DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE_PRE
+					FROM CBCI_NAVER_SALES
+					WHERE ORDER_STATUS = '빠른정산'
+					AND DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d') -- 오늘 날짜만 빠른정산 적용
+				) COMBINE_TB, (SELECT @pre_row_no := 0) PRE_ROW_NO
+				WHERE DATE_FORMAT(COMBINE_TB.SETTLEMENT_DATE_PRE, '%Y-%m-%d') >= #{fromDate}
+				AND DATE_FORMAT(COMBINE_TB.SETTLEMENT_DATE_PRE, '%Y-%m-%d') <= #{toDate}
+			) SECOND_CAL
+		) RESULT_TB
+	]]>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 종합지표 상단 정산(입금) -->
+	<select id="selectSettlement" parameterType="hashmap" resultType="hashmap">
+	<![CDATA[
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE, 
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM ( 
+			SELECT
+				FOUND_ROWS() AS TOTAL_COUNT,
+	    		SECOND_CAL.*
+	    	FROM (
+		   		SELECT
+					@settlement_row_no := @settlement_row_no + 1 AS RNUM,
+					FIRST_CAL.*
+				FROM (
+					SELECT
+						1 AS SHOP_TYPE,
+						'인터파크' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO, OPTION_PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE,
+					   	SETTLEMENT_AMOUNT, -- 배송비가 같은 주문번호에는 하나만 적용되어야 함, 현재는 배송비 제외
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_INTERPARK_SALES
+					WHERE SHOP_ID REGEXP ('^funnyd12$')
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					UNION ALL
+					SELECT
+						2 AS SHOP_TYPE,
+						'지마켓' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	SETTLEMENT_AMOUNT, -- 정산입금 금액
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_GMARKET_SALES
+					WHERE SHOP_ID REGEXP ('NONE')
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					UNION ALL
+					SELECT
+						3 AS SHOP_TYPE,
+						'옥션' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	SETTLEMENT_AMOUNT, -- 정산입금 금액
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_AUCTION_SALES
+					WHERE SHOP_ID REGEXP ('^funnyd12$')
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					UNION ALL
+					SELECT
+						4 AS SHOP_TYPE,
+						'11번가' AS SHOP,
+						SHOP_ID,
+						CONCAT(주문번호, 주문순번, 상품번호, 선결제배송비) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+						DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT_TIME,
+						IF(배송완료일 = '', '-', DATE_FORMAT(배송완료일 , '%Y-%m-%d')) AS DELIVERY_DATE,
+						IF(수취확인일 = '', '-', DATE_FORMAT(수취확인일 , '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+						DATE_FORMAT(송금완료일, '%Y-%m-%d') AS SETTLEMENT_DATE,
+						주문번호 AS ORDER_NO,
+						상품번호 AS PRODUCT_NO,
+						상품명 AS PRODUCT_NAME,
+						판매가 AS PRODUCT_PRICE, -- 옵션가 제외
+						수량 AS QUANTITY,
+						판매금액합계 AS ORDER_PRICE, -- 배송비정보 없음(선결제 배송비있는데...), 판매가 + 옵션가
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+						정산금액 AS SETTLEMENT_AMOUNT,
+						선결제배송비 AS SHIPPING_PRICE,
+						'-' AS DELIVERY_COMPANY_NAME,
+						송장번호 AS INVOICE_NO,
+						구매자명 AS CUSTOM_NAME,
+						구매자ID AS CUSTOM_ID
+					FROM CBCI_11ST_SALEACCNT
+					WHERE DATE_FORMAT(송금완료일, '%Y-%m-%d') BETWEEN #{fromDate} AND #{toDate}
+					AND 주문상태 = '구매확정'
+					UNION ALL
+					SELECT
+						14 AS SHOP_TYPE,
+						'네이버' AS SHOP,
+						SHOP_ID,
+						CONCAT(PRODUCT_ORDER_NO, ORDER_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+						IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d')) AS ORDERED_AT,
+						IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d(%H:%i:%s)')) AS ORDERED_AT_TIME,
+						IF(DELIVERED_DATE = '', '-', DATE_FORMAT(DELIVERED_DATE , '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(CONFIRM_DATE = '', '-', DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						ORDER_NO,
+						IF(PRODUCT_NO = '', '-', PRODUCT_NO) AS PRODUCT_NO,
+						IFNULL(PRODUCT_NAME, '-') AS PRODUCT_NAME,
+						IFNULL(PRODUCT_PRICE, 0) AS PRODUCT_PRICE,
+						IFNULL(QUANTITY, 0) AS QUANTITY,
+						ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	SETTLEMENT_AMOUNT, -- 정산입금 금액
+						SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+						IF(DELIVERY_COMPANY_NAME IS NULL OR TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+						IF(INVOICE_NUMBER IS NULL OR INVOICE_NUMBER = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+						IF(ORDERER_NAME IS NULL OR ORDERER_NAME = '', '-', ORDERER_NAME) AS CUSTOM_NAME,
+						IF(ORDERER_ID IS NULL OR ORDERER_ID = '', '-', ORDERER_ID) AS CUSTOM_ID
+						FROM CBCI_NAVER_SALES
+						WHERE SETTLEMENT_DATE >= #{fromDate}
+						AND SETTLEMENT_DATE <= #{toDate}
+						AND ORDER_STATUS IN ('정산', '일반정산', '빠른정산')
+						UNION ALL
+					SELECT
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						'정산입금(주정산_70%)' AS STATUS,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						IF(delivered_date = '', '-', DATE_FORMAT(delivered_date, '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						quantity AS QUANTITY,
+						total_sale_price AS ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	ROUND(settlement_amount*0.7) AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID
+					FROM CBCI_COUPANG_SALES
+					WHERE settlement_date >= #{fromDate}
+					AND settlement_date <= #{toDate}
+					AND sale_type = 'SALE'
+					UNION ALL
+					SELECT
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						'정산입금(주정산_30%)' AS STATUS,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						IF(delivered_date = '', '-', DATE_FORMAT(delivered_date, '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(final_settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						quantity AS QUANTITY,
+						total_sale_price AS ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	ROUND(settlement_amount*0.3) AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID
+					FROM CBCI_COUPANG_SALES
+					WHERE final_settlement_date >= #{fromDate}
+					AND final_settlement_date <= #{toDate}
+					AND sale_type = 'SALE'
+				) FIRST_CAL, (SELECT @settlement_row_no := 0) SETTLEMENT_ROW_NO
+				WHERE FIRST_CAL.SHOP_TYPE IN (1,3,4,14)
+				AND PRODUCT_NAME like '%%'
+				ORDER BY FIRST_CAL.SHOP_TYPE, FIRST_CAL.ORDER_NO
+			) SECOND_CAL
+		) RESULT_TB
+	]]>
+	</select>
+	
+	<!-- 등록SKU수 -->
+	<select id="selectCubiciSKUCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			FIRST_CAL.INPUT_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(FIRST_CAL.INPUT_DATE, INTERVAL WEEKDAY(FIRST_CAL.INPUT_DATE) DAY), '%Y-%m-%d') AS INPUT_DATE,
+			WEEK(FIRST_CAL.INPUT_DATE,5) - WEEK(DATE_SUB(FIRST_CAL.INPUT_DATE,INTERVAL DAYOFMONTH(FIRST_CAL.INPUT_DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(FIRST_CAL.INPUT_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(FIRST_CAL.INPUT_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="skuFlag == 'avg'">
+			CONVERT(SUM(FIRST_CAL.COUNT) / ${COUNT}, SIGNED INTEGER) AS COUNT
+		</if>
+		<if test="skuFlag != 'avg'">
+			CONVERT(SUM(FIRST_CAL.COUNT), SIGNED INTEGER) AS COUNT
+		</if>
+		FROM (
+			SELECT 
+				MATCHING.MATCHING_CODE,
+				MATCHING.MATCHING_TABLE,
+				COUNT(MATCHING.MATCHING_CODE) AS COUNT,
+				MATCHING.INPUT_DATE
+			FROM(	
+				SELECT
+					GROUP_CONCAT(SUBMATCHING.SHOP SEPARATOR '^') AS MATCHING_TABLE,
+					SUBMATCHING.MATCHING_CODE,
+					COUNT(SUBMATCHING.MATCHING_CODE) AS COUNT,
+					SUBMATCHING.INPUT_DATE
+				FROM (
+					SELECT
+						'인터파크' AS SHOP,
+						CIG.MATCHING_CODE,
+						DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_INTERPARK_GOODS CIG
+					WHERE
+						CIG.CUBICI_CODE IS NOT NULL
+						AND CIG.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'인터파크' AS SHOP,
+						CIS.MATCHING_CODE,
+						DATE_FORMAT(CIS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_INTERPARK_STOCK CIS
+					LEFT JOIN CBCI_INTERPARK_GOODS CIG
+					ON CIS.SHOP_ID = CIG.SHOP_ID AND CIS.PRODUCT_NO = CIG.PRODUCT_NO
+					WHERE
+						CIS.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'지마켓' AS SHOP,
+						CGG.MATCHING_CODE,
+						DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_GMARKET_GOODS CGG
+					WHERE
+						CGG.CUBICI_CODE IS NOT NULL
+						AND CGG.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'지마켓' AS SHOP,
+						CGS.MATCHING_CODE,
+						DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_GMARKET_STOCK CGS
+					LEFT JOIN CBCI_GMARKET_GOODS CGG
+					ON CGS.SHOP_ID = CGG.SHOP_ID AND CGS.PRODUCT_NO = CGG.PRODUCT_NO
+					WHERE
+						CGS.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'옥션' AS SHOP,
+						CAG.MATCHING_CODE,
+						DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_AUCTION_GOODS CAG
+					WHERE
+						CAG.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'11번가' AS SHOP,
+						CSG.MATCHING_CODE,
+						DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_11ST_GOODS CSG
+					WHERE
+						CSG.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'쿠팡' AS SHOP,
+						CCS.MATCHING_CODE,
+						DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_COUPANG_STOCK CCS
+					LEFT JOIN CBCI_COUPANG_GOODS CCG
+					ON CCS.SHOP_ID = CCG.SHOP_ID AND CCS.SELLER_PRODUCT_ID = CCG.SELLER_PRODUCT_ID
+					WHERE
+						CCS.CUBICI_CODE IS NOT NULL
+						AND CCS.MATCHING_CODE IS NOT NULL
+					UNION ALL
+					SELECT
+						'네이버' AS SHOP,
+						CNG.MATCHING_CODE,
+						DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_NAVER_GOODS CNG
+					WHERE
+						CNG.CUBICI_CODE IS NOT NULL
+						AND CNG.MATCHING_CODE IS NOT NULL
+					UNION ALL				
+					SELECT
+						'네이버' AS SHOP,
+						CNS.MATCHING_CODE,
+						DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_NAVER_STOCK CNS
+					LEFT JOIN CBCI_NAVER_GOODS CNG
+					ON CNS.SHOP_ID = CNG.SHOP_ID AND CNS.PRODUCT_NO = CNG.PRODUCT_NO
+					WHERE
+						CNS.MATCHING_CODE IS NOT NULL
+				) SUBMATCHING
+				GROUP BY SUBMATCHING.MATCHING_CODE
+				ORDER BY SUBMATCHING.INPUT_DATE DESC
+			) MATCHING
+			GROUP BY MATCHING.INPUT_DATE
+			UNION ALL
+			SELECT
+				'1' AS MATCHING_CODE,
+				'2' AS MATCHING_TABLE,
+				SUM(NONMATCHING.COUNT) AS COUNT,
+				NONMATCHING.INPUT_DATE
+			FROM (
+				SELECT
+					'인터파크' AS SHOP,
+					DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM
+					CBCI_INTERPARK_GOODS CIG
+				WHERE
+					CIG.CUBICI_CODE IS NOT NULL
+					AND CIG.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'인터파크' AS SHOP,
+					DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM CBCI_INTERPARK_STOCK CIS
+				LEFT JOIN CBCI_INTERPARK_GOODS CIG
+				ON CIS.SHOP_ID = CIG.SHOP_ID AND CIS.PRODUCT_NO = CIG.PRODUCT_NO
+				WHERE
+					CIS.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CIS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'지마켓' AS SHOP,
+					DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM
+					CBCI_GMARKET_GOODS CGG
+				WHERE
+					CGG.CUBICI_CODE IS NOT NULL
+					AND CGG.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'지마켓' AS SHOP,
+					DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM CBCI_GMARKET_STOCK CGS
+				LEFT JOIN CBCI_GMARKET_GOODS CGG
+				ON CGS.SHOP_ID = CGG.SHOP_ID AND CGS.PRODUCT_NO = CGG.PRODUCT_NO
+				WHERE
+					CGS.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'옥션' AS SHOP,
+					DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_AUCTION_GOODS CAG
+				WHERE
+					CAG.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'11번가' AS SHOP,
+					DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_11ST_GOODS CSG
+				WHERE
+					CSG.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'쿠팡' AS SHOP,
+					DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM CBCI_COUPANG_STOCK CCS
+				LEFT JOIN CBCI_COUPANG_GOODS CCG
+				ON CCS.SHOP_ID = CCG.SHOP_ID AND CCS.SELLER_PRODUCT_ID = CCG.SELLER_PRODUCT_ID
+				WHERE
+					CCS.CUBICI_CODE IS NOT NULL
+					AND CCS.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'네이버' AS SHOP,
+					DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_NAVER_GOODS CNG
+				WHERE
+					CNG.CUBICI_CODE IS NOT NULL
+					AND CNG.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'네이버' AS SHOP,
+					DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM CBCI_NAVER_STOCK CNS
+				LEFT JOIN CBCI_NAVER_GOODS CNG
+				ON CNS.SHOP_ID = CNG.SHOP_ID AND CNS.PRODUCT_NO = CNG.PRODUCT_NO
+				WHERE
+					CNS.MATCHING_CODE IS NULL
+				GROUP BY DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'' AS SHOP,
+					A.DATE,
+					'0' AS COUNT
+				FROM (
+				    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+				    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+				    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+				    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+				) A
+			WHERE A.DATE BETWEEN DATE_FORMAT(#{fromDate}, '%Y-%m-%d') AND #{toDate}) NONMATCHING
+			GROUP BY NONMATCHING.INPUT_DATE
+		)FIRST_CAL
+		<if test="skuFlag == 'preSum'">
+		<![CDATA[
+		WHERE FIRST_CAL.INPUT_DATE < #{fromDate}
+		]]>
+		</if>
+		<if test="skuFlag != 'preSum'">
+		WHERE FIRST_CAL.INPUT_DATE BETWEEN #{fromDate} AND #{toDate}
+			<if test="dateFlag == 'day'">
+			GROUP BY FIRST_CAL.INPUT_DATE
+			</if>
+			<if test="dateFlag == 'week'">
+			GROUP BY YEARWEEK(FIRST_CAL.INPUT_DATE)
+			</if>
+			<if test="dateFlag == 'month'">
+			GROUP BY LEFT(FIRST_CAL.INPUT_DATE,7)
+			</if>
+		</if>
+		ORDER BY FIRST_CAL.INPUT_DATE
+	</select>
+	
+	<select id="selectMbSKUCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			FIRST_CAL.INPUT_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(FIRST_CAL.INPUT_DATE, INTERVAL WEEKDAY(FIRST_CAL.INPUT_DATE) DAY), '%Y-%m-%d') AS INPUE_DATE,
+			WEEK(FIRST_CAL.INPUT_DATE,5) - WEEK(DATE_SUB(FIRST_CAL.INPUT_DATE,INTERVAL DAYOFMONTH(FIRST_CAL.INPUT_DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(FIRST_CAL.INPUT_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(FIRST_CAL.INPUT_DATE,7) AS YEARMONTH,
+		</if>
+			CONVERT(SUM(FIRST_CAL.COUNT) / ${COUNT}, SIGNED INTEGER) AS COUNT
+		FROM (
+			SELECT 
+				MATCHING.INPUT_DATE,
+				COUNT(MATCHING.MATCHING_CODE) AS COUNT
+			FROM(	
+				SELECT
+					SUBMATCHING.MATCHING_CODE,
+			    	SUBMATCHING.INPUT_DATE,
+			    	COUNT(SUBMATCHING.MATCHING_CODE) AS COUNT
+				FROM (
+					SELECT
+						'인터파크' AS SHOP,
+						CIG.MATCHING_CODE,
+						DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_INTERPARK_GOODS CIG
+					WHERE
+						CIG.CUBICI_CODE IS NOT NULL
+						AND CIG.MATCHING_CODE IS NOT NULL
+						AND CIG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '1')
+					UNION ALL
+					SELECT
+						'인터파크' AS SHOP,
+						CIS.MATCHING_CODE,
+						DATE_FORMAT(CIS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_INTERPARK_STOCK CIS
+					LEFT JOIN CBCI_INTERPARK_GOODS CIG
+					ON CIS.SHOP_ID = CIG.SHOP_ID AND CIS.PRODUCT_NO = CIG.PRODUCT_NO
+					WHERE
+						CIS.MATCHING_CODE IS NOT NULL
+						AND CIS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '1')
+					UNION ALL
+					SELECT
+						'지마켓' AS SHOP,
+						CGG.MATCHING_CODE,
+						DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_GMARKET_GOODS CGG
+					WHERE
+						CGG.CUBICI_CODE IS NOT NULL
+						AND CGG.MATCHING_CODE IS NOT NULL
+						AND CGG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '2')
+					UNION ALL
+					SELECT
+						'지마켓' AS SHOP,
+						CGS.MATCHING_CODE,
+						DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_GMARKET_STOCK CGS
+					LEFT JOIN CBCI_GMARKET_GOODS CGG
+					ON CGS.SHOP_ID = CGG.SHOP_ID AND CGS.PRODUCT_NO = CGG.PRODUCT_NO
+					WHERE
+						CGS.MATCHING_CODE IS NOT NULL
+						AND CGS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '2')
+					UNION ALL
+					SELECT
+						'옥션' AS SHOP,
+						CAG.MATCHING_CODE,
+						DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_AUCTION_GOODS CAG
+					WHERE
+						CAG.MATCHING_CODE IS NOT NULL
+						AND CAG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '3')
+					UNION ALL
+					SELECT
+						'11번가' AS SHOP,
+						CSG.MATCHING_CODE,
+						DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_11ST_GOODS CSG
+					WHERE
+						CSG.MATCHING_CODE IS NOT NULL
+						AND CSG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '4')
+					UNION ALL
+					SELECT
+						'쿠팡' AS SHOP,
+						CCS.MATCHING_CODE,
+						DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_COUPANG_STOCK CCS
+					LEFT JOIN CBCI_COUPANG_GOODS CCG
+					ON CCS.SHOP_ID = CCG.SHOP_ID AND CCS.SELLER_PRODUCT_ID = CCG.SELLER_PRODUCT_ID
+					WHERE
+						CCS.CUBICI_CODE IS NOT NULL
+						AND CCS.MATCHING_CODE IS NOT NULL
+						AND CCS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '11')
+					UNION ALL
+					SELECT
+						'네이버' AS SHOP,
+						CNG.MATCHING_CODE,
+						DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM
+						CBCI_NAVER_GOODS CNG
+					WHERE
+						CNG.CUBICI_CODE IS NOT NULL
+						AND CNG.MATCHING_CODE IS NOT NULL
+						AND CNG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '14')
+					UNION ALL				
+					SELECT
+						'네이버' AS SHOP,
+						CNS.MATCHING_CODE,
+						DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE
+					FROM CBCI_NAVER_STOCK CNS
+					LEFT JOIN CBCI_NAVER_GOODS CNG
+					ON CNS.SHOP_ID = CNG.SHOP_ID AND CNS.PRODUCT_NO = CNG.PRODUCT_NO
+					WHERE
+						CNS.MATCHING_CODE IS NOT NULL
+						AND CNS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '14')
+				)SUBMATCHING
+				GROUP BY SUBMATCHING.MATCHING_CODE 
+				ORDER BY SUBMATCHING.INPUT_DATE
+			)MATCHING
+			GROUP BY MATCHING.INPUT_DATE
+			UNION ALL
+			SELECT
+				NONMATCHING.INPUT_DATE,
+				SUM(NONMATCHING.COUNT) AS COUNT
+			FROM (
+				SELECT
+					'인터파크' AS SHOP,
+					DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM
+					CBCI_INTERPARK_GOODS CIG
+				WHERE
+					CIG.CUBICI_CODE IS NOT NULL
+					AND CIG.MATCHING_CODE IS NULL
+					AND CIG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '1')
+				GROUP BY DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'인터파크' AS SHOP,
+					DATE_FORMAT(CIG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM CBCI_INTERPARK_STOCK CIS
+				LEFT JOIN CBCI_INTERPARK_GOODS CIG
+				ON CIS.SHOP_ID = CIG.SHOP_ID AND CIS.PRODUCT_NO = CIG.PRODUCT_NO
+				WHERE
+					CIS.MATCHING_CODE IS NULL
+					AND CIS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '1')
+				GROUP BY DATE_FORMAT(CIS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'지마켓' AS SHOP,
+					DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM
+					CBCI_GMARKET_GOODS CGG
+				WHERE
+					CGG.CUBICI_CODE IS NOT NULL
+					AND CGG.MATCHING_CODE IS NULL
+					AND CGG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '2')
+				GROUP BY DATE_FORMAT(CGG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'지마켓' AS SHOP,
+					DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT 
+				FROM CBCI_GMARKET_STOCK CGS
+				LEFT JOIN CBCI_GMARKET_GOODS CGG
+				ON CGS.SHOP_ID = CGG.SHOP_ID AND CGS.PRODUCT_NO = CGG.PRODUCT_NO
+				WHERE
+					CGS.MATCHING_CODE IS NULL
+					AND CGS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '2')
+				GROUP BY DATE_FORMAT(CGS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'옥션' AS SHOP,
+					DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_AUCTION_GOODS CAG
+				WHERE
+					CAG.MATCHING_CODE IS NULL
+					AND CAG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '3')
+				GROUP BY DATE_FORMAT(CAG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'11번가' AS SHOP,
+					DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_11ST_GOODS CSG
+				WHERE
+					CSG.MATCHING_CODE IS NULL
+					AND CSG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '4')
+				GROUP BY DATE_FORMAT(CSG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'쿠팡' AS SHOP,
+					DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM CBCI_COUPANG_STOCK CCS
+				LEFT JOIN CBCI_COUPANG_GOODS CCG
+				ON CCS.SHOP_ID = CCG.SHOP_ID AND CCS.SELLER_PRODUCT_ID = CCG.SELLER_PRODUCT_ID
+				WHERE
+					CCS.CUBICI_CODE IS NOT NULL
+					AND CCS.MATCHING_CODE IS NULL
+					AND CCS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '11')
+				GROUP BY DATE_FORMAT(CCS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'네이버' AS SHOP,
+					DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM
+					CBCI_NAVER_GOODS CNG
+				WHERE
+					CNG.CUBICI_CODE IS NOT NULL
+					AND CNG.MATCHING_CODE IS NULL
+					AND CNG.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '14')
+				GROUP BY DATE_FORMAT(CNG.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'네이버' AS SHOP,
+					DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d') AS INPUT_DATE,
+					COUNT(*) AS COUNT
+				FROM CBCI_NAVER_STOCK CNS
+				LEFT JOIN CBCI_NAVER_GOODS CNG
+				ON CNS.SHOP_ID = CNG.SHOP_ID AND CNS.PRODUCT_NO = CNG.PRODUCT_NO
+				WHERE
+					CNS.MATCHING_CODE IS NULL
+					AND CNS.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.ADVCAL_YN = 'Y' AND CA.SHOP_TYPE = '14')
+				GROUP BY DATE_FORMAT(CNS.INPUT_DATE, '%Y-%m-%d')
+				UNION ALL
+				SELECT
+					'' AS SHOP,
+					A.DATE,
+					'0' AS COUNT
+				FROM (
+				    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+				    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+				    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+				    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+					) A
+				WHERE A.DATE BETWEEN DATE_FORMAT(#{fromDate}, '%Y-%m-%d') AND #{toDate}
+				) NONMATCHING
+			GROUP BY NONMATCHING.INPUT_DATE
+		)FIRST_CAL
+		<if test="skuFlag == 'preSum'">
+		<![CDATA[
+		WHERE FIRST_CAL.INPUT_DATE < #{fromDate}
+		]]>
+		</if>
+		<if test="skuFlag != 'preSum'">
+		WHERE FIRST_CAL.INPUT_DATE BETWEEN #{fromDate} AND #{toDate}
+			<if test="dateFlag == 'day'">
+			GROUP BY FIRST_CAL.INPUT_DATE
+			</if>
+			<if test="dateFlag == 'week'">
+			GROUP BY YEARWEEK(FIRST_CAL.INPUT_DATE)
+			</if>
+			<if test="dateFlag == 'month'">
+			GROUP BY LEFT(FIRST_CAL.INPUT_DATE,7)
+			</if>
+		</if>
+		ORDER BY FIRST_CAL.INPUT_DATE
+	</select>
+	
+	<!-- 제휴 -->
+	<select id="selectRegiPartner" parameterType="HashMap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			CAL.REG_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(A.DATE, INTERVAL WEEKDAY(A.DATE) DAY), '%Y-%m-%d') AS DATE,
+			WEEK(A.DATE,5) - WEEK(DATE_SUB(A.DATE,INTERVAL DAYOFMONTH(A.DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+			CAL.RECOMMENDED_NUM,
+			COUNT(CAL.USER_NO) AS COUNT
+			FROM (	
+			SELECT
+				DATE_FORMAT(REG_DATE, '%Y-%m-%d') AS REG_DATE,
+				CU.USER_NO,
+				CU.RECOMMENDED_NUM
+			FROM CBCI_USER CU 
+			WHERE CU.WITHDRAW_YN != 'Y' OR CU.WITHDRAW_YN IS NULL
+			AND CU.USER_TYPE = 2
+			<if test='PARTNER == ""'>
+			AND (CU.RECOMMENDED_NUM = '' OR CU.RECOMMENDED_NUM IS NULL)
+			</if>
+			<if test='PARTNER != ""'>
+			AND CU.RECOMMENDED_NUM = #{PARTNER}
+			</if>
+			UNION ALL
+			SELECT
+				A.DATE,
+				null AS USER_NO,
+				#{PARTNER} AS RECOMMENDED_NUM
+			FROM (
+			    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+			    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+			) A
+		) CAL
+		WHERE CAL.REG_DATE BETWEEN #{fromDate} AND #{toDate}
+		<if test="dateFlag == 'day'">
+		GROUP BY CAL.REG_DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(A.DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(A.DATE,7)
+		</if>
+		ORDER BY CAL.REG_DATE
+	</select>
+	
+	<!-- 등록쇼핌몰 -->
+	<select id="selectRegiShopCount" parameterType="HashMap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			A.DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(A.DATE, INTERVAL WEEKDAY(A.DATE) DAY), '%Y-%m-%d') AS DATE,
+			WEEK(A.DATE,5) - WEEK(DATE_SUB(A.DATE,INTERVAL DAYOFMONTH(A.DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(A.DATE,7) AS YEARMONTH,
+		</if>
+			COUNT(CASE WHEN CA.SHOP_TYPE = '1' THEN 1 END) AS INTERPARK_COUNT,
+			COUNT(CASE WHEN CA.SHOP_TYPE = '2' THEN 1 END) AS GMARKET_COUNT,
+			COUNT(CASE WHEN CA.SHOP_TYPE = '3' THEN 1 END) AS AUCTION_COUNT,
+			COUNT(CASE WHEN CA.SHOP_TYPE = '4' THEN 1 END) AS SHOP11_COUNT,
+			COUNT(CASE WHEN CA.SHOP_TYPE = '11' THEN 1 END) AS COUPANG_COUNT,
+			COUNT(CASE WHEN CA.SHOP_TYPE = '14' THEN 1 END) AS NAVER_COUNT,
+			COUNT(CA.SHOP_ID) AS TOTAL
+		FROM (
+		    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+		    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+		    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+		    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+		) A
+		LEFT JOIN CBCI_ACCOUNT CA
+		ON LEFT(CA.INPUT_DATETIME,10) = A.DATE
+		WHERE A.DATE BETWEEN #{fromDate} AND #{toDate}
+		<if test="dateFlag == 'day'">
+		GROUP BY A.DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(A.DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(A.DATE,7)
+		</if>
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 매출지표 쇼핑몰 판매비교 (운영) -->
+	<select id="selectOperShopCount" parameterType="hashmap" resultType="hashmap">
+		<if test="flag == 'total'">
+		SELECT
+			SUM(FIRST_CAL.COUNT) AS COUNT
+		FROM(
+		</if>
+		SELECT
+			SHOP_TYPE,
+		 	COUNT(DISTINCT SHOP_ID) AS COUNT
+		FROM CBCI_ACCOUNT CA
+		INNER JOIN CBCI_USER CU
+		WHERE CA.USER_NO = CU.USER_NO
+		AND (CA.DEL_YN != 'Y' OR CA.DEL_YN IS NULL OR CA.LOGIN_LOCK != 'Y')
+		AND (CU.WITHDRAW_YN != 'Y' OR CU.WITHDRAW_YN IS NULL)
+		<if test="flag == 'sum'">
+		<![CDATA[
+		AND CA.INPUT_DATETIME < #{fromDate}
+		]]>
+		</if>
+		GROUP BY SHOP_TYPE 
+		ORDER BY SHOP_TYPE , SHOP_ID
+		<if test="flag == 'total'">
+		)FIRST_CAL
+		</if> 
+	</select>
+	
+	<!-- 통합정보 > 큐빅아이 > 매출지표 > 매출현황 반품/교환 -->
+	<select id="selectReturnCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		<if test="dateFlag == 'day'">
+			CAL.REQUEST_DATE,
+		</if>
+		<if test="dateFlag == 'week'">
+			DATE_FORMAT(DATE_SUB(CAL.REQUEST_DATE, INTERVAL WEEKDAY(CAL.REQUEST_DATE) DAY), '%Y-%m-%d') AS REQUEST_DATE,
+			WEEK(CAL.REQUEST_DATE,5) - WEEK(DATE_SUB(CAL.REQUEST_DATE,INTERVAL DAYOFMONTH(CAL.REQUEST_DATE)-1 DAY),5) + 1 AS MONTHOFWEEK,
+			LEFT(CAL.REQUEST_DATE,7) AS YEARMONTH,
+		</if>
+		<if test="dateFlag == 'month'">
+			LEFT(CAL.REQUEST_DATE,7) AS YEARMONTH,
+		</if>
+			IFNULL(SUM(CAL.QUANTITY), 0) AS QUANTITY,
+			IFNULL(SUM(CAL.ORDER_PRICE), 0) AS ORDER_PRICE
+		<![CDATA[
+		FROM(
+			SELECT
+				1 AS SHOP_TYPE,
+				'인터파크' AS SHOP,
+				IF(CIS.PAID_AT IS NULL, '-', DATE_FORMAT(CIS.PAID_AT, '%Y-%m-%d')) AS PAID_AT,
+				DATE_FORMAT(CIRE.REG_DATE, '%Y-%m-%d') AS REQUEST_DATE,
+				CIRE.ORDER_PRICE,
+				CIRE.QUANTITY
+			FROM CBCI_INTERPARK_RETURN_EXCHANGE CIRE
+			LEFT JOIN CBCI_INTERPARK_SALES CIS
+			ON CIS.OPTION_NAME = CIRE.OPTION_NM 
+			AND CIS.ORDER_NO = CIRE.ORDER_NO 	
+			WHERE CIRE.REG_DATE >= #{fromDate}
+			AND CIRE.REG_DATE <= #{toDate}
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CIRE.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '1' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+			2 AS SHOP_TYPE,
+			'지마켓' AS SHOP,
+			DATE_FORMAT(CGRE.PAYMENT_DATE, '%Y-%m-%d') AS PAID_AT,
+			DATE_FORMAT(CGRE.REG_DATE, '%Y-%m-%d') AS REQUEST_DATE,
+			CGS.ORDER_PRICE-(CGS.PURCHASE_COUPON_PRICE+CGS.SELLER_DISCOUNT_PRICE+CGS.SMILE_CASH) AS ORDER_PRICE,
+			CGRE.QUANTITY
+			FROM CBCI_GMARKET_RETURN_EXCHANGE CGRE
+			LEFT JOIN CBCI_GMARKET_SALES CGS
+			ON CGRE.SHOP_ID = CGS.SHOP_ID AND CGRE.ORDER_NO = CGS.ORDER_NO AND CGRE.PRODUCT_NO = CGS.PRODUCT_NO
+			WHERE REG_DATE >= #{fromDate}
+			AND REG_DATE <= #{toDate}
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CGRE.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '2' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				3 AS SHOP_TYPE,
+				'옥션' AS SHOP,
+				DATE_FORMAT(CARE.PAYMENT_DATE, '%Y-%m-%d') AS PAID_AT,
+				DATE_FORMAT(CARE.REG_DATE, '%Y-%m-%d') AS REQUEST_DATE,
+				CAS.ORDER_PRICE-(CAS.SELLER_DISCOUNT_PRICE+CAS.EXCELLENT_MEM_DISCOUNT+CAS.SMILE_CASH) AS ORDER_PRICE,
+				CARE.QUANTITY
+			FROM CBCI_AUCTION_RETURN_EXCHANGE CARE
+			LEFT JOIN CBCI_AUCTION_SALES CAS
+			ON CARE.SHOP_ID = CAS.SHOP_ID AND CARE.ORDER_NO = CAS.ORDER_NO AND CARE.PRODUCT_NO = CAS.PRODUCT_NO
+			WHERE REG_DATE >= #{fromDate}
+			AND REG_DATE <= #{toDate}
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CARE.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '3' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				4 AS SHOP_TYPE,
+				'11번가' AS SHOP,
+				IF(CS.결제완료일 IS NULL OR TRIM(CS.결제완료일) = '', '-', DATE_FORMAT(CS.결제완료일, '%Y-%m-%d')) AS PAID_AT,
+				DATE_FORMAT(CRE.REG_DATE, '%Y-%m-%d') AS REQUEST_DATE,
+				CS.판매금액합계-(CS.할인쿠폰이용료+CS.복수구매할인비용+CS.판매자부담카드추가할인+CS.공제_스토어묶음쿠폰할인+CS.후불광고비) AS ORDER_PRICE,
+				CRE.RETURN_EXCHANGE_QUANTITY AS QUANTITY
+			FROM CBCI_11ST_RETURN_EXCHANGE CRE
+			LEFT JOIN CBCI_11ST_SALEACCNT CS
+			ON CRE.SHOP_ID = CS.SHOP_ID AND CRE.ORDER_NO = CS.주문번호 AND CRE.ORDER_SEQ = CS.주문순번
+			AND CS.선결제배송비 = 0 -- 배송비제외
+			WHERE REG_DATE >= #{fromDate}
+			AND REG_DATE <= #{toDate}
+			AND STATE NOT IN ('반품거부', '반품신청취소')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CRE.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '4' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				11 AS SHOP_TYPE,
+				'쿠팡' AS SHOP,
+				IF(CCS.paid_at IS NULL, '-', DATE_FORMAT(CCS.paid_at, '%Y-%m-%d')) AS PAID_AT,
+				DATE_FORMAT(CCR.CREATED_AT, '%Y-%m-%d') AS REQUEST_DATE,
+				IFNULL(CCS.order_price, 0) AS ORDER_PRICE,
+				IFNULL(CCS.shipping_count, 0) AS QUANTITY
+			FROM CBCI_COUPANG_RETURN CCR
+			LEFT JOIN CBCI_COUPANG_SALES CCS
+			ON CCR.SHOP_ID = CCS.SHOP_ID AND CCR.ORDER_ID = CCS.order_id AND CCR.VENDOR_ITEM_ID = CCS.vendor_item_id
+			WHERE CREATED_AT >= #{fromDate}
+			AND CREATED_AT <= #{toDate}
+			AND CCR.RECEIPT_TYPE <> '반품 철회'
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CCR.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '11' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[
+			UNION ALL
+			SELECT
+				14 AS SHOP_TYPE,
+				'네이버' AS SHOP,
+				DATE_FORMAT(CNRE.PAID_AT, '%Y-%m-%d') AS PAID_AT,
+				DATE_FORMAT(CNRE.REG_DATE, '%Y-%m-%d') AS REQUEST_DATE,
+				CNRE.ORDER_PRICE,
+				CNRE.QUANTITY
+			FROM CBCI_NAVER_RETURN_EXCHANGE CNRE
+			LEFT JOIN CBCI_NAVER_SALES CNS
+			ON CNRE.SHOP_ID = CNS.SHOP_ID AND CNRE.PRODUCT_ORDER_NO = CNS.PRODUCT_ORDER_NO AND CNRE.ORDER_NO = CNS.ORDER_NO 
+			WHERE REG_DATE >= #{fromDate}
+			AND REG_DATE <= #{toDate}
+			AND STATE NOT IN ('반품철회', '교환철회')
+			]]>
+			<if test='PARTNER != "" or PRODUCT_TYPE != ""'>
+			AND CNRE.SHOP_ID IN (SELECT CA.SHOP_ID FROM CBCI_ACCOUNT CA WHERE CA.SHOP_TYPE = '14' AND CA.USER_NO IN (
+				SELECT MUI.USER_NO FROM MONEYBANK_USER_INFO MUI WHERE MUI.DIVISION IN (
+					SELECT MP.DIVISION FROM MONEYBANK_PRODUCT MP WHERE MP.FIRM_NO REGEXP (#{PARTNER}) AND MP.PRODUCT_TYPE REGEXP (#{PRODUCT_TYPE}))))
+			</if>
+			<![CDATA[	
+			UNION ALL
+			SELECT  '0' AS SHOP_TYPE, '0' AS SHOP, '' AS PAID_AT , A.DATE AS REQUEST_DATE, '0' AS QUANTITY, '0' AS ORDER_PRICE FROM (
+			    SELECT CURDATE() - INTERVAL (A.A + (10 * B.A) + (100 * C.A)) DAY AS DATE
+			    FROM (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS A
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS B
+			    CROSS JOIN (SELECT 0 AS A UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3 UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6 UNION ALL SELECT 7 UNION ALL SELECT 8 UNION ALL SELECT 9) AS C
+			) A WHERE A.DATE BETWEEN #{fromDate} AND #{toDate}
+		) CAL	
+		]]>
+		<if test="dateFlag == 'day'">
+		GROUP BY CAL.REQUEST_DATE
+		</if>
+		<if test="dateFlag == 'week'">
+		GROUP BY YEARWEEK(CAL.REQUEST_DATE)
+		</if>
+		<if test="dateFlag == 'month'">
+		GROUP BY LEFT(CAL.REQUEST_DATE,7)
+		</if>
+	</select>
+	
+	<!-- 상세 모달 머니뱅크 -->
+	<select id="moneybankList" resultType ="hashmap" parameterType="hashmap">
+	SELECT 
+	MUI.MONEYBANK_REQUEST_DATE, -- 머니뱅크 회원가입, 신청
+	(SELECT APPROVAL_DATE
+	FROM TOGETHER_REQUEST_INFO 
+	WHERE MUI.SEQ=TOGETHER_REQUEST_INFO.SEQ
+	AND MUI.USER_NO= #{USER_NO}
+	AND TOGETHER_REQUEST_INFO.REQUEST_COUNT = 0) AS FIRST_APPROVAL_DATE, -- 최초 계약일자
+ 	TRI.APPROVAL_DATE, -- 신청승인
+ 	IFNULL(TRI.EXPIRATION_DATE,'-') AS EXPIRATION_DATE , -- 상환,상환완료
+ 	IFNULL(TRI.DEPOSIT_DATE,'-') AS DEPOSIT_DATE,-- 일자
+ 	MUI.DIVISION, -- 이용 서비스
+ 	TRI.TOTAL_PAYMENT, -- 이용총액
+ 	TRI.USAGE_PERIOD, -- 서비스 기간
+ 	TRI.DAILY_USAGE_FEE, -- 수수료
+ 	IFNULL((SELECT 
+	CPR.PRIZM_GRADE 
+	FROM 
+		CBCI_PRIZM_RESULT CPR 
+	WHERE 
+		DATE_FORMAT(CPR.INPUT_DATE, '%Y-%m-%d') = (SELECT DATE_FORMAT(TRI.APPROVAL_DATE, '%Y-%m-%d') FROM TOGETHER_REQUEST_INFO TRI WHERE CPR.SEQ = TRI.SEQ )
+		AND CPR.USER_NO = #{USER_NO}
+	ORDER BY 
+		CPR.INPUT_DATE DESC LIMIT 1), '-') AS PRIZM_GRADE
+	FROM 
+		MONEYBANK_USER_INFO MUI 
+	JOIN 
+		TOGETHER_REQUEST_INFO TRI 
+	ON 
+		MUI.SEQ = TRI.SEQ
+	WHERE
+		MUI.USER_NO = #{USER_NO}
+	</select>
+	
+	<!-- 회원 해지 확인 -->
+	<update id="updateWithdraw" parameterType="hashmap">
+	UPDATE CBCI_USER
+	SET
+		UPD_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+		WITHDRAW_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+		WITHDRAW_YN = 'Y'
+	WHERE
+		USER_NO = #{USER_NO}
+	</update>
+	
+	<!-- 쇼핑몰 어카운트 수 가져오기 날짜별 or 쇼핑몰별 -->
+	<select id="selectAccount" resultType="Integer" parameterType="hashmap">
+		SELECT 
+			COUNT(*)
+		FROM CBCI_ACCOUNT
+		<if test='accDateFlag=="y"'><!-- 날짜 기준으로 찾기 -->
+			WHERE INPUT_DATETIME &lt;= #{toDate}
+		</if>
+		<if test='excelFromDateFlag=="y"'><!-- 날짜 기준으로 찾기 -->
+			WHERE INPUT_DATETIME &lt;= #{excelFromDate}
+		</if>
+		<if test='accShopFlag=="y"'><!-- 쇼핑몰 기준으로 찾기 -->
+			AND SHOP_TYPE=#{shopType}
+		</if>
+	</select>
+	
+	<select id="monthGraphUserCount" parameterType="hashmap" resultType="hashmap">
+		SELECT
+		<if test='monthUserCountFlag == "new"'>
+			COUNT(*) AS COUNT,
+			SUBSTR(REG_DATETIME, 1, 7) AS MEM_MONTH_DATE
+		</if>
+		<if test='monthUserCountFlag == "wd"'>
+			COUNT(*) AS COUNT,
+		    SUBSTR(WITHDRAW_DATETIME, 1, 7) AS WD_MONTH_DATE
+		</if>
+		FROM CBCI_USER
+		WHERE REG_DATETIME BETWEEN #{fromDate} AND #{toDate}
+		<if test='monthUserCountFlag == "new"'>
+			GROUP BY MEM_MONTH_DATE
+		</if>
+		<if test='monthUserCountFlag == "wd"'>
+			GROUP BY WD_MONTH_DATE
+		</if>
+	</select>
+	
+ 	<!-- 관리자 페이지 END -->
+ 
+ 	<!-- 지급 승인된 리스트 가져오기 -->
+	<select id="selectAdvCalPaymentList" resultType="hashmap">
+	SELECT 
+		A.NEW_YN, 
+        D.USER_ID, 
+   	    D.USER_NM, 
+    	A.ADVCAL_ID, 
+    	A.HELLOPAY_REQ_YN_DATE, 
+    	A.APPROVAL_DATE, 
+    	A.ADVCAL_AMOUNT, 
+    	A.DAILY_CONT_CHARGE_RATE, 
+    	D.DEPOSIT_BANK,
+    	D.ACCOUNT_NUM,
+    	A.CONTRACT_DATE 
+	FROM CBCI_ADV_CALCULATE A 
+	LEFT JOIN (
+		SELECT 
+			B.USER_NO,
+			B.USER_ID, 
+			B.USER_NM,
+			C.DEPOSIT_BANK, 
+        	C.ACCOUNT_NUM 
+		FROM CBCI_USER B INNER JOIN CBCI_USER_DEPOSIT_INFO C 
+    	WHERE B.USER_NO=C.USER_NO
+		) D
+	ON A.USER_NO=D.USER_NO 
+	WHERE 1=1
+	AND CONTRACT_DATE != NULL 
+	</select>
+
+	<!-- 지급요청 전달할 내용 가져오기 -->
+    <select id="selectAdvCalPaySend" parameterType="hashmap" resultType="hashmap">
+    SELECT 
+		A.USER_NM AS USERNAME,
+		A.FIRM_NM AS FIRMNAME,
+		B.ADVCAL_ID,
+        B.REG_DATE,
+        B.DEPOSIT_BANK AS BANKNAME,
+        B.ACCOUNT_NUM AS ACCOUNT,
+		C.CAL_AVAIL_AMOUNT AS TOTAL,
+		C.ADVCAL_AMOUNT AS PAY_AMOUNT,
+        DATE_FORMAT(now(), '%Y-%m-%d') AS THISDATE
+    FROM CBCI_USER A 
+	LEFT JOIN CBCI_USER_DEPOSIT_INFO B ON A.USER_NO = B.USER_NO
+	LEFT JOIN CBCI_ADV_CALCULATE C ON A.USER_NO = C.USER_NO
+	WHERE A.USER_ID='${USER_ID}'
+	</select>
+    
+    <!-- CBCI_ADV_CAL_PAYMENT에 입력 -->
+    <insert id="insertPayment" parameterType="hashmap">
+    INSERT INTO CBCI_ADV_CAL_PAYMENT VALUES (
+		DEFAULT,
+		${USER_NO},
+    	'${ADVCAL_ID}',
+    	'${NEW_YN}',
+  		${HELLOPAY_REQ_YN_DATE},
+ 		${CAL_AVAIL_AMOUNT},
+ 		${ADVCAL_AMOUNT},
+ 		'${DEPOSIT_BANK}',
+ 		'${ACCOUNT_NUM}',
+  		${PAYMENT_YN},
+ 		${PAYMENT_DATE},
+ 		NOW()
+	)
+    </insert>
+	
+	<select id="selectActivityIndicator" parameterType="hashmap" resultType="hashmap">
+		SELECT 
+			PAGE_VIEWS_COUNT,
+			VISIT_COUNT,
+			AVG_USE_TIME,
+			STANDARD_DATE
+		FROM CBCI_USE_MANAGEMENT 
+		WHERE STANDARD_DATE BETWEEN #{fromDate} AND #{toDate}
+	</select>
+</mapper>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="14.781" height="13.656" viewBox="0 0 14.781 13.656">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #55575b;
+        stroke-width: 1px;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <path id="check-thin" class="cls-1" d="M957.408,577.628l5.2,7.255L969.538,574" transform="translate(-956.094 -573.5)"/>
+</svg>

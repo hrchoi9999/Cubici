@@ -1,0 +1,6503 @@
+[
+  {
+    "table": "api_report",
+    "column_count": 8,
+    "insert_rows": 640,
+    "primary_key": [
+      "api_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "api_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "api_type",
+        "mysql_type": "varchar(200)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'API 타입'"
+      },
+      {
+        "name": "shop_type",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰'"
+      },
+      {
+        "name": "shop_id",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰 ID'"
+      },
+      {
+        "name": "subject",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '제목'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "varchar(1000)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '원인'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상태'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "attach_file",
+    "column_count": 13,
+    "insert_rows": 14,
+    "primary_key": [
+      "uuid"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "uuid",
+        "mysql_type": "varchar(36)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'UUID'"
+      },
+      {
+        "name": "type",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '분류'"
+      },
+      {
+        "name": "type_id",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '분류_id'"
+      },
+      {
+        "name": "origin_name",
+        "mysql_type": "varchar(200)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '원본 파일명'"
+      },
+      {
+        "name": "store_name",
+        "mysql_type": "varchar(500)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '저장 파일명'"
+      },
+      {
+        "name": "ext",
+        "mysql_type": "varchar(5)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '파일 확장자'"
+      },
+      {
+        "name": "size",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '파일 크기'"
+      },
+      {
+        "name": "path",
+        "mysql_type": "varchar(300)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '파일 경로'"
+      },
+      {
+        "name": "encryption",
+        "mysql_type": "char(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '암호화 유무'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '작성인'"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정인'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "CBCI_FILE",
+    "column_count": 10,
+    "insert_rows": 12,
+    "primary_key": [
+      "uuid"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "uuid",
+        "mysql_type": "char(36)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'UUID'"
+      },
+      {
+        "name": "file_division",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '파일구분'"
+      },
+      {
+        "name": "file_division_pk",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '구분PK'"
+      },
+      {
+        "name": "origin_file_name",
+        "mysql_type": "varchar(200)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '원본파일명'"
+      },
+      {
+        "name": "store_file_name",
+        "mysql_type": "varchar(500)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '저장파일명'"
+      },
+      {
+        "name": "file_ext",
+        "mysql_type": "varchar(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '파일 확장자'"
+      },
+      {
+        "name": "file_size",
+        "mysql_type": "varchar(2000)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '파일크기(byte)'"
+      },
+      {
+        "name": "file_path",
+        "mysql_type": "varchar(300)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '파일 저장경로'"
+      },
+      {
+        "name": "enc_type",
+        "mysql_type": "char(1)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '암호화 유무'"
+      },
+      {
+        "name": "input_date",
+        "mysql_type": "datetime",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '등록일자'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "charge",
+    "column_count": 14,
+    "insert_rows": 5,
+    "primary_key": [
+      "charge_code"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "charge_code",
+        "mysql_type": "varchar(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요금제 코드 (ex. B0301)'"
+      },
+      {
+        "name": "charge_name",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요금제명'"
+      },
+      {
+        "name": "charge_type",
+        "mysql_type": "varchar(1)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '구분코드(기본요금\"B\"/ 부가요금\"A\"/ 조건부요금\"M\"/ 기타요금\"O\"/ 무료요금\"F\" )'"
+      },
+      {
+        "name": "start_date",
+        "mysql_type": "date",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요금제 기간_시작일'"
+      },
+      {
+        "name": "expire_date",
+        "mysql_type": "date",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요금제 기간_종료일'"
+      },
+      {
+        "name": "sub_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '제공 ID 수'"
+      },
+      {
+        "name": "sales_count",
+        "mysql_type": "varchar(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '거래 건수 (default : 무제한)'"
+      },
+      {
+        "name": "product_count",
+        "mysql_type": "varchar(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상품 건수(default : 무제한)'"
+      },
+      {
+        "name": "amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '기준 금액(VAT 제외)'"
+      },
+      {
+        "name": "period",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요금제 기간 (ex. 12)'"
+      },
+      {
+        "name": "period_unit",
+        "mysql_type": "varchar(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요금제 기간 단위 (ex. 개월 \"M\" / 주 \"W\")'"
+      },
+      {
+        "name": "charge_detail",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '기타 혜택'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6)"
+      },
+      {
+        "name": "update_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "column_stats",
+    "column_count": 11,
+    "insert_rows": 0,
+    "primary_key": [
+      "db_name",
+      "table_name",
+      "column_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "db_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "table_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "column_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "min_value",
+        "mysql_type": "varbinary(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "max_value",
+        "mysql_type": "varbinary(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "nulls_ratio",
+        "mysql_type": "decimal(12,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "avg_length",
+        "mysql_type": "decimal(12,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "avg_frequency",
+        "mysql_type": "decimal(12,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "hist_size",
+        "mysql_type": "tinyint(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "unsigned DEFAULT NULL"
+      },
+      {
+        "name": "hist_type",
+        "mysql_type": "enum('SINGLE_PREC_HB','DOUBLE_PREC_HB')",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "histogram",
+        "mysql_type": "varbinary(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "columns_priv",
+    "column_count": 7,
+    "insert_rows": 0,
+    "primary_key": [
+      "Host",
+      "Db",
+      "User",
+      "Table_name",
+      "Column_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Table_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Column_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Timestamp",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "Column_priv",
+        "mysql_type": "set('Select','Insert','Update','References')",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT ''"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "db",
+    "column_count": 23,
+    "insert_rows": 3,
+    "primary_key": [
+      "Host",
+      "Db",
+      "User"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Select_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Insert_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Update_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Delete_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Create_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Drop_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Grant_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "References_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Index_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Alter_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Create_tmp_table_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Lock_tables_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Create_view_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Show_view_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Create_routine_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Alter_routine_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Execute_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Event_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Trigger_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      },
+      {
+        "name": "Delete_history_priv",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      }
+    ],
+    "keys": [
+      {
+        "name": "User",
+        "columns": [
+          "User"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "event",
+    "column_count": 22,
+    "insert_rows": 0,
+    "primary_key": [
+      "db",
+      "name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "body",
+        "mysql_type": "longblob",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "definer",
+        "mysql_type": "char(141)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "execute_at",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "interval_value",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "interval_field",
+        "mysql_type": "enum('YEAR','QUARTER','MONTH','DAY','HOUR','MINUTE','WEEK','SECOND','MICROSECOND','YEAR_MONTH','DAY_HOUR','DAY_MINUTE','DAY_SECOND','HOUR_MINUTE','HOUR_SECOND','MINUTE_SECOND','DAY_MICROSECOND','HOUR_MICROSECOND','MINUTE_MICROSECOND','SECOND_MICROSECOND')",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "created",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "modified",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "'0000-00-00 00:00:00'",
+        "extra": "NOT NULL DEFAULT '0000-00-00 00:00:00'"
+      },
+      {
+        "name": "last_executed",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "starts",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "ends",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "status",
+        "mysql_type": "enum('ENABLED','DISABLED','SLAVESIDE_DISABLED')",
+        "nullable": false,
+        "default": "'ENABLED'",
+        "extra": "NOT NULL DEFAULT 'ENABLED'"
+      },
+      {
+        "name": "on_completion",
+        "mysql_type": "enum('DROP','PRESERVE')",
+        "nullable": false,
+        "default": "'DROP'",
+        "extra": "NOT NULL DEFAULT 'DROP'"
+      },
+      {
+        "name": "sql_mode",
+        "mysql_type": "set('REAL_AS_FLOAT','PIPES_AS_CONCAT','ANSI_QUOTES','IGNORE_SPACE','IGNORE_BAD_TABLE_OPTIONS','ONLY_FULL_GROUP_BY','NO_UNSIGNED_SUBTRACTION','NO_DIR_IN_CREATE','POSTGRESQL','ORACLE','MSSQL','DB2','MAXDB','NO_KEY_OPTIONS','NO_TABLE_OPTIONS','NO_FIELD_OPTIONS','MYSQL323','MYSQL40','ANSI','NO_AUTO_VALUE_ON_ZERO','NO_BACKSLASH_ESCAPES','STRICT_TRANS_TABLES','STRICT_ALL_TABLES','NO_ZERO_IN_DATE','NO_ZERO_DATE','INVALID_DATES','ERROR_FOR_DIVISION_BY_ZERO','TRADITIONAL','NO_AUTO_CREATE_USER','HIGH_NOT_PRECEDENCE','NO_ENGINE_SUBSTITUTION','PAD_CHAR_TO_FULL_LENGTH','EMPTY_STRING_IS_NULL','SIMULTANEOUS_ASSIGNMENT','TIME_ROUND_FRACTIONAL')",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "comment",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "originator",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "time_zone",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "'SYSTEM'",
+        "extra": "CHARACTER SET latin1 NOT NULL DEFAULT 'SYSTEM'"
+      },
+      {
+        "name": "character_set_client",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "collation_connection",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "db_collation",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "body_utf8",
+        "mysql_type": "longblob",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "faq",
+    "column_count": 9,
+    "insert_rows": 31,
+    "primary_key": [
+      "faq_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "faq_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT 'faq 번호'"
+      },
+      {
+        "name": "user_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '작성자'"
+      },
+      {
+        "name": "type",
+        "mysql_type": "varchar(15)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '게시글 분류'"
+      },
+      {
+        "name": "title",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '제목'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '내용'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '작성인'"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정인'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "fintech",
+    "column_count": 12,
+    "insert_rows": 2,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "fintech_name",
+        "mysql_type": "varchar(25)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 이름'"
+      },
+      {
+        "name": "fintech_bank_code",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 은행코드'"
+      },
+      {
+        "name": "fintech_prd_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 출금 업체코드'"
+      },
+      {
+        "name": "fintech_pay_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 송금 업체코드'"
+      },
+      {
+        "name": "fintech_account_number",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 계좌번호'"
+      },
+      {
+        "name": "fintech_account_holder",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 예금주명'"
+      },
+      {
+        "name": "fintech_interest_rate",
+        "mysql_type": "decimal(4,2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 이자율'"
+      },
+      {
+        "name": "fintech_repayment_date",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 상환일자'"
+      },
+      {
+        "name": "process_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '송금 API 사용 여부\\r\\n(헬로핀테크 모듈 : module , 펌뱅킹 API : firm)'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": [
+      {
+        "name": "fintech_UN",
+        "columns": [
+          "fintech_name"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "fintech_info",
+    "column_count": 11,
+    "insert_rows": 1,
+    "primary_key": [
+      "fintech_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "fintech_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '핀테크 아이디'"
+      },
+      {
+        "name": "ks_code",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'firm KSCODE'"
+      },
+      {
+        "name": "e_key",
+        "mysql_type": "varchar(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'firm EKey'"
+      },
+      {
+        "name": "m_salt",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'firm Msalt'"
+      },
+      {
+        "name": "password",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '계좌비밀번호'"
+      },
+      {
+        "name": "comp_code",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '펌뱅킹 기관코드'"
+      },
+      {
+        "name": "fac_code",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CMS 기관코드'"
+      },
+      {
+        "name": "send_code",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CMS 송신코드'"
+      },
+      {
+        "name": "recv_code",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CMS 수신코드'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "fintech_request",
+    "column_count": 15,
+    "insert_rows": 159,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "fintech_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '자금조달사 id'"
+      },
+      {
+        "name": "fintech_product_code",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 코드'"
+      },
+      {
+        "name": "request_code",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청코드'"
+      },
+      {
+        "name": "request_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청일자'"
+      },
+      {
+        "name": "request_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청금액'"
+      },
+      {
+        "name": "approval_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '승인일자'"
+      },
+      {
+        "name": "interest_rate",
+        "mysql_type": "decimal(4,2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이자율(12% 변경될 수 있음)'"
+      },
+      {
+        "name": "repayment_expire_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상환 만기일'"
+      },
+      {
+        "name": "repayment_complete_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상환 만료일'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상태'"
+      },
+      {
+        "name": "product_type",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상품 종류(선정산, 선지급)'"
+      },
+      {
+        "name": "process_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '송금 API 사용 여부\\r\\n(헬로핀테크 모듈 : module , 펌뱅킹 API : firm)'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": [
+      {
+        "name": "fintech_request_UN",
+        "columns": [
+          "fintech_product_code",
+          "request_code"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "firm_request_bin",
+    "column_count": 18,
+    "insert_rows": 48,
+    "primary_key": [
+      "comp_code",
+      "req_date",
+      "seq_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "mbid",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 아이디'"
+      },
+      {
+        "name": "req_type",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요청타입'"
+      },
+      {
+        "name": "comp_code",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '업체코드'"
+      },
+      {
+        "name": "req_date",
+        "mysql_type": "varchar(8)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요청날짜(yyyymmdd)'"
+      },
+      {
+        "name": "seq_no",
+        "mysql_type": "varchar(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '일련번호(000001 부터 순차증가 날짜 바뀔시 초기화)'"
+      },
+      {
+        "name": "req_time",
+        "mysql_type": "varchar(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청시간(hhmmss)'"
+      },
+      {
+        "name": "out_bank_code",
+        "mysql_type": "varchar(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '출금은행코드'"
+      },
+      {
+        "name": "out_account",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '출금은행계좌번호'"
+      },
+      {
+        "name": "in_bank_code",
+        "mysql_type": "varchar(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '입금은행코드'"
+      },
+      {
+        "name": "in_account",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '입금은행계좌번호'"
+      },
+      {
+        "name": "amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '입금액'"
+      },
+      {
+        "name": "reply_code",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '결과코드'"
+      },
+      {
+        "name": "success_yn",
+        "mysql_type": "varchar(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '성공유무'"
+      },
+      {
+        "name": "trade_time",
+        "mysql_type": "varchar(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이체시간'"
+      },
+      {
+        "name": "balance",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '출금계좌 잔액'"
+      },
+      {
+        "name": "svc_charge",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수수료'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "func",
+    "column_count": 4,
+    "insert_rows": 0,
+    "primary_key": [
+      "name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "ret",
+        "mysql_type": "tinyint(1)",
+        "nullable": false,
+        "default": "0",
+        "extra": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "dl",
+        "mysql_type": "char(128)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "type",
+        "mysql_type": "enum('function','aggregate')",
+        "nullable": false,
+        "default": null,
+        "extra": "CHARACTER SET utf8 NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "global_priv",
+    "column_count": 3,
+    "insert_rows": 12,
+    "primary_key": [
+      "Host",
+      "User"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Priv",
+        "mysql_type": "longtext",
+        "nullable": false,
+        "default": "'{}'",
+        "extra": "CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '{}' CHECK (json_valid(`Priv`))"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "gtid_slave_pos",
+    "column_count": 4,
+    "insert_rows": 1,
+    "primary_key": [
+      "domain_id",
+      "sub_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "domain_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "sub_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "server_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "seq_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "help_category",
+    "column_count": 4,
+    "insert_rows": 44,
+    "primary_key": [
+      "help_category_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "help_category_id",
+        "mysql_type": "smallint(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "parent_category_id",
+        "mysql_type": "smallint(5)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "unsigned DEFAULT NULL"
+      },
+      {
+        "name": "url",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "name",
+        "columns": [
+          "name"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "help_keyword",
+    "column_count": 2,
+    "insert_rows": 16,
+    "primary_key": [
+      "help_keyword_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "help_keyword_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "name",
+        "columns": [
+          "name"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "help_relation",
+    "column_count": 2,
+    "insert_rows": 36,
+    "primary_key": [
+      "help_keyword_id",
+      "help_topic_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "help_topic_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "help_keyword_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "help_topic_id",
+        "columns": [
+          "help_topic_id"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "help_topic",
+    "column_count": 6,
+    "insert_rows": 958,
+    "primary_key": [
+      "help_topic_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "help_topic_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "help_category_id",
+        "mysql_type": "smallint(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "description",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "example",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "url",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "name",
+        "columns": [
+          "name"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "holiday",
+    "column_count": 2,
+    "insert_rows": 91,
+    "primary_key": [
+      "date"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "date",
+        "mysql_type": "datetime",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '공휴일 일자'"
+      },
+      {
+        "name": "date_name",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '공휴일 이름'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "hyphen_bank_bin",
+    "column_count": 16,
+    "insert_rows": 137,
+    "primary_key": [
+      "hyphen_bank_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "hyphen_bank_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "payer_number",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '납부자번호'"
+      },
+      {
+        "name": "round_no",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회차번호'"
+      },
+      {
+        "name": "info_code",
+        "mysql_type": "varchar(3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '구분코드'"
+      },
+      {
+        "name": "send_date",
+        "mysql_type": "varchar(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '송신일자'"
+      },
+      {
+        "name": "seq_no",
+        "mysql_type": "varchar(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "bank_code",
+        "mysql_type": "varchar(3)",
+        "nullable": true,
+        "default": "''",
+        "extra": "DEFAULT '' COMMENT '은행코드'"
+      },
+      {
+        "name": "bank_account",
+        "mysql_type": "varchar(16)",
+        "nullable": true,
+        "default": "''",
+        "extra": "DEFAULT '' COMMENT '계좌번호'"
+      },
+      {
+        "name": "req_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청금액'"
+      },
+      {
+        "name": "res_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '촐금금액'"
+      },
+      {
+        "name": "fail_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '실패금액'"
+      },
+      {
+        "name": "result",
+        "mysql_type": "varchar(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '결과값'"
+      },
+      {
+        "name": "error_code",
+        "mysql_type": "varchar(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '결과코드'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "hyphen_bank_code",
+    "column_count": 2,
+    "insert_rows": 158,
+    "primary_key": [
+      "code"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "code",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '결과코드'"
+      },
+      {
+        "name": "message",
+        "mysql_type": "varchar(1000)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '결과메세지'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "index_stats",
+    "column_count": 5,
+    "insert_rows": 0,
+    "primary_key": [
+      "db_name",
+      "table_name",
+      "index_name",
+      "prefix_arity"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "db_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "table_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "index_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "prefix_arity",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "avg_frequency",
+        "mysql_type": "decimal(12,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "innodb_index_stats",
+    "column_count": 8,
+    "insert_rows": 218,
+    "primary_key": [
+      "database_name",
+      "table_name",
+      "index_name",
+      "stat_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "database_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "table_name",
+        "mysql_type": "varchar(199)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "index_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "last_update",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "stat_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "stat_value",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "sample_size",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "unsigned DEFAULT NULL"
+      },
+      {
+        "name": "stat_description",
+        "mysql_type": "varchar(1024)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "innodb_table_stats",
+    "column_count": 6,
+    "insert_rows": 48,
+    "primary_key": [
+      "database_name",
+      "table_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "database_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "table_name",
+        "mysql_type": "varchar(199)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "last_update",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "n_rows",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "clustered_index_size",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "sum_of_other_index_sizes",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "message_auth",
+    "column_count": 5,
+    "insert_rows": 92,
+    "primary_key": [
+      "auth_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "auth_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "email",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이메일'"
+      },
+      {
+        "name": "phone",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '전화번호'"
+      },
+      {
+        "name": "auth_num",
+        "mysql_type": "char(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '인증번호'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "message_template",
+    "column_count": 10,
+    "insert_rows": 8,
+    "primary_key": [
+      "message_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "message_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "msg_key",
+        "mysql_type": "char(2)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 메일 문자 구분(00:문자 01:E-mail)'"
+      },
+      {
+        "name": "msg_code",
+        "mysql_type": "char(2)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 코드 ex) 00:회원가입'"
+      },
+      {
+        "name": "msg_menu",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 대구분'"
+      },
+      {
+        "name": "msg_division",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 구분'"
+      },
+      {
+        "name": "msg_item",
+        "mysql_type": "varchar(30)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 항목'"
+      },
+      {
+        "name": "msg_title",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'SMS 문자:요약 메일:제목'"
+      },
+      {
+        "name": "msg_content",
+        "mysql_type": "mediumtext",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'SMS 내용'"
+      },
+      {
+        "name": "reg_user",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '등록유저이름'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '등록일자'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_advance_contract",
+    "column_count": 10,
+    "insert_rows": 4,
+    "primary_key": [
+      "advance_contract_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "advance_contract_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT '사전심사 번호'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회원번호'"
+      },
+      {
+        "name": "business_period",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사업기간 1년이상'"
+      },
+      {
+        "name": "business_type",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '해외구매 업종 제외'"
+      },
+      {
+        "name": "individual",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '개인 사업자 여부'"
+      },
+      {
+        "name": "sales_amount",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '월 평균 결제액 1,000만원 이상'"
+      },
+      {
+        "name": "user_age",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '만 20세 이상'"
+      },
+      {
+        "name": "success",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신청 자격 확인(성공 여부)'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract",
+    "column_count": 24,
+    "insert_rows": 7,
+    "primary_key": [
+      "mbid"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'MB ID'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '유저 번호'"
+      },
+      {
+        "name": "fintech_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 코드'"
+      },
+      {
+        "name": "product_code",
+        "mysql_type": "char(2)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '머니뱅크 상품 코드'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 신청 상태'"
+      },
+      {
+        "name": "request_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 신청일'"
+      },
+      {
+        "name": "approval_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 신청 승인일'"
+      },
+      {
+        "name": "agree_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 이용 동의일'"
+      },
+      {
+        "name": "contract_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 계약일'"
+      },
+      {
+        "name": "expire_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 계약만료일'"
+      },
+      {
+        "name": "cancel_request_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '중도 해지 신청일'"
+      },
+      {
+        "name": "reg_no_first",
+        "mysql_type": "varchar(30)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '생년월일'"
+      },
+      {
+        "name": "reg_no_second",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주민번호 뒷자리'"
+      },
+      {
+        "name": "sales_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '월매출'"
+      },
+      {
+        "name": "payer_number",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '납부자 번호'"
+      },
+      {
+        "name": "payer_status",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '납부자 번호 상태'"
+      },
+      {
+        "name": "demand_acc_bank_code",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요구불통장 은행코드'"
+      },
+      {
+        "name": "demand_acc_holder",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요구불통장 예금주'"
+      },
+      {
+        "name": "demand_acc_number",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요구불통장 계좌번호'"
+      },
+      {
+        "name": "main_acc_bank_code",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주거래 은행명'"
+      },
+      {
+        "name": "main_acc_holder",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주거래 예금주'"
+      },
+      {
+        "name": "main_acc_number",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주거래 계좌번호'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '머니뱅크 사전심사일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract_certificate",
+    "column_count": 8,
+    "insert_rows": 1,
+    "primary_key": [
+      "mbid"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'MB ID'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '유저 번호'"
+      },
+      {
+        "name": "certificate",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "private_key",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "password",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "expiration_date",
+        "mysql_type": "date",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract_document",
+    "column_count": 20,
+    "insert_rows": 6,
+    "primary_key": [
+      "mbid"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "business_no",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사업자 번호'"
+      },
+      {
+        "name": "business_start_date",
+        "mysql_type": "char(8)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사업 개시일'"
+      },
+      {
+        "name": "tax_type",
+        "mysql_type": "char(2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '과세유형(개인/법인)'"
+      },
+      {
+        "name": "cb_score_current",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CB스코어 - 현재'"
+      },
+      {
+        "name": "cb_score_rank",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CB스코어 - 등수'"
+      },
+      {
+        "name": "cb_score_past",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'CB스코어 - 과거 (6개월)'"
+      },
+      {
+        "name": "debt_status",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '채무불이행 여부'"
+      },
+      {
+        "name": "financial_disorder_status",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '금융질서문란 여부'"
+      },
+      {
+        "name": "public_information_status",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '공공정보 여부'"
+      },
+      {
+        "name": "overdue_status",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '연체 여부'"
+      },
+      {
+        "name": "cb_check",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신용정보 입력 완료 여부'"
+      },
+      {
+        "name": "national_tax_full_payment",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '국세 완납 여부'"
+      },
+      {
+        "name": "local_tax_full_payment",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '지방세 완납 여부'"
+      },
+      {
+        "name": "health_insurance_full_payment",
+        "mysql_type": "bit(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '건강보험 완납 여부'"
+      },
+      {
+        "name": "health_insurance_paid_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '건강보험 납부 총액'"
+      },
+      {
+        "name": "cb_confirm_admin",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신용정보 입력 담당자'"
+      },
+      {
+        "name": "final_confirm_admin",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '최종 입력 담당자'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract_fee",
+    "column_count": 9,
+    "insert_rows": 6,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 번호'"
+      },
+      {
+        "name": "payment_rate",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '지급율'"
+      },
+      {
+        "name": "sales_limit_per_order",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주문건당 한도'"
+      },
+      {
+        "name": "max_outstanding_balance",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '최대 미상환금'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록자'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '마지막 수정자'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract_fee_rates",
+    "column_count": 6,
+    "insert_rows": 17,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "contract_fee_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '계약심사 아이디'"
+      },
+      {
+        "name": "fee_type",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수수료 타입'"
+      },
+      {
+        "name": "fee_rate",
+        "mysql_type": "decimal(4,2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수수료율'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_contract_shop",
+    "column_count": 6,
+    "insert_rows": 12,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '머니뱅크 번호'"
+      },
+      {
+        "name": "contract_shop_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '선정산 신청 쇼핑몰 타입'"
+      },
+      {
+        "name": "contract_shop_id",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '선정산 신청 쇼핑몰 아이디'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_redemption_deposit",
+    "column_count": 7,
+    "insert_rows": 399,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "deposit_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "repayment_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "deposit_date",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "deposit_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "FKcpus1tcnd9vjw2pjy1fidwmw6",
+        "columns": [
+          "repayment_code"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "moneybank_redemption_history",
+    "column_count": 6,
+    "insert_rows": 388,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "cumulative_provision_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "cumulative_repayment_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "outstanding_balance",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "moneybank_redemption_provision",
+    "column_count": 11,
+    "insert_rows": 538,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "request_code",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "provision_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "total_payment_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "total_usage_fee",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "total_provision_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "provision_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UKcke55g9m66chf5wa19jxh0q6f",
+        "columns": [
+          "provision_code"
+        ]
+      },
+      {
+        "name": "FKtqbmdybvyte9ei278m1bv3fkk",
+        "columns": [
+          "request_code"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "moneybank_redemption_repayment",
+    "column_count": 11,
+    "insert_rows": 339,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "repayment_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "repayment_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "repayment_usage_fee",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "remittance_fee",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "balance_provision_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "balance_provision_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UK_f3abcwawtnybytw9kvm9abyy6",
+        "columns": [
+          "repayment_code"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "moneybank_redemption_sales",
+    "column_count": 12,
+    "insert_rows": 2098,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 2,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "request_code",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "sales_code",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "class_code",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "order_no",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "payment_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "usage_fee",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "provision_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "paid_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UKq5mlfdbou5l59bv6pcjw5nhoa",
+        "columns": [
+          "sales_code"
+        ]
+      },
+      {
+        "name": "FK8o6w9h2y2u7pbk21dpy40rkk6",
+        "columns": [
+          "request_code"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "notice",
+    "column_count": 9,
+    "insert_rows": 5,
+    "primary_key": [
+      "notice_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "notice_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT 'faq 번호'"
+      },
+      {
+        "name": "user_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '작성자'"
+      },
+      {
+        "name": "type",
+        "mysql_type": "varchar(15)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '게시글 분류'"
+      },
+      {
+        "name": "title",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '제목'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '내용'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '작성인'"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정인'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "partner",
+    "column_count": 12,
+    "insert_rows": 4,
+    "primary_key": [
+      "partner_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "partner_id",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '사업자등록번호'"
+      },
+      {
+        "name": "partner_code",
+        "mysql_type": "varchar(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '회사번호(협력사코드)'"
+      },
+      {
+        "name": "partner_name",
+        "mysql_type": "varchar(50)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '회사명'"
+      },
+      {
+        "name": "rep_name",
+        "mysql_type": "varchar(50)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '대표자명'"
+      },
+      {
+        "name": "partner_zip",
+        "mysql_type": "varchar(5)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '우편번호'"
+      },
+      {
+        "name": "partner_address",
+        "mysql_type": "varchar(300)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '회사주소'"
+      },
+      {
+        "name": "partner_status",
+        "mysql_type": "varchar(2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상태 (운영 00/ 종료 01)'"
+      },
+      {
+        "name": "partner_type",
+        "mysql_type": "varchar(2)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '업종 구분'"
+      },
+      {
+        "name": "memo",
+        "mysql_type": "varchar(1000)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '메모 형식 게시판'"
+      },
+      {
+        "name": "financing",
+        "mysql_type": "varchar(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 유무'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "update_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "partner_manager",
+    "column_count": 8,
+    "insert_rows": 2,
+    "primary_key": [
+      "manager_type",
+      "partner_code"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "partner_code",
+        "mysql_type": "varchar(255)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '협력사 코드'"
+      },
+      {
+        "name": "manager_type",
+        "mysql_type": "varchar(255)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '직책 구분 (책임자 \"00\" / 담당자 \"01\")'"
+      },
+      {
+        "name": "manager_name",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이름'"
+      },
+      {
+        "name": "manager_rank",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '직급'"
+      },
+      {
+        "name": "manager_email",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이메일'"
+      },
+      {
+        "name": "manager_phone",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '전화번호'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '등록일자'"
+      },
+      {
+        "name": "update_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일자'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "plugin",
+    "column_count": 2,
+    "insert_rows": 0,
+    "primary_key": [
+      "name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "dl",
+        "mysql_type": "varchar(128)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "prizm_items",
+    "column_count": 16,
+    "insert_rows": 26,
+    "primary_key": [
+      "division",
+      "subject_no",
+      "item_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "division",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "subject_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "item_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "item_definition",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_nm",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_weight",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_low1",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_high1",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_low2",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_high2",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_low3",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_high3",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_low4",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_high4",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_low5",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "item_standard_high5",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "prizm_pcs_result",
+    "column_count": 21,
+    "insert_rows": 536,
+    "primary_key": [
+      "pcs_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "pcs_no",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '계약 ID'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회원 번호'"
+      },
+      {
+        "name": "prizm_grade",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '프리즘등급'"
+      },
+      {
+        "name": "prizm_score",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '프리즘점수'"
+      },
+      {
+        "name": "business_period",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '사업기간'"
+      },
+      {
+        "name": "operating_period",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '온라인운영기간'"
+      },
+      {
+        "name": "shop_count",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '운영 쇼핑몰 수'"
+      },
+      {
+        "name": "month_sales_value",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '월 판매 금액'"
+      },
+      {
+        "name": "month_sales_quantity",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '월 판매 수량'"
+      },
+      {
+        "name": "month_settlement_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '월 정산액'"
+      },
+      {
+        "name": "month_settlement_period",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주문정산회수기간'"
+      },
+      {
+        "name": "month_settlement_to_sales_rate",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '매풀대비 정산율'"
+      },
+      {
+        "name": "month_promotion_rate",
+        "mysql_type": "double(11,3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '매출 판촉 비용'"
+      },
+      {
+        "name": "month_delivery_period",
+        "mysql_type": "double(11,3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '배송 완료 기간'"
+      },
+      {
+        "name": "month_return_rate",
+        "mysql_type": "double(11,3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '구매거부율'"
+      },
+      {
+        "name": "cb_score_current",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신용평가 점수'"
+      },
+      {
+        "name": "cb_score_rank",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신용평가 등수'"
+      },
+      {
+        "name": "cb_score_change_rate",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '신용평가 변화율'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "prizm_pms_result",
+    "column_count": 17,
+    "insert_rows": 44,
+    "primary_key": [
+      "pms_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "pms_no",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "pms_grade",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'pms등급'"
+      },
+      {
+        "name": "pms_score",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'pms점수'"
+      },
+      {
+        "name": "sales_total_score",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '매출 리스크 점수 총합'"
+      },
+      {
+        "name": "manage_total_score",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '운영 리스크 점수 총합'"
+      },
+      {
+        "name": "bsvc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '격주매출액변화'"
+      },
+      {
+        "name": "bsqc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '격주판매건수변화'"
+      },
+      {
+        "name": "baupc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주간단위매출액변화'"
+      },
+      {
+        "name": "bdsr",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '격주동일ID구매율'"
+      },
+      {
+        "name": "bprc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '격주판촉비율'"
+      },
+      {
+        "name": "brrc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '격주구매거부율'"
+      },
+      {
+        "name": "bstsc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주가매출대비정산율'"
+      },
+      {
+        "name": "bdltc",
+        "mysql_type": "double(11,3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주간배송준비시간'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "proc",
+    "column_count": 21,
+    "insert_rows": 3,
+    "primary_key": [
+      "db",
+      "name",
+      "type"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "type",
+        "mysql_type": "enum('FUNCTION','PROCEDURE','PACKAGE','PACKAGE BODY')",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "specific_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "language",
+        "mysql_type": "enum('SQL')",
+        "nullable": false,
+        "default": "'SQL'",
+        "extra": "NOT NULL DEFAULT 'SQL'"
+      },
+      {
+        "name": "sql_data_access",
+        "mysql_type": "enum('CONTAINS_SQL','NO_SQL','READS_SQL_DATA','MODIFIES_SQL_DATA')",
+        "nullable": false,
+        "default": "'CONTAINS_SQL'",
+        "extra": "NOT NULL DEFAULT 'CONTAINS_SQL'"
+      },
+      {
+        "name": "is_deterministic",
+        "mysql_type": "enum('YES','NO')",
+        "nullable": false,
+        "default": "'NO'",
+        "extra": "NOT NULL DEFAULT 'NO'"
+      },
+      {
+        "name": "security_type",
+        "mysql_type": "enum('INVOKER','DEFINER')",
+        "nullable": false,
+        "default": "'DEFINER'",
+        "extra": "NOT NULL DEFAULT 'DEFINER'"
+      },
+      {
+        "name": "param_list",
+        "mysql_type": "blob",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "returns",
+        "mysql_type": "longblob",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "body",
+        "mysql_type": "longblob",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "definer",
+        "mysql_type": "char(141)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "created",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "modified",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "'0000-00-00 00:00:00'",
+        "extra": "NOT NULL DEFAULT '0000-00-00 00:00:00'"
+      },
+      {
+        "name": "sql_mode",
+        "mysql_type": "set('REAL_AS_FLOAT','PIPES_AS_CONCAT','ANSI_QUOTES','IGNORE_SPACE','IGNORE_BAD_TABLE_OPTIONS','ONLY_FULL_GROUP_BY','NO_UNSIGNED_SUBTRACTION','NO_DIR_IN_CREATE','POSTGRESQL','ORACLE','MSSQL','DB2','MAXDB','NO_KEY_OPTIONS','NO_TABLE_OPTIONS','NO_FIELD_OPTIONS','MYSQL323','MYSQL40','ANSI','NO_AUTO_VALUE_ON_ZERO','NO_BACKSLASH_ESCAPES','STRICT_TRANS_TABLES','STRICT_ALL_TABLES','NO_ZERO_IN_DATE','NO_ZERO_DATE','INVALID_DATES','ERROR_FOR_DIVISION_BY_ZERO','TRADITIONAL','NO_AUTO_CREATE_USER','HIGH_NOT_PRECEDENCE','NO_ENGINE_SUBSTITUTION','PAD_CHAR_TO_FULL_LENGTH','EMPTY_STRING_IS_NULL','SIMULTANEOUS_ASSIGNMENT','TIME_ROUND_FRACTIONAL')",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "comment",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "character_set_client",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "collation_connection",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "db_collation",
+        "mysql_type": "char(32)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL"
+      },
+      {
+        "name": "body_utf8",
+        "mysql_type": "longblob",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "aggregate",
+        "mysql_type": "enum('NONE','GROUP')",
+        "nullable": false,
+        "default": "'NONE'",
+        "extra": "NOT NULL DEFAULT 'NONE'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "procs_priv",
+    "column_count": 8,
+    "insert_rows": 0,
+    "primary_key": [
+      "Host",
+      "Db",
+      "User",
+      "Routine_name",
+      "Routine_type"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Routine_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Routine_type",
+        "mysql_type": "enum('FUNCTION','PROCEDURE','PACKAGE','PACKAGE BODY')",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "Grantor",
+        "mysql_type": "char(141)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Proc_priv",
+        "mysql_type": "set('Execute','Alter Routine','Grant')",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Timestamp",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    ],
+    "keys": [
+      {
+        "name": "Grantor",
+        "columns": [
+          "Grantor"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "promotion",
+    "column_count": 16,
+    "insert_rows": 1,
+    "primary_key": [
+      "promo_code"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "promo_code",
+        "mysql_type": "varchar(255)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '연계코드(ex.22NAACBCI01)'"
+      },
+      {
+        "name": "promo_name",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '연계코드명'"
+      },
+      {
+        "name": "promo_target",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주요 대상(신규:N, 큐빅회원:C, MB회원: M, 휴면회원:L, 제휴사회원:A, 기타:O)'"
+      },
+      {
+        "name": "partner_code",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '협력사 코드(ex. BBOF)'"
+      },
+      {
+        "name": "charges",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요금제'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상태 (운영 : Y / 종료 : N)'"
+      },
+      {
+        "name": "period",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '무료 기간'"
+      },
+      {
+        "name": "period_unit",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '무료 기간 단위 (M:개월/W:주)'"
+      },
+      {
+        "name": "sub_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '제공ID수'"
+      },
+      {
+        "name": "discount_rate",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '할인율'"
+      },
+      {
+        "name": "discount_amount",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '할인금액'"
+      },
+      {
+        "name": "promo_detail",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '기타 혜택'"
+      },
+      {
+        "name": "start_date",
+        "mysql_type": "date",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '시작일'"
+      },
+      {
+        "name": "expire_date",
+        "mysql_type": "date",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '종료일'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": false,
+        "default": "current_timestamp(6)",
+        "extra": "NOT NULL DEFAULT current_timestamp(6) COMMENT '등록일'"
+      },
+      {
+        "name": "update_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "proxies_priv",
+    "column_count": 7,
+    "insert_rows": 2,
+    "primary_key": [
+      "Host",
+      "User",
+      "Proxied_host",
+      "Proxied_user"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Proxied_host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Proxied_user",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "With_grant",
+        "mysql_type": "tinyint(1)",
+        "nullable": false,
+        "default": "0",
+        "extra": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "Grantor",
+        "mysql_type": "char(141)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Timestamp",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    ],
+    "keys": [
+      {
+        "name": "Grantor",
+        "columns": [
+          "Grantor"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "qna",
+    "column_count": 10,
+    "insert_rows": 1,
+    "primary_key": [
+      "qna_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "qna_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT 'qna 번호'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '작성자'"
+      },
+      {
+        "name": "type",
+        "mysql_type": "varchar(15)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '게시글 분류'"
+      },
+      {
+        "name": "title",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '제목'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '내용'"
+      },
+      {
+        "name": "visibility",
+        "mysql_type": "bit(1)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '공개여부'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '작성인'"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정인'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "qna_reply",
+    "column_count": 8,
+    "insert_rows": 1,
+    "primary_key": [
+      "reply_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "reply_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT 'qna_reply 번호'"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '작성자'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "text",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '내용'"
+      },
+      {
+        "name": "qna_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '원글 번호'"
+      },
+      {
+        "name": "created_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "last_modified_by",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "roles_mapping",
+    "column_count": 4,
+    "insert_rows": 0,
+    "primary_key": [],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Role",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Admin_option",
+        "mysql_type": "enum('N','Y')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT 'N'"
+      }
+    ],
+    "keys": [
+      {
+        "name": "Host",
+        "columns": [
+          "Host",
+          "User",
+          "Role"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "sale",
+    "column_count": 50,
+    "insert_rows": 2390,
+    "primary_key": [
+      "sales_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "sales_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "shop_type",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '쇼핑몰'"
+      },
+      {
+        "name": "shop_id",
+        "mysql_type": "varchar(30)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'seller id'"
+      },
+      {
+        "name": "order_no",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주문번호'"
+      },
+      {
+        "name": "product_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상품번호'"
+      },
+      {
+        "name": "option_no",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '옵션번호'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주문상태'"
+      },
+      {
+        "name": "ordered_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주문일자'"
+      },
+      {
+        "name": "paid_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '결제일자'"
+      },
+      {
+        "name": "shipment_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '발송일(발송처리일)'"
+      },
+      {
+        "name": "delivered_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '배송완료일'"
+      },
+      {
+        "name": "confirm_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '구매확정일'"
+      },
+      {
+        "name": "settle_estimate_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산예정일'"
+      },
+      {
+        "name": "settle_complete_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산완료일'"
+      },
+      {
+        "name": "product_name",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상품명'"
+      },
+      {
+        "name": "option_name",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '옵션명'"
+      },
+      {
+        "name": "quantity",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '수량'"
+      },
+      {
+        "name": "sales_unit_price",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매단가'"
+      },
+      {
+        "name": "sales_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매금액'"
+      },
+      {
+        "name": "discount_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '총 할인금액'"
+      },
+      {
+        "name": "payment_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '총 결제금액'"
+      },
+      {
+        "name": "settle_estimate_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '정산예정금액'"
+      },
+      {
+        "name": "settlement_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '정산금액'"
+      },
+      {
+        "name": "pcc",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '개인통관번호'"
+      },
+      {
+        "name": "shipment_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '배송번호'"
+      },
+      {
+        "name": "seller_product_no",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '판매자 등록 상품 번호'"
+      },
+      {
+        "name": "canceled",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/주문취소여부'"
+      },
+      {
+        "name": "orderer_id",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '주문자 ID'"
+      },
+      {
+        "name": "orderer_name",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/주문자'"
+      },
+      {
+        "name": "shipment_box_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '11번가/묶음배송번호'"
+      },
+      {
+        "name": "option_sales_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '11번가/옵션상품결제금액'"
+      },
+      {
+        "name": "delivery_method",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '11번가/배송방식'"
+      },
+      {
+        "name": "deduction_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT 'esm/판매자공제금액'"
+      },
+      {
+        "name": "oversea_delivery_yn",
+        "mysql_type": "char(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'esm/해외배송여부'"
+      },
+      {
+        "name": "shipping_policy",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'esm/발송정책'"
+      },
+      {
+        "name": "instant_discount_coupon",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '즉시할인 쿠폰'"
+      },
+      {
+        "name": "downloadable_coupon",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '다운로드 쿠폰'"
+      },
+      {
+        "name": "product_instant_discount_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '상품별 즉시 할인 금액'"
+      },
+      {
+        "name": "product_discount_coupon_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '상품별 상품 할인 쿠폰 금액'"
+      },
+      {
+        "name": "product_purchase_discount_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '상품별 복수 구매 할인 금액'"
+      },
+      {
+        "name": "seller_discount_coupon_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매자 부담 상품 할인 쿠폰 금액'"
+      },
+      {
+        "name": "seller_purchase_discount_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매자 부담 복수 구매 할인 금액'"
+      },
+      {
+        "name": "seller_discounts_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매자 할인'"
+      },
+      {
+        "name": "seller_purchase_discount_type",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '판매자 부담 복수 구매 할인 타입'"
+      },
+      {
+        "name": "shopping_mall_discount_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '쇼핑몰 자체 지원 할인'"
+      },
+      {
+        "name": "delivery_charges",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '기본배송비'"
+      },
+      {
+        "name": "delivery_charges2",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '추가배송비'"
+      },
+      {
+        "name": "order_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "0",
+        "extra": "DEFAULT 0 COMMENT '총 주문금액'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UKiupekg46a2m5onek9sqjnk5xe",
+        "columns": [
+          "shop_type",
+          "shop_id",
+          "order_no",
+          "product_no",
+          "option_no"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "sale_return",
+    "column_count": 25,
+    "insert_rows": 775,
+    "primary_key": [
+      "returns_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "returns_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "shop_type",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "shop_id",
+        "mysql_type": "varchar(30)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '쇼핑몰 ID'"
+      },
+      {
+        "name": "order_no",
+        "mysql_type": "varchar(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '주문번호'"
+      },
+      {
+        "name": "product_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '11번가/ 상품번호'"
+      },
+      {
+        "name": "option_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '옵션번호'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '반품/환불 상태'"
+      },
+      {
+        "name": "payment_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '결제금액'"
+      },
+      {
+        "name": "receipt_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 반품/환불 번호'"
+      },
+      {
+        "name": "claim_status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 반품/환불 세부 상태'"
+      },
+      {
+        "name": "payment_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 결제번호'"
+      },
+      {
+        "name": "receipt_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 취소유형'"
+      },
+      {
+        "name": "total_cancel_count",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 총 취소수량'"
+      },
+      {
+        "name": "return_delivery_no",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 반품배송번호'"
+      },
+      {
+        "name": "release_stop_status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 출고중지처리상태'"
+      },
+      {
+        "name": "pre_refund",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 선환불여부'"
+      },
+      {
+        "name": "complete_confirm_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 출고중지처리완료'"
+      },
+      {
+        "name": "cancel_count",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 취소수량'"
+      },
+      {
+        "name": "order_count",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 주문수량'"
+      },
+      {
+        "name": "release_status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 상품출고여부'"
+      },
+      {
+        "name": "reason_code",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쿠팡/ 반품사유코드'"
+      },
+      {
+        "name": "request_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '신청일'"
+      },
+      {
+        "name": "claim_complete_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '11번가/ 취소완료일'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UKt8taoae5ijxayv5l2ka3t2yhx",
+        "columns": [
+          "shop_type",
+          "shop_id",
+          "order_no",
+          "product_no",
+          "option_no"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "servers",
+    "column_count": 9,
+    "insert_rows": 0,
+    "primary_key": [
+      "Server_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Server_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Host",
+        "mysql_type": "varchar(2048)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Username",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Password",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Port",
+        "mysql_type": "int(4)",
+        "nullable": false,
+        "default": "0",
+        "extra": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "Socket",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Wrapper",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Owner",
+        "mysql_type": "varchar(512)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "settlement",
+    "column_count": 21,
+    "insert_rows": 469,
+    "primary_key": [
+      "settlements_id"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "settlements_id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "shop_type",
+        "mysql_type": "varchar(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "shop_id",
+        "mysql_type": "varchar(30)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '쇼핑몰 ID'"
+      },
+      {
+        "name": "settlement_type",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산유형'"
+      },
+      {
+        "name": "settlement_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산(예정)일'"
+      },
+      {
+        "name": "total_sale",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '총 판매액'"
+      },
+      {
+        "name": "service_fee",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '판매 수수료'"
+      },
+      {
+        "name": "settlement_target_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산 대상액'"
+      },
+      {
+        "name": "settlement_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산 지급액'"
+      },
+      {
+        "name": "pending_released_amount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '보류(해제) 금액'"
+      },
+      {
+        "name": "seller_discount_coupon",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '즉시할인 쿠폰'"
+      },
+      {
+        "name": "downloadable_coupon",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '다운로드 쿠폰'"
+      },
+      {
+        "name": "seller_service_fee",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '판매자 서비스 이용료(서버 이용료)'"
+      },
+      {
+        "name": "store_fee_discount",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '셀러 스토어 이용료 할인 금액'"
+      },
+      {
+        "name": "debt_of_last_week",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '저번주 채권'"
+      },
+      {
+        "name": "bank_account_holder",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '예금주'"
+      },
+      {
+        "name": "bank_name",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '은행명'"
+      },
+      {
+        "name": "bank_account",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '정산대급 입금 계좌번호'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(7)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '지급 상태(DONE : 완료/ SUBJECT: 예정)'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UK97tkrs0vw3rcvkc907o4iljc3",
+        "columns": [
+          "shop_type",
+          "shop_id",
+          "settlement_type",
+          "settlement_date"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "shop_accounts",
+    "column_count": 14,
+    "insert_rows": 19,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '유저번호'"
+      },
+      {
+        "name": "shop_type",
+        "mysql_type": "varchar(255)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰'"
+      },
+      {
+        "name": "shop_id",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰ID'"
+      },
+      {
+        "name": "shop_account_id",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰 유저 아이디'"
+      },
+      {
+        "name": "shop_account_password",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '쇼핑몰 유저 비밀번호'"
+      },
+      {
+        "name": "vendor_id",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '업체코드'"
+      },
+      {
+        "name": "api_key",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'api key'"
+      },
+      {
+        "name": "api_secret_key",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT 'api secret key'"
+      },
+      {
+        "name": "settlement",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      },
+      {
+        "name": "status",
+        "mysql_type": "char(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'api 연결 상태'"
+      },
+      {
+        "name": "del_yn",
+        "mysql_type": "char(1)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '삭제유무'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "current_timestamp(6)",
+        "extra": "DEFAULT current_timestamp(6)"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime(6)",
+        "nullable": true,
+        "default": "current_timestamp(6)",
+        "extra": "DEFAULT current_timestamp(6)"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "site_visitor",
+    "column_count": 6,
+    "insert_rows": 253,
+    "primary_key": [
+      "no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "today_visitor",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '당일 총 방문유저'"
+      },
+      {
+        "name": "current_month_visitor",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이번달 총 방문유저'"
+      },
+      {
+        "name": "previous_month_visitor",
+        "mysql_type": "int(11)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '지난달 총 방문유저'"
+      },
+      {
+        "name": "date",
+        "mysql_type": "date",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '저장 기준날짜'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "table_stats",
+    "column_count": 3,
+    "insert_rows": 0,
+    "primary_key": [
+      "db_name",
+      "table_name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "db_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "table_name",
+        "mysql_type": "varchar(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "COLLATE utf8_bin NOT NULL"
+      },
+      {
+        "name": "cardinality",
+        "mysql_type": "bigint(21)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "unsigned DEFAULT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "tables_priv",
+    "column_count": 8,
+    "insert_rows": 5,
+    "primary_key": [
+      "Host",
+      "Db",
+      "User",
+      "Table_name"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "Host",
+        "mysql_type": "char(60)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Db",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "User",
+        "mysql_type": "char(80)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Table_name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Grantor",
+        "mysql_type": "char(141)",
+        "nullable": false,
+        "default": "''",
+        "extra": "COLLATE utf8_bin NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Timestamp",
+        "mysql_type": "timestamp",
+        "nullable": false,
+        "default": "current_timestamp()",
+        "extra": "NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      },
+      {
+        "name": "Table_priv",
+        "mysql_type": "set('Select','Insert','Update','Delete','Create','Drop','Grant','References','Index','Alter','Create View','Show view','Trigger','Delete versioning rows')",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT ''"
+      },
+      {
+        "name": "Column_priv",
+        "mysql_type": "set('Select','Insert','Update','References')",
+        "nullable": false,
+        "default": "''",
+        "extra": "CHARACTER SET utf8 NOT NULL DEFAULT ''"
+      }
+    ],
+    "keys": [
+      {
+        "name": "Grantor",
+        "columns": [
+          "Grantor"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "ticker",
+    "column_count": 16,
+    "insert_rows": 2036608,
+    "primary_key": [
+      "ticker_id"
+    ],
+    "key_count": 2,
+    "columns": [
+      {
+        "name": "ticker_id",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "event_time",
+        "mysql_type": "varchar(14)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '수집시간'"
+      },
+      {
+        "name": "symbol",
+        "mysql_type": "varchar(200)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '코인 심볼'"
+      },
+      {
+        "name": "event_type",
+        "mysql_type": "char(3)",
+        "nullable": false,
+        "default": "'1H'",
+        "extra": "NOT NULL DEFAULT '1H' COMMENT 'D:일, H:시간, M:분'"
+      },
+      {
+        "name": "name",
+        "mysql_type": "varchar(200)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '코인명'"
+      },
+      {
+        "name": "market_price",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '마켓 현재 최고가'"
+      },
+      {
+        "name": "bithumb_price",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '빗썸 시가'"
+      },
+      {
+        "name": "bithumb_traded",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '빗썸 거래량'"
+      },
+      {
+        "name": "upbit_price",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '업비트 시가'"
+      },
+      {
+        "name": "upbit_traded",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '업비트 거래량'"
+      },
+      {
+        "name": "coinone_price",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '코인원 시가'"
+      },
+      {
+        "name": "coinone_traded",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '코인원 거래량'"
+      },
+      {
+        "name": "korbit_price",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '코빗 시가'"
+      },
+      {
+        "name": "korbit_traded",
+        "mysql_type": "decimal(22,4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '코빗 거래량'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": [
+      {
+        "name": "UK_Event_Time_Type_Symbol",
+        "columns": [
+          "event_time",
+          "symbol",
+          "event_type"
+        ]
+      },
+      {
+        "name": "symbol_event_type_reg_date",
+        "columns": [
+          "symbol",
+          "event_type",
+          "reg_date"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "time_zone",
+    "column_count": 2,
+    "insert_rows": 0,
+    "primary_key": [
+      "Time_zone_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Time_zone_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL AUTO_INCREMENT"
+      },
+      {
+        "name": "Use_leap_seconds",
+        "mysql_type": "enum('Y','N')",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "NOT NULL DEFAULT 'N'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "time_zone_leap_second",
+    "column_count": 2,
+    "insert_rows": 0,
+    "primary_key": [
+      "Transition_time"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Transition_time",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "Correction",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "time_zone_name",
+    "column_count": 2,
+    "insert_rows": 0,
+    "primary_key": [
+      "Name"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Name",
+        "mysql_type": "char(64)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "Time_zone_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "time_zone_transition",
+    "column_count": 3,
+    "insert_rows": 0,
+    "primary_key": [
+      "Time_zone_id",
+      "Transition_time"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Time_zone_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "Transition_time",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "Transition_type_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "time_zone_transition_type",
+    "column_count": 5,
+    "insert_rows": 0,
+    "primary_key": [
+      "Time_zone_id",
+      "Transition_type_id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "Time_zone_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "Transition_type_id",
+        "mysql_type": "int(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "unsigned NOT NULL"
+      },
+      {
+        "name": "Offset",
+        "mysql_type": "int(11)",
+        "nullable": false,
+        "default": "0",
+        "extra": "NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "Is_DST",
+        "mysql_type": "tinyint(3)",
+        "nullable": false,
+        "default": "0",
+        "extra": "unsigned NOT NULL DEFAULT 0"
+      },
+      {
+        "name": "Abbreviation",
+        "mysql_type": "char(8)",
+        "nullable": false,
+        "default": "''",
+        "extra": "NOT NULL DEFAULT ''"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "TRADE_REQUEST_BIN",
+    "column_count": 21,
+    "insert_rows": 4142,
+    "primary_key": [
+      "REQ_DATE",
+      "BANK_CODE",
+      "COMP_CODE",
+      "SEQ_NO"
+    ],
+    "key_count": 1,
+    "columns": [
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT 'mbid'"
+      },
+      {
+        "name": "REQ_TYPE",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사용 타입'"
+      },
+      {
+        "name": "REQ_DATE",
+        "mysql_type": "char(8)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요청일자(YYYYMMDD)'"
+      },
+      {
+        "name": "REQ_TIME",
+        "mysql_type": "char(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '요청시간(HHMMSS)'"
+      },
+      {
+        "name": "SVC_TYPE",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '서비스타입'"
+      },
+      {
+        "name": "BANK_CODE",
+        "mysql_type": "char(3)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '은행코드'"
+      },
+      {
+        "name": "COMP_CODE",
+        "mysql_type": "char(8)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '업체코드'"
+      },
+      {
+        "name": "SEQ_NO",
+        "mysql_type": "char(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '전문 일련번호 COMP_CODE+BANK_CODE 기준으로 2000001번부터 매일 채번'"
+      },
+      {
+        "name": "MSG_CODE",
+        "mysql_type": "char(7)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '메세지코드+업무구분코드'"
+      },
+      {
+        "name": "SEND_FLAG",
+        "mysql_type": "char(1)",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "NOT NULL DEFAULT 'N' COMMENT '초기값: N, 정상수신: Y, 접속실패:C, Timeout: T 응답수신실패:F'"
+      },
+      {
+        "name": "RECV_FLAG",
+        "mysql_type": "char(1)",
+        "nullable": false,
+        "default": "'N'",
+        "extra": "NOT NULL DEFAULT 'N' COMMENT '응답수신여부(초기값:N)'"
+      },
+      {
+        "name": "SEND_DATE",
+        "mysql_type": "char(8)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '송신일자(YYYYMMDD)'"
+      },
+      {
+        "name": "SEND_TIME",
+        "mysql_type": "char(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '송신시간(HHMMSS) 초기값 null'"
+      },
+      {
+        "name": "RECV_DATE",
+        "mysql_type": "char(8)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수신일자(YYYYMMDD) 초기값 null'"
+      },
+      {
+        "name": "RECV_TIME",
+        "mysql_type": "char(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수신시간(HHMMSS) 초기값 null'"
+      },
+      {
+        "name": "SEND_MSG",
+        "mysql_type": "varchar(2100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '요청 전문'"
+      },
+      {
+        "name": "RECV_MSG",
+        "mysql_type": "varchar(2100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '응답전문 초기값 null'"
+      },
+      {
+        "name": "BIN_DATA",
+        "mysql_type": "mediumblob",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '증빙자료'"
+      },
+      {
+        "name": "PROCESS_STATUS",
+        "mysql_type": "varchar(7)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '처리 상태'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "timestamp",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "NULL DEFAULT NULL"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "timestamp",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "NULL DEFAULT NULL"
+      }
+    ],
+    "keys": [
+      {
+        "name": "TRADE_REQUEST_BIN_PK",
+        "columns": [
+          "REQ_DATE",
+          "BANK_CODE",
+          "COMP_CODE",
+          "SEQ_NO"
+        ]
+      }
+    ]
+  },
+  {
+    "table": "trade_result_inquiry",
+    "column_count": 23,
+    "insert_rows": 2073,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT 'id'"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '머니뱅크 아이디'"
+      },
+      {
+        "name": "send_date",
+        "mysql_type": "char(8)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '전송일자'"
+      },
+      {
+        "name": "send_time",
+        "mysql_type": "char(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '전송시간'"
+      },
+      {
+        "name": "svc_type",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '서비스타입'"
+      },
+      {
+        "name": "message_code",
+        "mysql_type": "char(4)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '메시지 코드'"
+      },
+      {
+        "name": "business_class_code",
+        "mysql_type": "char(4)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '메시지 코드'"
+      },
+      {
+        "name": "processing_result",
+        "mysql_type": "char(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '처리결과'"
+      },
+      {
+        "name": "full_text_number",
+        "mysql_type": "char(6)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '전문번호'"
+      },
+      {
+        "name": "original_processing_result",
+        "mysql_type": "char(4)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '원거래 처리결과'"
+      },
+      {
+        "name": "original_full_text_number",
+        "mysql_type": "char(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '원거래 전문번호'"
+      },
+      {
+        "name": "payer_number",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '납부자번호'"
+      },
+      {
+        "name": "withdrawal_bank_code",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '출금은행코드'"
+      },
+      {
+        "name": "withdrawal_account_number",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '출금계좌번호'"
+      },
+      {
+        "name": "deposit_bank_code",
+        "mysql_type": "char(3)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '입금은행코드'"
+      },
+      {
+        "name": "deposit_account_number",
+        "mysql_type": "varchar(100)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '입금계좌번호'"
+      },
+      {
+        "name": "result_amount",
+        "mysql_type": "int(13)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '금액'"
+      },
+      {
+        "name": "result_fee",
+        "mysql_type": "int(9)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수수료'"
+      },
+      {
+        "name": "payment_number",
+        "mysql_type": "varchar(15)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '지급번호'"
+      },
+      {
+        "name": "transfer_time",
+        "mysql_type": "char(6)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '이체시각'"
+      },
+      {
+        "name": "processing_status",
+        "mysql_type": "varchar(7)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '처리결과 상태'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "timestamp",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "NULL DEFAULT NULL COMMENT '등록일자'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "timestamp",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "NULL DEFAULT NULL COMMENT '수정일자'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "users",
+    "column_count": 18,
+    "insert_rows": 45,
+    "primary_key": [
+      "user_no"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "user_no",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL AUTO_INCREMENT COMMENT '회원번호'"
+      },
+      {
+        "name": "email",
+        "mysql_type": "varchar(50)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '아이디'"
+      },
+      {
+        "name": "password",
+        "mysql_type": "varchar(100)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '비밀번호'"
+      },
+      {
+        "name": "user_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '유저 타입'"
+      },
+      {
+        "name": "name",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회원명'"
+      },
+      {
+        "name": "phone",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '폰번호'"
+      },
+      {
+        "name": "zip_code",
+        "mysql_type": "char(5)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회사 우편번호'"
+      },
+      {
+        "name": "address",
+        "mysql_type": "varchar(300)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회사 주소'"
+      },
+      {
+        "name": "biz_num",
+        "mysql_type": "char(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사업자등록번호'"
+      },
+      {
+        "name": "biz_name",
+        "mysql_type": "varchar(50)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회사명'"
+      },
+      {
+        "name": "biz_setup_date",
+        "mysql_type": "varchar(8)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '회사 설립일'"
+      },
+      {
+        "name": "biz_type",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '사업자 유형'"
+      },
+      {
+        "name": "sectors",
+        "mysql_type": "varchar(30)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '업종(주요판매품목)'"
+      },
+      {
+        "name": "partner_code",
+        "mysql_type": "varchar(10)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '파트너 번호'"
+      },
+      {
+        "name": "fintech_id",
+        "mysql_type": "bigint(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '자금조달사 코드'"
+      },
+      {
+        "name": "last_login_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '최근 접속일'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      },
+      {
+        "name": "modified_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '수정일'"
+      }
+    ],
+    "keys": []
+  },
+  {
+    "table": "warning",
+    "column_count": 5,
+    "insert_rows": 0,
+    "primary_key": [
+      "id"
+    ],
+    "key_count": 0,
+    "columns": [
+      {
+        "name": "id",
+        "mysql_type": "bigint(20)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL"
+      },
+      {
+        "name": "mbid",
+        "mysql_type": "char(10)",
+        "nullable": false,
+        "default": null,
+        "extra": "NOT NULL COMMENT '머니뱅크 id'"
+      },
+      {
+        "name": "content",
+        "mysql_type": "mediumtext",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '누적 지급액'"
+      },
+      {
+        "name": "status",
+        "mysql_type": "varchar(20)",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '상태'"
+      },
+      {
+        "name": "reg_date",
+        "mysql_type": "datetime",
+        "nullable": true,
+        "default": "NULL",
+        "extra": "DEFAULT NULL COMMENT '등록일'"
+      }
+    ],
+    "keys": []
+  }
+]

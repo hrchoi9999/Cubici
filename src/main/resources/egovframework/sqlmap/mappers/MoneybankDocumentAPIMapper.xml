@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.moneybank.api.mapper.MoneybankDocumentAPIMapper">
+	<select id = "findAddress" parameterType = "String" resultType = "hashmap">
+		SELECT
+			sido,
+			sigg,
+			IF(SUBSTRING_INDEX(roadStr, ' ', -1) like '(%)', TRIM(replace(roadStr, SUBSTRING_INDEX(roadStr, ' ', -1), '')) , roadStr) AS roadStr
+		FROM(
+			SELECT
+				SUBSTRING_INDEX(FIRM_ADDR, ' ', 1) AS sido,
+				SUBSTRING_INDEX(SUBSTRING_INDEX(FIRM_ADDR, ' ', 2), ' ', -1) AS sigg,
+				TRIM(SUBSTRING_INDEX(SUBSTRING(FIRM_ADDR, CHAR_LENGTH(SUBSTRING_INDEX(FIRM_ADDR, ' ', 2))+1), ',', 1)) AS roadStr
+			FROM CBCI_USER
+			WHERE USER_CODE = #{value}) AS result_tb
+	</select>
+	
+	<insert id = "inputDocument" parameterType = "hashmap">
+		INSERT INTO MONEYBANK_SUB_CHECK (
+			mbid,
+			biz_no,
+			biz_start_date,
+			tax_type,
+			national_tax_full_payment,
+			local_tax_full_payment,
+			health_insurance_full_payment,
+			health_insurance_paid_amount,
+			input_date
+		) VALUES (
+			#{mbid},
+			#{biz_no},
+			#{biz_start_date},
+			#{tax_type},
+			#{national_tax_full_payment},
+			#{local_tax_full_payment},
+			#{health_insurance_full_payment},
+			#{health_insurance_paid_amount},
+			now()
+		)
+	</insert>
+
+	<select id="getRegNo" parameterType="String" resultType="hashmap">
+		SELECT
+			   reg_no_first
+			 , reg_no_second
+		FROM MONEYBANK_USER_REQUEST
+		WHERE mbid = #{mbid}
+	</select>
+
+	<select id="getFirmInfo" parameterType="String" resultType="hashmap">
+		SELECT
+		      FIRM_NM
+		FROM CBCI_USER cu
+		 LEFT JOIN MONEYBANK_USER_REQUEST mur ON cu.USER_CODE = mur.user_code
+		WHERE mbid = #{mbid}
+	</select>
+</mapper>

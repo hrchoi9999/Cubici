@@ -1,0 +1,46 @@
+stages:
+- test
+- build
+- deploy
+
+devCubici-test:
+  rules:
+    - if: '$CI_BUILD_REF_SLUG =~ /^devcubici/'
+      when: always
+  stage: test
+  script:
+    - echo "maven test start"
+    - echo $CI_BUILD_REF_SLUG
+    - ${CI_MAVEN_HOME}/bin/mvn test
+    - echo "maven test end"
+  tags:
+    - Cubici-runner
+    
+devCubici-build:
+  rules:
+    - if: '$CI_BUILD_REF_SLUG =~ /^devcubici/'
+      when: on_success
+  stage: build
+  script:
+    - echo "maven build start"
+    - echo $(pwd)
+    - ${CI_MAVEN_HOME}/bin/mvn -Dmaven.test.skip=true clean package
+    - cd target
+    - cp -p ${CUBICI_TARGET_WAR_FILE} ${RUNNER_WAR_FOLDER}/${CUBICI_TARGET_WAR_FILE}
+    - echo "maven build end"
+  tags:
+    - Cubici-runner
+    
+devCubici-deploy:
+  rules:
+    - if: '$CI_BUILD_REF_SLUG =~ /^devcubici/'
+      when: manual
+  stage: deploy
+  script:
+    - echo "deploy start"
+    - rsync -avzurt ${RUNNER_WAR_FOLDER}/${CUBICI_TARGET_WAR_FILE} ${DEVCUBICI_DEPLOY_SERVER_IP}:${DEVCUBICI_DEPLOY_SERVER_WAR_LOCATION}/cubici.war
+    - rsync -avzurt ${RUNNER_WAR_FOLDER}/${CUBICI_TARGET_WAR_FILE} ${DEVCUBICI_DEPLOY_SERVER_IP}:${DEVCUBICI_DEPLOY_SERVER_WAR_BACKUP}/$(date +"%Y-%m-%d_%H:%M:%S")_${CUBICI_TARGET_WAR_FILE}
+    - ssh ${DEVCUBICI_DEPLOY_SERVER_IP} "${DEVCUBICI_DEPLOY_SERVER_ENVIRONMENT};cd ${DEVCUBICI_DEPLOY_SERVER_WAR_LOCATION};jar -xvf ${DEVCUBICI_DEPLOY_SERVER_WAR_LOCATION}/cubici.war;${DEVCUBICI_DEPLOY_SERVER_TOMCAT_LOCATION}/shutdown.sh; sleep 5; ${DEVCUBICI_DEPLOY_SERVER_TOMCAT_LOCATION}/startup.sh"
+    - echo "deploy end"
+  tags:
+    - Cubici-runner

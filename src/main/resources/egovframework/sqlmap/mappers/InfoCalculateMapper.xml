@@ -1,0 +1,859 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.front.cubici.mapper.InfoCalculateMapper">
+
+	<select id="selectHoliday" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				*
+			FROM CBCI_HOLIDAY CH
+			WHERE DATE_FORMAT(CH.HOLIDAY_DATE, '%Y-%m') = #{yearMonth}
+			AND DAY_OF_THE_WEEK IN ('01', '02', '03', '04', '05')
+		]]>
+	</select>
+    
+    <!-- 정산예정 > 목록 -->
+    <select id="selectCalculatePreList" parameterType="hashmap" resultType="hashmap">
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excelSum")'>
+		SELECT
+			RESULT_TB.SHOP,
+			IFNULL(ROUND(SUM(RESULT_TB.SETTLEMENT_AMOUNT_PRE)), 0) AS PRE_SETTLE_AMOUNT
+		FROM (
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("calendar")'>
+		SELECT
+			RESULT_TB.TOTAL_COUNT,
+			RESULT_TB.SETTLEMENT_DATE_PRE AS SETTLEMENT_DATE,
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT_PRE), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("dailyDetail")'>
+		SELECT
+			RESULT_TB.SHOP,
+			RESULT_TB.SETTLEMENT_DATE_PRE AS SETTLEMENT_DATE,
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT_PRE), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excel")'>
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE_PRE AS SETTLEMENT_DATE,
+			REPLACE(REPLACE(RESULT_TB.STATUS, '(30%)', ''),'(70%)','') AS STATUS,
+			REPLACE(REPLACE(RESULT_TB.STATUS, ')', ''),'정산예정(','') AS STATUS_SORT,
+			RESULT_TB.SHOP,
+			RESULT_TB.ORDER_NO,
+			RESULT_TB.UNIQUE_OPTION,
+			IFNULL(ROUND(SUM(RESULT_TB.SETTLEMENT_AMOUNT_PRE)), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excelDetail")'>
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE_PRE,
+			RESULT_TB.ORDERED_AT AS STD_DATE,
+			REPLACE(REPLACE(RESULT_TB.STATUS, '(30%)', ''),'(70%)','') AS STATUS,
+			REPLACE(REPLACE(RESULT_TB.STATUS, ')', ''),'정산예정(','') AS STATUS_SORT,
+			RESULT_TB.SHOP,
+			RESULT_TB.ORDER_NO,
+			RESULT_TB.UNIQUE_OPTION,
+			IFNULL(ROUND(RESULT_TB.SETTLEMENT_AMOUNT_PRE, 0), 0) AS SETTLEMENT_AMOUNT_PRE,
+			IFNULL(RESULT_TB.QUANTITY, 0) AS QUANTITY
+			, IFNULL(RESULT_TB.PRODUCT_NO, "-") AS PRODUCT_NO -- 상품번호
+			, IFNULL(RESULT_TB.PRODUCT_NAME, "-") AS PRODUCT_NAME -- 상품명
+			, RESULT_TB.PRODUCT_PRICE -- 판매단가
+			, IF(RESULT_TB.SHOP_TYPE = 4, IFNULL(ROUND(RESULT_TB.PRODUCT_PRICE/RESULT_TB.QUANTITY, 0), 0),
+				RESULT_TB.PRODUCT_PRICE) AS UNIT_PRICE -- 판매단가는 11번가만 판매가/수량 해야 판매단가
+			, IFNULL(ROUND(RESULT_TB.ORDER_PRICE, 0), 0) AS ORDER_PRICE -- 주문금액
+			, IFNULL(RESULT_TB.CUSTOM_ID, "-") AS CUSTOM_ID -- 구매자 아이디
+			, IFNULL(RESULT_TB.CUSTOM_NAME, "-") AS CUSTOM_NAME -- 구매자명
+			, IFNULL(RESULT_TB.INVOICE_NO, "-") AS INVOICE_NO -- 송장번호
+			, IFNULL(RESULT_TB.DELIVERY_COMPANY_NAME, "-") AS DELIVERY_COMPANY_NAME -- 택배사명
+			, IFNULL(RESULT_TB.DELIVERED_DATE, "-") AS DELIVERED_DATE -- 배송완료일자
+			, "-" AS SETTLEMENT_DATE
+			, "-" AS SETTLEMENT_AMOUNT
+		FROM (
+		</if>
+			<![CDATA[
+			SELECT
+				FOUND_ROWS() AS TOTAL_COUNT,
+	    		SECOND_CAL.*
+	    	FROM (
+				SELECT
+					@pre_row_no := @pre_row_no + 1 AS RNUM,
+					COMBINE_TB.*
+				FROM (
+					SELECT
+						1 AS SHOP_TYPE,
+						'인터파크' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.*,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY, -- 구매확정이면 S-Money 지급일 사용
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @interpark_std_date,
+								bDay_interpark(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @interpark_bDay_count DAY))
+						) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							SHOP_ID,
+							CONCAT(ORDER_NO, PRODUCT_NO, OPTION_PRODUCT_NO) AS UNIQUE_OPTION,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT_TIME,
+							DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+							IF(CONFIRM_DATE IS NULL, '-', DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')) AS CONFIRM_DATE,
+							'-' AS SETTLEMENT_DATE,
+							ORDER_NO,
+							PRODUCT_NO,
+							PRODUCT_NAME,
+							PRODUCT_PRICE,
+							QUANTITY,
+							ORDER_PRICE,
+							ROUND(SETTLEMENT_AMOUNT+IFNULL(SHIPPING_PRICE_TOTAL*0.967,0)-CREDITCARD_DISCOUNT) AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+							IF(TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+							IF(TRIM(INVOICE_NUMBER) = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+							ORDERER_NAME AS CUSTOM_NAME,
+							ORDERER_ID AS CUSTOM_ID,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							DATE_FORMAT(IFNULL(SETTLEMENT_DATE, EXACT_SETTLE_DATE),'%Y-%m-%d') AS PRE_STANDARD_DAY
+						FROM CBCI_INTERPARK_SALES
+						WHERE SHOP_ID REGEXP (#{INTERPARK_ID})
+						AND ORDER_STATUS IN ('배송완료','구매확정')
+					) FIRST_CAL, (SELECT @interpark_std_date := '') STANDARD_DATE, (SELECT @interpark_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						2 AS SHOP_TYPE,
+						'지마켓' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.*,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY, -- 이미 정산된 데이터가 있기 때문에 사용
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @gmarket_std_date,
+								bDay_gmarket(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @gmarket_bDay_count DAY))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							SHOP_ID,
+							CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+							DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+							IF(CONFIRM_DATE = '', '-', DATE_FORMAT(CONFIRM_DATE , '%Y-%m-%d')) AS CONFIRM_DATE,
+							'-' AS SETTLEMENT_DATE,
+							ORDER_NO,
+							PRODUCT_NO,
+							PRODUCT_NAME,
+							PRODUCT_PRICE,
+							QUANTITY,
+							ORDER_PRICE,
+							SETTLEMENT_AMOUNT + SHIPPING_PRICE_TOTAL * 0.9668 AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+							IF(TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+							IF(TRIM(INVOICE_NUMBER) = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+							ORDERER_NAME AS CUSTOM_NAME,
+							ORDERER_ID AS CUSTOM_ID,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							DATE_FORMAT(IFNULL(SETTLEMENT_DATE, EXACT_SETTLE_DATE),'%Y-%m-%d') AS PRE_STANDARD_DAY
+						FROM CBCI_GMARKET_SALES
+						WHERE SHOP_ID REGEXP (#{GMARKET_ID})
+					    AND DELIVERY_STATUS IN ('배송완료','구매확정')
+					    ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @gmarket_std_date := '') STANDARD_DATE, (SELECT @gmarket_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						3 AS SHOP_TYPE,
+						'옥션' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.*,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(${AUCTION_ONLINE_REMIT_DATE} = 0, FIRST_CAL.PRE_STANDARD_DAY, -- 판매예치금이면 구매결정일자 그대로
+								IF(FIRST_CAL.PRE_STANDARD_DAY <> @auction_std_date,
+									bDay_auction(${AUCTION_ONLINE_REMIT_DATE}, FIRST_CAL.PRE_STANDARD_DAY),
+								DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @auction_bDay_count DAY)))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							SHOP_ID,
+							CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+							DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+							DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+							IF(CONFIRM_DATE = '', '-', DATE_FORMAT(CONFIRM_DATE , '%Y-%m-%d')) AS CONFIRM_DATE,
+							'-' AS SETTLEMENT_DATE,
+							ORDER_NO,
+							PRODUCT_NO,
+							PRODUCT_NAME,
+							PRODUCT_PRICE,
+							QUANTITY,
+							ORDER_PRICE,
+							SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+							IF(TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+							IF(TRIM(INVOICE_NUMBER) = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+							ORDERER_NAME AS CUSTOM_NAME,
+							ORDERER_ID AS CUSTOM_ID,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG,
+							DATE_FORMAT(IFNULL(SETTLEMENT_DATE, EXACT_SETTLE_DATE),'%Y-%m-%d') AS PRE_STANDARD_DAY
+						FROM CBCI_AUCTION_SALES
+						WHERE SHOP_ID REGEXP (#{AUCTION_ID})
+					    AND DELIVERY_STATUS IN ('배송완료','구매확정')
+					    ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @auction_std_date := '') STANDARD_DATE, (SELECT @auction_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate} -- 옥션은 판매예치금 때문에 당일날 정산 가능
+					UNION ALL
+					SELECT
+						4 AS SHOP_TYPE,
+						'11번가' AS SHOP,
+						'정산예정' AS STATUS,
+						FIRST_CAL.*,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @eleven_std_date,
+								bDay_11st(${ELEVEN_SHOP_GRADE_DATE}, FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @eleven_bDay_count DAY))) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							SHOP_ID,
+							CONCAT(주문번호, 주문순번, 상품번호, 선결제배송비) AS UNIQUE_OPTION,
+							DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT,
+							DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT_TIME,
+							IF(배송완료일 = '', '-', DATE_FORMAT(배송완료일 , '%Y-%m-%d')) AS DELIVERED_DATE,
+							IF(수취확인일 = '', '-', DATE_FORMAT(수취확인일 , '%Y-%m-%d')) AS CONFIRM_DATE,
+							'-' AS SETTLEMENT_DATE,
+							주문번호 AS ORDER_NO,
+							상품번호 AS PRODUCT_NO,
+							상품명 AS PRODUCT_NAME,
+							판매가 AS PRODUCT_PRICE, -- 11번가는 개당 상품가격 없음
+							수량 AS QUANTITY,
+							판매금액합계 AS ORDER_PRICE,
+							정산금액 + IF(정산금액>=선결제배송비+도서산간배송비,0,도서산간배송비) - 반품보험료 AS SETTLEMENT_AMOUNT_PRE,
+							'-' AS SETTLEMENT_AMOUNT,
+							선결제배송비 AS SHIPPING_PRICE,
+							'-' AS DELIVERY_COMPANY_NAME,
+							송장번호 AS INVOICE_NO,
+							구매자명 AS CUSTOM_NAME,
+							구매자ID AS CUSTOM_ID,
+							IF(송금완료일 = '', 1, 2) AS FLAG, # 1은 함수계산 필요, 2는 함수 안들려도 됨
+							DATE_FORMAT(IFNULL(송금완료일, EXACT_SETTLE_DATE),'%Y-%m-%d') AS PRE_STANDARD_DAY
+						FROM CBCI_11ST_SALEACCNT
+						WHERE SHOP_ID REGEXP (#{ELEVEN_ID})
+						AND 주문상태 IN ('배송완료', '구매확정', '클레임') # 배송완료 기준으로 정산예정일 계산 -> 송장번호가 없으면 배송추적 불가로 설정
+						ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @eleven_std_date := '') STANDARD_DATE, (SELECT @eleven_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					UNION ALL
+					SELECT
+						14 AS SHOP_TYPE,
+						'네이버' AS SHOP,
+						'정산예정(일반)' AS STATUS,
+						FIRST_CAL.*,
+						'-' AS TEMP_DATE,
+						IF(FIRST_CAL.FLAG = 2, FIRST_CAL.PRE_STANDARD_DAY,
+							IF(FIRST_CAL.PRE_STANDARD_DAY <> @naver_std_date,
+								bDay_naver(FIRST_CAL.PRE_STANDARD_DAY),
+							DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL @naver_bDay_count DAY))
+					    ) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							SHOP_ID,
+			 				CONCAT(PRODUCT_ORDER_NO, ORDER_NO) AS UNIQUE_OPTION,
+			 				IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d')) AS ORDERED_AT,
+			 				IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d(%H:%i:%s)')) AS ORDERED_AT_TIME,
+			 				IF(DELIVERED_DATE = '', '-', DATE_FORMAT(DELIVERED_DATE , '%Y-%m-%d')) AS DELIVERED_DATE,
+			 				IF(CONFIRM_DATE = '',
+			 					IF(AUTO_CONFIRM_DATE = '', '-',
+			 					DATE_FORMAT(AUTO_CONFIRM_DATE, '%Y-%m-%d')),
+			 				DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')) AS CONFIRM_DATE,
+			 				'-' AS SETTLEMENT_DATE, -- 정산입금 날짜
+							ORDER_NO,
+							IF(PRODUCT_NO IS NULL OR PRODUCT_NO = '', '-', PRODUCT_NO) AS PRODUCT_NO,
+							PRODUCT_NAME,
+			 				PRODUCT_PRICE,
+			 				IFNULL(QUANTITY, 0) AS QUANTITY,
+							ORDER_PRICE,
+							SETTLEMENT_AMOUNT AS SETTLEMENT_AMOUNT_PRE,
+			 		        '-' AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+			 		        SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+			 				IF(DELIVERY_COMPANY_NAME IS NULL OR TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+			 				IF(INVOICE_NUMBER IS NULL OR TRIM(INVOICE_NUMBER) = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+			 				IFNULL(ORDERER_NAME, '-') AS CUSTOM_NAME,
+			 				IFNULL(ORDERER_ID, '-') AS CUSTOM_ID,
+							IF(SETTLEMENT_DATE IS NULL, 1, 2) AS FLAG, # 1은 정산완료 날짜 없음, 함수 사용
+							DATE_FORMAT(IFNULL(SETTLEMENT_DATE, EXACT_SETTLE_DATE),'%Y-%m-%d') AS PRE_STANDARD_DAY
+						FROM CBCI_NAVER_SALES
+						WHERE SHOP_ID REGEXP (#{NAVER_ID})
+						AND ORDER_STATUS IN ('일반정산','빠른정산','배송완료','구매확정','정산후 취소','직권취소','교환','빠른정산 회수')
+						ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @naver_std_date := '') STANDARD_DATE, (SELECT @naver_bDay_count := 0) B_DAY_COUNT
+					WHERE FIRST_CAL.PRE_STANDARD_DAY >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 11 DAY)
+					AND FIRST_CAL.PRE_STANDARD_DAY <= #{toDate}
+					]]>
+					<if test='COUPANG_SETTLEMENT_TYPE == "WEEKLY"'>
+					<![CDATA[
+					UNION ALL
+					SELECT -- 주정산 > 70% 지급액
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						'정산예정(70%)' AS STATUS,
+						SECOND_CAL.*,
+						IF(SECOND_CAL.FLAG = 1, -- 정산일 데이터가 없으면
+							IF(@coupang_std_date <> SECOND_CAL.TEMP_DATE, -- 기존에 비교했던 기준일이랑 다르면
+								bDay_coupang_weekly_seventy(SECOND_CAL.TEMP_DATE),
+							DATE_ADD(SECOND_CAL.TEMP_DATE, INTERVAL @coupang_bDay_count DAY)), -- 이전에 계산해놓은 날짜 수
+						SECOND_CAL.PRE_STANDARD_DAY) AS SETTLEMENT_DATE_PRE
+					FROM (
+						SELECT
+							FIRST_CAL.*,
+							IF(FIRST_CAL.FLAG = 1,
+								IF(DAYOFWEEK(FIRST_CAL.PRE_STANDARD_DAY) = 1, FIRST_CAL.PRE_STANDARD_DAY, -- 일요일이면 그대로 사용
+									DATE_ADD(FIRST_CAL.PRE_STANDARD_DAY, INTERVAL 8-DAYOFWEEK(FIRST_CAL.PRE_STANDARD_DAY) DAY)), -- 매주 마지막 요일로 변환
+							FIRST_CAL.PRE_STANDARD_DAY) AS TEMP_DATE
+						FROM (
+							SELECT
+								SHOP_ID,
+								CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+								DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+								DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+								DATE_FORMAT(delivered_date, '%Y-%m-%d') AS DELIVERED_DATE,
+								IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+							   	'-' AS SETTLEMENT_DATE, -- 정산입금 날짜
+								order_id AS ORDER_NO,
+								seller_product_id AS PRODUCT_NO,
+								seller_product_name AS PRODUCT_NAME,
+								sales_price AS PRODUCT_PRICE,
+								shipping_count AS QUANTITY,
+								order_price AS ORDER_PRICE,
+								IF(settlement_amount IS NULL, ROUND(order_price*0.9*0.7), ROUND(settlement_amount*0.7)) AS SETTLEMENT_AMOUNT_PRE, -- 정산예정금이 없으면 임의로 기준 수수료 10% 계산
+							   	'-' AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+								shipping_price AS SHIPPING_PRICE,
+								IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+								IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+								orderer_name AS CUSTOMER_NAME,
+								orderer_email AS CUSTOMER_ID,
+								IF(settlement_date IS NULL, 1, 2) AS FLAG, -- 1은 정산일 데이터가 있는 경우
+								IF(settlement_date IS NULL, -- 정산일 데이터가 없으면 공휴일 안따지고 +7일
+									IF(confirm_date = '', -- 구매확정일 확인
+										DATE_ADD(DATE_FORMAT(delivered_date, '%Y-%m-%d'), INTERVAL 7 DAY), -- 구매확정x -> 배송추적이 가능하던 불가능하던 컬럼 동일, 배송완료일 = 업체직송 완료일
+									DATE_FORMAT(confirm_date, '%Y-%m-%d')),
+								DATE_FORMAT(settlement_date, '%Y-%m-%d')) AS PRE_STANDARD_DAY
+							FROM CBCI_COUPANG_SALES
+							WHERE SHOP_ID = #{COUPANG_ID}
+							AND ((settlement_date >= #{fromDate} AND settlement_date <= #{toDate})
+							OR (delivered_date >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 2 MONTH)
+							AND delivered_date <= DATE_SUB(DATE_FORMAT(#{toDate}, '%Y-%m-%d'), INTERVAL 15 DAY))) -- 배송완료일이 '구매확정일'일수도 있음
+							AND status IN ('FINAL_DELIVERY', 'NONE_TRACKING') -- 정산예정의 기준은 배송완료, 직접배송
+							AND sale_type IN ('', 'SALE')
+						) FIRST_CAL
+					) SECOND_CAL, (SELECT @coupang_std_date := '') STANDARD_DATE, (SELECT @coupang_bDay_count := 0) B_DAY_COUNT
+					UNION ALL
+					SELECT -- 주정산(30%) > 다다음달 1일 지급액 -> 무조건 구매확정 데이터가 있음(저저번달인데...)
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						'정산예정(30%)' AS STATUS,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						DATE_FORMAT(delivered_date, '%Y-%m-%d') AS DELIVERED_DATE,
+						DATE_FORMAT(confirm_date, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						shipping_count AS QUANTITY,
+						order_price AS ORDER_PRICE,
+						ROUND(settlement_amount*0.3) AS SETTLEMENT_AMOUNT_PRE, -- 정산예정금이 없으면 임의로 기준 수수료 10% 계산
+					   	'-' AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID,
+						3 AS FLAG, -- 1은 정산일 데이터가 있는 경우
+						'-' AS PRE_STANDARD_DAY,
+						'-' AS TEMP_DATE,
+						DATE_FORMAT(final_settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE_PRE
+					FROM CBCI_COUPANG_SALES
+					WHERE SHOP_ID = #{COUPANG_ID}
+					AND final_settlement_date >= #{fromDate}
+					AND final_settlement_date <= #{toDate}
+					AND status IN ('FINAL_DELIVERY', 'NONE_TRACKING') -- 정산예정의 기준은 배송완료, 직접배송
+					AND sale_type = 'SALE'
+					]]>
+					</if>
+					<if test='COUPANG_SETTLEMENT_TYPE == "MONTH"'>
+					<![CDATA[
+					UNION ALL
+					SELECT -- 월정산
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						'정산예정(월정산)' AS STATUS,
+						FIRST_CAL.*,
+						IF(FIRST_CAL.FLAG = 1,
+							IF(@coupang_month_std_date <> LAST_DAY(FIRST_CAL.PRE_STANDARD_DAY),
+								bDay_coupang_month(LAST_DAY(FIRST_CAL.PRE_STANDARD_DAY)),
+							@coupang_month_settlement_date),
+						FIRST_CAL.PRE_STANDARD_DAY) AS SETTLEMENT_DATE_PRE -- 구매확정이면 settlement_date 사용
+					FROM (
+						SELECT
+							SHOP_ID,
+							CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+							DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+							DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+							DATE_FORMAT(delivered_date, '%Y-%m-%d') AS DELIVERED_DATE,
+							IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						   	'-' AS SETTLEMENT_DATE, -- 정산입금 날짜
+							order_id AS ORDER_NO,
+							seller_product_id AS PRODUCT_NO,
+							seller_product_name AS PRODUCT_NAME,
+							sales_price AS PRODUCT_PRICE,
+							shipping_count AS QUANTITY,
+							order_price AS ORDER_PRICE,
+							IF(settlement_amount IS NULL, ROUND(order_price*0.9), settlement_amount) AS SETTLEMENT_AMOUNT_PRE, -- 정산예정금이 없으면 임의로 기준 수수료 10% 계산
+						   	'-' AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+							shipping_price AS SHIPPING_PRICE,
+							IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+							IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+							orderer_name AS CUSTOMER_NAME,
+							orderer_email AS CUSTOMER_ID,
+							IF(settlement_date IS NULL, 1, 2) AS FLAG, -- 1은 정산일 데이터가 있는 경우
+							IF(settlement_date IS NULL, -- 정산일 데이터가 없으면 공휴일 안따지고 +7일
+								IF(confirm_date = '', -- 구매확정일 확인
+									DATE_ADD(DATE_FORMAT(delivered_date, '%Y-%m-%d'), INTERVAL 7 DAY), -- 구매확정x -> 배송추적이 가능하던 불가능하던 컬럼 동일, 배송완료일 = 업체직송 완료일
+								DATE_FORMAT(confirm_date, '%Y-%m-%d')),
+							DATE_FORMAT(settlement_date, '%Y-%m-%d')) AS PRE_STANDARD_DAY,
+							'-' AS TEMP_DATE
+						FROM CBCI_COUPANG_SALES
+						WHERE SHOP_ID = #{COUPANG_ID}
+						AND ((settlement_date >= #{fromDate} AND settlement_date <= #{toDate})
+						OR (delivered_date >= DATE_SUB(DATE_FORMAT(#{fromDate}, '%Y-%m-%d'), INTERVAL 2 MONTH)
+						AND delivered_date <= DATE_SUB(DATE_FORMAT(#{toDate}, '%Y-%m-%d'), INTERVAL 15 DAY))) -- 배송완료일이 '구매확정일'일수도 있음
+						AND status IN ('FINAL_DELIVERY', 'NONE_TRACKING') -- 정산예정의 기준은 배송완료, 직접배송
+						AND sale_type IN ('', 'SALE')
+						ORDER BY FLAG, PRE_STANDARD_DAY
+					) FIRST_CAL, (SELECT @coupang_month_std_date := '') STANDARD_DATE, (SELECT @coupang_month_settlement_date := '') SET_DATE
+					]]>
+					</if>
+				<![CDATA[
+				) COMBINE_TB, (SELECT @pre_row_no := 0) PRE_ROW_NO
+				WHERE COMBINE_TB.SHOP_TYPE IN (${SHOP_TYPE_LIST})
+				AND PRODUCT_NAME like #{PRODUCT_NAME}
+				AND DATE_FORMAT(COMBINE_TB.SETTLEMENT_DATE_PRE, '%Y-%m-%d') >= #{fromDate}
+				AND DATE_FORMAT(COMBINE_TB.SETTLEMENT_DATE_PRE, '%Y-%m-%d') <= #{toDate}
+				ORDER BY COMBINE_TB.${ORDER_BY}, COMBINE_TB.ORDER_NO
+			) SECOND_CAL
+			]]>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("details")'>
+			LIMIT ${LIMIT}
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("calendar")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SETTLEMENT_DATE_PRE
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("dailyDetail")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SHOP, RESULT_TB.SETTLEMENT_DATE_PRE
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excel")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.UNIQUE_OPTION
+		ORDER BY RESULT_TB.SETTLEMENT_DATE_PRE, RESULT_TB.SHOP, RESULT_TB.ORDER_NO
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excelSum")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SHOP
+		</if>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("excelDetail")'>
+		) RESULT_TB
+		</if>
+		<if test ='DETAIL == ("DETAIL")'>
+		WHERE ORDER_NO = #{ORDER_NO}
+		</if>
+    </select>
+    
+    <!-- 정산입금 > 목록 -->
+    <select id="selectSettlementList" parameterType="hashmap" resultType="hashmap">
+   		<if test='settlementFlag != null and settlementFlag.equals("sum")'>
+   		SELECT
+   			IFNULL(TOTAL_COUNT, 0) AS TOTAL_COUNT,
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT), 0) AS SETTLEMENT_AMOUNT
+		FROM (
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("calendar")'>
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE, 
+			IF(RESULT_TB.SHOP_TYPE = 14
+			,IFNULL((SELECT SUM(정산금액) FROM CBCI_NAVER_WITHDRAWDAY WHERE SHOP_ID REGEXP (#{NAVER_ID}) 
+				AND DATE_FORMAT(정산완료일, '%Y-%m-%d') = RESULT_TB.SETTLEMENT_DATE),0)
+			,IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT), 0))  AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("dailyDetail")'>
+		SELECT
+			RESULT_TB.SHOP,
+			RESULT_TB.SETTLEMENT_DATE AS SETTLEMENT_DATE,
+			IF(RESULT_TB.SHOP_TYPE = 14
+			,IFNULL((SELECT SUM(정산금액) FROM CBCI_NAVER_WITHDRAWDAY WHERE SHOP_ID REGEXP (#{NAVER_ID}) 
+				AND DATE_FORMAT(정산완료일, '%Y-%m-%d') = RESULT_TB.SETTLEMENT_DATE),0)
+			,IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT), 0))  AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excel")'>
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE AS SETTLEMENT_DATE,
+			RESULT_TB.STATUS,
+			RESULT_TB.SHOP,
+			RESULT_TB.ORDER_NO,
+			RESULT_TB.UNIQUE_OPTION,
+			IFNULL(SUM(RESULT_TB.SETTLEMENT_AMOUNT), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(SUM(RESULT_TB.QUANTITY), 0) AS QUANTITY
+		FROM (
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excelSum")'>
+		SELECT
+			RESULT_TB.SHOP,
+			IFNULL(ROUND(SUM(RESULT_TB.SETTLEMENT_AMOUNT)), 0) AS SETTLE_AMOUNT
+		FROM (
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excelDetail")'>
+		SELECT
+			RESULT_TB.SETTLEMENT_DATE AS SETTLEMENT_DATE,
+			RESULT_TB.ORDERED_AT AS STD_DATE,
+			REPLACE(REPLACE(RESULT_TB.STATUS, '(30%)', ''),'(70%)','') AS STATUS,
+			REPLACE(REPLACE(RESULT_TB.STATUS, ')', ''),'정산예정(','') AS STATUS_SORT,
+			RESULT_TB.SHOP,
+			RESULT_TB.ORDER_NO,
+			RESULT_TB.UNIQUE_OPTION,
+			IFNULL(ROUND(RESULT_TB.SETTLEMENT_AMOUNT, 0), 0) AS SETTLEMENT_AMOUNT,
+			IFNULL(RESULT_TB.QUANTITY, 0) AS QUANTITY
+			, IFNULL(RESULT_TB.PRODUCT_NO, "-") AS PRODUCT_NO -- 상품번호
+			, IFNULL(RESULT_TB.PRODUCT_NAME, "-") AS PRODUCT_NAME -- 상품명
+			, RESULT_TB.PRODUCT_PRICE -- 판매가
+			, IF(RESULT_TB.SHOP_TYPE = 4, IFNULL(ROUND(RESULT_TB.PRODUCT_PRICE/RESULT_TB.QUANTITY, 0), 0),
+				RESULT_TB.PRODUCT_PRICE) AS UNIT_PRICE -- 판매단가는 11번가만 판매가/수량 해야 판매단가
+			, RESULT_TB.ORDER_PRICE -- 주문금액
+			, IFNULL(RESULT_TB.CUSTOM_ID, "-") AS CUSTOM_ID -- 구매자 아이디
+			, IFNULL(RESULT_TB.CUSTOM_NAME, "-") AS CUSTOM_NAME -- 구매자명
+			, IFNULL(RESULT_TB.INVOICE_NO, "-") AS INVOICE_NO -- 송장번호
+			, IFNULL(RESULT_TB.DELIVERY_COMPANY_NAME, "-") AS DELIVERY_COMPANY_NAME -- 택배사명
+			, IFNULL(RESULT_TB.DELIVERED_DATE, "-") AS DELIVERED_DATE -- 배송완료일자
+			, "-" AS SETTLEMENT_DATE_PRE
+			, "-" AS SETTLEMENT_AMOUNT_PRE
+		FROM (
+		</if>
+		<![CDATA[
+			SELECT
+				FOUND_ROWS() AS TOTAL_COUNT,
+	    		SECOND_CAL.*
+	    	FROM (
+		   		SELECT
+					@settlement_row_no := @settlement_row_no + 1 AS RNUM,
+					FIRST_CAL.*
+				FROM (
+					SELECT
+						1 AS SHOP_TYPE,
+						'인터파크' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO, OPTION_PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE,
+						ROUND(SETTLEMENT_AMOUNT+IFNULL(SHIPPING_PRICE_TOTAL*0.967,0)) AS SETTLEMENT_AMOUNT,
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_INTERPARK_SALES
+					WHERE SHOP_ID REGEXP (#{INTERPARK_ID})
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					UNION ALL
+					SELECT
+						2 AS SHOP_TYPE,
+						'지마켓' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	IF(SETTLEMENT_SHIPPING_AMNT < 0, 0, SETTLEMENT_AMOUNT) + IFNULL(SETTLEMENT_SHIPPING_AMNT,0) AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_GMARKET_SALES
+					WHERE SHOP_ID REGEXP (#{GMARKET_ID})
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					AND (SETTLEMENT_STATUS = '정산완료' OR SETTLEMENT_SHIPPING_AMNT <	0)
+					UNION ALL
+					SELECT
+						3 AS SHOP_TYPE,
+						'옥션' AS SHOP,
+						SHOP_ID,
+						CONCAT(ORDER_NO, PRODUCT_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d') AS ORDERED_AT,
+					   	DATE_FORMAT(ORDERED_AT, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+					   	DATE_FORMAT(DELIVERED_DATE, '%Y-%m-%d') AS DELIVERED_DATE,
+					   	DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d') AS CONFIRM_DATE,
+					   	'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+					   	ORDER_NO,
+					   	PRODUCT_NO,
+					   	PRODUCT_NAME,
+					   	PRODUCT_PRICE,
+					   	QUANTITY,
+					   	ORDER_PRICE,
+					   	'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	SETTLEMENT_AMOUNT, -- 정산입금 금액
+					   	SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+					   	DELIVERY_COMPANY_NAME,
+					   	INVOICE_NUMBER AS INVOICE_NO,
+					   	ORDERER_NAME AS CUSTOM_NAME,
+					   	ORDERER_ID AS CUSTOM_ID
+					FROM CBCI_AUCTION_SALES
+					WHERE SHOP_ID REGEXP (#{AUCTION_ID})
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+ 					AND SETTLEMENT_STATUS = '정산완료'	
+					UNION ALL
+					SELECT
+						4 AS SHOP_TYPE,
+						'11번가' AS SHOP,
+						SHOP_ID,
+						CONCAT(주문번호, 주문순번, 상품번호, 선결제배송비) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+						DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(결제완료일, '%Y-%m-%d') AS ORDERED_AT_TIME,
+						IF(배송완료일 = '', '-', DATE_FORMAT(배송완료일 , '%Y-%m-%d')) AS DELIVERY_DATE,
+						IF(수취확인일 = '', '-', DATE_FORMAT(수취확인일 , '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+						DATE_FORMAT(송금완료일, '%Y-%m-%d') AS SETTLEMENT_DATE,
+						주문번호 AS ORDER_NO,
+						상품번호 AS PRODUCT_NO,
+						상품명 AS PRODUCT_NAME,
+						판매가 AS PRODUCT_PRICE, -- 옵션가 제외
+						수량 AS QUANTITY,
+						판매금액합계 AS ORDER_PRICE, -- 배송비정보 없음(선결제 배송비있는데...), 판매가 + 옵션가
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+						정산금액 + IF(정산금액 > (선결제배송비+도서산간배송비), 도서산간배송비, 0) - 반품보험료 AS SETTLEMENT_AMOUNT,
+						선결제배송비 AS SHIPPING_PRICE,
+						'-' AS DELIVERY_COMPANY_NAME,
+						송장번호 AS INVOICE_NO,
+						구매자명 AS CUSTOM_NAME,
+						구매자ID AS CUSTOM_ID
+					FROM CBCI_11ST_SALEACCNT
+					WHERE SHOP_ID REGEXP (#{ELEVEN_ID})
+					AND 송금완료일 BETWEEN  DATE_FORMAT(#{fromDate}, '%Y/%m/%d') AND DATE_FORMAT(#{toDate}, '%Y/%m/%d')
+					AND (주문상태 = '구매확정' or 주문상태 = '반품완료' or 구매자부담_반품_교환배송비 >0)
+					UNION ALL
+					SELECT
+						14 AS SHOP_TYPE,
+						'네이버' AS SHOP,
+						SHOP_ID,
+						CONCAT(PRODUCT_ORDER_NO, ORDER_NO) AS UNIQUE_OPTION,
+						'정산입금' AS STATUS,
+						IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d')) AS ORDERED_AT,
+						IF(PAID_AT IS NULL, '-', DATE_FORMAT(PAID_AT, '%Y-%m-%d(%H:%i:%s)')) AS ORDERED_AT_TIME,
+						IF(DELIVERED_DATE = '', '-', DATE_FORMAT(DELIVERED_DATE , '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(CONFIRM_DATE = '', '-', DATE_FORMAT(CONFIRM_DATE, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(SETTLEMENT_DATE, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						ORDER_NO,
+						IF(PRODUCT_NO = '', '-', PRODUCT_NO) AS PRODUCT_NO,
+						IFNULL(PRODUCT_NAME, '-') AS PRODUCT_NAME,
+						IFNULL(PRODUCT_PRICE, 0) AS PRODUCT_PRICE,
+						IFNULL(QUANTITY, 0) AS QUANTITY,
+						ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	SETTLEMENT_AMOUNT, -- 정산입금 금액
+						SHIPPING_PRICE_TOTAL AS SHIPPING_PRICE,
+						IF(DELIVERY_COMPANY_NAME IS NULL OR TRIM(DELIVERY_COMPANY_NAME) = '', '-', DELIVERY_COMPANY_NAME) AS DELIVERY_COMPANY_NAME,
+						IF(INVOICE_NUMBER IS NULL OR INVOICE_NUMBER = '', '-', INVOICE_NUMBER) AS INVOICE_NO,
+						IF(ORDERER_NAME IS NULL OR ORDERER_NAME = '', '-', ORDERER_NAME) AS CUSTOM_NAME,
+						IF(ORDERER_ID IS NULL OR ORDERER_ID = '', '-', ORDERER_ID) AS CUSTOM_ID
+					FROM CBCI_NAVER_SALES
+					WHERE SHOP_ID REGEXP (#{NAVER_ID})
+					AND SETTLEMENT_DATE >= #{fromDate}
+					AND SETTLEMENT_DATE <= #{toDate}
+					AND ORDER_STATUS IN ('일반정산','빠른정산','구매확정','정산후 취소','직권취소','교환')	
+					]]>
+					<if test='COUPANG_SETTLEMENT_TYPE == "WEEKLY"'>
+					<![CDATA[
+					UNION ALL
+					SELECT
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						'정산입금(70%)' AS STATUS,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						IF(delivered_date = '', '-', DATE_FORMAT(delivered_date, '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						quantity AS QUANTITY,
+						total_sale_price AS ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	ROUND(settlement_amount*0.7) AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID
+					FROM CBCI_COUPANG_SALES
+					WHERE SHOP_ID = #{COUPANG_ID}
+					AND settlement_date >= #{fromDate}
+					AND settlement_date <= #{toDate}
+					AND sale_type = 'SALE'
+					UNION ALL
+					SELECT
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						'정산입금(30%)' AS STATUS,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						IF(delivered_date = '', '-', DATE_FORMAT(delivered_date, '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(final_settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						quantity AS QUANTITY,
+						total_sale_price AS ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	ROUND(settlement_amount*0.3) AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID
+					FROM CBCI_COUPANG_SALES
+					WHERE SHOP_ID = #{COUPANG_ID}
+					AND final_settlement_date >= #{fromDate}
+					AND final_settlement_date <= #{toDate}
+					AND sale_type = 'SALE'
+					]]>
+					</if>
+					<if test='COUPANG_SETTLEMENT_TYPE == "MONTH"'>
+					<![CDATA[
+					UNION ALL
+					SELECT
+						11 AS SHOP_TYPE,
+						'쿠팡' AS SHOP,
+						SHOP_ID,
+						CONCAT(order_id, vendor_item_id) AS UNIQUE_OPTION,
+						'정산입금(월정산)' AS STATUS,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d') AS ORDERED_AT,
+						DATE_FORMAT(ordered_at, '%Y-%m-%d(%H:%i:%s)') AS ORDERED_AT_TIME,
+						IF(delivered_date = '', '-', DATE_FORMAT(delivered_date, '%Y-%m-%d')) AS DELIVERED_DATE,
+						IF(confirm_date = '', '-', DATE_FORMAT(confirm_date, '%Y-%m-%d')) AS CONFIRM_DATE,
+						'-' AS SETTLEMENT_DATE_PRE, -- 정산예정 날짜
+					   	DATE_FORMAT(settlement_date, '%Y-%m-%d') AS SETTLEMENT_DATE, -- 정산입금 날짜
+						order_id AS ORDER_NO,
+						seller_product_id AS PRODUCT_NO,
+						seller_product_name AS PRODUCT_NAME,
+						sales_price AS PRODUCT_PRICE,
+						quantity AS QUANTITY,
+						total_sale_price AS ORDER_PRICE,
+						'-' AS SETTLEMENT_AMOUNT_PRE, -- 정산예정 금액
+					   	settlement_amount AS SETTLEMENT_AMOUNT, -- 정산입금 금액
+						shipping_price AS SHIPPING_PRICE,
+						IF(TRIM(delivery_company_name) = '', '-', delivery_company_name) AS DELIVERY_COMPANY_NAME,
+						IF(TRIM(invoice_number) = '', '-', invoice_number) AS INVOICE_NO,
+						orderer_name AS CUSTOMER_NAME,
+						orderer_email AS CUSTOMER_ID
+					FROM CBCI_COUPANG_SALES
+					WHERE SHOP_ID = #{COUPANG_ID}
+					AND settlement_date >= #{fromDate}
+					AND settlement_date <= #{toDate}
+					AND sale_type = 'SALE'
+					AND order_id <> 0
+					]]>
+					</if>
+			<![CDATA[
+				) FIRST_CAL, (SELECT @settlement_row_no := 0) SETTLEMENT_ROW_NO
+				WHERE FIRST_CAL.SHOP_TYPE IN (${SHOP_TYPE_LIST})
+				AND PRODUCT_NAME like #{PRODUCT_NAME}
+				ORDER BY FIRST_CAL.${ORDER_BY}, FIRST_CAL.ORDER_NO
+			) SECOND_CAL
+			]]>
+		<if test='calculatePreFlag != null and calculatePreFlag.equals("details")'>
+		LIMIT ${LIMIT}
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("sum")'>
+   		) RESULT_TB
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("calendar")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SETTLEMENT_DATE
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("dailyDetail")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SHOP
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excel")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.UNIQUE_OPTION
+		ORDER BY RESULT_TB.SETTLEMENT_DATE, RESULT_TB.SHOP, RESULT_TB.ORDER_NO
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excelSum")'>
+		) RESULT_TB
+		GROUP BY RESULT_TB.SHOP
+		</if>
+		<if test='settlementFlag != null and settlementFlag.equals("excelDetail")'>
+		) RESULT_TB
+		</if>
+		<if test ='DETAIL == ("DETAIL")'>
+		WHERE ORDER_NO = #{ORDER_NO}
+		</if>
+    </select>
+    
+</mapper>

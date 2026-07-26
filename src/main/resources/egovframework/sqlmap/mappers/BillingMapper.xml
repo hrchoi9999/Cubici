@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper	namespace="egovframework.azon.front.cubici.mapper.BillingMapper">
+
+	<select id="selectChargeList" resultType="hashMap">
+		SELECT
+			charge_code,
+			charge_name,
+			sub_period,
+			amount AS origin_amount
+		FROM
+			CBCI_BILLING_CHARGE CBC
+		WHERE
+		<![CDATA[
+			start_date <= DATE_FORMAT(now(), '%Y-%m-%d')
+			AND expire_date >= DATE_FORMAT(now(), '%Y-%m-%d')
+			AND amount > 0
+		]]>
+	</select>
+	
+	<select id="selectUserChargeInfo" resultType="hashMap">
+		SELECT 
+			LIST.*
+		FROM (
+			SELECT
+				ROUND(@ROWNUM := @ROWNUM + 1, 0) AS ROWNUM,
+				CBPD.user_code,
+				CSC.SELECT_NM AS status_name,
+				CBPD.status,
+				DATE_FORMAT(CBPD.start_date, '%Y-%m-%d') AS start_date,
+				DATE_FORMAT(IFNULL(CBPD.cancel_date,IFNULL(CBPD.change_date,CBPD.expire_date)), '%Y-%m-%d') AS expire_date,
+				CBC.amount AS charge_amount,
+				CBPD.amount AS payment_amount,
+				CBPD.payment_base_amount,
+				CBPD.payment_base_vat,
+				CBPD.charge_code,
+				CBPD.seq,
+				CBPD.pg_id,
+				CBPD.imp_uid,
+				CBPD.payment_date,
+				IFNULL(CBC.charge_name, CBC2.charge_name) AS charge_name,
+				CBC.sub_period,
+				CBC.sub_unit,
+				CPC.promo_name
+			FROM
+				CBCI_BILLING_PAYMENT_DETAIL CBPD
+			LEFT JOIN CBCI_BILLING_CHARGE CBC ON CBPD.charge_code = CBC.charge_code
+			LEFT JOIN CBCI_BILLING_CHARGE CBC2 ON CBPD.ex_charge_code = CBC2.charge_code
+			LEFT JOIN CBCI_PROMOTION_CODE CPC ON CBPD.promotion_code = CPC.promo_code
+			LEFT JOIN CBCI_SELECT_CODE CSC ON CBPD.status = CSC.SELECT_CD, (SELECT @ROWNUM := 0) TMP
+			WHERE
+				CBPD.user_code = #{user_code}
+				AND CSC.SELECT_CLASS = 'billingUserStatus'
+				AND CBPD.status != 'DSB'
+			ORDER BY CBPD.payment_date) LIST 
+		ORDER BY LIST.payment_date DESC
+	</select>
+	
+	<select id="selectChargeInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			DATE_FORMAT(now(), '%Y년 %m월 %d일') AS standard_date,
+			CBPD.seq,
+			CBC.charge_name,
+			DATE_FORMAT(CBPD.start_date, '%Y-%m-%d') AS start_date,
+			DATE_FORMAT(CBPD.expire_date, '%Y-%m-%d') AS expire_date,
+			DATEDIFF(CBPD.expire_date, IF(CBPD.start_date >= now(), CBPD.start_date, now())) AS dateDiff,
+			CPC.promo_name,
+			CBPD.promotion_code,
+			CBPD.amount
+		FROM
+			CBCI_BILLING_PAYMENT_DETAIL CBPD
+		LEFT JOIN CBCI_BILLING_CHARGE CBC ON CBPD.charge_code = CBC.charge_code
+		LEFT JOIN CBCI_PROMOTION_CODE CPC ON CBPD.promotion_code = CPC.promo_code
+		LEFT JOIN CBCI_SELECT_CODE CSC ON CBPD.status = CSC.SELECT_CD
+		WHERE
+			CBPD.user_code = #{user_code}
+			AND CSC.SELECT_CLASS = 'billingUserStatus'
+			<if test="status == 'using'">AND LEFT(CBPD.status,1) = 'U'</if>
+			<if test="status == 'standBy'">AND CBPD.status = 'SB'</if>
+			AND CBPD.status != 'DSB'
+		ORDER BY CBPD.payment_date DESC
+	</select>
+	
+	<select id="selectPromotionInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			CPC.promo_code,
+			CPC.status,
+			CPC.promo_name,
+			CPC.promo_target,
+			CCPC.charge_code,
+			CPC.partner_code,
+			CPC.discount_rate,
+			CPC.discount_amount,
+			CPC.free_period,
+			CPC.free_period_unit,
+			CPC.sub_id,
+			CPC.promo_detail,
+			DATE_FORMAT(CPC.start_date, '%Y-%m-%d') as start_date,
+			DATE_FORMAT(CPC.end_date, '%Y-%m-%d') as end_date,
+			DATE_FORMAT(CPC.input_date, '%Y-%m-%d') as input_date
+		FROM 
+			CBCI_PROMOTION_CODE CPC, CBCI_CHARGE_PROMOTION_CONNECTION CCPC
+		WHERE
+			CPC.promo_code = CCPC.promo_code
+			AND CPC.promo_code = #{promotionCode}
+			AND CCPC.charge_code = #{chargeCode}
+			AND CPC.partner_code = #{partner_code}
+			<![CDATA[	
+			AND CPC.start_date <= DATE_FORMAT(now(), '%Y-%m-%d')
+			AND CPC.end_date >= DATE_FORMAT(now(), '%y-%m-%d')
+			]]>	
+	</select>
+		
+	<select id="checkChargeInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			charge_code,
+			charge_name,
+			sub_period,
+			sub_unit,
+			amount AS origin_amount
+		FROM
+			CBCI_BILLING_CHARGE CBC
+		WHERE
+			charge_code = #{chargeCode}
+	</select>
+	
+	<insert id="refundRequest" parameterType="hashMap">
+		INSERT INTO CBCI_BILLING_REFUND(
+			seq,
+			new_seq,
+			user_code,
+			refund_type,
+			status,
+			refund_user_name,
+			refund_account,
+			refund_bank,
+			refund_amount,
+			request_date
+		) VALUES (
+			#{user_seq},
+			#{payment_seq},
+			#{user_code},
+			'C',
+			'R',
+			#{name},
+			#{account},
+			#{bank},
+			#{resultAmountVat},
+			now()
+		)
+	</insert>
+	
+	<insert id="insertPaymentsData" parameterType="hashMap">
+		INSERT INTO CBCI_BILLING_PAYMENT_DETAIL(
+			seq,
+			user_code,
+			start_date,
+			expire_date,
+			<if test="result == 'withdraw'">cancel_date,</if>
+			status,
+			promotion_code,
+			amount,
+			vat,
+			payment_base_amount,
+			payment_base_vat,
+			pg_id,
+			imp_uid,
+			pay_method,
+			card_type,
+			charge_code,
+			ex_charge_code,
+			installments,
+			payment_date,
+			pay_confirm_date,
+			upd_datetime
+		) VALUES (
+			#{payment_seq},
+			#{user_code},
+			#{startDate},
+			#{changeExpireDate},			
+			<if test="result == 'withdraw'">#{startDate},</if>
+			#{status},
+			#{promotionCode},
+			#{resultAmountVat},
+			#{resultAmount}*0.1,
+			#{changeAmount},
+			#{changeAmount}*0.1,
+			#{pg_tid},
+			#{imp_uid},
+			#{payMethod},
+			#{cardType},
+			#{chargeCode},
+			#{ex_charge_code},
+			#{card_quota},
+			#{paid_at},
+			#{paid_at},
+			now()
+		)
+	</insert>
+	
+	<update id="updatePaymentsData" parameterType="hashMap">
+		UPDATE
+			CBCI_BILLING_PAYMENT_DETAIL
+		SET
+		<if test="result != 'withdraw'">
+			change_date = #{startDate},
+			status = IF(#{status} = 'SB', 'DSB', RIGHT(status,2)),
+		</if>
+		<if test="result == 'withdraw' and request_type != 'SDC'">
+			cancel_date = #{startDate},
+		</if>
+		<if test="result == 'withdraw' and request_type == 'SDC'">
+			cancel_date = #{startDate},
+			status = IF(#{status} = 'SB', 'DSB', 'CC'),
+		</if>
+			rest_date = #{rest_date},
+			ex_balance = #{ex_balance},
+			upd_datetime = now()
+		WHERE
+			seq = #{user_seq}
+			AND expire_date >= #{startDate}
+	</update>
+		
+	<select id="freeChargeInfo" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			charge_code,
+			charge_name,
+			sub_period,
+			sub_unit,
+			amount AS origin_amount
+		FROM
+			CBCI_BILLING_CHARGE CBC
+		WHERE
+			amount = 0
+			AND charge_type = 'F'
+			AND charge_name LIKE '%신규%'
+		<![CDATA[
+			AND start_date <= DATE_FORMAT(now(), '%Y-%m-%d')
+			AND expire_date >= DATE_FORMAT(now(), '%Y-%m-%d')
+		]]>
+	</select>
+	
+	<select id="selectPayementDetailCount" parameterType="hashMap" resultType="hashMap">
+		SELECT 
+			COUNT(CBPD.seq) AS COUNT
+		FROM
+			CBCI_BILLING_PAYMENT_DETAIL CBPD
+		WHERE 
+			CBPD.payment_date >= DATE_FORMAT(now(), '%Y-%m-%d')
+	</select>
+	
+	<select id="selectPaymentDetail" parameterType="hashMap" resultType="HashMap">
+		 SELECT
+			CBPD.pg_id,
+			CBPD.imp_uid,
+			DATE_FORMAT(CBR.refund_date, '%Y-%m-%d') AS refund_date,
+			CBC.charge_name,
+			DATE_FORMAT(IFNULL(CBPD.change_date, CBPD.cancel_date), '%Y-%m-%d') AS change_date,
+			IFNULL(CONCAT(CBR.refund_type, CBR.status), CBPD.status) AS status,
+			CBPD.amount
+		FROM
+			CBCI_BILLING_PAYMENT_DETAIL CBPD
+		LEFT JOIN CBCI_BILLING_REFUND CBR ON CBPD.seq = CBR.new_seq
+		LEFT JOIN CBCI_BILLING_CHARGE CBC ON CBC.charge_code = IF(CBPD.charge_code = 'withdraw',CBPD.ex_charge_code,CBPD.charge_code)
+		WHERE
+			CBPD.seq = #{seq}
+	</select>
+	
+	<select id="selectMBList" parameterType="hashMap" resultType="hashMap">
+		SELECT
+			RESULT_TB.name,
+			RESULT_TB.balance,
+			MUR.mbid,
+			MUR.mb_contract_date,
+			MUR.mb_contract_expire_date
+		FROM (
+			SELECT
+				'B2B 구매자금' AS name,
+				IFNULL(SUM(MRC.balance_remittance_amount),0) AS balance
+			FROM MONEYBANK_REDEM_CALCULATE MRC
+			) RESULT_TB, MONEYBANK_USER_REQUEST MUR
+		WHERE
+			MUR.user_code = #{user_code}
+	</select>
+	
+	<select id="selectMbBalance" parameterType="hashMap" resultType="HashMap">
+		SELECT
+			IFNULL(SUM(MRC.balance_remittance_amount),0) AS balance
+		FROM
+			MONEYBANK_USER_REQUEST MUR, MONEYBANK_REDEM_CALCULATE MRC
+		WHERE
+			MUR.mbid = MRC.mbid
+			AND MUR.USER_CODE = #{user_code}
+	</select>
+	
+	<insert id="insertRequestCancel" parameterType="hashMap">
+		INSERT INTO CBCI_BILLING_REFUND(
+			seq,
+			new_seq,
+			user_code,
+			refund_type,
+			status,
+			refund_user_name,
+			refund_account,
+			refund_bank,
+			refund_amount,
+			refund_card,
+			request_date
+			<if test="refund_status.equals('C')">
+			,refund_date
+			</if>
+		) VALUES (
+			#{user_seq},
+			#{payment_seq},
+			#{user_code},
+			'R',
+			#{refund_status},
+			#{name},
+			#{account},
+			#{bank},
+			#{resultAmountVat},
+			#{refund_card},
+			now()
+			<if test="refund_status.equals('C')">
+			,now()
+			</if>
+		)
+	</insert>
+	
+	<update id="updateUserType" parameterType="hashMap">
+		UPDATE
+			CBCI_USER
+		SET
+			USER_TYPE = #{user_type}
+		WHERE
+			USER_CODE = #{user_code}
+	</update>
+</mapper>

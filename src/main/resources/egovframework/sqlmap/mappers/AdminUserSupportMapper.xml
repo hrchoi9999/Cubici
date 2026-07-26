@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.cubici.mapper.AdminUserSupportMapper"> 
+    
+    <!-- Q&A 답글 쿼리 -->
+    <select id="selectBoardDetailList" parameterType="hashmap" resultType="hashmap">
+	   <![CDATA[
+			SELECT
+				BOARD_NO,
+				DIVISION,
+				USER_NO,
+				USER_NM,
+				GROUP_NO,
+				GROUP_ORDER,
+				TITLE,
+				CONTENT,
+				OPEN_YN,
+				DATE_FORMAT(STR_TO_DATE(REG_DATE, '%Y-%m-%d %H:%i:%s'), '%Y년 %m월 %d일 %H:%i:%s') AS REG_DATE,
+				DATE_FORMAT(STR_TO_DATE(MODIFY_DATE, '%Y-%m-%d %H:%i:%s'), '%Y년 %m월 %d일 %H:%i:%s') AS MODIFY_DATE,
+				(SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = CB.BOARD_DIVISION AND SELECT_CLASS = 'boardDivision') AS BOARD_DIVISION,
+				(SELECT COUNT(*) FROM CBCI_BOARD WHERE GROUP_NO = ${GROUP_NO} AND DIVISION = ${DIVISION}) AS COMMENT_CNT
+			FROM CBCI_BOARD CB
+			WHERE GROUP_NO = ${GROUP_NO}
+			AND DIVISION = ${DIVISION}
+			ORDER BY GROUP_ORDER
+	   ]]>
+   </select>
+   
+    
+    <select id="selectMaxGroupOrder" resultType="hashmap">
+	    <![CDATA[
+			SELECT 
+				MAX(GROUP_ORDER) AS MAX_GROUP_ORDER 
+			FROM CBCI_BOARD 
+			WHERE GROUP_NO = ${GROUP_NO}
+	    ]]>
+   </select>
+    
+    <insert id="boardCommentInsert" parameterType="hashmap">
+    	<![CDATA[
+			INSERT INTO CBCI_BOARD (
+				GROUP_NO,
+				GROUP_ORDER,
+				TITLE,
+				CONTENT,
+				OPEN_YN,
+				REG_DATE,
+				USER_NM,
+				USER_NO,
+				DIVISION
+			) VALUES (
+				${GROUP_NO},
+				${GROUP_ORDER},
+				'', # 답글은 제목 없음
+				#{CONTENT},
+				'Y',
+				DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+				#{USER_NM},
+				#{USER_NO},
+				#{DIVISION}
+			)
+	    ]]>
+    </insert>
+    
+    <update id="boardCommentUpdate" parameterType="hashmap">
+    	<![CDATA[
+    		UPDATE CBCI_BOARD 
+    		SET 
+    			CONTENT = #{CONTENT},
+    			MODIFY_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+    			USER_NM = #{USER_NM},
+    			USER_NO = #{USER_NO}
+    		WHERE BOARD_NO = ${BOARD_NO}
+    			
+    	]]>
+    </update>
+
+<!-- Q&A 답글 쿼리 끝-->
+    
+<!-- 공통 쿼리 -->
+
+    <select id="selectBoardList" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT,
+				RESULT_TB.*
+			FROM(
+				SELECT
+					@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM,
+					CBT.BOARD_NO,
+					CBT.GROUP_NO,
+					CBT.GROUP_ORDER,
+					CBT.TITLE,
+					CBT.CONTENT,
+					CBT.OPEN_YN,
+					DATE_FORMAT(STR_TO_DATE(CBT.REG_DATE, '%Y-%m-%d'), '%Y년 %m월 %d일') AS REG_DATE,
+					CBT.USER_NO,
+					CBT.USER_NM,
+					CBT.DIVISION,
+					(SELECT SELECT_NM FROM CBCI_SELECT_CODE CSC WHERE CSC.SELECT_CD = CBT.BOARD_DIVISION GROUP BY CBT.BOARD_DIVISION ) AS BOARD_DIVISION,
+					(SELECT DATE_FORMAT(STR_TO_DATE(REG_DATE, '%Y-%m-%d'), '%Y년 %m월 %d일') FROM CBCI_BOARD WHERE DIVISION = 01 AND GROUP_NO = CBT.GROUP_NO AND GROUP_ORDER = 1) AS ANSWER_DATE,
+					(SELECT DATE_FORMAT(STR_TO_DATE(MODIFY_DATE, '%Y-%m-%d'), '%Y년 %m월 %d일') FROM CBCI_BOARD WHERE DIVISION = 01 AND GROUP_NO = CBT.GROUP_NO AND GROUP_ORDER = 1) AS ANSWER_MODIFY_DATE,
+					(SELECT COUNT(GROUP_NO) FROM CBCI_BOARD WHERE GROUP_NO = CBT.GROUP_NO AND GROUP_ORDER != 0) AS COMMENT_CNT
+				FROM CBCI_BOARD CBT, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				WHERE GROUP_ORDER = 0
+				AND DIVISION = ${DIVISION}
+				AND TITLE LIKE UPPER('%${keyword}%')
+				ORDER BY BOARD_NO DESC
+			) RESULT_TB
+			ORDER BY RNUM LIMIT ${dataCnt}, ${dataPerPage}
+	    ]]>
+   </select>
+
+   <select id="selectBoardDetail" parameterType="hashmap" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				*
+			FROM CBCI_BOARD
+			WHERE BOARD_NO = ${BOARD_NO}
+	    ]]>
+   </select>
+   
+   <select id="selectMaxGroupNO" resultType="hashmap">
+	    <![CDATA[
+			SELECT 
+				IFNULL(MAX(GROUP_NO), 0) AS MAX_GROUP_NO 
+			FROM CBCI_BOARD 
+			WHERE DIVISION = ${DIVISION};
+	    ]]>
+   </select>
+   
+   <insert id="boardInsert" parameterType="hashmap" useGeneratedKeys="true" keyProperty="BOARD_NO" keyColumn="board_no">
+    	<![CDATA[
+			INSERT INTO CBCI_BOARD (
+				GROUP_NO,
+				GROUP_ORDER,
+				TITLE,
+				CONTENT,
+				OPEN_YN,
+				REG_DATE,
+				USER_NO,
+				USER_NM,
+				DIVISION,
+				BOARD_DIVISION
+			) VALUES (
+				${GROUP_NO},
+				${GROUP_ORDER},
+				#{TITLE},
+				#{CONTENT},
+				#{OPEN_YN},
+				DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+				#{USER_NO},
+				#{WRITER},
+				#{DIVISION},
+				#{BOARD_DIVISION}
+			)
+	    ]]>
+    </insert>
+   
+   <update id="boardUpdate" parameterType="hashmap">
+    	<![CDATA[
+    		UPDATE CBCI_BOARD
+    		SET
+    			TITLE = #{TITLE},
+    			CONTENT = #{CONTENT},
+    			OPEN_YN = #{OPEN_YN},
+    			BOARD_DIVISION = #{BOARD_DIVISION},
+    			MODIFY_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+    		WHERE BOARD_NO = ${BOARD_NO}
+    	]]>
+    </update>
+    
+    <delete id="boardDelete" parameterType="hashmap">
+    	<![CDATA[
+    		DELETE 
+    		FROM CBCI_BOARD 
+    		WHERE GROUP_NO = ${GROUP_NO} 
+    		AND DIVISION = ${DIVISION}
+    	]]>
+    </delete>
+<!-- 공통 쿼리 끝 -->
+
+<!-- SMS 공통 쿼리 -->
+	 <select id="SMSBoardList" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT,
+				RESULT_TB.*
+			FROM(
+				SELECT
+					@SMS_ROWNUM := @SMS_ROWNUM + 1 AS RNUM,
+					CST.SMS_NO,
+					CST.SMS_KEY,
+					CST.SMS_CODE,
+					(SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = CST.SMS_MENU AND SELECT_CLASS = 'SMSMenu') AS SMS_MENU,
+					(SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = CST.SMS_DIVISION AND SELECT_CLASS IN ('SMSCubici', 'SMSMoneyBank', 'SMSEtc')) AS SMS_DIVISION,
+					CST.SMS_ITEM,				
+					CST.SMS_TITLE,
+					CST.SMS_CONTENT,
+					CST.SMS_REG_USER_NM,
+					DATE_FORMAT(CST.SMS_REG_DATE, '%Y년 %m월 %d일') AS SMS_REG_DATE,
+					CST.SMS_MODIFY_USER_NM,
+					DATE_FORMAT(CST.SMS_MODIFY_DATE, '%Y년 %m월 %d일') AS SMS_MODIFY_DATE
+				FROM CBCI_SMS_TEMPLATE CST , (SELECT @SMS_ROWNUM := 0) ROWNUM_TB
+				WHERE SMS_KEY = #{SMS_KEY}
+				  AND SMS_TITLE LIKE UPPER('%${keyword}%')
+			)RESULT_TB
+			ORDER BY SMS_MENU DESC, SMS_DIVISION 
+			LIMIT ${dataCnt}, ${dataPerPage}
+	    ]]>
+    </select>
+    
+    <select id="SMSBoardDetail" parameterType="hashmap" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				*
+			FROM CBCI_SMS_TEMPLATE
+			WHERE SMS_NO = #{SMS_NO}
+	    ]]>
+   </select>
+
+	<select id="SMSCodeCheck" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT 
+				COUNT(*) AS CODE_CHECK,
+				SMS_CODE
+			FROM CBCI_SMS_TEMPLATE
+			WHERE SMS_CODE = #{SMS_CODE}
+			AND SMS_KEY = #{SMS_KEY}
+		]]>
+	</select>
+	<insert id="SMSInsert" parameterType="hashmap">
+		<![CDATA[
+			INSERT INTO CBCI_SMS_TEMPLATE(
+				SMS_KEY,
+				SMS_CODE,
+				SMS_MENU,
+				SMS_DIVISION,
+				SMS_ITEM,
+				SMS_TITLE,
+				SMS_CONTENT,
+				SMS_SEND_CONTENT,
+				SMS_REG_USER_NM,
+				SMS_REG_DATE
+			) VALUES(
+				#{SMS_KEY},
+				#{SMS_CODE},
+				#{SMS_MENU},
+				#{SMS_DIVISION},
+				#{SMS_ITEM},
+				#{SMS_TITLE},
+				#{SMS_CONTENT},
+				#{SMS_SEND_CONTENT},
+				#{SMS_REG_USER_NM},
+				DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+			)
+		]]>
+	</insert>
+	
+	 <update id="SMSUpdate" parameterType="hashmap">
+    	<![CDATA[
+    		UPDATE CBCI_SMS_TEMPLATE
+    		SET
+    			SMS_CODE = #{SMS_CODE},
+    			SMS_MENU = #{SMS_MENU},
+    			SMS_DIVISION = #{SMS_DIVISION},
+    			SMS_ITEM = #{SMS_ITEM},
+    			SMS_TITLE = #{SMS_TITLE},
+    			SMS_CONTENT = #{SMS_CONTENT},
+    			SMS_SEND_CONTENT = 	#{SMS_SEND_CONTENT},
+    			SMS_MODIFY_USER_NM = #{SMS_MODIFY_USER_NM},
+    			SMS_MODIFY_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+    		WHERE SMS_NO = ${SMS_NO}
+    	]]>
+    </update>
+    
+    <delete id="SMSDelete" parameterType="hashmap">
+    	<![CDATA[
+    		DELETE 
+    		FROM CBCI_SMS_TEMPLATE
+    		WHERE SMS_NO = ${SMS_NO}
+    	]]>
+    </delete>
+    <!-- SMS 발송시 쿼리 -->
+    <select id="SMSSendMailContent" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+			SELECT
+				SMS_CONTENT
+			FROM CBCI_SMS_TEMPLATE
+			WHERE SMS_CODE = #{SMS_CODE}
+			AND SMS_KEY = #{SMS_KEY}
+		]]>
+	</select>
+    
+<!-- SMS 공통 쿼리 끝 -->
+   
+</mapper>

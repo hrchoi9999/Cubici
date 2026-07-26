@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+                http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+                http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+                http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+                http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+                http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd">
+                
+    <context:annotation-config/>
+    
+    <context:component-scan base-package="egovframework">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Service" />
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Repository" />
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Component" />
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller" />
+    </context:component-scan>
+
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+    <!-- <tx:annotation-driven proxy-target-class="true" order="2"/> -->
+    
+    <!-- pool-size 조정 -->
+    <task:scheduler id="jobScheduler" pool-size="100" />
+    <task:annotation-driven scheduler="jobScheduler" />
+
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter">
+        <property name="webBindingInitializer">
+            <bean class="egovframework.azon.cmmn.controller.EgovBindingInitializer"/>
+        </property>
+        
+        <property name="messageConverters">
+		  <list>    
+			  <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">
+			  	<property name="supportedMediaTypes">
+			    	<list>
+			         <value>text/plain;charset=UTF-8</value>
+		             <value>text/html;charset=UTF-8</value>
+		             <value>application/json;charset=UTF-8</value>
+			        </list>
+			       </property>
+			   </bean>            
+		   </list>
+	   </property> 
+    </bean>
+    <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
+        <property name="interceptors">
+            <list>
+                <ref bean="localeChangeInterceptor" />
+            </list>
+        </property>
+    </bean>
+    <!-- Exception bean -->
+    <bean id="exceptionHandlerExceptionResolver" 
+    class="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver" />
+
+    <bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver" />
+    <!-- 쿠키를 이용한 Locale 이용시 <bean id="localeResolver" class="org.springframework.web.servlet.i18n.CookieLocaleResolver"/> -->
+    <bean id="localeChangeInterceptor" class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor">
+        <property name="paramName" value="language" />
+    </bean>
+
+    <bean id="properties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+        <property name="singleton" value="true" />
+        <property name="locations">
+            <list>
+                <value>classpath:/egovframework/globals.properties</value>
+            </list>
+        </property>
+    </bean>
+
+    <!--properties java-->
+    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" p:order="3">
+        <property name="properties" ref="properties" />
+    </bean>
+    <!--properties java-->
+
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/egovframework/azon"/>
+        <property name="suffix" value=".jsp" />
+        <!--<property name="contentType" value="text/html; charset=UTF-8"/>-->
+        <property name="exposedContextBeanNames">
+            <list>
+                <value>properties</value>
+            </list>
+        </property>
+    </bean>
+
+	<!-- /For Pagination Tag -->
+    <mvc:view-controller path="/cmmn/validator.do" view-name="/cmmn/validator"/>
+    <bean class="org.springframework.web.servlet.view.BeanNameViewResolver" p:order="0"/>
+    <bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView"/>
+
+    <mvc:resources mapping="/resources/**" location="/resources/" cache-period="0"/>
+    <mvc:resources mapping="/vmc/**" location="/vmc/"/>
+    <mvc:resources mapping="/sample/**" location="/vmc/"/>
+    <mvc:resources mapping="/images/**" location="/vmc/"/>
+    <mvc:resources mapping="/cpClassRoom/**" location="/vmc/cpClassRoom/"/>
+    <mvc:resources mapping="/include/**" location="/vmc/include/"/>
+	
+    <mvc:view-controller path="/" view-name="/front/main_rec"/>
+
+	<!-- Mapping URI 대소문자 미구분 -->
+   	<!--  <bean class="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping">
+        <property name="pathMatcher">
+            <bean class="egovframework.azon.cmmn.interceptor.CaseInsensitiveAntPathMatcher"/>
+        </property>
+    </bean> -->
+    
+    <!-- <mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/moneybank/**/request" />
+			<mvc:mapping path="/moneybank/**/evaluate" />
+			<mvc:mapping path="/moneybank/**/contract" />
+			<bean id="MBSignUpPageInterceptor" class="egovframework.azon.cmmn.interceptor.MBSignUpPageInterceptor" />
+		</mvc:interceptor>
+	</mvc:interceptors> -->
+
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+          <property name="maxUploadSize" value="10000000" />
+           <property name="maxInMemorySize" value="10000000" />          
+    </bean>
+
+</beans>

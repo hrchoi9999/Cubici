@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.moneybank.operation.mapper.RedemMapper">
+	<select id="findRedemList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			result_tb2.*,
+			IFNULL(SUM(mrc.act_principal), 0) AS act_sum,
+			IFNULL(SUM(mrc.usage_fee), 0) AS fee_sum
+		FROM (
+				 SELECT
+					 result_tb.*,
+					 IFNULL(SUM(mrp.calculate_deposit_amount), 0) AS cal_sum
+				 FROM (
+						  SELECT
+							  mm.mbid,
+							  mm.id,
+							  cu.USER_NM,
+							  cu.FIRM_NM,
+							  mur.mb_product_code,
+							  mur.mb_status,
+							  DATE_FORMAT(mur.mb_contract_date, '%Y-%m-%d') AS mb_contract_date,
+							  DATE_FORMAT(mur.mb_contract_expire_date, '%Y-%m-%d') AS mb_contract_expire_date,
+							  IFNULL(DATE_FORMAT(mur.mb_termi_apply_date, '%Y-%m-%d'), '-') AS mb_termi_apply_date,
+							  IFNULL(DATE_FORMAT(mur.mb_termi_date, '%Y-%m-%d'), '-') AS mb_termi_date,
+							  mm.fee_rate,
+							  mm.payment_rate,
+							  mm.sales_limit_per_case
+						  FROM MONEYBANK_USER_REQUEST mur, MONEYBANK_MONEYPLUS mm, CBCI_USER cu
+						  WHERE
+							  mur.mbid = mm.mbid
+							AND mur.user_code = cu.USER_CODE
+							AND mur.mb_status >= 06
+							AND cu.USER_NM LIKE '%${user_nm}%'
+							AND cu.FIRM_NM LIKE '%${firm_nm}%'
+							AND mur.mb_product_code LIKE '%${mb_product_code}%'
+							AND mur.mb_status LIKE '%${mb_status}%'
+							AND mur.mb_contract_date >= #{fromDate}
+							AND mur.mb_contract_date < #{toDate}
+						  ORDER BY mb_contract_date desc
+							  LIMIT #{page}, 10 ) result_tb
+						  LEFT JOIN MONEYBANK_REDEM_PROVISION mrp ON mrp.mbid = result_tb.mbid
+				 GROUP BY result_tb.mbid
+					 LIMIT 10 ) result_tb2
+				 LEFT JOIN MONEYBANK_REDEM_CALCULATE mrc ON mrc.mbid = result_tb2.mbid
+		GROUP BY result_tb2.mbid
+		ORDER BY ${orderBy}
+		]]>
+	</select>
+
+	<select id="findRedemAmountTotal" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			SUM(result_tb3.fee_sum) AS fee_sum,
+			SUM(result_tb3.cal_sum) AS cal_sum
+		FROM (
+				 SELECT
+					 result_tb2.cal_sum,
+					 IFNULL(SUM(mrc.usage_fee), 0) AS fee_sum
+				 FROM (
+						  SELECT
+							  result_tb.mbid,
+							  IFNULL(SUM(mrp.calculate_deposit_amount), 0) AS cal_sum
+						  FROM (
+								   SELECT
+									   mm.mbid,
+									   mur.mb_status
+								   FROM MONEYBANK_USER_REQUEST mur, MONEYBANK_MONEYPLUS mm, CBCI_USER cu
+								   WHERE
+									   mur.mbid = mm.mbid
+									 AND mur.user_code = cu.USER_CODE
+									 AND mur.mb_status >= 06
+									 AND mur.mb_contract_date >= #{fromDate}
+									 AND mur.mb_contract_date < #{toDate}
+							   ) result_tb
+								   LEFT JOIN MONEYBANK_REDEM_PROVISION mrp ON mrp.mbid = result_tb.mbid
+						  GROUP BY result_tb.mbid
+					  ) result_tb2
+						  LEFT JOIN MONEYBANK_REDEM_CALCULATE mrc ON mrc.mbid = result_tb2.mbid
+				 GROUP BY result_tb2.mbid
+			 ) result_tb3
+		]]>
+	</select>
+
+	<select id="findRedemCountTotal" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+			COUNT(*) as total_cnt,
+			COUNT(CASE WHEN mur.mb_status IN ('06') THEN 1 END) as cnt1,
+			COUNT(CASE WHEN mur.mb_status IN ('62') THEN 1 END) as cnt2,
+			COUNT(CASE WHEN mur.mb_status IN ('63') THEN 1 END) as cnt3
+		FROM
+			MONEYBANK_USER_REQUEST mur, MONEYBANK_MONEYPLUS mm
+		WHERE
+			mur.mbid = mm.mbid
+			AND mur.mb_status IN (06, 62, 63)
+			AND mur.mb_contract_date >= #{fromDate}
+			AND mur.mb_contract_date < #{toDate}
+		]]>
+	</select>
+
+	<select id="findRedemDetailSum" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+		SELECT
+		    COUNT(*) AS total
+		FROM (
+			 SELECT
+				 mrp.mbid,
+				 '입금' AS status,
+				 mrp.calculate_deposit_date AS calc_date,
+				 mrp.calculate_deposit_amount,
+				 '' AS act_principal
+			 FROM
+				 MONEYBANK_REDEM_PROVISION mrp
+			 WHERE
+				 mrp.mbid = #{mbid}
+				 AND DATE_FORMAT(mrp.calculate_deposit_date, '%Y-%m-%d') >= #{fromDate}
+			     AND mrp.calculate_deposit_date <= #{toDate}
+			 UNION
+			 SELECT
+				 mrc.mbid,
+				 '상환',
+				 mrd.deposit_date,
+				 0,
+				 mrc.act_principal
+			 FROM
+				 MONEYBANK_REDEM_CALCULATE mrc
+				 LEFT JOIN MONEYBANK_REDEM_DEPOSIT mrd ON mrc.settlement_code = mrd.settlement_code
+			 WHERE mrc.mbid = #{mbid}
+				AND DATE_FORMAT(mrd.deposit_date, '%Y-%m-%d') >= #{fromDate}
+				AND mrd.deposit_date <= #{toDate}
+			 GROUP BY mrc.settlement_code
+		) result_tb
+		]]>
+		<if test='status neq ""'>
+			WHERE result_tb.status IN (#{status})
+		</if>
+		ORDER BY result_tb.calc_date desc
+	</select>
+
+	<select id="findRedemDetailList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			LIST_LIMIT.*
+		FROM (
+			SELECT
+				@ROWNUM:= @ROWNUM + 1 AS rownum,
+				LIST.*
+			FROM (
+				SELECT
+					*,
+					(SUM(result_tb.calculate_deposit_amount) OVER(order by result_tb.calc_date) -
+					SUM(result_tb.act_principal) OVER(order by result_tb.calc_date)) AS cal_balance
+				FROM (
+					SELECT
+						mrp.mbid,
+						'입금' AS status,
+						DATE_FORMAT(mrp.calculate_deposit_date, '%Y-%m-%d 00:59:59') AS calc_date,
+						mrp.calculate_deposit_amount,
+						'' AS act_principal,
+						'' AS usage_fee,
+						'' AS remittance_fee,
+						'' AS balance_deposit_date	,
+						'' AS balance_remittance_amount,
+						0 AS deposit_amount
+					FROM
+						MONEYBANK_REDEM_PROVISION mrp
+					WHERE mrp.mbid = #{mbid}
+					UNION
+					SELECT
+						mrc.mbid,
+						'상환',
+						DATE_FORMAT(mrd.deposit_date, '%Y-%m-%d 23:59:59'),
+						'',
+						mrc.act_principal,
+						mrc.usage_fee,
+						mrc.remittance_fee,
+						mrc.balance_deposit_date,
+						mrc.balance_remittance_amount,
+						SUM(mrd.deposit_amount)
+					FROM
+						MONEYBANK_REDEM_CALCULATE mrc
+					LEFT JOIN MONEYBANK_REDEM_DEPOSIT mrd ON mrc.settlement_code = mrd.settlement_code
+					WHERE mrc.mbid = #{mbid}
+					GROUP BY mrd.deposit_date
+		)  result_tb
+				ORDER BY result_tb.calc_date DESC
+			) LIST, (SELECT @ROWNUM:=0) r
+				<![CDATA[
+				WHERE LIST.calc_date >= #{fromDate}
+					AND LIST.calc_date <= #{toDate}
+				]]>
+				<if test='status neq ""'>
+					AND LIST.status IN (#{status})
+				</if>
+		)LIST_LIMIT
+		LIMIT ${current_data}, ${data_limit}
+	</select>
+
+	<select id="getRedemInfo" parameterType="String" resultType="map">
+		SELECT
+			DATE_FORMAT((DATE_ADD(now(), INTERVAL 1 DAY)),'%Y-%m-%d') AS standardDate,
+			cu.USER_NM,
+			cu.USER_ID,
+			mur.mbid,
+			mur.mb_status,
+			cu.FIRM_NM,
+			cu.FIRM_ID,
+			(SELECT csc.SELECT_NM FROM CBCI_SELECT_CODE csc WHERE csc.SELECT_CLASS = 'bizType' AND csc.SELECT_CD = cu.BUSINESS_TYPE) AS BUSINESS_TYPE,
+			(SELECT csc.SELECT_NM FROM CBCI_SELECT_CODE csc WHERE csc.SELECT_CLASS = 'CBCI_SECTOR' AND csc.SELECT_CD = cu.BUSINESS_TYPE) AS SECTORS,
+			DATE_FORMAT(cu.FIRM_SETUP_DATE, '%Y-%m-%d') AS FIRM_SETUP_DATE,
+			cu.USER_PHONE,
+			cu.FIRM_ZIP_CODE,
+			cu.FIRM_ADDR,
+			mur.mb_main_acc_number AS main_acc,
+			mur.mb_demand_acc_number AS demand_acc,
+			mur.mb_product_code,
+			DATE_FORMAT(mur.mb_approval_date, '%Y-%m-%d') AS mb_approval_date,
+			DATE_FORMAT(mur.mb_contract_date, '%Y-%m-%d') AS mb_contract_date,
+			DATE_FORMAT(mur.mb_contract_expire_date, '%Y-%m-%d') AS mb_contract_expire_date,
+			DATE_FORMAT(mur.mb_termi_date, '%Y-%m-%d') AS mb_contract_expire_date,
+			mm.fee_rate,
+			mm.payment_rate,
+			mm.sales_limit_per_case
+		FROM MONEYBANK_USER_REQUEST mur
+		LEFT JOIN CBCI_USER cu ON cu.USER_CODE = mur.user_code
+		LEFT JOIN MONEYBANK_MONEYPLUS mm ON mm.mbid = mur.mbid
+		WHERE mur.mbid = #{mbid};
+	</select>
+
+	<select id="getEvalInfo" parameterType="map" resultType="map">
+		SELECT
+			@ROWNUM := @ROWNUM +1 AS rn,
+			DATE_FORMAT(input_date, '%Y-%m-%d %H:%i:%s') AS input_date,
+			reviewer,
+			eval_subject,
+			title,
+			detail
+		FROM CBCI_EVALUATE , (SELECT @ROWNUM:= 0) rn
+		WHERE eval_no = #{eval_no}
+	</select>
+
+	<select id="getEvalInfoList" parameterType="map" resultType="map">
+	SELECT
+	    LIST.*
+	FROM
+		(SELECT
+			@ROWNUM := @ROWNUM +1 AS rn,
+			eval_no,
+			DATE_FORMAT(input_date, '%Y-%m-%d %H:%i:%s') AS input_date,
+			reviewer,
+			eval_subject,
+			title
+		FROM CBCI_EVALUATE , (SELECT @ROWNUM:= 0) rn
+		WHERE object_no = #{mbid}
+		ORDER BY input_date DESC)AS LIST
+		LIMIT ${current_data}, ${data_limit};
+	</select>
+
+	<select id="evalCountTotal" parameterType="String" resultType="int">
+		SELECT
+			COUNT(*)
+		FROM CBCI_EVALUATE
+		WHERE object_no = #{mbid}
+	</select>
+
+	<insert id="evalEnroll" parameterType="map">
+		INSERT INTO CBCI_EVALUATE(
+			division,
+			object_no,
+			input_date,
+			eval_subject,
+			reviewer,
+			title,
+			detail
+		) VALUES (
+		    '00',
+		    #{mbid},
+		    now(),
+		    #{eval_subject},
+		    #{reviewer},
+		    #{title},
+		    #{detail}
+		)
+	</insert>
+
+	<update id="updateMBStatus" parameterType="map">
+		UPDATE MONEYBANK_USER_REQUEST mur
+		SET	mur.mb_status = #{status},
+			mur.upd_date = now(),
+			mur.mb_termi_date = now()
+		WHERE mur.mbid = #{mbid};
+	</update>
+
+	<update id="updateUserType" parameterType="map">
+		UPDATE CBCI_USER cu, MONEYBANK_USER_REQUEST mur
+		SET	cu.USER_TYPE = #{USER_TYPE},
+			cu.UPD_DATE = now()
+		WHERE cu.USER_CODE = mur.user_code
+		AND mur.mbid = #{mbid};
+	</update>
+</mapper>

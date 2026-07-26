@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.admin.moneybank.operation.mapper.ManageMapper">
+    <select id="selectPrizmItemList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+        select
+            cpi.ITEM_NM,
+            cpi.ITEM_WEIGHT,
+            cpid.DIVISION,
+            cpid.SUBJECT_NO ,
+            cpid.ITEM_NO,
+            GROUP_CONCAT(cpid.ITEM_SCORE) as ITEM_SCORE,
+            GROUP_CONCAT(IFNULL(cpid.ITEM_STANDARD1,'null')) as ITEM_STANDARD1 ,
+            GROUP_CONCAT(IFNULL(cpid.OPERATOR1,'null')) as OPERATOR1  ,
+            GROUP_CONCAT(IFNULL(cpid.ITEM_STANDARD2,'null')) as ITEM_STANDARD2  ,
+            GROUP_CONCAT(IFNULL(cpid.OPERATOR2,'null')) as OPERATOR2
+        from CBCI_PRIZM_ITEM_DETAIL cpid
+                 left join CBCI_PRIZM_ITEM cpi on cpid.DIVISION =cpi.DIVISION and cpid.SUBJECT_NO = cpi.SUBJECT_NO  and cpid.ITEM_NO = cpi.ITEM_NO
+        where cpid.DIVISION = ${DIVISION}
+        group by cpid.SUBJECT_NO, cpid.ITEM_NO
+        order by cpid.DIVISION, cpid.SUBJECT_NO, cpid.ITEM_NO, cpid.ITEM_SCORE  ASC
+        ]]>
+	</select>
+
+    <select id="selectPrizmItemGradeList" parameterType="hashmap" resultType="hashmap">
+		<![CDATA[
+        select
+            cpig.DIVISION ,
+            cpig.GRADE_NO ,
+            cpig.GRADE_NM ,
+            FLOOR(cpig.ITEM_STANDARD1) as ITEM_STANDARD1 ,
+            cpig.OPERATOR1 ,
+            FLOOR(cpig.ITEM_STANDARD2) as ITEM_STANDARD2 ,
+            cpig.OPERATOR2
+        from CBCI_PRIZM_ITEM_GRADE cpig
+        where DIVISION =#{DIVISION}
+        order by cpig.DIVISION , cpig.GRADE_NO ASC
+        ]]>
+	</select>
+
+</mapper>

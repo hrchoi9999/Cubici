@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.shop.mapper.SettlementMapper">
+
+	<select id="findByShopTypeAndShopIdOrderByInputDateDesc" parameterType="String" resultType="java.sql.Timestamp">
+		SELECT
+			INPUT_DATE as inputDate
+		FROM SHOP_SETTLEMENT_API
+		WHERE SHOP_TYPE = #{shopType}
+		AND SHOP_ID = #{shopId}
+		ORDER BY INPUT_DATE DESC LIMIT 1
+	</select>
+
+	<insert id="saveAll" parameterType="SettlementDTO">
+		INSERT INTO SHOP_SETTLEMENT_API(
+			shop_type, shop_id, sub_store, settlement_type, settlement_date, total_sale, service_fee, settlement_target_amount, settlement_amount, pending_released_amount, seller_discount_coupon, downloadable_coupon, seller_service_fee, store_fee_discount, debt_of_last_week, bank_account_holder, bank_name, bank_account, status, input_date, upd_date
+		)
+		VALUES (
+		    #{shopType},
+		    #{shopId},
+			IFNULL(#{subStore}, ' '),
+		    #{settlementType},
+		    #{settlementDate},
+		    #{totalSale},
+		    #{serviceFee},
+		    #{settlementTargetAmount},
+		    #{settlementAmount},
+		    #{pendingReleasedAmount},
+		    #{sellerDiscountCoupon},
+		    #{downloadableCoupon},
+		    #{sellerServiceFee},
+		    #{storeFeeDiscount},
+		    #{debtOfLastWeek},
+		    #{bankAccountHolder},
+		    #{bankName},
+		    #{bankAccount},
+		    #{status},
+		    #{inputDate},
+		    #{updDate}
+	   ) ON DUPLICATE KEY UPDATE
+		   total_sale = IFNULL(#{totalSale}, total_sale),
+		   service_fee = IFNULL(#{serviceFee}, service_fee),
+		   settlement_target_amount = IFNULL(#{settlementTargetAmount}, settlement_target_amount),
+		   settlement_amount = IFNULL(#{settlementAmount}, settlement_amount),
+		   pending_released_amount = IFNULL(#{pendingReleasedAmount}, pending_released_amount),
+		   seller_discount_coupon = IFNULL(#{sellerDiscountCoupon}, seller_discount_coupon),
+		   downloadable_coupon = IFNULL(#{downloadableCoupon}, downloadable_coupon),
+		   seller_service_fee = IFNULL(#{sellerServiceFee}, seller_service_fee),
+		   store_fee_discount = IFNULL(#{storeFeeDiscount}, store_fee_discount),
+		   debt_of_last_week = IFNULL(#{debtOfLastWeek}, debt_of_last_week),
+		   bank_account_holder = IFNULL(#{bankAccountHolder}, bank_account_holder),
+		   bank_name = IFNULL(#{bankName}, bank_name),
+		   bank_account = IFNULL(#{bankAccount}, bank_account),
+		   status = IFNULL(#{status}, status),
+		   upd_date = IFNULL(#{updDate}, NOW())
+	</insert>
+</mapper>

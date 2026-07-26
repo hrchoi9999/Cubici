@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.front.cubici.mapper.UserSupportMapper">
+    
+    <!-- Q&A 상세 리스트 조회 -->
+    <select id="selectBoardDetailList" parameterType="hashmap" resultType="hashmap">
+	   <![CDATA[
+			SELECT
+				BOARD_NO,
+				DIVISION,
+				USER_NO,
+				USER_NM,
+				GROUP_NO,
+				GROUP_ORDER,
+				TITLE,
+				CONTENT,
+				OPEN_YN,
+				DATE_FORMAT(REG_DATE, '%Y-%m-%d %H:%i:%s') AS REG_DATE,
+				MODIFY_DATE,
+				BOARD_DIVISION,
+				(SELECT COUNT(*) FROM CBCI_BOARD WHERE GROUP_NO = ${GROUP_NO} AND DIVISION = ${DIVISION}) AS COMMENT_CNT
+			FROM CBCI_BOARD
+			WHERE GROUP_NO = ${GROUP_NO}
+			AND DIVISION = ${DIVISION}
+			ORDER BY GROUP_ORDER
+	   ]]>
+   </select>
+
+   <select id="selectBoardList" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				FOUND_ROWS() AS CNT,
+				RESULT_TB.*,
+				(SELECT SELECT_NM FROM CBCI_SELECT_CODE WHERE SELECT_CD = RESULT_TB.BOARD_DIVISION_CODE GROUP BY SELECT_NM) AS BOARD_DIVISION
+			FROM(
+				SELECT
+					@BOARD_ROWNUM := @BOARD_ROWNUM + 1 AS RNUM,
+					CBT.BOARD_NO,
+					CBT.GROUP_NO,
+					CBT.GROUP_ORDER,
+					CBT.TITLE,
+					CBT.CONTENT,
+					CBT.OPEN_YN,
+					DATE_FORMAT(STR_TO_DATE(CBT.REG_DATE, '%Y-%m-%d'), '%Y년 %m월 %d일') AS REG_DATE,
+					CBT.USER_NO,
+					CBT.USER_NM,
+					CBT.DIVISION,
+					CBT.BOARD_DIVISION AS BOARD_DIVISION_CODE,
+					(SELECT COUNT(GROUP_NO) FROM CBCI_BOARD WHERE GROUP_NO = CBT.GROUP_NO AND GROUP_ORDER != 0) AS COMMENT_CNT
+				FROM CBCI_BOARD CBT, (SELECT @BOARD_ROWNUM := 0) ROWNUM_TB
+				WHERE GROUP_ORDER = 0
+				AND DIVISION = ${DIVISION}
+				AND TITLE LIKE UPPER('%${keyword}%')
+				ORDER BY BOARD_NO DESC
+			) RESULT_TB
+			ORDER BY RNUM LIMIT ${dataCnt}, ${dataPerPage}
+	    ]]>
+   </select>
+
+   <select id="selectBoardDetail" parameterType="hashmap" resultType="hashmap">
+	    <![CDATA[
+			SELECT
+				title,
+				user_nm,
+				DATE_FORMAT(reg_date, '%Y-%m-%d %H:%i:%s') reg_date,
+				content
+			FROM CBCI_BOARD
+			WHERE BOARD_NO = ${BOARD_NO}
+	    ]]>
+   </select>
+   
+   <select id="selectMaxGroupNO" resultType="hashmap">
+	    <![CDATA[
+			SELECT 
+				IFNULL(MAX(GROUP_NO), 0) AS MAX_GROUP_NO 
+			FROM CBCI_BOARD 
+			WHERE DIVISION = ${DIVISION};
+	    ]]>
+   </select>
+   
+   <insert id="boardInsert" parameterType="hashmap">
+    	<![CDATA[
+			INSERT INTO CBCI_BOARD (
+				GROUP_NO,
+				GROUP_ORDER,
+				TITLE,
+				CONTENT,
+				OPEN_YN,
+				REG_DATE,
+				USER_NO,
+				USER_NM,
+				DIVISION,
+				BOARD_DIVISION
+			) VALUES (
+				${GROUP_NO},
+				${GROUP_ORDER},
+				#{TITLE},
+				#{CONTENT},
+				#{OPEN_YN},
+				DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s'),
+				#{USER_NO},
+				#{WRITER},
+				#{DIVISION},
+				#{BOARD_DIVISION}
+			)
+	    ]]>
+    </insert>
+   
+   <update id="boardUpdate" parameterType="hashmap">
+    	<![CDATA[
+    		UPDATE CBCI_BOARD
+    		SET
+    			TITLE = #{TITLE},
+    			CONTENT = #{CONTENT},
+    			OPEN_YN = #{OPEN_YN},
+    			BOARD_DIVISION = #{BOARD_DIVISION},
+    			MODIFY_DATE = DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+    		WHERE BOARD_NO = ${BOARD_NO}
+    	]]>
+    </update>
+    
+    <delete id="boardDelete" parameterType="hashmap">
+    	<![CDATA[
+    		DELETE 
+    		FROM CBCI_BOARD 
+    		WHERE GROUP_NO = ${GROUP_NO} 
+    		AND DIVISION = ${DIVISION}
+    	]]>
+    </delete>
+   
+</mapper>

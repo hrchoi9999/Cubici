@@ -1,0 +1,18 @@
+<svg id="cal-arr-next" xmlns="http://www.w3.org/2000/svg" width="24.82" height="24.812" viewBox="0 0 24.82 24.812">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #179aff;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-width: 2px;
+        fill-rule: evenodd;
+      }
+    </style>
+  </defs>
+  <circle id="타원_1172" data-name="타원 1172" class="cls-1" cx="12.41" cy="12.406" r="12.41"/>
+  <path id="cal-arr-next-2" data-name="cal-arr-next" class="cls-2" d="M1415.52,544.064l4.05-4.064-4.05-4.064" transform="translate(-1405.59 -527.594)"/>
+</svg>

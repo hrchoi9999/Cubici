@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="egovframework.azon.cmmn.mapper.CmmScheduledMapper">
+    
+    <insert id="insertScheduledReport" parameterType="hashmap">
+		INSERT INTO CBCI_SCHEDULED_REPORT (
+			SCHEDULED_NAME,
+			SHOP_TYPE,
+			SHOP_NM,
+			SHOP_ID,
+			CAUSE,
+			INPUT_DATE
+		) VALUES (
+			#{SCHEDULED_NAME},
+			#{SHOP_TYPE},
+			#{SHOP_NM},
+			#{SHOP_ID},
+			#{CAUSE},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+    </insert>
+	
+	<select id="selectNewEmailList" resultType="hashmap">
+		SELECT
+			CU.USER_ID,
+			CA.USER_NO,
+			CU.USER_PHONE,
+			CU.USER_NM,
+			(SELECT COUNT(*) FROM CBCI_ACCOUNT WHERE USER_NO = CU.USER_NO AND SEND_MAIL = 'N' AND USER_NEW_YN1 = 'N' AND USER_NEW_YN2 = 'N') AS SEND_MAIL_COUNT
+		FROM
+			CBCI_ACCOUNT CA
+		INNER JOIN CBCI_USER CU
+		WHERE 
+			CA.USER_NO = CU.USER_NO
+			AND CU.USER_TYPE = '02'
+			AND CU.USER_NO NOT IN ('37','38','40','41')
+		GROUP BY
+			CA.USER_NO
+		HAVING
+			SEND_MAIL_COUNT > 0
+	</select>
+	
+	<select id="selectNewEmailListShopList" parameterType="hashmap" resultType="hashmap">
+		SELECT
+			USER_NO,
+			SHOP_TYPE,
+			(SELECT CODE_NM FROM CBCI_CODE WHERE CODE_ID = SHOP_TYPE) AS SHOP_NM,
+			SHOP_ID
+		FROM
+			CBCI_ACCOUNT
+		WHERE
+			USER_NO = ${USER_NO}
+			AND SEND_MAIL = 'N'
+			AND USER_NEW_YN1 = 'N'
+			AND USER_NEW_YN2 = 'N'
+		ORDER BY SHOP_TYPE
+	</select>
+	
+	<!-- 신규회원 사용준비 알림 성공 -->
+	<update id="updateSendMail" parameterType="hashmap">
+		UPDATE CBCI_ACCOUNT
+		SET SEND_MAIL = 'Y'
+		WHERE USER_NO = ${USER_NO}
+		AND SHOP_TYPE = #{SHOP_TYPE}
+		AND SHOP_ID = #{SHOP_ID}
+	</update>
+    
+    <select id="selectShopLoginFailUser" resultType="hashmap">
+		<![CDATA[
+		  SELECT
+				CA.USER_NO,
+				CA.SHOP_ID,
+				CA.SHOP_TYPE,
+				CU.USER_ID, 
+				CU.USER_PHONE,
+				CA.LOGIN_LOCK_NOTICE,
+				CA.LOGIN_LOCK,
+				(SELECT COUNT(*) FROM CBCI_ACCOUNT WHERE USER_NO = CA.USER_NO AND LOGIN_LOCK = 'Y' AND LOGIN_LOCK_NOTICE < 3) AS COUNT_CNT,
+				(
+				SELECT
+					CODE_NM
+				FROM
+					CBCI_CODE CC 
+				WHERE
+					CODE_ID = CA.SHOP_TYPE) AS CODE_NM
+			FROM
+				CBCI_ACCOUNT CA
+			INNER JOIN CBCI_USER CU
+			WHERE
+				CA.USER_NO = CU.USER_NO 
+			AND LOGIN_LOCK = 'Y'
+			AND LOGIN_LOCK_NOTICE < 3
+		]]>
+    </select>
+    
+    <select id="selectNoticeOverList" resultType="hashmap">
+		SELECT
+			COUNT(*) AS COUNT
+		FROM
+			CBCI_ACCOUNT CA
+		INNER JOIN CBCI_USER CU
+		WHERE
+			CA.USER_NO = CU.USER_NO
+			AND LOGIN_LOCK = 'Y'
+			AND LOGIN_LOCK_NOTICE >= 3	    
+    </select>
+    
+    <update id="updateNoticeCount">
+    	UPDATE
+			CBCI_ACCOUNT
+		SET
+			LOGIN_LOCK_NOTICE = #{LOGIN_LOCK_NOTICE}
+		WHERE
+			SHOP_TYPE = #{SHOP_TYPE}
+			AND SHOP_ID = #{SHOP_ID}
+			AND LOGIN_LOCK = 'Y'
+    </update>
+    
+    <insert id="insertAnalytics" parameterType="hashmap">
+    	INSERT INTO CBCI_USE_MANAGEMENT(
+    		PAGE_VIEWS_COUNT,
+    		VISIT_COUNT,
+    		AVG_USE_TIME,
+    		STANDARD_DATE,
+    		INPUT_DATE
+    	) VALUES(
+    		${PAGE_VIEWS_COUNT},
+    		${VISIT_COUNT},
+    		${AVG_USE_TIME},
+    		#{STANDARD_DATE},
+    		DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+    	)
+    </insert>
+    
+    <insert id="insertAnalyticsErrorReport" parameterType="hashmap">
+    	INSERT INTO CBCI_SCHEDULED_REPORT (
+			SCHEDULED_NAME,
+			CAUSE,
+			INPUT_DATE
+		) VALUES (
+			#{SCHEDULED_NAME},
+			#{CAUSE},
+			DATE_FORMAT(now(), '%Y-%m-%d %H:%i:%s')
+		)
+    </insert>
+    
+    <select id="claim_status" resultType="hashmap">
+	    <![CDATA[
+	    	CALL update_claim_status()
+	    ]]>
+    </select>
+	
+	<update id="updateUserTypeByExpireDate" parameterType="hashMap">
+		UPDATE
+			CBCI_USER CU
+			LEFT JOIN CBCI_BILLING_PAYMENT_DETAIL CBPD ON CU.USER_CODE = CBPD.user_code 
+		SET 
+			CU.USER_TYPE = IF(CU.USER_TYPE = '01', '97', IF(CU.USER_TYPE = '02', '03', CU.USER_TYPE)),
+			CBPD.status = RIGHT(CBPD.status, 2)
+		WHERE
+			CU.USER_TYPE != '00' 
+		 	AND LEFT(CBPD.status, 1) = 'U'
+		<![CDATA[
+			AND CBPD.expire_date <= now()
+		]]>
+	</update>
+	
+	<update id="updateUserTypeByprePayment" parameterType="hashMap">
+		UPDATE
+			CBCI_USER CU
+			LEFT JOIN CBCI_BILLING_PAYMENT_DETAIL CBPD ON CU.USER_CODE = CBPD.user_code 
+		SET 
+			CU.USER_TYPE = IF(CU.USER_TYPE = '97', '01', IF(CU.USER_TYPE = '03', '02', CU.USER_TYPE)),
+			CBPD.status = 'U-CC'
+		WHERE
+			CU.USER_TYPE != '00'
+			AND CBPD.status = 'SB'
+			AND DATE_FORMAT(CBPD.start_date, '%Y-%m-%d') = DATE_FORMAT(now(), '%Y-%m-%d')
+	</update>
+</mapper>
