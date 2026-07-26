@@ -29,7 +29,7 @@
 | 머니뱅크 운영 | 계약 관리 | `ContractManagementPage` | `moneybank-contract-*`, `moneybank-full-lifecycle-*` | 73% | 체결 가능 상태 판정 보강, 계약서/전자서명 실연동 제외 범위 명확화 |
 | 머니뱅크 운영 | 정산 관리 | `SettlementManagementPage` | `settlement-management.spec.js` | 67% | 정산 검산 표시 완료, `settlement_amount` 원천 batch/procedure 대조 잔여 |
 | 머니뱅크 운영 | 상환 관리 | `RedemptionManagementPage` | `redemption-management.spec.js` | 69% | 잔액 검산 표시 완료, 해지/강제해지 운영정책 반복 검수 잔여 |
-| 머니뱅크 운영 | 프리즘 지표 관리 | `PrizmManagementPage` | 없음 또는 간접 | 58% | Alt_CSM score 경계, legacy 평가결과 표시 대조 |
+| 머니뱅크 운영 | 프리즘 지표 관리 | `PrizmManagementPage` | `prizm-management.spec.js` | 70% | PCS/PMS 결과 조회/상세/상태 표시 1차 보강 완료, 재계산/Alt_CSM 실연동은 2차 |
 | 고객관리 | 고객문의 | `CustomerInquiryPage` | `customer-inquiry-management.spec.js` | 73% | 답변 CRUD/후속상태 표시 보강, 알림/메일 실발송 잔여 |
 | 고객관리 | 문자/이메일 | `MessageTemplatePage` | `message-template-management.spec.js` | 67% | 템플릿 CRUD/실발송 미연동/변수정책 상태 표시 보강, 실제 발송 연동 잔여 |
 | 고객관리 | 고객 공지 관리 | `CustomerBoardPage` | `customer-board-management.spec.js` | 73% | 공지/FAQ CRUD/첨부·노출정책 상태 표시 보강, 첨부/팝업/상단고정 잔여 |
@@ -40,8 +40,8 @@
 | 환경설정 | 요금제 관리 | `ChargeManagementPage` | `charge-management.spec.js` | 64% | 운영 요금정책 반복 검증 |
 | 환경설정 | 연계코드 관리 | `PromotionManagementPage` | `promotion-management.spec.js` | 60% | 적용/노출 정책 검수 |
 | 환경설정 | 협력사 관리 | `PartnerManagementPage` | `partner-management.spec.js` | 66% | 담당자 정합성 표시 보강, 금융상품 연결 정책 잔여 |
-| 환경설정 | 머니뱅크 관리 | `MoneybankProductPreferencePage` | `moneybank-product-preference.spec.js` | 60% | master 미적재/조건상태 표시 보강, 상품 seed 데이터 잔여 |
-| 환경설정 | Prism System | `PrizmConfigPage`, `RawDataConfigPage` | `prizm-config.spec.js`, `raw-data-config.spec.js` | 62% | 설정 미완성/공식 연결상태 표시 보강, 산식/Alt_CSM 연동 경계 잔여 |
+| 환경설정 | 머니뱅크 관리 | `MoneybankProductPreferencePage` | `moneybank-product-preference.spec.js` | 70% | 금융상품/제휴사 master 조회·등록·수정 1차 보강 완료, 실데이터 확정/seed 생성은 2차 |
+| 환경설정 | Prism System | `PrizmConfigPage`, `RawDataConfigPage` | `prizm-config.spec.js`, `raw-data-config.spec.js` | 72% | Prism 설정/RawData 공식 관리·preview 1차 보강 완료, 산식 재계산/Alt_CSM 실연동은 2차 |
 
 ## 전체 완료율
 
@@ -50,8 +50,8 @@
 - 저장/변경 workflow: 60~68%
 - legacy 정책 재현: 55~62%
 - E2E/운영 검수: 45~55%
-- 관리자단 전체 운영 재현: 73~77%
-- 1차 제외 항목을 제외한 관리자단 운영 재현: 84~88%
+- 관리자단 전체 운영 재현: 75~79%
+- 1차 제외 항목을 제외한 관리자단 운영 재현: 86~90%
 
 ## 1차 개발 범위 확정 후보
 
@@ -65,9 +65,9 @@
 
 ### 다음
 
-6. 금융상품/협력사 master 데이터 정합성 검수
+6. 금융상품/협력사 master 데이터 조회/관리와 정합성 상태 표시
 7. 관리자 권한등급/audit/민감정보 노출 정책 정리
-8. Prism/Raw data 설정 반영 검증
+8. Prism/Raw data 조회/참조와 설정 반영 검증
 9. 통합정보 shop grouping/legacy 통계 procedure 대조
 10. 서버관리/오류로그/알림 workflow 보강
 
@@ -80,7 +80,7 @@
 - 외부 서버 metric 수집
 - 게시판 첨부파일 고도화, 팝업, 상단고정, 노출기간
 - 금융상품 master 실데이터 확정/seed 생성
-- Prism/RawData 실제 산식 운영 연동
+- Prism/RawData 실제 산식 재계산 및 Alt_CSM 실연동
 
 ## Sub Agent 병렬 분배안
 
@@ -170,8 +170,9 @@ Moneybank 신청/심사/계약/서류는 계약 상태 공통 로직과 충돌 �
 - 미구현 route는 `Route 점검 / 미구현 경로`로 표시하고 진행률 산정에서 제외한다.
 - 정산 원본값, 상환/지급 취소 재계산, 해지 상태 이벤트의 1차 완료 기준을 문서화했다.
 - 실제 DB 통합 현황 잔액 검산 차이 `-43,050,505`는 운영 검수 항목으로 유지한다.
-- Hyphen/은행, 외부 쇼핑몰, SMS/Email/Alert 실발송, 외부 서버 metric, 첨부/팝업/상단고정/노출기간, 금융상품 seed, Prism/RawData 실연동은 1차 제외 또는 후순위로 분리했다.
-- 관리자단 전체 E2E milestone은 33 passed로 완료했다.
+- Hyphen/은행, 외부 쇼핑몰, SMS/Email/Alert 실발송, 외부 서버 metric, 첨부/팝업/상단고정/노출기간, 금융상품 seed, Prism/RawData 산식 재계산/Alt_CSM 실연동은 1차 제외 또는 후순위로 분리했다.
+- 금융상품 master 조회/관리와 Prism/RawData 결과 조회/참조는 1차 범위로 재분류해 보강했다.
+- 관리자단 전체 E2E milestone은 34 passed로 완료했다.
 
 ## 관리자 E2E Runner 준비
 
@@ -180,7 +181,7 @@ Moneybank 신청/심사/계약/서류는 계약 상태 공통 로직과 충돌 �
 - `admin-web/scripts/run-playwright-e2e.mjs`에 `CUBICI_RUN_DB_E2E=1` 기본 설정을 추가했다.
 - `admin-web/scripts/run-playwright-e2e.mjs`는 stale server 재사용 방지를 위해 실행별 동적 포트를 사용한다.
 - `admin-web/playwright.config.js`는 `CUBICI_ADMIN_BASE_URL`을 우선 사용한다.
-- 관리자단 전체 E2E milestone 1회 실행 결과: 33 passed.
+- 관리자단 전체 E2E milestone 1회 실행 결과: 34 passed.
 
 ## 다음 액션
 

@@ -1651,10 +1651,24 @@ def test_account_my_shop_delete_endpoint_payload(monkeypatch) -> None:
 
 
 def test_risk_results_endpoint_payload(monkeypatch) -> None:
-    from cubici_service.risk_results.repository import RiskResultListResponse
+    from cubici_service.risk_results.repository import RiskResultCounts, RiskResultListResponse
 
     def fake_list_risk_results(limit: int, offset: int, **filters) -> RiskResultListResponse:
-        return RiskResultListResponse(limit=limit, offset=offset, total=0, items=[])
+        return RiskResultListResponse(
+            limit=limit,
+            offset=offset,
+            total=1,
+            counts=RiskResultCounts(
+                total_count=1,
+                pcs_count=1,
+                pms_count=1,
+                linked_count=1,
+                incomplete_count=0,
+                source_status_label="PCS/PMS 연결",
+                policy_status_label="조회 재현",
+            ),
+            items=[],
+        )
 
     monkeypatch.setattr(risk_results, "list_risk_results", fake_list_risk_results)
 
@@ -1662,7 +1676,9 @@ def test_risk_results_endpoint_payload(monkeypatch) -> None:
 
     assert response.limit == 10
     assert response.offset == 0
-    assert response.total == 0
+    assert response.total == 1
+    assert response.counts.source_status_label == "PCS/PMS 연결"
+    assert response.counts.policy_status_label == "조회 재현"
     assert response.items == []
 
 

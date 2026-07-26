@@ -55,6 +55,15 @@ function mapRiskResultToRow(item) {
 export function PrizmManagementPage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState({
+    total_count: 0,
+    pcs_count: 0,
+    pms_count: 0,
+    linked_count: 0,
+    incomplete_count: 0,
+    source_status_label: '미조회',
+    policy_status_label: '조회 재현',
+  });
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -81,11 +90,21 @@ export function PrizmManagementPage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
+          setCounts(data.counts ?? {});
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
+          setCounts({
+            total_count: 0,
+            pcs_count: 0,
+            pms_count: 0,
+            linked_count: 0,
+            incomplete_count: 0,
+            source_status_label: '조회 실패',
+            policy_status_label: '조회 재현',
+          });
           setMessage(error.message);
         }
       } finally {
@@ -147,6 +166,16 @@ export function PrizmManagementPage() {
             <a href="javascript:;">프리즘 지표 관리</a>
           </li>
         </ul>
+      </div>
+
+      <div className="summaryPills">
+        <span>전체 {formatNumber(counts.total_count ?? total)}건</span>
+        <span>PCS {formatNumber(counts.pcs_count ?? 0)}건</span>
+        <span>PMS {formatNumber(counts.pms_count ?? 0)}건</span>
+        <span>연결 {formatNumber(counts.linked_count ?? 0)}건</span>
+        <span>상태 {counts.source_status_label ?? '-'}</span>
+        <span>정책 {counts.policy_status_label ?? '조회 재현'}</span>
+        <span>재계산/Alt_CSM 실연동 2차</span>
       </div>
 
       <form className="m-search searchArea" onSubmit={handleSearch}>

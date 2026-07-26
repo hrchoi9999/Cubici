@@ -3,7 +3,7 @@
 from datetime import date, datetime
 
 from psycopg.rows import dict_row
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cubici_service.db.connection import get_connection
 
@@ -45,10 +45,21 @@ class RiskResultListItem(BaseModel):
     pms_reg_date: datetime | None
 
 
+class RiskResultCounts(BaseModel):
+    total_count: int = 0
+    pcs_count: int = 0
+    pms_count: int = 0
+    linked_count: int = 0
+    incomplete_count: int = 0
+    source_status_label: str = "미조회"
+    policy_status_label: str = "조회 재현"
+
+
 class RiskResultListResponse(BaseModel):
     limit: int
     offset: int
     total: int
+    counts: RiskResultCounts = Field(default_factory=RiskResultCounts)
     items: list[RiskResultListItem]
 
 
@@ -132,7 +143,18 @@ def list_risk_results(
                     union
                     select mbid, user_no from pms_latest
                 )
-                select count(*) as total
+                select
+                    count(*)::int as total_count,
+                    count(pcs.pcs_no)::int as pcs_count,
+                    count(pms.pms_no)::int as pms_count,
+                    count(*) filter (where pcs.pcs_no is not null and pms.pms_no is not null)::int as linked_count,
+                    count(*) filter (where pcs.pcs_no is null or pms.pms_no is null)::int as incomplete_count,
+                    case
+                        when count(*) = 0 then '평가결과 없음'
+                        when count(*) filter (where pcs.pcs_no is null or pms.pms_no is null) > 0 then 'PCS/PMS 일부 누락'
+                        else 'PCS/PMS 연결'
+                    end as source_status_label,
+                    '조회 재현' as policy_status_label
                 from base b
                 left join pcs_latest pcs
                   on pcs.mbid is not distinct from b.mbid
@@ -144,7 +166,7 @@ def list_risk_results(
                 """,
                 filter_params,
             )
-            total = cursor.fetchone()["total"]
+            counts = RiskResultCounts(**cursor.fetchone())
 
             cursor.execute(
                 f"""
@@ -222,6 +244,7 @@ def list_risk_results(
     return RiskResultListResponse(
         limit=limit,
         offset=offset,
-        total=total,
+        total=counts.total_count,
+        counts=counts,
         items=[RiskResultListItem(**row) for row in rows],
     )
