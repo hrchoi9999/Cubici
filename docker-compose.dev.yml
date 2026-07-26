@@ -1,0 +1,18 @@
+services:
+  cubici-postgres:
+    image: postgres:17-alpine
+    container_name: cubici-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CUBICI_DB_NAME:-cubici_local}
+      POSTGRES_USER: ${CUBICI_DB_USER:-cubici_app}
+      POSTGRES_PASSWORD: ${CUBICI_DB_PASSWORD:?CUBICI_DB_PASSWORD is required}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - ./data_local/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20

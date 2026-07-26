@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 import json
+from typing import Any
 
 from fastapi import HTTPException
 from psycopg.rows import dict_row
@@ -35,6 +36,9 @@ class RedemptionListItem(BaseModel):
     latest_cumulative_repayment_amount: int | None
     latest_outstanding_balance: int | None
     latest_history_date: datetime | None
+    latest_balance_check_amount: int | None = None
+    latest_balance_difference: int | None = None
+    latest_balance_check_status: str = "NOT_CHECKED"
 
 
 class RedemptionListResponse(BaseModel):
@@ -98,6 +102,12 @@ class RedemptionOperationResponse(BaseModel):
     outstanding_balance: int
 
 
+class RedemptionOperationCancelRequest(BaseModel):
+    cancel_code: str | None = Field(default=None, max_length=30)
+    operated_by: str = Field(min_length=1, max_length=50)
+    reason: str = Field(min_length=1, max_length=2000)
+
+
 class RedemptionOperationHistoryItem(BaseModel):
     id: int
     mbid: str
@@ -111,6 +121,10 @@ class RedemptionOperationHistoryItem(BaseModel):
     new_cumulative_provision_amount: int | None
     new_cumulative_repayment_amount: int | None
     new_outstanding_balance: int | None
+    is_reversal: bool = False
+    reversed_operation_history_id: int | None = None
+    canceled_by_operation_history_id: int | None = None
+    payload: dict[str, Any]
     operated_by: str
     reason: str | None
     reg_date: datetime
@@ -126,6 +140,7 @@ class RedemptionOperationHistoryResponse(BaseModel):
 
 def _build_redemption_filters(
     *,
+    user_no: int | None,
     mbid: str | None,
     outstanding_only: bool,
     from_date: date | None,
@@ -134,6 +149,11 @@ def _build_redemption_filters(
     clauses = []
     params: list[object] = []
 
+    if user_no is not None:
+        clauses.append(
+            "exists (select 1 from moneybank_contract c where c.mbid = b.mbid and c.user_no = %s)"
+        )
+        params.append(user_no)
     if mbid:
         clauses.append("b.mbid ilike %s")
         params.append(f"%{mbid}%")
@@ -247,7 +267,23 @@ def _redemption_summary_select() -> str:
             h.latest_cumulative_provision_amount,
             h.latest_cumulative_repayment_amount,
             h.latest_outstanding_balance,
-            h.latest_history_date
+            h.latest_history_date,
+            case
+                when h.latest_history_date is null then null
+                else coalesce(h.latest_cumulative_provision_amount, 0) - coalesce(h.latest_cumulative_repayment_amount, 0)
+            end as latest_balance_check_amount,
+            case
+                when h.latest_history_date is null then null
+                else coalesce(h.latest_outstanding_balance, 0)
+                   - (coalesce(h.latest_cumulative_provision_amount, 0) - coalesce(h.latest_cumulative_repayment_amount, 0))
+            end as latest_balance_difference,
+            case
+                when h.latest_history_date is null then 'NO_HISTORY'
+                when coalesce(h.latest_outstanding_balance, 0)
+                   = coalesce(h.latest_cumulative_provision_amount, 0) - coalesce(h.latest_cumulative_repayment_amount, 0)
+                then 'OK'
+                else 'DIFF'
+            end as latest_balance_check_status
         from base b
         left join provision p on p.mbid = b.mbid
         left join repayment r on r.mbid = b.mbid
@@ -261,12 +297,14 @@ def list_redemptions(
     limit: int,
     offset: int,
     *,
+    user_no: int | None = None,
     mbid: str | None = None,
     outstanding_only: bool = False,
     from_date: date | None = None,
     to_date: date | None = None,
 ) -> RedemptionListResponse:
     where_clause, filter_params = _build_redemption_filters(
+        user_no=user_no,
         mbid=mbid,
         outstanding_only=outstanding_only,
         from_date=from_date,
@@ -356,6 +394,10 @@ def list_redemption_operation_history(
                     new_cumulative_provision_amount,
                     new_cumulative_repayment_amount,
                     new_outstanding_balance,
+                    is_reversal,
+                    reversed_operation_history_id,
+                    canceled_by_operation_history_id,
+                    payload,
                     operated_by,
                     reason,
                     reg_date
@@ -625,6 +667,109 @@ def create_redemption_repayment(
     )
 
 
+def cancel_redemption_operation(
+    mbid: str,
+    operation_history_id: int,
+    payload: RedemptionOperationCancelRequest,
+) -> RedemptionOperationResponse:
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            _ensure_contract_exists(cursor, mbid)
+            target = _fetch_operation_history_for_update(cursor, mbid, operation_history_id)
+            if target is None:
+                raise HTTPException(status_code=404, detail="operation history not found")
+            if target["is_reversal"]:
+                raise HTTPException(status_code=400, detail="reversal operation cannot be canceled")
+            if target["canceled_by_operation_history_id"] is not None:
+                raise HTTPException(status_code=409, detail="operation already canceled")
+            if target["operation_type"] not in {"PROVISION", "REPAYMENT"}:
+                raise HTTPException(status_code=400, detail="operation type cannot be canceled")
+
+            latest = _fetch_latest_history_for_update(cursor, mbid)
+            previous_provision = latest["cumulative_provision_amount"] if latest else 0
+            previous_repayment = latest["cumulative_repayment_amount"] if latest else 0
+            previous_balance = latest["outstanding_balance"] if latest else 0
+
+            provision_delta = (
+                target["new_cumulative_provision_amount"]
+                - target["previous_cumulative_provision_amount"]
+            )
+            repayment_delta = (
+                target["new_cumulative_repayment_amount"]
+                - target["previous_cumulative_repayment_amount"]
+            )
+
+            if target["operation_type"] == "PROVISION":
+                operation_type = "PROVISION_CANCEL"
+                new_provision = previous_provision - provision_delta
+                new_repayment = previous_repayment
+            else:
+                operation_type = "REPAYMENT_CANCEL"
+                new_provision = previous_provision
+                new_repayment = previous_repayment - repayment_delta
+
+            new_balance = new_provision - new_repayment
+            if new_provision < 0 or new_repayment < 0:
+                raise HTTPException(status_code=400, detail="cumulative amount cannot be negative")
+            if new_balance < 0:
+                raise HTTPException(status_code=400, detail="outstanding_balance cannot be negative")
+
+            cancel_code = payload.cancel_code or f"C{target['operation_code']}"[:30]
+            _ensure_unique_operation_code(cursor, operation_type, cancel_code)
+            history_id = _append_redemption_history(
+                cursor,
+                mbid=mbid,
+                cumulative_provision_amount=new_provision,
+                cumulative_repayment_amount=new_repayment,
+                outstanding_balance=new_balance,
+            )
+            operation_history_id = _append_operation_history(
+                cursor,
+                mbid=mbid,
+                operation_type=operation_type,
+                operation_code=cancel_code,
+                related_table=target["related_table"],
+                related_id=target["related_id"],
+                previous_cumulative_provision_amount=previous_provision,
+                previous_cumulative_repayment_amount=previous_repayment,
+                previous_outstanding_balance=previous_balance,
+                new_cumulative_provision_amount=new_provision,
+                new_cumulative_repayment_amount=new_repayment,
+                new_outstanding_balance=new_balance,
+                payload={
+                    "cancel_code": cancel_code,
+                    "target_operation_history_id": target["id"],
+                    "target_operation_type": target["operation_type"],
+                    "target_operation_code": target["operation_code"],
+                    "reason": payload.reason,
+                },
+                operated_by=payload.operated_by,
+                reason=payload.reason,
+                is_reversal=True,
+                reversed_operation_history_id=target["id"],
+            )
+            cursor.execute(
+                """
+                update moneybank_redemption_operation_history
+                set canceled_by_operation_history_id = %s
+                where id = %s
+                """,
+                (operation_history_id, target["id"]),
+            )
+
+    return RedemptionOperationResponse(
+        mbid=mbid,
+        operation_type=operation_type,
+        operation_code=cancel_code,
+        related_id=target["related_id"],
+        history_id=history_id,
+        operation_history_id=operation_history_id,
+        cumulative_provision_amount=new_provision,
+        cumulative_repayment_amount=new_repayment,
+        outstanding_balance=new_balance,
+    )
+
+
 def _ensure_contract_exists(cursor, mbid: str) -> None:
     cursor.execute("select 1 from moneybank_contract where mbid = %s", (mbid,))
     if cursor.fetchone() is None:
@@ -635,6 +780,47 @@ def _ensure_unique_code(cursor, table_name: str, column_name: str, code: str) ->
     cursor.execute(f"select 1 from {table_name} where {column_name} = %s", (code,))
     if cursor.fetchone() is not None:
         raise HTTPException(status_code=409, detail=f"{column_name} already exists")
+
+
+def _ensure_unique_operation_code(cursor, operation_type: str, operation_code: str) -> None:
+    cursor.execute(
+        """
+        select 1
+        from moneybank_redemption_operation_history
+        where operation_type = %s and operation_code = %s
+        """,
+        (operation_type, operation_code),
+    )
+    if cursor.fetchone() is not None:
+        raise HTTPException(status_code=409, detail="operation_code already exists")
+
+
+def _fetch_operation_history_for_update(cursor, mbid: str, operation_history_id: int) -> dict | None:
+    cursor.execute(
+        """
+        select
+            id,
+            mbid,
+            operation_type,
+            operation_code,
+            related_table,
+            related_id,
+            previous_cumulative_provision_amount,
+            previous_cumulative_repayment_amount,
+            previous_outstanding_balance,
+            new_cumulative_provision_amount,
+            new_cumulative_repayment_amount,
+            new_outstanding_balance,
+            is_reversal,
+            reversed_operation_history_id,
+            canceled_by_operation_history_id
+        from moneybank_redemption_operation_history
+        where mbid = %s and id = %s
+        for update
+        """,
+        (mbid, operation_history_id),
+    )
+    return cursor.fetchone()
 
 
 def _fetch_latest_history_for_update(cursor, mbid: str) -> dict | None:
@@ -701,6 +887,8 @@ def _append_operation_history(
     payload: dict,
     operated_by: str,
     reason: str | None,
+    is_reversal: bool = False,
+    reversed_operation_history_id: int | None = None,
 ) -> int:
     cursor.execute(
         """
@@ -718,9 +906,11 @@ def _append_operation_history(
             new_outstanding_balance,
             payload,
             operated_by,
-            reason
+            reason,
+            is_reversal,
+            reversed_operation_history_id
         )
-        values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s)
+        values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s, %s, %s, %s)
         returning id
         """,
         (
@@ -738,6 +928,8 @@ def _append_operation_history(
             json.dumps(payload, ensure_ascii=False, default=str),
             operated_by,
             reason,
+            is_reversal,
+            reversed_operation_history_id,
         ),
     )
     return cursor.fetchone()["id"]

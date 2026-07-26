@@ -7,14 +7,20 @@ from fastapi import APIRouter, HTTPException, Query
 from cubici_service.contracts.repository import (
     ContractFeeAdjustmentRequest,
     ContractFeeAdjustmentResponse,
+    ContractElectronicSignatureRequest,
+    ContractElectronicSignatureResponse,
     ContractDetailResponse,
     ContractListResponse,
     ContractOrderBy,
+    ContractRequestCreateRequest,
+    ContractRequestCreateResponse,
     ContractStatusUpdateRequest,
     ContractStatusUpdateResponse,
     adjust_contract_fee,
+    create_contract_request,
     get_contract_detail,
     list_contracts,
+    sign_contract_electronically,
     update_contract_status,
 )
 
@@ -25,6 +31,7 @@ router = APIRouter(prefix="/contracts", tags=["contracts"])
 def contract_list(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    user_no: int | None = Query(default=None, ge=1),
     user_id: str | None = Query(default=None),
     user_name: str | None = Query(default=None),
     firm_name: str | None = Query(default=None),
@@ -39,6 +46,7 @@ def contract_list(
     return list_contracts(
         limit=limit,
         offset=offset,
+        user_no=user_no,
         user_id=user_id,
         user_name=user_name,
         firm_name=firm_name,
@@ -52,9 +60,19 @@ def contract_list(
     )
 
 
+@router.post("/requests", response_model=ContractRequestCreateResponse)
+def contract_request_create(
+    payload: ContractRequestCreateRequest,
+) -> ContractRequestCreateResponse:
+    return create_contract_request(payload)
+
+
 @router.get("/{mbid}", response_model=ContractDetailResponse)
-def contract_detail(mbid: str) -> ContractDetailResponse:
-    detail = get_contract_detail(mbid)
+def contract_detail(
+    mbid: str,
+    user_no: int | None = Query(default=None, ge=1),
+) -> ContractDetailResponse:
+    detail = get_contract_detail(mbid, user_no=user_no)
     if detail is None:
         raise HTTPException(status_code=404, detail="contract not found")
     return detail
@@ -66,6 +84,14 @@ def contract_status_update(
     payload: ContractStatusUpdateRequest,
 ) -> ContractStatusUpdateResponse:
     return update_contract_status(mbid=mbid, payload=payload)
+
+
+@router.put("/{mbid}/electronic-signature", response_model=ContractElectronicSignatureResponse)
+def contract_electronic_signature(
+    mbid: str,
+    payload: ContractElectronicSignatureRequest,
+) -> ContractElectronicSignatureResponse:
+    return sign_contract_electronically(mbid=mbid, payload=payload)
 
 
 @router.put("/{mbid}/fees/adjust", response_model=ContractFeeAdjustmentResponse)

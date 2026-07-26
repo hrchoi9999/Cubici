@@ -1,0 +1,1 @@
+"""Moneybank management dashboard domain."""

@@ -1,6 +1,6 @@
 """Contract document file API."""
 
-from fastapi import APIRouter, File, Form, UploadFile
+from fastapi import APIRouter, File, Form, Query, UploadFile
 from fastapi.responses import FileResponse
 
 from cubici_service.documents.repository import (
@@ -21,8 +21,11 @@ router = APIRouter(prefix="/contracts/{mbid}/documents", tags=["documents"])
 
 
 @router.get("/files", response_model=DocumentFileListResponse)
-def contract_document_files(mbid: str) -> DocumentFileListResponse:
-    return list_contract_document_files(mbid)
+def contract_document_files(
+    mbid: str,
+    user_no: int | None = Query(default=None, ge=1),
+) -> DocumentFileListResponse:
+    return list_contract_document_files(mbid, user_no=user_no)
 
 
 @router.post("/files", response_model=DocumentFileUploadResponse)
@@ -41,8 +44,12 @@ def upload_contract_document_file(
 
 
 @router.get("/files/{uuid}/download")
-def download_contract_document_file(mbid: str, uuid: str) -> FileResponse:
-    download = get_contract_document_file_download(mbid, uuid)
+def download_contract_document_file(
+    mbid: str,
+    uuid: str,
+    user_no: int | None = Query(default=None, ge=1),
+) -> FileResponse:
+    download = get_contract_document_file_download(mbid, uuid, user_no=user_no)
     return FileResponse(
         path=download.path,
         filename=download.file_name,

@@ -7,10 +7,12 @@ from fastapi import APIRouter, HTTPException, Query
 from cubici_service.redemptions.repository import (
     RedemptionListItem,
     RedemptionListResponse,
+    RedemptionOperationCancelRequest,
     RedemptionOperationHistoryResponse,
     RedemptionOperationResponse,
     RedemptionProvisionCreateRequest,
     RedemptionRepaymentCreateRequest,
+    cancel_redemption_operation,
     create_redemption_provision,
     create_redemption_repayment,
     get_redemption_detail,
@@ -25,6 +27,7 @@ router = APIRouter(prefix="/redemptions", tags=["redemptions"])
 def redemption_list(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
+    user_no: int | None = Query(default=None, ge=1),
     mbid: str | None = Query(default=None),
     outstanding_only: bool = Query(default=False),
     from_date: date | None = Query(default=None),
@@ -33,6 +36,7 @@ def redemption_list(
     return list_redemptions(
         limit=limit,
         offset=offset,
+        user_no=user_no,
         mbid=mbid,
         outstanding_only=outstanding_only,
         from_date=from_date,
@@ -55,6 +59,19 @@ def redemption_operation_history(
     offset: int = Query(default=0, ge=0),
 ) -> RedemptionOperationHistoryResponse:
     return list_redemption_operation_history(mbid=mbid, limit=limit, offset=offset)
+
+
+@router.post("/{mbid}/operations/{operation_history_id}/cancel", response_model=RedemptionOperationResponse)
+def redemption_operation_cancel(
+    mbid: str,
+    operation_history_id: int,
+    payload: RedemptionOperationCancelRequest,
+) -> RedemptionOperationResponse:
+    return cancel_redemption_operation(
+        mbid=mbid,
+        operation_history_id=operation_history_id,
+        payload=payload,
+    )
 
 
 @router.post("/{mbid}/provisions", response_model=RedemptionOperationResponse)

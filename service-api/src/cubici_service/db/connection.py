@@ -1,6 +1,7 @@
 """PostgreSQL connection helpers."""
 
 from contextlib import contextmanager
+import time
 from typing import Iterator
 
 import psycopg
@@ -20,12 +21,22 @@ class DatabaseCheck(BaseModel):
 @contextmanager
 def get_connection(settings: Settings | None = None) -> Iterator[Connection]:
     resolved_settings = settings or get_settings()
-    with psycopg.connect(
-        resolved_settings.db_conninfo,
-        autocommit=True,
-        connect_timeout=5,
-    ) as connection:
-        yield connection
+    last_error = None
+    for attempt in range(3):
+        try:
+            with psycopg.connect(
+                resolved_settings.db_conninfo,
+                autocommit=True,
+                connect_timeout=5,
+            ) as connection:
+                yield connection
+                return
+        except psycopg.OperationalError as error:
+            last_error = error
+            if attempt == 2:
+                break
+            time.sleep(0.25 * (attempt + 1))
+    raise last_error
 
 
 def check_database_connection(settings: Settings | None = None) -> DatabaseCheck:

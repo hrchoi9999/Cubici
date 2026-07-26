@@ -1,4 +1,6 @@
-const adminMenu = [
+import { useState } from 'react';
+
+export const adminMenu = [
   {
     id: 'cubiciInfo',
     title: '통합정보',
@@ -29,6 +31,7 @@ const adminMenu = [
     pages: [
       { id: 'request', title: '신청 접수', href: '/admin/moneybank/request' },
       { id: 'approval', title: '심사 승인', href: '/admin/moneybank/approval_tab1' },
+      { id: 'contract', title: '계약 관리', href: '/admin/moneybank/approval_tab2' },
       { id: 'settlement', title: '정산 관리', href: '/admin/moneybank/settlement' },
       { id: 'redemption', title: '상환 관리', href: '/admin/moneybank/redemption' },
       { id: 'manage', title: '프리즘 지표 관리', href: '/admin/moneybank/manage' },
@@ -49,6 +52,7 @@ const adminMenu = [
     pages: [
       { id: 'error', title: 'Error Log', href: '/admin/cubici/adminMonitor/error_report' },
       { id: 'server', title: '서버 관리', href: '/admin/cubici/adminMonitor/server_monitor' },
+      { id: 'fintech', title: '펌뱅킹 전문', href: '/admin/cubici/adminMonitor/fintech_trade' },
     ],
   },
   {
@@ -100,12 +104,33 @@ function AdminHeader() {
 }
 
 function AdminSidebar({ activeCategoryId, activePageId }) {
+  const [openCategoryId, setOpenCategoryId] = useState(activeCategoryId);
+
+  function toggleCategory(categoryId) {
+    setOpenCategoryId((current) => (
+      current === categoryId && categoryId !== activeCategoryId ? activeCategoryId : categoryId
+    ));
+  }
+
   return (
     <aside className="snbArea">
       <ul id="snb">
-        {adminMenu.map((category) => (
-          <li key={category.id} id={category.id} className={category.id === activeCategoryId ? 'active' : ''}>
-            <a href="javascript:;">{category.title}</a>
+        {adminMenu.map((category) => {
+          const isActiveCategory = category.id === activeCategoryId;
+          const isOpenCategory = category.id === openCategoryId || isActiveCategory;
+
+          return (
+          <li
+            key={category.id}
+            id={category.id}
+            className={[
+              isActiveCategory ? 'active' : '',
+              isOpenCategory ? 'open' : '',
+            ].filter(Boolean).join(' ')}
+          >
+            <button className="snbCategoryButton" type="button" onClick={() => toggleCategory(category.id)}>
+              {category.title}
+            </button>
             <ul>
               {category.pages.map((page) => (
                 <li key={page.id} className={category.id === activeCategoryId && page.id === activePageId ? 'active' : ''}>
@@ -114,7 +139,8 @@ function AdminSidebar({ activeCategoryId, activePageId }) {
               ))}
             </ul>
           </li>
-        ))}
+          );
+        })}
       </ul>
     </aside>
   );
@@ -146,13 +172,15 @@ function CommonModal({ id }) {
 }
 
 export function AdminLayout({ activeCategoryId, activePageId, children }) {
-  const activeCategory = adminMenu.find((category) => category.id === activeCategoryId);
-  const activePage = activeCategory?.pages.find((page) => page.id === activePageId);
+  const activeCategory = adminMenu.find((category) => category.id === activeCategoryId)
+    ?? { id: activeCategoryId, title: activeCategoryId === 'unmappedRoute' ? 'Route 점검' : '' };
+  const activePage = activeCategory?.pages?.find((page) => page.id === activePageId)
+    ?? { id: activePageId, title: activePageId === 'unmappedRoute' ? '미구현 경로' : '' };
 
   return (
     <>
       <LoadingSpinner />
-      <div id="wrap">
+      <div id="wrap" className="adminReactWrap">
         <AdminHeader />
         <div className="container">
           <figure className="subVisualArea">
@@ -168,7 +196,11 @@ export function AdminLayout({ activeCategoryId, activePageId, children }) {
           <div className="subContainer" id="subNavigation">
             <div className="inner">
               <AdminSidebar activeCategoryId={activeCategoryId} activePageId={activePageId} />
-              <div className="subContents">{children}</div>
+              <div className="subContents">
+                <article className="subBox transparent adminReactPage">
+                  <div className="contentArea">{children}</div>
+                </article>
+              </div>
             </div>
           </div>
         </div>

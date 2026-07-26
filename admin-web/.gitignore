@@ -2,4 +2,6 @@ node_modules/
 dist/
 .vite/
 .logs/
+test-results/
+playwright-report/
 npm-debug.log*

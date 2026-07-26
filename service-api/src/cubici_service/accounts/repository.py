@@ -1,10 +1,19 @@
-"""Read-only account queries."""
+"""Account queries and local user authentication."""
 
+import base64
 from datetime import datetime
+import hashlib
+import hmac
+import json
+import secrets
+import time
 
+from fastapi import HTTPException
 from psycopg.rows import dict_row
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
+from cubici_service.core.config import get_settings
+from cubici_service.core.shop_types import normalize_shop_type
 from cubici_service.db.connection import get_connection
 
 
@@ -24,6 +33,114 @@ class AccountListResponse(BaseModel):
     offset: int
     total: int
     items: list[AccountListItem]
+
+
+class AccountAuthUser(BaseModel):
+    user_no: int
+    email: str
+    user_type: str | None
+    name: str | None
+    phone: str | None
+    biz_num: str | None
+    biz_name: str | None
+    biz_setup_date: str | None = None
+    biz_type: str | None = None
+    sectors: str | None = None
+    partner_code: str | None = None
+    last_login_date: datetime | None = None
+
+
+class AccountSignupRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=50)
+    password: str = Field(min_length=8, max_length=72)
+    name: str = Field(min_length=1, max_length=50)
+    phone: str | None = Field(default=None, max_length=20)
+    biz_num: str = Field(min_length=10, max_length=20)
+    biz_name: str = Field(min_length=1, max_length=50)
+    biz_setup_date: str | None = Field(default=None, max_length=8)
+    biz_type: str = Field(default="GENERAL", min_length=1, max_length=20)
+    sectors: str = Field(default="OTHER", min_length=1, max_length=30)
+    partner_code: str | None = Field(default=None, max_length=10)
+
+
+class AccountLoginRequest(BaseModel):
+    email: str = Field(min_length=5, max_length=50)
+    password: str = Field(min_length=1, max_length=72)
+
+
+class AccountAuthResponse(BaseModel):
+    token_type: str = "Bearer"
+    access_token: str
+    expires_in: int
+    user: AccountAuthUser
+
+
+class AccountCompanyUpdateRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=50)
+    phone: str | None = Field(default=None, max_length=20)
+    biz_num: str = Field(min_length=10, max_length=20)
+    biz_name: str = Field(min_length=1, max_length=50)
+    biz_setup_date: str | None = Field(default=None, max_length=8)
+    biz_type: str = Field(default="GENERAL", min_length=1, max_length=20)
+    sectors: str = Field(default="OTHER", min_length=1, max_length=30)
+    partner_code: str | None = Field(default=None, max_length=10)
+
+
+class AccountCompanyUpdateResponse(BaseModel):
+    updated: bool
+    user: AccountAuthUser
+
+
+class ShopAccountItem(BaseModel):
+    id: int
+    user_no: int | None
+    shop_type: str | None
+    shop_id: str | None
+    shop_account_id: str | None
+    vendor_id: str | None
+    settlement: str | None
+    status: str | None
+    del_yn: str | None
+    reg_date: datetime | None
+    modified_date: datetime | None
+
+
+class ShopAccountListResponse(BaseModel):
+    total: int
+    items: list[ShopAccountItem]
+
+
+class ShopAccountCreateRequest(BaseModel):
+    shop_type: str = Field(min_length=1, max_length=50)
+    shop_id: str = Field(min_length=1, max_length=50)
+    shop_account_id: str | None = Field(default=None, max_length=50)
+    shop_account_password: str | None = Field(default=None, max_length=100)
+    vendor_id: str | None = Field(default=None, max_length=20)
+    api_key: str | None = Field(default=None, max_length=100)
+    api_secret_key: str | None = Field(default=None, max_length=100)
+    settlement: str | None = Field(default=None, max_length=100)
+
+
+class ShopAccountCreateResponse(BaseModel):
+    created: bool
+    item: ShopAccountItem
+
+
+class ShopAccountUpdateRequest(BaseModel):
+    shop_type: str | None = Field(default=None, min_length=1, max_length=50)
+    shop_id: str | None = Field(default=None, min_length=1, max_length=50)
+    shop_account_id: str | None = Field(default=None, max_length=50)
+    shop_account_password: str | None = Field(default=None, max_length=100)
+    vendor_id: str | None = Field(default=None, max_length=20)
+    api_key: str | None = Field(default=None, max_length=100)
+    api_secret_key: str | None = Field(default=None, max_length=100)
+    settlement: str | None = Field(default=None, max_length=100)
+    status: str | None = Field(default=None, min_length=1, max_length=1)
+
+
+class ShopAccountWriteResponse(BaseModel):
+    action: str
+    item: ShopAccountItem
 
 
 def list_user_accounts(limit: int, offset: int) -> AccountListResponse:
@@ -66,3 +183,599 @@ def list_user_accounts(limit: int, offset: int) -> AccountListResponse:
         total=total,
         items=[AccountListItem(**row) for row in rows],
     )
+
+
+def signup_user(payload: AccountSignupRequest) -> AccountAuthResponse:
+    email = _normalize_email(payload.email)
+    biz_num = _normalize_biz_num(payload.biz_num)
+    if len(biz_num) != 10:
+        raise HTTPException(status_code=422, detail="business number must be 10 digits")
+
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    "select user_no from users where lower(email) = %s limit 1",
+                    (email,),
+                )
+                if cursor.fetchone() is not None:
+                    raise HTTPException(status_code=409, detail="email already exists")
+
+                cursor.execute("lock table users in share row exclusive mode")
+                cursor.execute("select coalesce(max(user_no), 0) + 1 as next_user_no from users")
+                user_no = cursor.fetchone()["next_user_no"]
+
+                cursor.execute(
+                    """
+                    insert into users (
+                        user_no,
+                        email,
+                        password,
+                        user_type,
+                        name,
+                        phone,
+                        biz_num,
+                        biz_name,
+                        biz_setup_date,
+                        biz_type,
+                        sectors,
+                        partner_code,
+                        reg_date,
+                        modified_date
+                    ) values (
+                        %s, %s, %s, 'USER', %s, %s, %s, %s, %s, %s, %s, %s, now(), now()
+                    )
+                    returning
+                        user_no,
+                        email,
+                        user_type,
+                        name,
+                        phone,
+                        biz_num,
+                        biz_name,
+                        biz_setup_date,
+                        biz_type,
+                        sectors,
+                        partner_code,
+                        last_login_date
+                    """,
+                    (
+                        user_no,
+                        email,
+                        _hash_password(payload.password),
+                        payload.name.strip(),
+                        _clean_optional(payload.phone),
+                        biz_num,
+                        payload.biz_name.strip(),
+                        _normalize_date(payload.biz_setup_date),
+                        payload.biz_type.strip().upper(),
+                        payload.sectors.strip().upper(),
+                        _clean_optional(payload.partner_code),
+                    ),
+                )
+                user = AccountAuthUser(**cursor.fetchone())
+
+    return _build_auth_response(user)
+
+
+def update_company_for_user(user_no: int, payload: AccountCompanyUpdateRequest) -> AccountCompanyUpdateResponse:
+    biz_num = _normalize_biz_num(payload.biz_num)
+    if len(biz_num) != 10:
+        raise HTTPException(status_code=422, detail="business number must be 10 digits")
+
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    """
+                    update users
+                    set
+                        name = %s,
+                        phone = %s,
+                        biz_num = %s,
+                        biz_name = %s,
+                        biz_setup_date = %s,
+                        biz_type = %s,
+                        sectors = %s,
+                        partner_code = %s,
+                        modified_date = now()
+                    where user_no = %s
+                    returning
+                        user_no,
+                        email,
+                        user_type,
+                        name,
+                        phone,
+                        biz_num,
+                        biz_name,
+                        biz_setup_date,
+                        biz_type,
+                        sectors,
+                        partner_code,
+                        last_login_date
+                    """,
+                    (
+                        payload.name.strip(),
+                        _clean_optional(payload.phone),
+                        biz_num,
+                        payload.biz_name.strip(),
+                        _normalize_date(payload.biz_setup_date),
+                        payload.biz_type.strip().upper(),
+                        payload.sectors.strip().upper(),
+                        _clean_optional(payload.partner_code),
+                        user_no,
+                    ),
+                )
+                row = cursor.fetchone()
+                if row is None:
+                    raise HTTPException(status_code=404, detail="user not found")
+
+    return AccountCompanyUpdateResponse(updated=True, user=AccountAuthUser(**row))
+
+
+def login_user(payload: AccountLoginRequest) -> AccountAuthResponse:
+    email = _normalize_email(payload.email)
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    """
+                    select
+                        user_no,
+                        email,
+                        password,
+                        user_type,
+                        name,
+                        phone,
+                        biz_num,
+                        biz_name,
+                        biz_setup_date,
+                        biz_type,
+                        sectors,
+                        partner_code,
+                        last_login_date
+                    from users
+                    where lower(email) = %s
+                    limit 1
+                    """,
+                    (email,),
+                )
+                row = cursor.fetchone()
+                if row is None or not _verify_password(payload.password, row["password"]):
+                    raise HTTPException(status_code=401, detail="invalid email or password")
+
+                cursor.execute(
+                    """
+                    update users
+                    set last_login_date = now(), modified_date = now()
+                    where user_no = %s
+                    returning
+                        user_no,
+                        email,
+                        user_type,
+                        name,
+                        phone,
+                        biz_num,
+                        biz_name,
+                        biz_setup_date,
+                        biz_type,
+                        sectors,
+                        partner_code,
+                        last_login_date
+                    """,
+                    (row["user_no"],),
+                )
+                user = AccountAuthUser(**cursor.fetchone())
+
+    return _build_auth_response(user)
+
+
+def get_authenticated_user(token: str) -> AccountAuthUser:
+    payload = _decode_token(token)
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                """
+                select
+                    user_no,
+                    email,
+                    user_type,
+                    name,
+                    phone,
+                    biz_num,
+                    biz_name,
+                    biz_setup_date,
+                    biz_type,
+                    sectors,
+                    partner_code,
+                    last_login_date
+                from users
+                where user_no = %s
+                """,
+                (payload["user_no"],),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                raise HTTPException(status_code=401, detail="invalid token user")
+    return AccountAuthUser(**row)
+
+
+def list_shop_accounts_for_user(user_no: int) -> ShopAccountListResponse:
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                """
+                select
+                    id,
+                    user_no,
+                    shop_type,
+                    shop_id,
+                    shop_account_id,
+                    vendor_id,
+                    settlement,
+                    status,
+                    del_yn,
+                    reg_date,
+                    modified_date
+                from shop_accounts
+                where user_no = %s
+                  and coalesce(del_yn, 'N') <> 'Y'
+                order by modified_date desc nulls last, reg_date desc nulls last, id desc
+                """,
+                (user_no,),
+            )
+            rows = cursor.fetchall()
+    return ShopAccountListResponse(
+        total=len(rows),
+        items=[ShopAccountItem(**row) for row in rows],
+    )
+
+
+def create_shop_account_for_user(user_no: int, payload: ShopAccountCreateRequest) -> ShopAccountCreateResponse:
+    shop_type = _normalize_shop_type(payload.shop_type)
+    shop_id = payload.shop_id.strip()
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                cursor.execute(
+                    """
+                    select id
+                    from shop_accounts
+                    where user_no = %s
+                      and upper(shop_type) = %s
+                      and shop_id = %s
+                      and coalesce(del_yn, 'N') <> 'Y'
+                    limit 1
+                    """,
+                    (user_no, shop_type, shop_id),
+                )
+                if cursor.fetchone() is not None:
+                    raise HTTPException(status_code=409, detail="shop account already exists")
+
+                cursor.execute("lock table shop_accounts in share row exclusive mode")
+                cursor.execute("select coalesce(max(id), 0) + 1 as next_id from shop_accounts")
+                next_id = cursor.fetchone()["next_id"]
+                cursor.execute(
+                    """
+                    insert into shop_accounts (
+                        id,
+                        user_no,
+                        shop_type,
+                        shop_id,
+                        shop_account_id,
+                        shop_account_password,
+                        vendor_id,
+                        api_key,
+                        api_secret_key,
+                        settlement,
+                        status,
+                        del_yn,
+                        reg_date,
+                        modified_date
+                    ) values (
+                        %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'Y', 'N', now(), now()
+                    )
+                    returning
+                        id,
+                        user_no,
+                        shop_type,
+                        shop_id,
+                        shop_account_id,
+                        vendor_id,
+                        settlement,
+                        status,
+                        del_yn,
+                        reg_date,
+                        modified_date
+                    """,
+                    (
+                        next_id,
+                        user_no,
+                        shop_type,
+                        shop_id,
+                        _clean_optional(payload.shop_account_id),
+                        _clean_optional(payload.shop_account_password),
+                        _clean_optional(payload.vendor_id),
+                        _clean_optional(payload.api_key),
+                        _clean_optional(payload.api_secret_key) or "NOT_PROVIDED",
+                        _clean_optional(payload.settlement),
+                    ),
+                )
+                item = ShopAccountItem(**cursor.fetchone())
+    return ShopAccountCreateResponse(created=True, item=item)
+
+
+def update_shop_account_for_user(
+    user_no: int,
+    account_id: int,
+    payload: ShopAccountUpdateRequest,
+) -> ShopAccountWriteResponse:
+    changes = _shop_account_update_changes(payload)
+    if not changes:
+        raise HTTPException(status_code=422, detail="no shop account fields to update")
+
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                current = _get_active_shop_account(cursor, user_no, account_id)
+                next_shop_type = changes.get("shop_type", current["shop_type"])
+                next_shop_id = changes.get("shop_id", current["shop_id"])
+                if next_shop_type and next_shop_id:
+                    _ensure_shop_account_not_duplicated(
+                        cursor,
+                        user_no=user_no,
+                        shop_type=next_shop_type,
+                        shop_id=next_shop_id,
+                        exclude_id=account_id,
+                    )
+
+                assignments = [f"{column} = %s" for column in changes]
+                values = list(changes.values())
+                values.extend([user_no, account_id])
+                cursor.execute(
+                    f"""
+                    update shop_accounts
+                    set {", ".join(assignments)}, modified_date = now()
+                    where user_no = %s
+                      and id = %s
+                      and coalesce(del_yn, 'N') <> 'Y'
+                    returning
+                        id,
+                        user_no,
+                        shop_type,
+                        shop_id,
+                        shop_account_id,
+                        vendor_id,
+                        settlement,
+                        status,
+                        del_yn,
+                        reg_date,
+                        modified_date
+                    """,
+                    values,
+                )
+                row = cursor.fetchone()
+                if row is None:
+                    raise HTTPException(status_code=404, detail="shop account not found")
+
+    return ShopAccountWriteResponse(action="updated", item=ShopAccountItem(**row))
+
+
+def delete_shop_account_for_user(user_no: int, account_id: int) -> ShopAccountWriteResponse:
+    with get_connection() as connection:
+        with connection.transaction():
+            with connection.cursor(row_factory=dict_row) as cursor:
+                _get_active_shop_account(cursor, user_no, account_id)
+                cursor.execute(
+                    """
+                    update shop_accounts
+                    set del_yn = 'Y', status = 'N', modified_date = now()
+                    where user_no = %s
+                      and id = %s
+                    returning
+                        id,
+                        user_no,
+                        shop_type,
+                        shop_id,
+                        shop_account_id,
+                        vendor_id,
+                        settlement,
+                        status,
+                        del_yn,
+                        reg_date,
+                        modified_date
+                    """,
+                    (user_no, account_id),
+                )
+                row = cursor.fetchone()
+                if row is None:
+                    raise HTTPException(status_code=404, detail="shop account not found")
+
+    return ShopAccountWriteResponse(action="deleted", item=ShopAccountItem(**row))
+
+
+def _build_auth_response(user: AccountAuthUser) -> AccountAuthResponse:
+    expires_in = 60 * 60 * 8
+    token = _encode_token(
+        {
+            "user_no": user.user_no,
+            "email": user.email,
+            "exp": int(time.time()) + expires_in,
+        }
+    )
+    return AccountAuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+def _hash_password(password: str) -> str:
+    iterations = 120_000
+    salt = secrets.token_bytes(16)
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return "pbkdf2_sha256${}${}${}".format(
+        iterations,
+        _b64_encode(salt),
+        _b64_encode(digest),
+    )
+
+
+def _verify_password(password: str, stored_password: str | None) -> bool:
+    if not stored_password:
+        return False
+    parts = stored_password.split("$")
+    if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
+        return False
+    try:
+        iterations = int(parts[1])
+        salt = _b64_decode(parts[2])
+        expected = _b64_decode(parts[3])
+    except (ValueError, TypeError):
+        return False
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return hmac.compare_digest(digest, expected)
+
+
+def _encode_token(payload: dict) -> str:
+    payload_b64 = _b64_encode(json.dumps(payload, separators=(",", ":")).encode("utf-8"))
+    signature = _token_signature(payload_b64)
+    return f"{payload_b64}.{signature}"
+
+
+def _decode_token(token: str) -> dict:
+    try:
+        payload_b64, signature = token.split(".", 1)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="invalid token") from None
+    if not hmac.compare_digest(signature, _token_signature(payload_b64)):
+        raise HTTPException(status_code=401, detail="invalid token signature")
+    try:
+        payload = json.loads(_b64_decode(payload_b64))
+    except (ValueError, json.JSONDecodeError):
+        raise HTTPException(status_code=401, detail="invalid token payload") from None
+    if int(payload.get("exp", 0)) < int(time.time()):
+        raise HTTPException(status_code=401, detail="token expired")
+    if "user_no" not in payload:
+        raise HTTPException(status_code=401, detail="invalid token payload")
+    return payload
+
+
+def _token_signature(payload_b64: str) -> str:
+    secret = get_settings().auth_secret.get_secret_value().encode("utf-8")
+    return _b64_encode(hmac.new(secret, payload_b64.encode("utf-8"), hashlib.sha256).digest())
+
+
+def _b64_encode(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).decode("ascii").rstrip("=")
+
+
+def _b64_decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(value + padding)
+
+
+def _normalize_email(value: str) -> str:
+    cleaned = value.strip().lower()
+    if "@" not in cleaned:
+        raise HTTPException(status_code=422, detail="email format is invalid")
+    return cleaned
+
+
+def _normalize_shop_type(value: str) -> str:
+    return normalize_shop_type(value)
+
+
+def _normalize_biz_num(value: str) -> str:
+    return "".join(ch for ch in value if ch.isdigit())
+
+
+def _normalize_date(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = "".join(ch for ch in value if ch.isdigit())
+    return cleaned[:8] if cleaned else None
+
+
+def _clean_optional(value: str | None) -> str | None:
+    if value is None:
+        return None
+    cleaned = value.strip()
+    return cleaned or None
+
+
+def _normalize_status(value: str | None) -> str | None:
+    if value is None:
+        return None
+    status = value.strip().upper()
+    if status not in {"Y", "N"}:
+        raise HTTPException(status_code=422, detail="status must be Y or N")
+    return status
+
+
+def _shop_account_update_changes(payload: ShopAccountUpdateRequest) -> dict[str, str | None]:
+    changes: dict[str, str | None] = {}
+    fields_set = payload.model_fields_set
+    if "shop_type" in fields_set and payload.shop_type is not None:
+        changes["shop_type"] = _normalize_shop_type(payload.shop_type)
+    if "shop_id" in fields_set and payload.shop_id is not None:
+        changes["shop_id"] = payload.shop_id.strip()
+    if "shop_account_id" in fields_set:
+        changes["shop_account_id"] = _clean_optional(payload.shop_account_id)
+    if "shop_account_password" in fields_set and _clean_optional(payload.shop_account_password) is not None:
+        changes["shop_account_password"] = _clean_optional(payload.shop_account_password)
+    if "vendor_id" in fields_set:
+        changes["vendor_id"] = _clean_optional(payload.vendor_id)
+    if "api_key" in fields_set:
+        changes["api_key"] = _clean_optional(payload.api_key)
+    if "api_secret_key" in fields_set and _clean_optional(payload.api_secret_key) is not None:
+        changes["api_secret_key"] = _clean_optional(payload.api_secret_key)
+    if "settlement" in fields_set:
+        changes["settlement"] = _clean_optional(payload.settlement)
+    if "status" in fields_set:
+        changes["status"] = _normalize_status(payload.status)
+    return changes
+
+
+def _get_active_shop_account(cursor, user_no: int, account_id: int) -> dict:
+    cursor.execute(
+        """
+        select id, user_no, shop_type, shop_id
+        from shop_accounts
+        where user_no = %s
+          and id = %s
+          and coalesce(del_yn, 'N') <> 'Y'
+        limit 1
+        """,
+        (user_no, account_id),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        raise HTTPException(status_code=404, detail="shop account not found")
+    return row
+
+
+def _ensure_shop_account_not_duplicated(
+    cursor,
+    *,
+    user_no: int,
+    shop_type: str,
+    shop_id: str,
+    exclude_id: int | None = None,
+) -> None:
+    params: list[object] = [user_no, shop_type, shop_id]
+    exclude_clause = ""
+    if exclude_id is not None:
+        exclude_clause = "and id <> %s"
+        params.append(exclude_id)
+    cursor.execute(
+        f"""
+        select id
+        from shop_accounts
+        where user_no = %s
+          and upper(shop_type) = %s
+          and shop_id = %s
+          and coalesce(del_yn, 'N') <> 'Y'
+          {exclude_clause}
+        limit 1
+        """,
+        params,
+    )
+    if cursor.fetchone() is not None:
+        raise HTTPException(status_code=409, detail="shop account already exists")

@@ -80,3 +80,12 @@ export async function createRedemptionProvision(mbid, payload) {
 export async function createRedemptionRepayment(mbid, payload) {
   return postRedemptionOperation(mbid, '/repayments', payload, '상환 등록 실패');
 }
+
+export async function cancelRedemptionOperation(mbid, operationHistoryId, payload) {
+  return postRedemptionOperation(
+    mbid,
+    `/operations/${encodeURIComponent(operationHistoryId)}/cancel`,
+    payload,
+    '상환 작업 취소 실패',
+  );
+}

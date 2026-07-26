@@ -1,6 +1,6 @@
 """Read-only legacy risk result queries."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from psycopg.rows import dict_row
 from pydantic import BaseModel
@@ -52,11 +52,71 @@ class RiskResultListResponse(BaseModel):
     items: list[RiskResultListItem]
 
 
-def list_risk_results(limit: int, offset: int) -> RiskResultListResponse:
+def _build_risk_result_filters(
+    *,
+    mbid: str | None,
+    user_no: int | None,
+    prizm_grade: str | None,
+    pms_grade: str | None,
+    from_date: date | None,
+    to_date: date | None,
+) -> tuple[str, list[object]]:
+    clauses = []
+    params: list[object] = []
+
+    if mbid:
+        clauses.append("b.mbid ilike %s")
+        params.append(f"%{mbid}%")
+    if user_no is not None:
+        clauses.append("b.user_no = %s")
+        params.append(user_no)
+    if prizm_grade:
+        clauses.append("pcs.prizm_grade = %s")
+        params.append(prizm_grade)
+    if pms_grade:
+        clauses.append("pms.pms_grade = %s")
+        params.append(pms_grade)
+    if from_date:
+        clauses.append(
+            "greatest(coalesce(pcs.reg_date, timestamp '1900-01-01'), coalesce(pms.reg_date, timestamp '1900-01-01'))::date >= %s"
+        )
+        params.append(from_date)
+    if to_date:
+        clauses.append(
+            "greatest(coalesce(pcs.reg_date, timestamp '1900-01-01'), coalesce(pms.reg_date, timestamp '1900-01-01'))::date <= %s"
+        )
+        params.append(to_date)
+
+    if not clauses:
+        return "", params
+
+    return " where " + " and ".join(clauses), params
+
+
+def list_risk_results(
+    limit: int,
+    offset: int,
+    *,
+    mbid: str | None = None,
+    user_no: int | None = None,
+    prizm_grade: str | None = None,
+    pms_grade: str | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
+) -> RiskResultListResponse:
+    where_clause, filter_params = _build_risk_result_filters(
+        mbid=mbid,
+        user_no=user_no,
+        prizm_grade=prizm_grade,
+        pms_grade=pms_grade,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
-                """
+                f"""
                 with pcs_latest as (
                     select distinct on (mbid, user_no) *
                     from prizm_pcs_result
@@ -72,13 +132,22 @@ def list_risk_results(limit: int, offset: int) -> RiskResultListResponse:
                     union
                     select mbid, user_no from pms_latest
                 )
-                select count(*) as total from base
-                """
+                select count(*) as total
+                from base b
+                left join pcs_latest pcs
+                  on pcs.mbid is not distinct from b.mbid
+                 and pcs.user_no is not distinct from b.user_no
+                left join pms_latest pms
+                  on pms.mbid is not distinct from b.mbid
+                 and pms.user_no is not distinct from b.user_no
+                {where_clause}
+                """,
+                filter_params,
             )
             total = cursor.fetchone()["total"]
 
             cursor.execute(
-                """
+                f"""
                 with pcs_latest as (
                     select distinct on (mbid, user_no) *
                     from prizm_pcs_result
@@ -136,6 +205,7 @@ def list_risk_results(limit: int, offset: int) -> RiskResultListResponse:
                 left join pms_latest pms
                   on pms.mbid is not distinct from b.mbid
                  and pms.user_no is not distinct from b.user_no
+                {where_clause}
                 order by
                     greatest(
                         coalesce(pcs.reg_date, timestamp '1900-01-01'),
@@ -145,7 +215,7 @@ def list_risk_results(limit: int, offset: int) -> RiskResultListResponse:
                     b.user_no desc nulls last
                 limit %s offset %s
                 """,
-                (limit, offset),
+                (*filter_params, limit, offset),
             )
             rows = cursor.fetchall()
 

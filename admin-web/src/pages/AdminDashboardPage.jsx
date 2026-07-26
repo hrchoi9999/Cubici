@@ -12,6 +12,13 @@ import {
   updateContractDocumentChecks,
   updateContractStatus,
 } from '../api/contracts.js';
+import {
+  canCancelContractStatus,
+  canMoveToReviewStatus,
+  canRejectContractStatus,
+  canRequestDocumentSupplementStatus,
+  formatContractStatus,
+} from '../utils/contractStatus.js';
 
 const PAGE_SIZE = 20;
 
@@ -70,7 +77,7 @@ function toNullableFlag(value) {
 function mapContractToRow(contract) {
   return {
     id: contract.mbid,
-    status: contract.status ?? '-',
+    status: formatContractStatus(contract.status),
     count: contract.contract_fee_count > 0 ? `${contract.contract_fee_count}회` : '신규',
     requestedAt: formatDate(contract.request_date),
     userId: contract.user_email ?? contract.user_no ?? '-',
@@ -350,7 +357,7 @@ export function AdminDashboardPage() {
       </div>
 
       <div className="contentGrid">
-        <form className="searchArea" onSubmit={handleSearch}>
+        <form className="m-search searchArea" onSubmit={handleSearch}>
           <div className="line">
             <div className="inputBox">
               <label htmlFor="userName">회원명</label>
@@ -407,16 +414,9 @@ export function AdminDashboardPage() {
           </div>
         </form>
 
-        <div className="resultArea">
-          {summary.map((item) => (
-            <span key={item.label}>
-              {item.label} <strong className="result">{item.value}</strong>
-            </span>
-          ))}
-        </div>
-
-        <div className="m-shadowTable">
-          <table>
+        <div id="fixTable" className="fixTable legacyListTable table-scroll">
+          <div className="overflowBox">
+          <table className="m-shadowTable requestTable">
             <caption className="caption">신청 접수 목록</caption>
             <thead>
               <tr>
@@ -474,8 +474,19 @@ export function AdminDashboardPage() {
               )) : null}
             </tbody>
           </table>
+          </div>
+          <div className="fixBottom">
+            <ul className="tableTotal">
+              {summary.map((item) => (
+                <li key={item.label}>
+                  <span className="txt">{item.label}</span>
+                  <span className="result">{item.value}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-        <div className="paging" id="pagingButton">
+        <div className="m-paging paging" id="pagingButton">
           <ul>
             <li>
               <button className="oiBtn prev" type="button" onClick={goToPreviousPage} disabled={offset === 0}>
@@ -528,7 +539,10 @@ function getDetailModeLabel(mode) {
 
 function getStatusActionLabel(action) {
   if (action === 'approve') {
-    return '승인';
+    return '심사대기 전환';
+  }
+  if (action === 'document_pending') {
+    return '서류보완 요청';
   }
   if (action === 'reject') {
     return '거부';
@@ -617,18 +631,24 @@ function ContractDetailPanel({
 }
 
 function StatusDetailSections({ contract, feeMessage, fees, message, redemption, onFeeAdjust, onStatusChange }) {
+  const canCancel = canCancelContractStatus(contract.status);
+  const canMoveToReview = canMoveToReviewStatus(contract.status);
+  const canRequestSupplement = canRequestDocumentSupplementStatus(contract.status);
+  const canReject = canRejectContractStatus(contract.status);
+  const hasAction = canMoveToReview || canRequestSupplement || canReject || canCancel;
+
   return (
     <>
       <section className="detailSection">
         <h3>회원정보</h3>
-        <table>
+        <table className="detailInfoTable">
           <caption className="caption">회원정보</caption>
           <tbody>
             <tr>
               <th scope="row">신청서비스</th>
               <td>{contract.product_code ?? '-'}</td>
               <th scope="row">상태</th>
-              <td>{contract.status ?? '-'}</td>
+              <td>{formatContractStatus(contract.status)}</td>
             </tr>
             <tr>
               <th scope="row">회원명</th>
@@ -654,7 +674,7 @@ function StatusDetailSections({ contract, feeMessage, fees, message, redemption,
 
       <section className="detailSection">
         <h3>신청 상태</h3>
-        <table>
+        <table className="detailInfoTable">
           <caption className="caption">신청 상태</caption>
           <tbody>
             <tr>
@@ -684,16 +704,28 @@ function StatusDetailSections({ contract, feeMessage, fees, message, redemption,
           </tbody>
         </table>
         <div className="statusActions">
-          <button className="sBtn sColorLB" type="button" onClick={() => onStatusChange(contract.mbid, 'approve')}>
-            승인
-          </button>
-          <button className="sBtn sColorN" type="button" onClick={() => onStatusChange(contract.mbid, 'reject')}>
-            거부
-          </button>
-          <button className="sBtn sColorG" type="button" onClick={() => onStatusChange(contract.mbid, 'cancel')}>
-            해지
-          </button>
+          {canMoveToReview ? (
+            <button className="sBtn sColorLB" type="button" onClick={() => onStatusChange(contract.mbid, 'approve')}>
+              심사대기 전환
+            </button>
+          ) : null}
+          {canRequestSupplement ? (
+            <button className="sBtn sColorN" type="button" onClick={() => onStatusChange(contract.mbid, 'document_pending')}>
+              서류보완 요청
+            </button>
+          ) : null}
+          {canReject ? (
+            <button className="sBtn sColorN" type="button" onClick={() => onStatusChange(contract.mbid, 'reject')}>
+              거부
+            </button>
+          ) : null}
+          {canCancel ? (
+            <button className="sBtn sColorG" type="button" onClick={() => onStatusChange(contract.mbid, 'cancel')}>
+              해지
+            </button>
+          ) : null}
         </div>
+        {!hasAction ? <p className="detailMessage">현재 상태에서 처리 가능한 신청 상태 액션이 없습니다.</p> : null}
         {message ? <p className="detailMessage">{message}</p> : null}
       </section>
       <ContractFeeAdjustPanel
@@ -853,7 +885,7 @@ function DocumentDetailSections({
           mbid={contract.mbid}
           onSave={onDocumentCheckSave}
         />
-        <table>
+        <table className="detailInfoTable">
           <caption className="caption">신용정보 입력</caption>
           <tbody>
             <tr>
@@ -892,7 +924,7 @@ function DocumentDetailSections({
 
       <section className="detailSection">
         <h3>서류 확인</h3>
-        <table>
+        <table className="detailInfoTable">
           <caption className="caption">서류 확인</caption>
           <tbody>
             <tr>
@@ -954,7 +986,7 @@ function ScoreDetailSection({ contract, riskResult }) {
   return (
     <section className="detailSection">
       <h3>Prism Score</h3>
-      <table>
+      <table className="detailInfoTable">
         <caption className="caption">Prism Score</caption>
         <tbody>
           <tr>

@@ -19,6 +19,16 @@ function formatNumber(value) {
   return Number(value).toLocaleString('ko-KR');
 }
 
+function formatSettlementCheckStatus(value) {
+  const labels = {
+    OK: '일치',
+    DIFF: '차이',
+    LEGACY_BATCH_VALUE: '원본산출',
+    NOT_CHECKED: '미검산',
+  };
+  return labels[value] ?? value ?? '-';
+}
+
 function mapSettlementToRow(item) {
   return {
     id: item.settlements_id,
@@ -35,6 +45,8 @@ function mapSettlementToRow(item) {
     bankAccountHolder: item.bank_account_holder,
     bankAccount: item.bank_account,
     status: item.status,
+    checkStatus: item.settlement_check_status,
+    checkDifference: item.settlement_difference,
   };
 }
 
@@ -147,7 +159,7 @@ export function SettlementManagementPage() {
         </ul>
       </div>
 
-      <form className="searchArea" onSubmit={handleSearch}>
+      <form className="m-search searchArea" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="settlementShopType">쇼핑몰</label>
@@ -177,18 +189,10 @@ export function SettlementManagementPage() {
         </div>
       </form>
 
-      <div className="resultArea">
-        <div>
-          전체 <strong className="result">{formatNumber(total)}</strong> 건
-        </div>
-        <div>
-          페이지 <strong className="result">{currentPage} / {pageCount}</strong>
-        </div>
-      </div>
-
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div className="table-scroll">
-        <table className="baseTable settlementTable">
+      <div id="fixTable" className="fixTable legacyListTable table-scroll">
+        <div className="overflowBox">
+        <table className="m-shadowTable settlementTable">
           <caption className="caption">정산 관리 목록</caption>
           <thead>
             <tr>
@@ -205,6 +209,7 @@ export function SettlementManagementPage() {
               <th scope="col">은행</th>
               <th scope="col">예금주</th>
               <th scope="col">계좌번호</th>
+              <th scope="col">검산</th>
               <th scope="col">상태</th>
               <th scope="col">상세</th>
             </tr>
@@ -212,11 +217,11 @@ export function SettlementManagementPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="15">정산 목록을 조회 중입니다.</td>
+                <td colSpan="16">정산 목록을 조회 중입니다.</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan="15">조회된 정산 데이터가 없습니다.</td>
+                <td colSpan="16">조회된 정산 데이터가 없습니다.</td>
               </tr>
             ) : rows.map((row) => (
               <tr key={row.id}>
@@ -233,6 +238,7 @@ export function SettlementManagementPage() {
                 <td>{row.bankName ?? '-'}</td>
                 <td>{row.bankAccountHolder ?? '-'}</td>
                 <td>{row.bankAccount ?? '-'}</td>
+                <td>{formatSettlementCheckStatus(row.checkStatus)} ({formatNumber(row.checkDifference)})</td>
                 <td>{row.status ?? '-'}</td>
                 <td>
                   <button className="sColorLB refund-btn" type="button" onClick={() => openDetail(row.id)}>
@@ -243,9 +249,22 @@ export function SettlementManagementPage() {
             ))}
           </tbody>
         </table>
+        </div>
+        <div className="fixBottom">
+          <ul className="tableTotal">
+            <li>
+              <span className="txt">전체</span>
+              <span className="result">{formatNumber(total)} 건</span>
+            </li>
+            <li>
+              <span className="txt">페이지</span>
+              <span className="result">{currentPage} / {pageCount}</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <div className="paging" id="pagingButton">
+      <div className="m-paging paging" id="pagingButton">
         <ul>
           <li>
             <button className="oiBtn prev" type="button" onClick={goToPreviousPage} disabled={offset === 0}>
@@ -286,7 +305,7 @@ function SettlementDetailPanel({ detail, message }) {
       {message ? <p className="detailMessage">{message}</p> : null}
       {detail ? (
         <div className="detailSection">
-          <table>
+          <table className="detailInfoTable">
             <caption className="caption">정산 상세</caption>
             <tbody>
               <tr>
@@ -324,6 +343,12 @@ function SettlementDetailPanel({ detail, message }) {
                 <td>{formatNumber(detail.pending_released_amount)}</td>
                 <th scope="row">전주채무</th>
                 <td>{formatNumber(detail.debt_of_last_week)}</td>
+              </tr>
+              <tr>
+                <th scope="row">검산 정산액</th>
+                <td>{formatNumber(detail.settlement_check_amount)}</td>
+                <th scope="row">검산 차이</th>
+                <td>{formatSettlementCheckStatus(detail.settlement_check_status)} ({formatNumber(detail.settlement_difference)})</td>
               </tr>
               <tr>
                 <th scope="row">판매자쿠폰</th>

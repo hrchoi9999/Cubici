@@ -122,10 +122,19 @@ admin-web/node_modules/
 admin-web/dist/
 admin-web/.vite/
 admin-web/.logs/
+admin-web/test-results/
+admin-web/playwright-report/
+user-web/node_modules/
+user-web/dist/
+user-web/.vite/
+user-web/.logs/
+user-web/test-results/
+user-web/playwright-report/
 service-api/.logs/
 service-api/.pytest_cache/
 data_local/**
 reports/**
+.docs/hyphen-api-docs/**
 backup_*.sql
 db/mysql_legacy/*.sql
 db/mysql_legacy/*.dump
@@ -137,3 +146,5 @@ db/postgres/*.sql.local
 .env
 .env.*
 !.env.example
+src/main/java/egovframework/azon/cmmn/service/cubicianalytics-*.json
+*service-account*.json

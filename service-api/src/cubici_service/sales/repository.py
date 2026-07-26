@@ -1,10 +1,11 @@
 """Read-only sales queries."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from psycopg.rows import dict_row
 from pydantic import BaseModel
 
+from cubici_service.core.shop_types import build_shop_pair_clause, normalize_shop_type
 from cubici_service.db.connection import get_connection
 
 
@@ -78,14 +79,124 @@ class SaleReturnListResponse(BaseModel):
     items: list[SaleReturnListItem]
 
 
-def list_sales(limit: int, offset: int) -> SaleListResponse:
+def _build_sale_filters(
+    *,
+    shop_pairs: str | None,
+    shop_type: str | None,
+    shop_id: str | None,
+    status: str | None,
+    keyword: str | None,
+    from_date: date | None,
+    to_date: date | None,
+) -> tuple[str, list[object]]:
+    clauses = []
+    params: list[object] = []
+
+    if shop_pairs is not None:
+        pair_clause, pair_params = build_shop_pair_clause(shop_pairs)
+        clauses.append(pair_clause)
+        params.extend(pair_params)
+    if shop_type:
+        clauses.append("upper(shop_type) = %s")
+        params.append(normalize_shop_type(shop_type))
+    if shop_id:
+        clauses.append("shop_id ilike %s")
+        params.append(f"%{shop_id}%")
+    if status:
+        clauses.append("status = %s")
+        params.append(status)
+    if keyword:
+        like_keyword = f"%{keyword.strip()}%"
+        clauses.append(
+            "(order_no ilike %s or product_no ilike %s or product_name ilike %s or option_name ilike %s or orderer_name ilike %s)"
+        )
+        params.extend([like_keyword, like_keyword, like_keyword, like_keyword, like_keyword])
+    if from_date:
+        clauses.append("paid_date::date >= %s")
+        params.append(from_date)
+    if to_date:
+        clauses.append("paid_date::date <= %s")
+        params.append(to_date)
+
+    if not clauses:
+        return "", params
+
+    return " where " + " and ".join(clauses), params
+
+
+def _build_sale_return_filters(
+    *,
+    shop_pairs: str | None,
+    shop_type: str | None,
+    shop_id: str | None,
+    status: str | None,
+    keyword: str | None,
+    from_date: date | None,
+    to_date: date | None,
+) -> tuple[str, list[object]]:
+    clauses = []
+    params: list[object] = []
+
+    if shop_pairs is not None:
+        pair_clause, pair_params = build_shop_pair_clause(shop_pairs)
+        clauses.append(pair_clause)
+        params.extend(pair_params)
+    if shop_type:
+        clauses.append("upper(shop_type) = %s")
+        params.append(normalize_shop_type(shop_type))
+    if shop_id:
+        clauses.append("shop_id ilike %s")
+        params.append(f"%{shop_id}%")
+    if status:
+        clauses.append("(status = %s or claim_status = %s)")
+        params.extend([status, status])
+    if keyword:
+        like_keyword = f"%{keyword.strip()}%"
+        clauses.append(
+            "(order_no ilike %s or product_no ilike %s or receipt_no ilike %s or payment_no ilike %s or return_delivery_no ilike %s)"
+        )
+        params.extend([like_keyword, like_keyword, like_keyword, like_keyword, like_keyword])
+    if from_date:
+        clauses.append("request_date::date >= %s")
+        params.append(from_date)
+    if to_date:
+        clauses.append("request_date::date <= %s")
+        params.append(to_date)
+
+    if not clauses:
+        return "", params
+
+    return " where " + " and ".join(clauses), params
+
+
+def list_sales(
+    limit: int,
+    offset: int,
+    *,
+    shop_pairs: str | None = None,
+    shop_type: str | None = None,
+    shop_id: str | None = None,
+    status: str | None = None,
+    keyword: str | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
+) -> SaleListResponse:
+    where_clause, filter_params = _build_sale_filters(
+        shop_pairs=shop_pairs,
+        shop_type=shop_type,
+        shop_id=shop_id,
+        status=status,
+        keyword=keyword,
+        from_date=from_date,
+        to_date=to_date,
+    )
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
-            cursor.execute("select count(*) as total from sale")
+            cursor.execute(f"select count(*) as total from sale{where_clause}", filter_params)
             total = cursor.fetchone()["total"]
 
             cursor.execute(
-                """
+                f"""
                 select
                     sales_id,
                     shop_type,
@@ -113,10 +224,11 @@ def list_sales(limit: int, offset: int) -> SaleListResponse:
                     reg_date,
                     modified_date
                 from sale
+                {where_clause}
                 order by paid_date desc nulls last, sales_id desc
                 limit %s offset %s
                 """,
-                (limit, offset),
+                (*filter_params, limit, offset),
             )
             rows = cursor.fetchall()
 
@@ -128,14 +240,34 @@ def list_sales(limit: int, offset: int) -> SaleListResponse:
     )
 
 
-def list_sale_returns(limit: int, offset: int) -> SaleReturnListResponse:
+def list_sale_returns(
+    limit: int,
+    offset: int,
+    *,
+    shop_pairs: str | None = None,
+    shop_type: str | None = None,
+    shop_id: str | None = None,
+    status: str | None = None,
+    keyword: str | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
+) -> SaleReturnListResponse:
+    where_clause, filter_params = _build_sale_return_filters(
+        shop_pairs=shop_pairs,
+        shop_type=shop_type,
+        shop_id=shop_id,
+        status=status,
+        keyword=keyword,
+        from_date=from_date,
+        to_date=to_date,
+    )
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
-            cursor.execute("select count(*) as total from sale_return")
+            cursor.execute(f"select count(*) as total from sale_return{where_clause}", filter_params)
             total = cursor.fetchone()["total"]
 
             cursor.execute(
-                """
+                f"""
                 select
                     returns_id,
                     shop_type,
@@ -163,10 +295,11 @@ def list_sale_returns(limit: int, offset: int) -> SaleReturnListResponse:
                     reg_date,
                     modified_date
                 from sale_return
+                {where_clause}
                 order by request_date desc nulls last, returns_id desc
                 limit %s offset %s
                 """,
-                (limit, offset),
+                (*filter_params, limit, offset),
             )
             rows = cursor.fetchall()
 

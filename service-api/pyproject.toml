@@ -18,3 +18,6 @@ cubici-api = "cubici_service.main:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+markers = [
+  "db_e2e: local PostgreSQL end-to-end tests",
+]

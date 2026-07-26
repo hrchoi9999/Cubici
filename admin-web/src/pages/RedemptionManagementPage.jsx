@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  cancelRedemptionOperation,
   createRedemptionProvision,
   createRedemptionRepayment,
   fetchRedemptionDetail,
@@ -25,6 +26,16 @@ function formatNumber(value) {
   return Number(value).toLocaleString('ko-KR');
 }
 
+function formatBalanceCheckStatus(value) {
+  const labels = {
+    OK: '일치',
+    DIFF: '차이',
+    NO_HISTORY: '이력없음',
+    NOT_CHECKED: '미검산',
+  };
+  return labels[value] ?? value ?? '-';
+}
+
 function mapRedemptionToRow(item) {
   return {
     mbid: item.mbid,
@@ -38,6 +49,8 @@ function mapRedemptionToRow(item) {
     salesCount: item.sales_count,
     salesPaymentAmount: item.sales_payment_amount,
     outstandingBalance: item.latest_outstanding_balance,
+    balanceCheckStatus: item.latest_balance_check_status,
+    balanceDifference: item.latest_balance_difference,
     latestHistoryDate: item.latest_history_date,
   };
 }
@@ -57,7 +70,75 @@ function formatOperationType(value) {
   if (value === 'REPAYMENT') {
     return '상환';
   }
+  if (value === 'PROVISION_CANCEL') {
+    return '지급취소';
+  }
+  if (value === 'REPAYMENT_CANCEL') {
+    return '상환취소';
+  }
   return value || '-';
+}
+
+function getOperationStatus(item) {
+  if (item.is_reversal) {
+    return '취소이력';
+  }
+  if (item.canceled_by_operation_history_id) {
+    return '취소됨';
+  }
+  return '정상';
+}
+
+function canCancelOperation(item) {
+  return ['PROVISION', 'REPAYMENT'].includes(item.operation_type)
+    && !item.is_reversal
+    && !item.canceled_by_operation_history_id;
+}
+
+function formatPayload(payload) {
+  if (!payload) {
+    return '{}';
+  }
+
+  return JSON.stringify(payload, null, 2);
+}
+
+function getOperationAmount(item) {
+  const provisionDelta = Math.abs(
+    Number(item.new_cumulative_provision_amount ?? 0)
+      - Number(item.previous_cumulative_provision_amount ?? 0),
+  );
+  const repaymentDelta = Math.abs(
+    Number(item.new_cumulative_repayment_amount ?? 0)
+      - Number(item.previous_cumulative_repayment_amount ?? 0),
+  );
+
+  return Math.max(provisionDelta, repaymentDelta);
+}
+
+function matchesHistoryFilters(item, filters) {
+  const regDate = item.reg_date ? item.reg_date.slice(0, 10) : '';
+  const amount = getOperationAmount(item);
+  const minAmount = filters.minAmount === '' ? null : Number(filters.minAmount);
+  const maxAmount = filters.maxAmount === '' ? null : Number(filters.maxAmount);
+
+  if (filters.fromDate && regDate < filters.fromDate) {
+    return false;
+  }
+  if (filters.toDate && regDate > filters.toDate) {
+    return false;
+  }
+  if (filters.status && getOperationStatus(item) !== filters.status) {
+    return false;
+  }
+  if (minAmount !== null && amount < minAmount) {
+    return false;
+  }
+  if (maxAmount !== null && amount > maxAmount) {
+    return false;
+  }
+
+  return true;
 }
 
 export function RedemptionManagementPage() {
@@ -71,6 +152,8 @@ export function RedemptionManagementPage() {
   const [operationHistory, setOperationHistory] = useState([]);
   const [historyMessage, setHistoryMessage] = useState('');
   const [operationMessage, setOperationMessage] = useState('');
+  const [cancelTarget, setCancelTarget] = useState(null);
+  const [cancelValues, setCancelValues] = useState(() => makeCancelDefaults());
   const [formValues, setFormValues] = useState({
     mbid: '',
     outstandingOnly: false,
@@ -143,6 +226,7 @@ export function RedemptionManagementPage() {
     setOperationHistory([]);
     setHistoryMessage('');
     setOperationMessage('');
+    setCancelTarget(null);
     setFilters({
       mbid: formValues.mbid,
       outstanding_only: formValues.outstandingOnly,
@@ -157,6 +241,7 @@ export function RedemptionManagementPage() {
     setDetailMessage('상환 상세를 조회 중입니다.');
     setHistoryMessage('');
     setOperationMessage('');
+    setCancelTarget(null);
     try {
       const [detailData, historyData] = await Promise.all([
         fetchRedemptionDetail(mbid),
@@ -250,6 +335,33 @@ export function RedemptionManagementPage() {
     }
   }
 
+  function openOperationCancel(item) {
+    setCancelTarget(item);
+    setCancelValues(makeCancelDefaults());
+    setOperationMessage('');
+  }
+
+  async function handleOperationCancel(values) {
+    if (!detail || !cancelTarget) {
+      return;
+    }
+
+    setOperationMessage('상환 작업 취소 중입니다.');
+    try {
+      const result = await cancelRedemptionOperation(detail.mbid, cancelTarget.id, {
+        cancel_code: values.cancelCode || null,
+        operated_by: values.operatedBy || 'local-admin',
+        reason: values.reason,
+      });
+      await refreshDetail(detail.mbid);
+      await refreshList();
+      setCancelTarget(null);
+      setOperationMessage(`상환 작업 취소 완료: ${result.operation_code}`);
+    } catch (error) {
+      setOperationMessage(error.message);
+    }
+  }
+
   return (
     <>
       <div className="m-tab">
@@ -260,7 +372,7 @@ export function RedemptionManagementPage() {
         </ul>
       </div>
 
-      <form className="searchArea" onSubmit={handleSearch}>
+      <form className="m-search searchArea" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="redemptionMbid">MBID</label>
@@ -284,18 +396,10 @@ export function RedemptionManagementPage() {
         </div>
       </form>
 
-      <div className="resultArea">
-        <div>
-          전체 <strong className="result">{formatNumber(total)}</strong> 건
-        </div>
-        <div>
-          페이지 <strong className="result">{currentPage} / {pageCount}</strong>
-        </div>
-      </div>
-
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div className="table-scroll">
-        <table className="baseTable redemptionTable">
+      <div id="fixTable" className="fixTable wide legacyListTable table-scroll">
+        <div className="overflowBox">
+        <table className="m-shadowTable redemptionTable">
           <caption className="caption">상환 관리 목록</caption>
           <thead>
             <tr>
@@ -310,6 +414,7 @@ export function RedemptionManagementPage() {
               <th scope="col">판매건수</th>
               <th scope="col">판매결제액</th>
               <th scope="col">미상환잔액</th>
+              <th scope="col">잔액검산</th>
               <th scope="col">최근이력일</th>
               <th scope="col">상세</th>
             </tr>
@@ -317,11 +422,11 @@ export function RedemptionManagementPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="13">상환 목록을 조회 중입니다.</td>
+                <td colSpan="14">상환 목록을 조회 중입니다.</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan="13">조회된 상환 데이터가 없습니다.</td>
+                <td colSpan="14">조회된 상환 데이터가 없습니다.</td>
               </tr>
             ) : rows.map((row) => (
               <tr key={row.mbid}>
@@ -336,6 +441,7 @@ export function RedemptionManagementPage() {
                 <td>{formatNumber(row.salesCount)}</td>
                 <td>{formatNumber(row.salesPaymentAmount)}</td>
                 <td>{formatNumber(row.outstandingBalance)}</td>
+                <td>{formatBalanceCheckStatus(row.balanceCheckStatus)} ({formatNumber(row.balanceDifference)})</td>
                 <td>{formatDate(row.latestHistoryDate)}</td>
                 <td>
                   <button className="sColorLB refund-btn" type="button" onClick={() => openDetail(row.mbid)}>
@@ -346,9 +452,22 @@ export function RedemptionManagementPage() {
             ))}
           </tbody>
         </table>
+        </div>
+        <div className="fixBottom">
+          <ul className="tableTotal">
+            <li>
+              <span className="txt">총 상환건수</span>
+              <span className="result">{formatNumber(total)} 건</span>
+            </li>
+            <li>
+              <span className="txt">페이지</span>
+              <span className="result">{currentPage} / {pageCount}</span>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <div className="paging" id="pagingButton">
+      <div className="m-paging paging" id="pagingButton">
         <ul>
           <li>
             <button className="oiBtn prev" type="button" onClick={goToPreviousPage} disabled={offset === 0}>
@@ -373,9 +492,19 @@ export function RedemptionManagementPage() {
         operationHistory={operationHistory}
         historyMessage={historyMessage}
         operationMessage={operationMessage}
+        onOperationCancel={openOperationCancel}
         onProvisionCreate={handleProvisionCreate}
         onRepaymentCreate={handleRepaymentCreate}
       />
+      {cancelTarget ? (
+        <RedemptionCancelModal
+          item={cancelTarget}
+          values={cancelValues}
+          onChange={setCancelValues}
+          onClose={() => setCancelTarget(null)}
+          onSubmit={handleOperationCancel}
+        />
+      ) : null}
     </>
   );
 }
@@ -386,6 +515,7 @@ function RedemptionDetailPanel({
   operationHistory,
   historyMessage,
   operationMessage,
+  onOperationCancel,
   onProvisionCreate,
   onRepaymentCreate,
 }) {
@@ -405,7 +535,7 @@ function RedemptionDetailPanel({
       {message ? <p className="detailMessage">{message}</p> : null}
       {detail ? (
         <div className="detailSection">
-          <table>
+          <table className="detailInfoTable">
             <caption className="caption">상환 상세</caption>
             <tbody>
               <tr>
@@ -468,9 +598,19 @@ function RedemptionDetailPanel({
                 <th scope="row">최근판매지급일</th>
                 <td>{formatDate(detail.latest_sales_paid_date)}</td>
               </tr>
+              <tr>
+                <th scope="row">검산잔액</th>
+                <td>{formatNumber(detail.latest_balance_check_amount)}</td>
+                <th scope="row">잔액차이</th>
+                <td>{formatBalanceCheckStatus(detail.latest_balance_check_status)} ({formatNumber(detail.latest_balance_difference)})</td>
+              </tr>
             </tbody>
           </table>
-          <RedemptionOperationHistoryTable items={operationHistory} message={historyMessage} />
+          <RedemptionOperationHistoryTable
+            items={operationHistory}
+            message={historyMessage}
+            onOperationCancel={onOperationCancel}
+          />
           {operationMessage ? <p className="detailMessage">{operationMessage}</p> : null}
           <div className="redemptionOperationForms">
             <RedemptionProvisionForm mbid={detail.mbid} onSubmit={onProvisionCreate} />
@@ -486,13 +626,77 @@ function RedemptionDetailPanel({
   );
 }
 
-function RedemptionOperationHistoryTable({ items, message }) {
+function RedemptionOperationHistoryTable({ items, message, onOperationCancel }) {
+  const [payloadItem, setPayloadItem] = useState(null);
+  const [filters, setFilters] = useState({
+    fromDate: '',
+    toDate: '',
+    minAmount: '',
+    maxAmount: '',
+    status: '',
+  });
+  const filteredItems = useMemo(
+    () => items.filter((item) => matchesHistoryFilters(item, filters)),
+    [items, filters],
+  );
+
+  function updateFilter(event) {
+    const { name, value } = event.target;
+    setFilters((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function resetFilters() {
+    setFilters({
+      fromDate: '',
+      toDate: '',
+      minAmount: '',
+      maxAmount: '',
+      status: '',
+    });
+  }
+
   return (
     <div className="redemptionOperationHistory">
       <h3>최근 작업 이력</h3>
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div className="table-scroll">
-        <table className="baseTable redemptionOperationHistoryTable">
+      <div className="redemptionHistoryFilters">
+        <label>
+          시작일
+          <input name="fromDate" type="date" value={filters.fromDate} onChange={updateFilter} />
+        </label>
+        <label>
+          종료일
+          <input name="toDate" type="date" value={filters.toDate} onChange={updateFilter} />
+        </label>
+        <label>
+          최소금액
+          <input name="minAmount" type="number" min="0" value={filters.minAmount} onChange={updateFilter} />
+        </label>
+        <label>
+          최대금액
+          <input name="maxAmount" type="number" min="0" value={filters.maxAmount} onChange={updateFilter} />
+        </label>
+        <label>
+          상태
+          <select name="status" value={filters.status} onChange={updateFilter}>
+            <option value="">전체</option>
+            <option value="정상">정상</option>
+            <option value="취소됨">취소됨</option>
+            <option value="취소이력">취소이력</option>
+          </select>
+        </label>
+        <button className="sColorLB refund-btn" type="button" onClick={resetFilters}>
+          초기화
+        </button>
+        <span className="redemptionHistoryFilterCount">
+          {formatNumber(filteredItems.length)} / {formatNumber(items.length)} 건
+        </span>
+      </div>
+      <div className="table-scroll detailTableScroll">
+        <table className="m-shadowTable redemptionOperationHistoryTable">
           <caption className="caption">상환 작업 이력</caption>
           <thead>
             <tr>
@@ -505,16 +709,19 @@ function RedemptionOperationHistoryTable({ items, message }) {
               <th scope="col">신규지급</th>
               <th scope="col">신규상환</th>
               <th scope="col">신규잔액</th>
+              <th scope="col">상태</th>
               <th scope="col">처리자</th>
               <th scope="col">사유</th>
+              <th scope="col">상세</th>
+              <th scope="col">취소</th>
             </tr>
           </thead>
           <tbody>
-            {items.length === 0 ? (
+            {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan="11">등록된 작업 이력이 없습니다.</td>
+                <td colSpan="14">조회된 작업 이력이 없습니다.</td>
               </tr>
-            ) : items.map((item) => (
+            ) : filteredItems.map((item) => (
               <tr key={item.id}>
                 <td>{formatDate(item.reg_date)}</td>
                 <td>{formatOperationType(item.operation_type)}</td>
@@ -525,13 +732,128 @@ function RedemptionOperationHistoryTable({ items, message }) {
                 <td>{formatNumber(item.new_cumulative_provision_amount)}</td>
                 <td>{formatNumber(item.new_cumulative_repayment_amount)}</td>
                 <td>{formatNumber(item.new_outstanding_balance)}</td>
+                <td>{getOperationStatus(item)}</td>
                 <td>{item.operated_by}</td>
                 <td>{item.reason || '-'}</td>
+                <td>
+                  <button className="sColorLB refund-btn" type="button" onClick={() => setPayloadItem(item)}>
+                    보기
+                  </button>
+                </td>
+                <td>
+                  {canCancelOperation(item) ? (
+                    <button className="sColorLB refund-btn" type="button" onClick={() => onOperationCancel(item)}>
+                      취소
+                    </button>
+                  ) : '-'}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+      {payloadItem ? (
+        <RedemptionPayloadModal item={payloadItem} onClose={() => setPayloadItem(null)} />
+      ) : null}
+    </div>
+  );
+}
+
+function RedemptionPayloadModal({ item, onClose }) {
+  return (
+    <div className="redemptionModalOverlay" role="presentation">
+      <section className="redemptionModal" role="dialog" aria-modal="true" aria-labelledby="redemptionPayloadTitle">
+        <div className="redemptionModalHeader">
+          <h3 id="redemptionPayloadTitle">작업 상세</h3>
+          <button className="sColorLB refund-btn" type="button" onClick={onClose}>
+            닫기
+          </button>
+        </div>
+        <table className="detailInfoTable">
+          <caption className="caption">작업 상세 정보</caption>
+          <tbody>
+            <tr>
+              <th scope="row">구분</th>
+              <td>{formatOperationType(item.operation_type)}</td>
+              <th scope="row">작업코드</th>
+              <td>{item.operation_code}</td>
+            </tr>
+            <tr>
+              <th scope="row">상태</th>
+              <td>{getOperationStatus(item)}</td>
+              <th scope="row">처리자</th>
+              <td>{item.operated_by}</td>
+            </tr>
+          </tbody>
+        </table>
+        <pre className="redemptionPayload">{formatPayload(item.payload)}</pre>
+      </section>
+    </div>
+  );
+}
+
+function RedemptionCancelModal({ item, values, onChange, onClose, onSubmit }) {
+  function updateValue(event) {
+    const { name, value } = event.target;
+    onChange((current) => ({
+      ...current,
+      [name]: value,
+    }));
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault();
+    onSubmit(values);
+  }
+
+  return (
+    <div className="redemptionModalOverlay" role="presentation">
+      <section className="redemptionModal" role="dialog" aria-modal="true" aria-labelledby="redemptionCancelTitle">
+        <div className="redemptionModalHeader">
+          <h3 id="redemptionCancelTitle">작업 취소</h3>
+          <button className="sColorLB refund-btn" type="button" onClick={onClose}>
+            닫기
+          </button>
+        </div>
+        <table className="detailInfoTable">
+          <caption className="caption">취소 대상 작업</caption>
+          <tbody>
+            <tr>
+              <th scope="row">구분</th>
+              <td>{formatOperationType(item.operation_type)}</td>
+              <th scope="row">작업코드</th>
+              <td>{item.operation_code}</td>
+            </tr>
+            <tr>
+              <th scope="row">신규잔액</th>
+              <td>{formatNumber(item.new_outstanding_balance)}</td>
+              <th scope="row">처리자</th>
+              <td>{item.operated_by}</td>
+            </tr>
+          </tbody>
+        </table>
+        <form className="redemptionCancelForm" onSubmit={handleSubmit}>
+          <div className="redemptionOperationGrid">
+            <label>
+              취소코드
+              <input name="cancelCode" type="text" value={values.cancelCode} onChange={updateValue} />
+            </label>
+            <label>
+              처리자
+              <input name="operatedBy" type="text" value={values.operatedBy} onChange={updateValue} required />
+            </label>
+            <label className="redemptionCancelReason">
+              취소사유
+              <input name="reason" type="text" value={values.reason} onChange={updateValue} required />
+            </label>
+          </div>
+          <div className="redemptionOperationActions">
+            <button className="sBtn sColorLB" type="submit">
+              취소 실행
+            </button>
+          </div>
+        </form>
+      </section>
     </div>
   );
 }
@@ -713,6 +1035,14 @@ function makeRepaymentDefaults(outstandingBalance) {
     depositCode: makeOperationCode('DP'),
     depositDate: new Date().toISOString().slice(0, 10),
     depositAmount: balanceValue,
+    operatedBy: 'local-admin',
+    reason: '',
+  };
+}
+
+function makeCancelDefaults() {
+  return {
+    cancelCode: makeOperationCode('CX'),
     operatedBy: 'local-admin',
     reason: '',
   };

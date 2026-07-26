@@ -12,7 +12,16 @@ from cubici_service.core.config import get_settings
 from cubici_service.db.connection import get_connection
 
 
-ALLOWED_DOCUMENT_TYPES = {"CBInfo", "regNo", "demand", "main"}
+ALLOWED_DOCUMENT_TYPES = {
+    "CBInfo",
+    "regNo",
+    "demand",
+    "main",
+    "demandAccCopy",
+    "mainAccCopy",
+    "transferConsent",
+    "consentFile",
+}
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "hwp", "pdf"}
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024
 
@@ -89,7 +98,8 @@ class DocumentCheckUpdateResponse(BaseModel):
     health_insurance_paid_amount: int | None
 
 
-def list_contract_document_files(mbid: str) -> DocumentFileListResponse:
+def list_contract_document_files(mbid: str, *, user_no: int | None = None) -> DocumentFileListResponse:
+    _ensure_contract_exists(mbid, user_no=user_no)
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
@@ -172,7 +182,8 @@ def save_contract_document_file(
     return DocumentFileUploadResponse(mbid=mbid, item=item)
 
 
-def get_contract_document_file_download(mbid: str, uuid: str) -> DocumentFileDownload:
+def get_contract_document_file_download(mbid: str, uuid: str, *, user_no: int | None = None) -> DocumentFileDownload:
+    _ensure_contract_exists(mbid, user_no=user_no)
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
@@ -386,6 +397,39 @@ def _insert_file_metadata(
                 ),
             )
             row = cursor.fetchone()
+            cursor.execute(
+                """
+                update moneybank_contract
+                set status = 'REQUEST',
+                    modified_date = now()
+                where mbid = %s
+                  and coalesce(status, '') = 'PENDING_DOCUMENTS'
+                returning status
+                """,
+                (mbid,),
+            )
+            resubmitted = cursor.fetchone()
+            if resubmitted is not None:
+                cursor.execute(
+                    """
+                    insert into contract_status_history (
+                        mbid,
+                        previous_status,
+                        new_status,
+                        action,
+                        changed_by,
+                        reason,
+                        reg_date
+                    ) values (
+                        %s, 'PENDING_DOCUMENTS', 'REQUEST', 'document_resubmitted', %s, %s, now()
+                    )
+                    """,
+                    (
+                        mbid,
+                        uploaded_by,
+                        f"document resubmitted: {document_type}",
+                    ),
+                )
 
     return DocumentFileItem(**row)
 
@@ -400,12 +444,14 @@ def _count_contract_document_files(mbid: str) -> int:
             return int(cursor.fetchone()[0])
 
 
-def _ensure_contract_exists(mbid: str) -> None:
+def _ensure_contract_exists(mbid: str, *, user_no: int | None = None) -> None:
+    user_clause = " and user_no = %s" if user_no is not None else ""
+    params: tuple[object, ...] = (mbid, user_no) if user_no is not None else (mbid,)
     with get_connection() as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "select exists(select 1 from moneybank_contract where mbid = %s)",
-                (mbid,),
+                f"select exists(select 1 from moneybank_contract where mbid = %s{user_clause})",
+                params,
             )
             exists = cursor.fetchone()[0]
 
