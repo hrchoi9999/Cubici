@@ -872,8 +872,12 @@ textarea {
 }
 
 .secondary-action {
+  min-height: 38px;
   min-width: 96px;
   padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid #b8c7d8;
   background: #fff;
   color: #2f4c69;
@@ -1024,6 +1028,12 @@ th {
   margin-top: 18px;
   color: #607086;
   font-size: 13px;
+}
+
+.auth-card > div a {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .auth-card .field-grid {

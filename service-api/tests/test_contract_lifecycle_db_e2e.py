@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
+from cubici_service.accounts.repository import AccountAuthUser, _build_auth_response
 from cubici_service.app import create_app
 from cubici_service.db.connection import get_connection
 
@@ -183,6 +184,7 @@ def test_contract_cancel_rejects_pre_contract_status_with_real_db() -> None:
                 "changed_by": "local-db-e2e",
                 "reason": "pre-contract cancel must fail",
             },
+            headers=_master_admin_headers(),
         )
         assert response.status_code == 409
         assert response.json()["detail"] == "contract can be canceled only after contract is active or account standby"
@@ -273,21 +275,36 @@ def _insert_test_shop_account(*, shop_account_id: int, user_no: int, suffix: str
 
 
 def _post_json(client: TestClient, path: str, payload: dict) -> dict:
-    response = client.post(path, json=payload)
+    response = client.post(path, json=payload, headers=_master_admin_headers())
     assert response.status_code == 200, response.text
     return response.json()
 
 
 def _put_json(client: TestClient, path: str, payload: dict) -> dict:
-    response = client.put(path, json=payload)
+    response = client.put(path, json=payload, headers=_master_admin_headers())
     assert response.status_code == 200, response.text
     return response.json()
 
 
 def _get_json(client: TestClient, path: str) -> dict:
-    response = client.get(path)
+    response = client.get(path, headers=_master_admin_headers())
     assert response.status_code == 200, response.text
     return response.json()
+
+
+def _master_admin_headers() -> dict[str, str]:
+    auth = _build_auth_response(
+        AccountAuthUser(
+            user_no=900000000,
+            email=os.getenv("CUBICI_MASTER_ADMIN_EMAIL", "admin@example.com"),
+            user_type="ADMIN_USER",
+            name="DB E2E Admin",
+            phone=None,
+            biz_num=None,
+            biz_name=None,
+        )
+    )
+    return {"Authorization": f"Bearer {auth.access_token}"}
 
 
 def _status_actions(mbid: str) -> set[str]:

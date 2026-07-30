@@ -9,7 +9,7 @@ const userRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(userRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const authSession = {
   access_token: 'e2e-local-token',
   user: {

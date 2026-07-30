@@ -48,7 +48,7 @@ $(document).ready(function(){
 	mailHtml += 					'<div>';
 	mailHtml += 						'<p class="w400" style="font-weight: 400;">본 메일은 서비스 고지사항 전달 목적의 발신전용 메일로 회신이 불가합니다.</p>';
 	mailHtml += 						'<p class="w300" style="font-weight: 300;">(07325) 서울 영등포구 의사당대로 83 오투타워 서울핀테크랩(여의도동) 4층 109호</p>';
-	mailHtml += 						'<p class="w300" style="font-weight: 300;"><span>TEL. 02-6925-6373</span><span>MAIL. admin@cubici.co.kr</span></p>';
+		mailHtml += 						'<p class="w300" style="font-weight: 300;"><span>TEL. 02-6925-6373</span><span>MAIL. contact@example.com</span></p>';
 	mailHtml += 					'</div>';
 	mailHtml += 					'<div>';
 	mailHtml += 						'<img src="/resources/admin/img/email/logo.png" alt="큐빅아이">';

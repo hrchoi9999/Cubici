@@ -9,7 +9,7 @@ const userRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(userRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 test.skip(process.env.CUBICI_RUN_DB_E2E !== '1', 'set CUBICI_RUN_DB_E2E=1 to run local PostgreSQL UI E2E tests');
@@ -33,17 +33,7 @@ test('user contract detail accepts presented terms with database API', async ({ 
 
   await page.addInitScript((session) => {
     window.localStorage.setItem('cubiciUserAuth', JSON.stringify(session));
-  }, {
-    access_token: `local-db-user-e2e-${fixture.suffix}`,
-    user: {
-      user_no: fixture.userNo,
-      user_type: 'USER',
-      email: fixture.email,
-      name: fixture.userName,
-      biz_name: fixture.bizName,
-      biz_num: fixture.bizNum,
-    },
-  });
+  }, fixture.session);
 
   await page.goto(`/moneybank/current/${encodeURIComponent(fixture.mbid)}`);
 
@@ -78,6 +68,7 @@ function createUserFixture() {
   return JSON.parse(runPython(`
 import json
 import sys
+from cubici_service.accounts.repository import AccountAuthUser, _build_auth_response
 from cubici_service.db.connection import get_connection
 
 suffix = sys.argv[1]
@@ -122,6 +113,19 @@ with get_connection() as conn:
                 f"local-db-user-e2e-account-{suffix}",
             ),
         )
+
+user = AccountAuthUser(
+    user_no=user_no,
+    email=email,
+    user_type="USER",
+    name=user_name,
+    phone="01000000000",
+    biz_num=biz_num,
+    biz_name=biz_name,
+    partner_code=None,
+    last_login_date=None,
+)
+session = _build_auth_response(user).model_dump()
 print(json.dumps({
     "userNo": user_no,
     "shopAccountId": shop_account_id,
@@ -130,7 +134,8 @@ print(json.dumps({
     "userName": user_name,
     "bizName": biz_name,
     "bizNum": biz_num,
-}, ensure_ascii=False))
+    "session": session,
+}, ensure_ascii=False, default=str))
   `, [suffix]));
 }
 
@@ -194,7 +199,10 @@ async function apiJson(pathname, options = {}) {
     try {
       response = await fetch(`${apiBaseUrl}${pathname}`, {
         method: options.method || 'GET',
-        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        headers: {
+          ...adminAuthHeaders(),
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        },
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
       break;
@@ -209,6 +217,12 @@ async function apiJson(pathname, options = {}) {
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected setup API calls').toBe(true);
+  return { Authorization: authorization };
 }
 
 function cleanupContractFixture(currentFixture) {

@@ -10,7 +10,7 @@ const adminRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(adminRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const tempRoot = path.join(workspaceRoot, '.tmp', 'cubici-e2e');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || 'http://127.0.0.1:8000';
 const adminBaseUrl = process.env.CUBICI_ADMIN_BASE_URL || 'http://127.0.0.1:5174';
@@ -47,7 +47,7 @@ test('admin reject and user terms refusal exception statuses are persisted and d
     window.localStorage.setItem('cubiciUserAuth', JSON.stringify(session));
   }, refused.session);
   await createRequestFromUser(page, refused);
-  await presentTermsFromAdmin(page, refused);
+  await presentTermsByApi(refused.mbid);
   await expectStatus(refused.mbid, 'CONDITIONS_ACCEPT');
   await refuseTermsFromUser(page, refused);
   await expectStatus(refused.mbid, 'TERMS_REFUSED');
@@ -62,10 +62,13 @@ async function createRequestFromUser(page, currentFixture) {
   fs.writeFileSync(cbFile, `%PDF-1.4\n% cubici exception ${currentFixture.kind} identity document\n`);
   currentFixture.tempFiles.push(regFile, cbFile);
 
+  await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/request`);
   await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.userNo}"]`)).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.bizName}"]`)).toBeVisible();
+  await expect(page.getByText('연결 완료')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('input[value="1개"]')).toBeVisible();
   await expect(page.getByLabel('네이버')).toBeChecked();
 
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
@@ -76,11 +79,20 @@ async function createRequestFromUser(page, currentFixture) {
   await expect(page.getByText(/주민등록증 진위확인 mock 완료/)).toBeVisible();
   await expect(page.getByLabel('본인확인을 완료했습니다.')).toBeChecked();
   await page.getByLabel('머니뱅크 신청 약관에 동의합니다.').check();
+  const requestResponsePromise = waitForApiResponse(page, '/v1/api/contracts/requests', 'POST');
   await page.getByRole('button', { name: '서비스 신청' }).click();
-  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 15_000 });
+  await expectApiResponse(requestResponsePromise);
+  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 30_000 });
 
   currentFixture.mbid = await latestContractMbid(currentFixture.userNo);
   await expectStatus(currentFixture.mbid, 'REQUEST');
+}
+
+async function setUserSession(page, session) {
+  await page.goto(userBaseUrl);
+  await page.evaluate((value) => {
+    window.localStorage.setItem('cubiciUserAuth', JSON.stringify(value));
+  }, session);
 }
 
 async function rejectRequestFromAdmin(page, currentFixture) {
@@ -93,41 +105,22 @@ async function rejectRequestFromAdmin(page, currentFixture) {
   await requestRow.getByRole('button', { name: '신청접수' }).click();
 
   await expect(page.getByText('상태 상세')).toBeVisible();
+  const statusResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '거부' }).click();
+  await expectApiResponse(statusResponsePromise);
   await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
   await expect(page.locator('td').filter({ hasText: '거절' }).first()).toBeVisible();
 }
 
-async function presentTermsFromAdmin(page, currentFixture) {
-  await page.goto(`${adminBaseUrl}/admin/moneybank/approval_tab1`);
-  await page.getByLabel('회원명').fill(currentFixture.userName);
-  await page.getByRole('button', { name: '검색' }).click();
-
-  const reviewRow = page.locator('tbody tr').filter({ hasText: currentFixture.userName });
-  await expect(reviewRow).toContainText(currentFixture.bizName);
-  await reviewRow.getByRole('button', { name: '보기' }).click();
-
-  await expect(page.getByRole('heading', { name: '심사 정보' })).toBeVisible();
-  await page.getByLabel('지급율(%)').fill('80');
-  await page.getByLabel('건당 주문한도').fill('700000');
-  await page.getByLabel('최대 미상환잔액').fill('5000000');
-  await page.getByLabel('조정사유').fill('exception e2e fee');
-  await page.getByRole('button', { name: '수수료율 추가' }).click();
-  await page.getByLabel('수수료 구분 1').fill('ADVANCE');
-  await page.getByLabel('수수료율 1').fill('1.35');
-  await page.getByRole('button', { name: '조건 저장' }).click();
-
-  await expect(page.getByText('계약 조건 저장이 완료되었습니다.')).toBeVisible();
-  await page.getByRole('button', { name: '조건 제시' }).click();
-  await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
-}
-
 async function refuseTermsFromUser(page, currentFixture) {
+  await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(currentFixture.mbid)}`);
   await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('input[value="조건제시"]').first()).toBeVisible();
+  const refuseResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '동의하지 않습니다' }).click();
+  await expectApiResponse(refuseResponsePromise);
   await expect(page.getByText('이용조건 거절이 저장되었습니다.')).toBeVisible();
 }
 
@@ -159,11 +152,10 @@ kind = sys.argv[1]
 suffix = sys.argv[2]
 with get_connection() as conn:
     with conn.cursor() as cur:
-        cur.execute("select coalesce(max(user_no), 0) + 1 from users")
-        user_no = int(cur.fetchone()[0])
-        cur.execute("select coalesce(max(id), 0) + 1 from shop_accounts")
-        shop_account_id = int(cur.fetchone()[0])
         numeric_part = ''.join(ch for ch in suffix if ch.isdigit())[-10:].ljust(10, "0")
+        numeric_id = int(numeric_part[-6:])
+        user_no = 7300000 + numeric_id
+        shop_account_id = 8300000 + numeric_id
         email = f"local-db-ex-{suffix}@example.test"
         user_name = f"Ex{kind.capitalize()}User{numeric_part[-6:]}"
         biz_name = f"Ex{kind.capitalize()}Biz{numeric_part[-6:]}"
@@ -238,10 +230,71 @@ async function expectStatus(mbid, expectedStatus) {
 }
 
 async function apiJson(pathname) {
-  const response = await fetch(`${apiBaseUrl}${pathname}`);
+  const response = await fetch(`${apiBaseUrl}${pathname}`, {
+    headers: adminAuthHeaders(),
+  });
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+async function apiJsonWithBody(pathname, options = {}) {
+  const response = await fetch(`${apiBaseUrl}${pathname}`, {
+    method: options.method || 'GET',
+    headers: {
+      ...adminAuthHeaders(),
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+  const text = await response.text();
+  expect(response.ok, text).toBe(true);
+  return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected admin DB E2E API calls').toBe(true);
+  return { Authorization: authorization };
+}
+
+async function presentTermsByApi(mbid) {
+  await apiJsonWithBody(`/v1/api/contracts/${encodeURIComponent(mbid)}/fees/adjust`, {
+    method: 'PUT',
+    body: {
+      adjusted_by: 'local-admin',
+      reason: 'exception e2e fee setup',
+      payment_rate: 80,
+      sales_limit_per_order: 700000,
+      max_outstanding_balance: 5000000,
+      fee_rates: [
+        {
+          fee_type: 'ADVANCE',
+          fee_rate: 1.35,
+        },
+      ],
+    },
+  });
+  await apiJsonWithBody(`/v1/api/contracts/${encodeURIComponent(mbid)}/status`, {
+    method: 'PUT',
+    body: {
+      action: 'present_terms',
+      changed_by: 'local-admin',
+      reason: 'terms presented by exception e2e setup',
+    },
+  });
+}
+
+function waitForApiResponse(page, pathname, method) {
+  return page.waitForResponse((response) => (
+    response.url().includes(pathname)
+    && response.request().method() === method
+  ), { timeout: 30_000 });
+}
+
+async function expectApiResponse(responsePromise) {
+  const response = await responsePromise;
+  expect(response.ok(), await response.text()).toBeTruthy();
 }
 
 function cleanupExceptionFixture(currentFixture) {

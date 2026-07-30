@@ -53,6 +53,16 @@ function mapSettlementToRow(item) {
 export function SettlementManagementPage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [counts, setCounts] = useState({
+    total_count: 0,
+    ok_count: 0,
+    diff_count: 0,
+    legacy_batch_value_count: 0,
+    unchecked_count: 0,
+    total_difference: 0,
+    absolute_difference: 0,
+    check_status_label: '미검산',
+  });
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
@@ -79,11 +89,22 @@ export function SettlementManagementPage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
+          setCounts(data.counts ?? {});
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
+          setCounts({
+            total_count: 0,
+            ok_count: 0,
+            diff_count: 0,
+            legacy_batch_value_count: 0,
+            unchecked_count: 0,
+            total_difference: 0,
+            absolute_difference: 0,
+            check_status_label: '조회 실패',
+          });
           setMessage(error.message);
         }
       } finally {
@@ -188,6 +209,15 @@ export function SettlementManagementPage() {
           </button>
         </div>
       </form>
+
+      <div className="summaryPills">
+        <span>검산 {counts.check_status_label ?? '-'}</span>
+        <span>일치 {formatNumber(counts.ok_count ?? 0)}건</span>
+        <span>차이 {formatNumber(counts.diff_count ?? 0)}건</span>
+        <span>원본산출 {formatNumber(counts.legacy_batch_value_count ?? 0)}건</span>
+        <span>차이합계 {formatNumber(counts.total_difference ?? 0)}</span>
+        <span>절대차이 {formatNumber(counts.absolute_difference ?? 0)}</span>
+      </div>
 
       {message ? <p className="detailMessage">{message}</p> : null}
       <div id="fixTable" className="fixTable legacyListTable table-scroll">

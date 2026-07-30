@@ -41,10 +41,22 @@ class RedemptionListItem(BaseModel):
     latest_balance_check_status: str = "NOT_CHECKED"
 
 
+class RedemptionCheckCounts(BaseModel):
+    total_count: int = 0
+    ok_count: int = 0
+    diff_count: int = 0
+    no_history_count: int = 0
+    outstanding_count: int = 0
+    total_balance_difference: int = 0
+    absolute_balance_difference: int = 0
+    check_status_label: str = "미검산"
+
+
 class RedemptionListResponse(BaseModel):
     limit: int
     offset: int
     total: int
+    counts: RedemptionCheckCounts = Field(default_factory=RedemptionCheckCounts)
     items: list[RedemptionListItem]
 
 
@@ -316,15 +328,29 @@ def list_redemptions(
             cursor.execute(
                 f"""
                 {_redemption_summary_cte()}
-                select count(*) as total
-                from (
+                , summary as (
                     {_redemption_summary_select()}
                     {where_clause}
-                ) summary
+                )
+                select
+                    count(*)::int as total_count,
+                    count(*) filter (where latest_balance_check_status = 'OK')::int as ok_count,
+                    count(*) filter (where latest_balance_check_status = 'DIFF')::int as diff_count,
+                    count(*) filter (where latest_balance_check_status = 'NO_HISTORY')::int as no_history_count,
+                    count(*) filter (where coalesce(latest_outstanding_balance, 0) > 0)::int as outstanding_count,
+                    coalesce(sum(coalesce(latest_balance_difference, 0)), 0)::bigint as total_balance_difference,
+                    coalesce(sum(abs(coalesce(latest_balance_difference, 0))), 0)::bigint as absolute_balance_difference,
+                    case
+                        when count(*) = 0 then '데이터 없음'
+                        when count(*) filter (where latest_balance_check_status = 'DIFF') > 0 then '검산차이'
+                        when count(*) filter (where latest_balance_check_status = 'NO_HISTORY') > 0 then '이력없음'
+                        else '검산일치'
+                    end as check_status_label
+                from summary
                 """,
                 filter_params,
             )
-            total = cursor.fetchone()["total"]
+            counts = RedemptionCheckCounts(**cursor.fetchone())
 
             cursor.execute(
                 f"""
@@ -348,7 +374,8 @@ def list_redemptions(
     return RedemptionListResponse(
         limit=limit,
         offset=offset,
-        total=total,
+        total=counts.total_count,
+        counts=counts,
         items=[RedemptionListItem(**row) for row in rows],
     )
 

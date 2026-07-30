@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -10,7 +12,7 @@ const cubiciRoot = path.resolve(adminRoot, '..');
 const userRoot = path.join(cubiciRoot, 'user-web');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
 const browserPath = path.join(workspaceRoot, '.downloads', 'ms-playwright');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const dynamicPortOffset = String(process.pid % 1000).padStart(3, '0');
 const previewPort = process.env.CUBICI_E2E_PORT || `28${dynamicPortOffset}`;
 const apiPort = process.env.CUBICI_API_E2E_PORT || `29${dynamicPortOffset}`;
@@ -25,6 +27,8 @@ const env = {
   CUBICI_API_BASE_URL: process.env.CUBICI_API_BASE_URL || apiUrl,
   CUBICI_USER_BASE_URL: process.env.CUBICI_USER_BASE_URL || userUrl,
   CUBICI_USER_E2E_PORT: userPort,
+  CUBICI_CORS_ALLOW_ORIGINS: process.env.CUBICI_CORS_ALLOW_ORIGINS || [baseUrl, userUrl].join(','),
+  CUBICI_CORS_ALLOW_ORIGIN_REGEX: process.env.CUBICI_CORS_ALLOW_ORIGIN_REGEX || 'https?://(127\\.0\\.0\\.1|localhost):\\d+',
   PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || browserPath,
   VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || apiUrl,
 };
@@ -33,10 +37,12 @@ let apiProcess = null;
 let previewProcess = null;
 let userProcess = null;
 let finalExitCode = 1;
+let adminStorageStatePath = null;
 
 try {
   checkDatabase();
   await ensureServiceApi();
+  await prepareMasterAdminTestAuth();
   await ensureUserWeb();
   buildAdminWeb();
 
@@ -67,6 +73,9 @@ try {
   if (apiProcess) {
     await stopProcess(apiProcess);
   }
+  if (adminStorageStatePath) {
+    fs.rmSync(adminStorageStatePath, { force: true });
+  }
   process.exit(finalExitCode);
 }
 
@@ -88,6 +97,62 @@ async function ensureServiceApi() {
     },
   );
   await waitForServer(`${apiUrl}/v1/api/health`, 20_000);
+}
+
+async function prepareMasterAdminTestAuth() {
+  if (env.CUBICI_RUN_DB_E2E !== '1') {
+    return;
+  }
+
+  const email = env.CUBICI_MASTER_ADMIN_EMAIL;
+  const password = env.CUBICI_MASTER_ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error('CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required for admin DB E2E authentication.');
+  }
+
+  const session = await loginMasterAdmin(email, password);
+  const tokenType = session.token_type ?? 'Bearer';
+  env.CUBICI_ADMIN_BEARER_TOKEN = `${tokenType} ${session.access_token}`;
+
+  adminStorageStatePath = env.CUBICI_ADMIN_STORAGE_STATE_PATH || path.join(
+    os.tmpdir(),
+    `cubici-admin-storage-state-${process.pid}.json`,
+  );
+  env.CUBICI_ADMIN_STORAGE_STATE_PATH = adminStorageStatePath;
+  fs.writeFileSync(
+    adminStorageStatePath,
+    JSON.stringify({
+      cookies: [],
+      origins: [
+        {
+          origin: baseUrl,
+          localStorage: [
+            {
+              name: 'cubiciAdminAuth',
+              value: JSON.stringify(session),
+            },
+          ],
+        },
+      ],
+    }),
+    'utf8',
+  );
+}
+
+async function loginMasterAdmin(email, password) {
+  const response = await fetch(`${apiUrl}/v1/api/accounts/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    throw new Error(`Master admin login for DB E2E failed with status ${response.status}.`);
+  }
+  const session = await response.json();
+  if (!session?.access_token || String(session?.user?.user_type ?? '').toUpperCase() !== 'ADMIN_USER') {
+    throw new Error('Master admin login for DB E2E did not return an ADMIN_USER session.');
+  }
+  return session;
 }
 
 async function ensureUserWeb() {
@@ -165,7 +230,7 @@ function buildAdminWeb() {
 
 function runPlaywright(args) {
   return new Promise((resolve) => {
-    const cliPath = path.join(adminRoot, 'node_modules', 'playwright', 'cli.js');
+    const cliPath = path.join(adminRoot, 'node_modules', '@playwright', 'test', 'cli.js');
     const child = spawn(process.execPath, [cliPath, 'test', ...args], {
       cwd: adminRoot,
       env,

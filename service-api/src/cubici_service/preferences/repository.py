@@ -6,10 +6,11 @@ import hashlib
 from datetime import date, datetime
 from typing import Any, Literal
 
+from fastapi import HTTPException
 from psycopg.rows import dict_row
 from psycopg import sql
 from psycopg.types.json import Jsonb
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, model_validator
 
 from cubici_service.db.connection import get_connection
 
@@ -27,6 +28,8 @@ MoneybankProductOrderBy = Literal["reg_date_desc", "reg_date_asc", "firm_name_as
 PrizmConfigDivision = Literal["all", "1", "2"]
 
 ADMIN_PASSWORD_SALT = "{AZON}"
+ADMIN_TYPE_CODES = {"00", "01", "02"}
+APPROVED_ADMIN_GRADE_CODES = {"00", "01"}
 
 
 class ChargeListItem(BaseModel):
@@ -121,11 +124,23 @@ class AdminAccountRequest(BaseModel):
     admin_email: str | None = Field(default=None, max_length=150)
     admin_department: str | None = Field(default=None, max_length=100)
 
+    @model_validator(mode="after")
+    def validate_admin_request_policy(self) -> "AdminAccountRequest":
+        if self.admin_type not in ADMIN_TYPE_CODES:
+            raise ValueError("admin_type must be one of 00, 01, 02")
+        return self
+
 
 class AdminAccountApproveRequest(BaseModel):
     new_admin_id: str = Field(min_length=1, max_length=100)
     password: SecretStr = Field(min_length=1)
     admin_grade: str = Field(min_length=2, max_length=2)
+
+    @model_validator(mode="after")
+    def validate_admin_approval_policy(self) -> "AdminAccountApproveRequest":
+        if self.admin_grade not in APPROVED_ADMIN_GRADE_CODES:
+            raise ValueError("approved admin_grade must be one of 00, 01")
+        return self
 
 
 class AdminAccountUpdateRequest(BaseModel):
@@ -136,6 +151,14 @@ class AdminAccountUpdateRequest(BaseModel):
     admin_department: str | None = Field(default=None, max_length=100)
     admin_grade: str = Field(min_length=2, max_length=2)
     password: SecretStr | None = None
+
+    @model_validator(mode="after")
+    def validate_admin_update_policy(self) -> "AdminAccountUpdateRequest":
+        if self.admin_type not in ADMIN_TYPE_CODES:
+            raise ValueError("admin_type must be one of 00, 01, 02")
+        if self.admin_grade not in APPROVED_ADMIN_GRADE_CODES:
+            raise ValueError("admin_grade must be one of 00, 01")
+        return self
 
 
 class AdminAccountWriteResponse(BaseModel):
@@ -402,41 +425,67 @@ class MoneybankProductWriteRequest(BaseModel):
     division: str | None = Field(default=None, max_length=30)
     product_name: str = Field(min_length=1, max_length=100)
     product_status: str = Field(default="00", max_length=20)
-    min_sales_amount: int | None = None
+    min_sales_amount: int | None = Field(default=None, ge=0)
     min_business_period: str | None = Field(default=None, max_length=50)
-    min_calc_amount: int | None = None
+    min_calc_amount: int | None = Field(default=None, ge=0)
     credit_rate: str | None = Field(default=None, max_length=50)
     cubici_period: str | None = Field(default=None, max_length=50)
-    amount_limit: int | None = None
+    amount_limit: int | None = Field(default=None, ge=0)
     other_conditions: str | None = Field(default=None, max_length=1000)
     service_amount_standard: str | None = Field(default=None, max_length=50)
-    service_amount_min: int | None = None
-    service_amount_max: int | None = None
+    service_amount_min: int | None = Field(default=None, ge=0)
+    service_amount_max: int | None = Field(default=None, ge=0)
     service_amount_unit: str | None = Field(default=None, max_length=50)
     execute_amount_standard: str | None = Field(default=None, max_length=50)
-    execute_amount_min: int | None = None
-    execute_amount_max: int | None = None
+    execute_amount_min: int | None = Field(default=None, ge=0)
+    execute_amount_max: int | None = Field(default=None, ge=0)
     execute_amount_unit: str | None = Field(default=None, max_length=50)
     service_fee_standard: str | None = Field(default=None, max_length=50)
-    service_fee_min: float | None = None
-    service_fee_max: float | None = None
-    annual_fee_rate: float | None = None
+    service_fee_min: float | None = Field(default=None, ge=0)
+    service_fee_max: float | None = Field(default=None, ge=0)
+    annual_fee_rate: float | None = Field(default=None, ge=0)
     interest_standard: str | None = Field(default=None, max_length=50)
-    interest_min: float | None = None
-    interest_max: float | None = None
+    interest_min: float | None = Field(default=None, ge=0)
+    interest_max: float | None = Field(default=None, ge=0)
     limit_change_yn: str | None = Field(default=None, max_length=1)
     service_repay_period: str | None = Field(default=None, max_length=50)
-    service_repay_min: int | None = None
-    service_repay_max: int | None = None
+    service_repay_min: int | None = Field(default=None, ge=0)
+    service_repay_max: int | None = Field(default=None, ge=0)
     service_repay_method: str | None = Field(default=None, max_length=50)
     extension_yn: str | None = Field(default=None, max_length=1)
     launch_date: date | None = None
     expire_date: date | None = None
-    repayment_count: int | None = None
-    repay_amount: int | None = None
+    repayment_count: int | None = Field(default=None, ge=0)
+    repay_amount: int | None = Field(default=None, ge=0)
     mid_repay_yn: str | None = Field(default=None, max_length=1)
     b2b_firm_name: str | None = Field(default=None, max_length=100)
     product_type: str | None = Field(default=None, max_length=30)
+
+    @model_validator(mode="after")
+    def validate_moneybank_product_conditions(self) -> "MoneybankProductWriteRequest":
+        if self.product_status not in {"00", "01", "02"}:
+            raise ValueError("product_status must be one of 00, 01, 02")
+        for field_name in ("limit_change_yn", "extension_yn", "mid_repay_yn"):
+            value = getattr(self, field_name)
+            if value is not None and value not in {"Y", "N"}:
+                raise ValueError(f"{field_name} must be Y or N")
+
+        range_pairs = (
+            ("service_amount_min", "service_amount_max"),
+            ("execute_amount_min", "execute_amount_max"),
+            ("service_fee_min", "service_fee_max"),
+            ("interest_min", "interest_max"),
+            ("service_repay_min", "service_repay_max"),
+        )
+        for min_field, max_field in range_pairs:
+            min_value = getattr(self, min_field)
+            max_value = getattr(self, max_field)
+            if min_value is not None and max_value is not None and min_value > max_value:
+                raise ValueError(f"{min_field} must be <= {max_field}")
+
+        if self.launch_date is not None and self.expire_date is not None and self.launch_date > self.expire_date:
+            raise ValueError("launch_date must be <= expire_date")
+        return self
 
 
 class MoneybankProductWriteResponse(BaseModel):
@@ -1055,6 +1104,25 @@ def approve_admin_account(admin_id: str, payload: AdminAccountApproveRequest) ->
 
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute("select admin_approval_date from admin_account where admin_id = %s", (admin_id,))
+            target = cursor.fetchone()
+            if target is None:
+                return None
+            if target["admin_approval_date"] is not None:
+                raise HTTPException(status_code=409, detail="admin account already approved")
+
+            cursor.execute(
+                """
+                select 1
+                from admin_account
+                where admin_id = %s
+                  and admin_id <> %s
+                """,
+                (payload.new_admin_id, admin_id),
+            )
+            if cursor.fetchone() is not None:
+                raise HTTPException(status_code=409, detail="admin_id already exists")
+
             cursor.execute(
                 """
                 update admin_account
@@ -1063,8 +1131,9 @@ def approve_admin_account(admin_id: str, payload: AdminAccountApproveRequest) ->
                     admin_password_hash = %s,
                     admin_grade = %s,
                     admin_approval_date = now(),
-                    modified_date = now()
+                    modified_date = null
                 where admin_id = %s
+                  and admin_approval_date is null
                 returning admin_id
                 """,
                 (payload.new_admin_id, password_hash, payload.admin_grade, admin_id),
@@ -1887,7 +1956,17 @@ def _moneybank_product_select_query() -> str:
             case
                 when nullif(mpp.product_name, '') is null then '상품명 미등록'
                 when mpp.service_fee_min is null or mpp.service_fee_max is null then '수수료 조건 확인'
+                when mpp.service_fee_min > mpp.service_fee_max then '수수료 범위 오류'
                 when mpp.execute_amount_min is null or mpp.execute_amount_max is null then '실행금액 조건 확인'
+                when mpp.execute_amount_min > mpp.execute_amount_max then '실행금액 범위 오류'
+                when mpp.service_amount_min is not null and mpp.service_amount_max is not null
+                 and mpp.service_amount_min > mpp.service_amount_max then '서비스금액 범위 오류'
+                when mpp.interest_min is not null and mpp.interest_max is not null
+                 and mpp.interest_min > mpp.interest_max then '이자율 범위 오류'
+                when mpp.service_repay_min is not null and mpp.service_repay_max is not null
+                 and mpp.service_repay_min > mpp.service_repay_max then '상환기간 범위 오류'
+                when mpp.launch_date is not null and mpp.expire_date is not null
+                 and mpp.launch_date > mpp.expire_date then '운영기간 오류'
                 else '상품조건 등록'
             end as master_status_label,
             mpp.min_sales_amount,
@@ -1976,6 +2055,12 @@ def list_moneybank_products(
                            or service_fee_max is null
                            or execute_amount_min is null
                            or execute_amount_max is null
+                           or service_fee_min > service_fee_max
+                           or execute_amount_min > execute_amount_max
+                           or service_amount_min > service_amount_max
+                           or interest_min > interest_max
+                           or service_repay_min > service_repay_max
+                           or launch_date > expire_date
                     )::int as incomplete_count,
                     case
                         when (select count(*) from moneybank_partner) = 0
@@ -1987,6 +2072,12 @@ def list_moneybank_products(
                                or service_fee_max is null
                                or execute_amount_min is null
                                or execute_amount_max is null
+                               or service_fee_min > service_fee_max
+                               or execute_amount_min > execute_amount_max
+                               or service_amount_min > service_amount_max
+                               or interest_min > interest_max
+                               or service_repay_min > service_repay_max
+                               or launch_date > expire_date
                         ) > 0 then '조건확인필요'
                         else '정상'
                     end as master_status_label

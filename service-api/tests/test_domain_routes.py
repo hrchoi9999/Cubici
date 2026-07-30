@@ -551,6 +551,30 @@ def test_preferences_admin_account_endpoint_payload(monkeypatch) -> None:
     assert result.admin_id == "admin01"
 
 
+def test_admin_account_requests_reject_invalid_permission_policy() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from cubici_service.preferences.repository import (
+        AdminAccountApproveRequest,
+        AdminAccountRequest,
+        AdminAccountUpdateRequest,
+    )
+
+    with pytest.raises(ValidationError):
+        AdminAccountRequest(admin_type="99", admin_name="관리자")
+
+    with pytest.raises(ValidationError):
+        AdminAccountApproveRequest(new_admin_id="admin01", password="pw", admin_grade="02")
+
+    with pytest.raises(ValidationError):
+        AdminAccountUpdateRequest(
+            admin_type="00",
+            admin_name="관리자",
+            admin_grade="02",
+        )
+
+
 def test_preferences_promotion_endpoint_payload(monkeypatch) -> None:
     from datetime import date, datetime
 
@@ -840,6 +864,35 @@ def test_preferences_moneybank_product_endpoint_payload(monkeypatch) -> None:
     assert response.counts.total_count == 1
     assert detail.firm_no == 10
     assert result.action == "updated"
+
+
+def test_moneybank_product_write_request_rejects_invalid_conditions() -> None:
+    import pytest
+    from pydantic import ValidationError
+
+    from cubici_service.preferences.repository import MoneybankProductWriteRequest
+
+    base_payload = {
+        "firm_id": "1234567890",
+        "firm_name": "머니뱅크 제휴사",
+        "rep_name": "대표",
+        "firm_address": "서울",
+        "product_name": "선정산 기본상품",
+        "product_status": "00",
+    }
+
+    invalid_payloads = [
+        {**base_payload, "product_status": "99"},
+        {**base_payload, "service_fee_min": 3.0, "service_fee_max": 1.5},
+        {**base_payload, "execute_amount_min": 5_000_000, "execute_amount_max": 1_000_000},
+        {**base_payload, "launch_date": "2026-12-31", "expire_date": "2026-07-01"},
+        {**base_payload, "extension_yn": "X"},
+        {**base_payload, "amount_limit": -1},
+    ]
+
+    for payload in invalid_payloads:
+        with pytest.raises(ValidationError):
+            MoneybankProductWriteRequest(**payload)
 
 
 def test_preferences_prizm_config_endpoint_payload(monkeypatch) -> None:
@@ -1278,7 +1331,7 @@ def test_account_signup_endpoint_payload(monkeypatch) -> None:
     response = accounts.account_signup(
         payload=accounts.AccountSignupRequest(
             email="seller@example.com",
-            password="password123",
+            password="test-password",
             name="테스트",
             phone="01012345678",
             biz_num="1234567890",
@@ -1323,7 +1376,7 @@ def test_account_login_endpoint_payload(monkeypatch) -> None:
     response = accounts.account_login(
         payload=accounts.AccountLoginRequest(
             email="seller@example.com",
-            password="password123",
+            password="test-password",
         ),
     )
 

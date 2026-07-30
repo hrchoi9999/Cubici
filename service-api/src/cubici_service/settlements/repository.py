@@ -3,7 +3,7 @@
 from datetime import date, datetime
 
 from psycopg.rows import dict_row
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from cubici_service.core.shop_types import build_shop_pair_clause, normalize_shop_type
 from cubici_service.db.connection import get_connection
@@ -36,10 +36,22 @@ class SettlementListItem(BaseModel):
     modified_date: datetime | None
 
 
+class SettlementCheckCounts(BaseModel):
+    total_count: int = 0
+    ok_count: int = 0
+    diff_count: int = 0
+    legacy_batch_value_count: int = 0
+    unchecked_count: int = 0
+    total_difference: int = 0
+    absolute_difference: int = 0
+    check_status_label: str = "미검산"
+
+
 class SettlementListResponse(BaseModel):
     limit: int
     offset: int
     total: int
+    counts: SettlementCheckCounts = Field(default_factory=SettlementCheckCounts)
     items: list[SettlementListItem]
 
 
@@ -110,8 +122,27 @@ def list_settlements(
 
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
-            cursor.execute(f"select count(*) as total from settlement{where_clause}", filter_params)
-            total = cursor.fetchone()["total"]
+            cursor.execute(
+                f"""
+                select
+                    settlements_id,
+                    total_sale,
+                    service_fee,
+                    settlement_target_amount,
+                    settlement_amount,
+                    pending_released_amount,
+                    seller_discount_coupon,
+                    downloadable_coupon,
+                    seller_service_fee,
+                    store_fee_discount,
+                    debt_of_last_week
+                from settlement
+                {where_clause}
+                """,
+                filter_params,
+            )
+            checked_all = [_with_settlement_amount_check(row) for row in cursor.fetchall()]
+            counts = _build_settlement_check_counts(checked_all)
 
             cursor.execute(
                 f"""
@@ -149,7 +180,8 @@ def list_settlements(
     return SettlementListResponse(
         limit=limit,
         offset=offset,
-        total=total,
+        total=counts.total_count,
+        counts=counts,
         items=[SettlementListItem(**row) for row in rows],
     )
 
@@ -235,3 +267,35 @@ def _with_settlement_amount_check(row: dict) -> dict:
     checked["settlement_difference"] = difference
     checked["settlement_check_status"] = status
     return checked
+
+
+def _build_settlement_check_counts(rows: list[dict]) -> SettlementCheckCounts:
+    ok_count = sum(1 for row in rows if row.get("settlement_check_status") == "OK")
+    diff_count = sum(1 for row in rows if row.get("settlement_check_status") == "DIFF")
+    legacy_batch_value_count = sum(
+        1 for row in rows if row.get("settlement_check_status") == "LEGACY_BATCH_VALUE"
+    )
+    unchecked_count = sum(1 for row in rows if row.get("settlement_check_status") == "NOT_CHECKED")
+    total_difference = sum(int(row.get("settlement_difference") or 0) for row in rows)
+    absolute_difference = sum(abs(int(row.get("settlement_difference") or 0)) for row in rows)
+    if not rows:
+        check_status_label = "데이터 없음"
+    elif diff_count:
+        check_status_label = "검산차이"
+    elif legacy_batch_value_count:
+        check_status_label = "원본산출값 확인"
+    elif unchecked_count:
+        check_status_label = "미검산"
+    else:
+        check_status_label = "검산일치"
+
+    return SettlementCheckCounts(
+        total_count=len(rows),
+        ok_count=ok_count,
+        diff_count=diff_count,
+        legacy_batch_value_count=legacy_batch_value_count,
+        unchecked_count=unchecked_count,
+        total_difference=total_difference,
+        absolute_difference=absolute_difference,
+        check_status_label=check_status_label,
+    )

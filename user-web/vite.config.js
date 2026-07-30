@@ -4,7 +4,7 @@ import { defineConfig } from '../admin-web/node_modules/vite/dist/node/index.js'
 
 export default defineConfig({
   plugins: [react()],
-  publicDir: '../src/main/webapp/resources',
+  publicDir: 'public',
   define: {
     'import.meta.env.VITE_API_BASE_URL': JSON.stringify(process.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'),
   },

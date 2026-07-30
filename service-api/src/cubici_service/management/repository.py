@@ -932,8 +932,11 @@ def get_member_charge_change_refund_detail(seq: int) -> MemberChargeChangeRefund
                     )::bigint as balance,
                     old_bp.expire_date::date as expire_date,
                     coalesce(br.refund_amount, 0)::bigint as refund_amount,
-                    coalesce(br.refund_card, 0)::bigint as refund_card,
-                    (coalesce(br.refund_amount, 0) + coalesce(br.refund_card, 0))::bigint as refund_cash,
+                    coalesce(nullif(br.refund_card, '')::bigint, 0)::bigint as refund_card,
+                    (
+                        coalesce(br.refund_amount, 0)
+                        + coalesce(nullif(br.refund_card, '')::bigint, 0)
+                    )::bigint as refund_cash,
                     br.refund_user_name,
                     br.refund_bank,
                     br.refund_account,
@@ -1490,7 +1493,7 @@ def _usage_base_query() -> str:
             c.mbid,
             c.status,
             case
-                when c.status in ('SELF_TERMINATION', 'TERMINATION', 'EXPIRED') then '만료'
+                when c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82') then '만료'
                 when c.status in ('REJECTED', 'REJECT') then '거부'
                 when coalesce(h.outstanding_balance, 0) > 0 then '상환'
                 when c.status = 'CONTRACT' then '상환'
@@ -1562,7 +1565,7 @@ def _resolve_date_range(cursor, *, from_date: date | None, to_date: date | None)
             coalesce((select max(request_date)::date from moneybank_contract), date '1900-01-01'),
             coalesce((select max(approval_date)::date from moneybank_contract), date '1900-01-01'),
             coalesce((select max(provision_date)::date from moneybank_redemption_provision), date '1900-01-01'),
-            coalesce((select max(balance_provision_date)::date from moneybank_redemption_repayment), date '1900-01-01'),
+            coalesce((select max(coalesce(balance_provision_date, reg_date, modified_date))::date from moneybank_redemption_repayment), date '1900-01-01'),
             coalesce((select max(reg_date)::date from moneybank_redemption_history), date '1900-01-01'),
             coalesce((select max(settlement_date)::date from settlement), date '1900-01-01')
         ) as max_date
@@ -1751,17 +1754,22 @@ def _member_withdrawal_base_query() -> str:
                 '머니뱅크'::text as service_label,
                 'moneybank'::text as service_code,
                 case
-                    when c.status = 'SELF_TERMINATION' then 'terminated'
+                    when c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82') then 'terminated'
                     when c.cancel_request_date is not null then 'requested'
                     else 'dormant'
                 end as withdrawal_status,
                 case
-                    when c.status = 'SELF_TERMINATION' then '해지'
+                    when c.status in ('SELF_TERMINATION', '72') then '해지'
+                    when c.status in ('FORCE_TERMINATION', '73') then '강제해지'
+                    when c.status in ('ACCOUNT_CLOSED', '82') then '계좌해지'
                     when c.cancel_request_date is not null then '해지 신청'
                     else '휴면 후보'
                 end as withdrawal_status_label,
                 c.cancel_request_date::date as withdrawal_request_date,
-                case when c.status = 'SELF_TERMINATION' then coalesce(c.modified_date, c.cancel_request_date, c.request_date)::date end as withdrawal_date,
+                case
+                    when c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
+                    then coalesce(c.modified_date, c.cancel_request_date, c.request_date)::date
+                end as withdrawal_date,
                 coalesce(c.cancel_request_date, c.modified_date, c.request_date, u.last_login_date, u.reg_date)::date as event_date,
                 u.name as user_name,
                 u.biz_name as firm_name,
@@ -1777,7 +1785,7 @@ def _member_withdrawal_base_query() -> str:
             left join users u on u.user_no = c.user_no
             left join shop_stats s on s.user_no = u.user_no
             left join latest_history h on h.mbid = c.mbid
-            where c.status = 'SELF_TERMINATION'
+            where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
                or c.cancel_request_date is not null
         ),
         dormant_users as (
@@ -1808,7 +1816,7 @@ def _member_withdrawal_base_query() -> str:
                   select 1
                   from moneybank_contract c
                   where c.user_no = u.user_no
-                    and (c.status = 'SELF_TERMINATION' or c.cancel_request_date is not null)
+                    and (c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82') or c.cancel_request_date is not null)
               )
         )
         select * from moneybank_withdrawals
@@ -1987,11 +1995,13 @@ def _resolve_member_date_range(cursor, *, from_date: date | None, to_date: date 
         select
             least(
                 coalesce((select min(reg_date)::date from users where user_type = 'USER'), current_date),
-                coalesce((select min(request_date)::date from moneybank_contract), current_date)
+                coalesce((select min(request_date)::date from moneybank_contract), current_date),
+                coalesce((select min(coalesce(cancel_request_date, modified_date, request_date))::date from moneybank_contract), current_date)
             ) as min_date,
             greatest(
                 coalesce((select max(reg_date)::date from users where user_type = 'USER'), current_date),
-                coalesce((select max(request_date)::date from moneybank_contract), current_date)
+                coalesce((select max(request_date)::date from moneybank_contract), current_date),
+                coalesce((select max(coalesce(cancel_request_date, modified_date, request_date))::date from moneybank_contract), current_date)
             ) as max_date
         """
     )
@@ -2077,7 +2087,7 @@ def _fetch_member_summary_metrics(
                 select count(*)::int
                 from moneybank_contract c
                 left join users u on u.user_no = c.user_no
-                where c.status = 'SELF_TERMINATION'
+                where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
                   and coalesce(c.cancel_request_date, c.modified_date, c.request_date)::date = (%s::date - interval '1 day')::date
                   {contract_filter}
             ) as terminated_yesterday_count,
@@ -2085,7 +2095,7 @@ def _fetch_member_summary_metrics(
                 select count(*)::int
                 from moneybank_contract c
                 left join users u on u.user_no = c.user_no
-                where c.status = 'SELF_TERMINATION'
+                where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
                   and (%s::date is null or coalesce(c.cancel_request_date, c.modified_date, c.request_date)::date <= %s::date)
                   {contract_filter}
             ) as terminated_total_count,
@@ -2183,7 +2193,7 @@ def _fetch_member_summary_series(
             select count(*)::int as count
             from moneybank_contract c
             left join users u on u.user_no = c.user_no
-            where c.status = 'SELF_TERMINATION'
+            where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
               and coalesce(c.cancel_request_date, c.modified_date, c.request_date)::date < %s::date
               {contract_filter}
         ),
@@ -2207,7 +2217,7 @@ def _fetch_member_summary_series(
             select {terminated_bucket} as bucket, count(*)::int as terminated_count
             from moneybank_contract c
             left join users u on u.user_no = c.user_no
-            where c.status = 'SELF_TERMINATION'
+            where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '72', '73', '82')
               and coalesce(c.cancel_request_date, c.modified_date, c.request_date)::date between %s and %s
               {contract_filter}
             group by 1
@@ -2299,7 +2309,7 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
             (
                 select count(*)::int
                 from moneybank_contract
-                where status in ('SELF_TERMINATION', 'TERMINATION', 'EXPIRED')
+                where status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
             ) as terminated_contract_count,
             (
                 select coalesce(sum(total_provision_amount), 0)::bigint
@@ -2319,17 +2329,17 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
             (
                 select coalesce(sum(repayment_amount), 0)::bigint
                 from moneybank_redemption_repayment
-                where %s::date is not null and balance_provision_date::date = %s::date
+                where %s::date is not null and coalesce(balance_provision_date, reg_date, modified_date)::date = %s::date
             ) as repayment_today_amount,
             (
                 select coalesce(sum(repayment_amount), 0)::bigint
                 from moneybank_redemption_repayment
-                where %s::date is null or balance_provision_date::date <= %s::date
+                where %s::date is null or coalesce(balance_provision_date, reg_date, modified_date)::date <= %s::date
             ) as repayment_total_amount,
             (
                 select count(*)::int
                 from moneybank_redemption_repayment
-                where %s::date is null or balance_provision_date::date <= %s::date
+                where %s::date is null or coalesce(balance_provision_date, reg_date, modified_date)::date <= %s::date
             ) as repayment_total_count,
             coalesce((select sum(outstanding_balance) from latest_history), 0)::bigint as outstanding_balance_amount,
             coalesce((select count(*) from latest_history where outstanding_balance > 0), 0)::int as outstanding_balance_count,
@@ -2396,7 +2406,7 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
 
     contract_bucket = _bucket_expr(unit, "request_date")
     provision_bucket = _bucket_expr(unit, "provision_date")
-    repayment_bucket = _bucket_expr(unit, "balance_provision_date")
+    repayment_bucket = _bucket_expr(unit, "coalesce(balance_provision_date, reg_date, modified_date)")
     settlement_bucket = _bucket_expr(unit, "settlement_date")
     history_bucket = _bucket_expr(unit, "reg_date")
 
@@ -2428,7 +2438,7 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
         repayments as (
             select {repayment_bucket} as bucket, coalesce(sum(repayment_amount), 0)::bigint as repayment_amount
             from moneybank_redemption_repayment
-            where balance_provision_date::date between %s and %s
+            where coalesce(balance_provision_date, reg_date, modified_date)::date between %s and %s
             group by 1
         ),
         settlements as (

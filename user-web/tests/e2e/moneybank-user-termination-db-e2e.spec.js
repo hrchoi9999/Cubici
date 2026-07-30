@@ -9,7 +9,7 @@ const userRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(userRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
 test.skip(process.env.CUBICI_RUN_DB_E2E !== '1', 'set CUBICI_RUN_DB_E2E=1 to run local PostgreSQL UI E2E tests');
@@ -211,7 +211,10 @@ async function apiJson(pathname, options = {}) {
     try {
       response = await fetch(`${apiBaseUrl}${pathname}`, {
         method: options.method || 'GET',
-        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        headers: {
+          ...adminAuthHeaders(),
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        },
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
       break;
@@ -226,6 +229,12 @@ async function apiJson(pathname, options = {}) {
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected setup API calls').toBe(true);
+  return { Authorization: authorization };
 }
 
 function cleanupFixture(currentFixture) {

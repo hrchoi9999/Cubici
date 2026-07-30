@@ -37,6 +37,16 @@ test.beforeEach(async ({ page }) => {
         limit: Number(requestUrl.searchParams.get('limit') ?? 20),
         offset: Number(requestUrl.searchParams.get('offset') ?? 0),
         total: 1,
+        counts: {
+          total_count: 1,
+          ok_count: 0,
+          diff_count: 1,
+          legacy_batch_value_count: 0,
+          unchecked_count: 0,
+          total_difference: 43000,
+          absolute_difference: 43000,
+          check_status_label: '검산차이',
+        },
         items: [
           {
             ...settlementDetail,
@@ -60,6 +70,9 @@ test('settlement list filters and detail panel work with mock data', async ({ pa
 
   await expect(page.getByRole('heading', { name: '정산 관리' })).toBeVisible();
   await expect(page.getByText('정산 관리 목록')).toBeVisible();
+  await expect(page.getByText('검산 검산차이')).toBeVisible();
+  await expect(page.getByText('차이 1건')).toBeVisible();
+  await expect(page.getByText('차이합계 43,000')).toBeVisible();
   await expect(page.getByText(String(settlementId))).toBeVisible();
   await expect(page.getByText('SHOP-SETTLE-01')).toBeVisible();
   await expect(page.getByText('343,000')).toBeVisible();

@@ -9,7 +9,7 @@ const userRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(userRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 
 let createdEmail = '';
 
@@ -103,24 +103,53 @@ test('user signup and shop account registration persist through account API', as
   await shopPanel.getByLabel('API Key').fill(`api-key-${suffix}`);
   await shopPanel.getByLabel('API Secret').fill(`api-secret-${suffix}`);
   await shopPanel.getByLabel('정산 메모').fill('E2E 등록');
+  const createShopResponsePromise = waitForApiResponse(page, '/v1/api/accounts/me/shops', 'POST');
   await shopPanel.getByRole('button', { name: '계정 연결' }).click();
+  await expectApiResponse(createShopResponsePromise);
 
   await expect(page.getByRole('cell', { name: 'NAVER' })).toBeVisible();
   await expect(page.getByRole('cell', { name: shopId })).toBeVisible();
   await page.getByRole('row', { name: shopId }).getByRole('button', { name: '수정' }).click();
   await shopPanel.getByLabel('계정 ID').fill(updatedShopLogin);
   await shopPanel.getByLabel('정산 메모').fill('E2E 수정');
+  const updateShopResponsePromise = page.waitForResponse((response) => (
+    response.url().includes('/v1/api/accounts/me/shops/')
+    && response.request().method() === 'PUT'
+  ), { timeout: 30_000 });
   await shopPanel.getByRole('button', { name: '계정 수정 저장' }).click();
+  await expectApiResponse(updateShopResponsePromise);
   await expect(shopPanel.getByText('쇼핑몰 계정이 수정되었습니다.')).toBeVisible();
   await expect(page.getByRole('cell', { name: updatedShopLogin })).toBeVisible();
 
+  const disableShopResponsePromise = page.waitForResponse((response) => (
+    response.url().includes('/v1/api/accounts/me/shops/')
+    && response.request().method() === 'PUT'
+  ), { timeout: 30_000 });
   await page.getByRole('row', { name: shopId }).getByRole('button', { name: '비활성' }).click();
+  await expectApiResponse(disableShopResponsePromise);
   await expect(page.getByRole('row', { name: shopId }).getByRole('cell', { name: 'N', exact: true })).toBeVisible();
 
+  const deleteShopResponsePromise = page.waitForResponse((response) => (
+    response.url().includes('/v1/api/accounts/me/shops/')
+    && response.request().method() === 'DELETE'
+  ), { timeout: 30_000 });
   await page.getByRole('row', { name: shopId }).getByRole('button', { name: '삭제' }).click();
+  await expectApiResponse(deleteShopResponsePromise);
   await expect(shopPanel.getByText('쇼핑몰 계정이 삭제되었습니다.')).toBeVisible();
   await expect(page.getByRole('cell', { name: shopId })).toHaveCount(0);
 });
+
+function waitForApiResponse(page, pathname, method) {
+  return page.waitForResponse((response) => (
+    response.url().includes(pathname)
+    && response.request().method() === method
+  ), { timeout: 30_000 });
+}
+
+async function expectApiResponse(responsePromise) {
+  const response = await responsePromise;
+  expect(response.ok(), await response.text()).toBeTruthy();
+}
 
 function cleanupAccountFixture(email) {
   const script = `

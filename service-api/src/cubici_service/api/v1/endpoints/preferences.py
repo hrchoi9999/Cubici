@@ -100,8 +100,8 @@ router = APIRouter(prefix="/preferences", tags=["preferences"])
 def admin_account_list(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    admin_type: str | None = Query(default=None, max_length=2),
-    admin_grade: str | None = Query(default=None, max_length=2),
+    admin_type: str | None = Query(default=None, max_length=5),
+    admin_grade: str | None = Query(default=None, max_length=5),
     admin_name: str | None = Query(default=None, max_length=100),
     status: AdminAccountStatus = Query(default="all", pattern="^(all|pending|approved)$"),
     order_by: AdminAccountOrderBy = Query(

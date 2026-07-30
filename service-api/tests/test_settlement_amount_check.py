@@ -1,4 +1,4 @@
-from cubici_service.settlements.repository import _with_settlement_amount_check
+from cubici_service.settlements.repository import _build_settlement_check_counts, _with_settlement_amount_check
 
 
 def test_settlement_amount_check_matches_target_minus_pending() -> None:
@@ -41,3 +41,21 @@ def test_settlement_amount_check_flags_legacy_batch_value() -> None:
     assert checked["settlement_check_amount"] == 0
     assert checked["settlement_difference"] == 47_985
     assert checked["settlement_check_status"] == "LEGACY_BATCH_VALUE"
+
+
+def test_settlement_check_counts_summarize_operating_reconcile_status() -> None:
+    rows = [
+        {"settlement_check_status": "OK", "settlement_difference": 0},
+        {"settlement_check_status": "DIFF", "settlement_difference": -1200},
+        {"settlement_check_status": "LEGACY_BATCH_VALUE", "settlement_difference": 47985},
+    ]
+
+    counts = _build_settlement_check_counts(rows)
+
+    assert counts.total_count == 3
+    assert counts.ok_count == 1
+    assert counts.diff_count == 1
+    assert counts.legacy_batch_value_count == 1
+    assert counts.total_difference == 46785
+    assert counts.absolute_difference == 49185
+    assert counts.check_status_label == "검산차이"

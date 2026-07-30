@@ -30,7 +30,7 @@
                 </li> -->
                 <li>
                     <b>이메일</b>
-                    <span>admin@cubici.co.kr</span>
+				<span>contact@example.com</span>
                 </li>
                 <li>
                     <b>사업자 등록번호</b>
