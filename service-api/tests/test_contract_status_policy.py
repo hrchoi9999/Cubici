@@ -35,6 +35,26 @@ def test_contract_status_policy_rejects_cancel_before_contract() -> None:
     assert error.value.status_code == 409
 
 
+@pytest.mark.parametrize("action", ["cancel", "request_termination", "force_termination", "account_closed"])
+@pytest.mark.parametrize("status", ["ACCOUNT_STANDBY", "CONTRACT", "06", "81"])
+def test_contract_status_policy_allows_termination_after_contract(action: str, status: str) -> None:
+    _assert_contract_status_transition(action, status)
+
+
+@pytest.mark.parametrize("action", ["cancel", "force_termination", "account_closed"])
+@pytest.mark.parametrize("status", ["TERMINATION_REQUEST", "71"])
+def test_contract_status_policy_allows_final_termination_after_request(action: str, status: str) -> None:
+    _assert_contract_status_transition(action, status)
+
+
+@pytest.mark.parametrize("status", ["SELF_TERMINATION", "FORCE_TERMINATION", "ACCOUNT_CLOSED", "72", "73", "82"])
+def test_contract_status_policy_rejects_changes_after_termination(status: str) -> None:
+    with pytest.raises(HTTPException) as error:
+        _assert_contract_status_transition("approve", status)
+
+    assert error.value.status_code == 409
+
+
 def test_contract_status_policy_rejects_reject_after_contract() -> None:
     with pytest.raises(HTTPException) as error:
         _assert_contract_status_transition("reject", "CONTRACT")

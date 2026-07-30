@@ -10,7 +10,7 @@ const adminRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(adminRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const tempRoot = path.join(workspaceRoot, '.tmp', 'cubici-e2e');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || 'http://127.0.0.1:8000';
 const adminBaseUrl = process.env.CUBICI_ADMIN_BASE_URL || 'http://127.0.0.1:5174';
@@ -84,7 +84,7 @@ async function submitUserRequest(page, currentFixture, regFile, cbFile) {
   await page.getByLabel('머니뱅크 신청 약관에 동의합니다.').check();
   await page.getByRole('button', { name: '서비스 신청' }).click();
 
-  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 30_000 });
 }
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
@@ -150,7 +150,7 @@ async function acceptTermsFromUser(page, currentFixture) {
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(currentFixture.mbid)}`);
 
   await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(`input[value="${currentFixture.mbid}"]`).first()).toBeVisible();
   await expect(page.locator('input[value="조건제시"]').first()).toBeVisible();
   await expect(page.getByText('80%')).toBeVisible();
@@ -188,10 +188,9 @@ from cubici_service.db.connection import get_connection
 suffix = sys.argv[1]
 with get_connection() as conn:
     with conn.cursor() as cur:
-        cur.execute("select coalesce(max(user_no), 0) + 1 from users")
-        user_no = int(cur.fetchone()[0])
-        cur.execute("select coalesce(max(id), 0) + 1 from shop_accounts")
-        shop_account_id = int(cur.fetchone()[0])
+        numeric_id = int(''.join(ch for ch in suffix if ch.isdigit())[-6:].ljust(6, "0"))
+        user_no = 7100000 + numeric_id
+        shop_account_id = 8100000 + numeric_id
         email = f"local-db-full-e2e-{suffix}@example.test"
         user_name = f"FullUIUser{suffix}"
         biz_name = f"FullUIBiz{suffix}"

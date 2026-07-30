@@ -1,0 +1,66 @@
+services:
+  cubici-postgres:
+    image: postgres:17-alpine
+    container_name: cubici-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CUBICI_DB_NAME:-cubici_local}
+      POSTGRES_USER: ${CUBICI_DB_USER:-cubici_app}
+      POSTGRES_PASSWORD: ${CUBICI_DB_PASSWORD:?CUBICI_DB_PASSWORD is required}
+    ports:
+      - "127.0.0.1:${CUBICI_DB_PUBLIC_PORT:-55433}:5432"
+    volumes:
+      - ./data_local/postgres-prod:/var/lib/postgresql/data
+      - ./logs/postgres-prod:/var/log/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  cubici-api:
+    build:
+      context: ./service-api
+    container_name: cubici-api-prod
+    restart: unless-stopped
+    depends_on:
+      cubici-postgres:
+        condition: service_healthy
+    environment:
+      CUBICI_ENV: production-local
+      CUBICI_DB_HOST: cubici-postgres
+      CUBICI_DB_PORT: "5432"
+      CUBICI_DB_NAME: ${CUBICI_DB_NAME:-cubici_local}
+      CUBICI_DB_USER: ${CUBICI_DB_USER:-cubici_app}
+      CUBICI_DB_PASSWORD: ${CUBICI_DB_PASSWORD:?CUBICI_DB_PASSWORD is required}
+      CUBICI_DB_SCHEMA: ${CUBICI_DB_SCHEMA:-public}
+      CUBICI_AUTH_SECRET: ${CUBICI_AUTH_SECRET:?CUBICI_AUTH_SECRET is required}
+      CUBICI_MASTER_ADMIN_EMAIL: ${CUBICI_MASTER_ADMIN_EMAIL:?CUBICI_MASTER_ADMIN_EMAIL is required}
+      CUBICI_DOCUMENT_STORAGE_DIR: /app/data/documents
+      CUBICI_CORS_ALLOW_ORIGINS: ${CUBICI_CORS_ALLOW_ORIGINS:-}
+      CUBICI_CORS_ALLOW_ORIGIN_REGEX: ${CUBICI_CORS_ALLOW_ORIGIN_REGEX:-}
+      CUBICI_EXTERNAL_API_ENABLED: ${CUBICI_EXTERNAL_API_ENABLED:-false}
+      CUBICI_PAYMENT_ENABLED: ${CUBICI_PAYMENT_ENABLED:-false}
+      CUBICI_SMS_ENABLED: ${CUBICI_SMS_ENABLED:-false}
+      CUBICI_MAIL_ENABLED: ${CUBICI_MAIL_ENABLED:-false}
+    ports:
+      - "127.0.0.1:${CUBICI_API_PUBLIC_PORT:-8000}:8000"
+    volumes:
+      - ./data_local/documents:/app/data/documents
+      - ./logs/service-api-prod:/app/.logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/api/health', timeout=5).read()"]
+      interval: 15s
+      timeout: 6s
+      retries: 8
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cubici-cloudflared-prod
+    restart: unless-stopped
+    depends_on:
+      cubici-api:
+        condition: service_healthy
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?CLOUDFLARE_TUNNEL_TOKEN is required}
+    volumes:
+      - ./logs/cloudflared:/var/log/cloudflared

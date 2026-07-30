@@ -102,6 +102,16 @@ test.beforeEach(async ({ page }) => {
         limit: 20,
         offset: 0,
         total: 1,
+        counts: {
+          total_count: 1,
+          ok_count: 1,
+          diff_count: 0,
+          no_history_count: 0,
+          outstanding_count: 1,
+          total_balance_difference: 0,
+          absolute_balance_difference: 0,
+          check_status_label: '검산일치',
+        },
         items: [redemptionSummary],
       }),
     });
@@ -149,6 +159,8 @@ test('redemption history filters, payload detail, and cancel modal work with moc
   await page.goto('/admin/moneybank/redemption');
 
   await expect(page.getByRole('heading', { name: '상환 관리' })).toBeVisible();
+  await expect(page.getByText('잔액검산 검산일치')).toBeVisible();
+  await expect(page.getByText('미상환 1건')).toBeVisible();
   await expect(page.getByText(mbid)).toBeVisible();
 
   await page.getByRole('button', { name: '보기' }).first().click();

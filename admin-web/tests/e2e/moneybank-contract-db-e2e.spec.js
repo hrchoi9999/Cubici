@@ -9,10 +9,11 @@ const adminRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(adminRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || 'http://127.0.0.1:8000';
 
 test.skip(process.env.CUBICI_RUN_DB_E2E !== '1', 'set CUBICI_RUN_DB_E2E=1 to run local PostgreSQL UI E2E tests');
+test.setTimeout(120_000);
 
 let created = null;
 
@@ -45,11 +46,15 @@ test('admin review screen presents terms and contract screen readies accepted co
   await page.getByRole('button', { name: '수수료율 추가' }).click();
   await page.getByLabel('수수료 구분 1').fill('ADVANCE');
   await page.getByLabel('수수료율 1').fill('1.35');
+  const feeResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${created.mbid}/fees/adjust`, 'PUT');
   await page.getByRole('button', { name: '조건 저장' }).click();
+  await expectApiResponse(feeResponsePromise);
 
   await expect(page.getByText('계약 조건 저장이 완료되었습니다.')).toBeVisible();
   await expect(page.getByRole('button', { name: '조건 제시' })).toBeEnabled();
+  const conditionResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${created.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '조건 제시' }).click();
+  await expectApiResponse(conditionResponsePromise);
   await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
   await expectStatus(created.mbid, 'CONDITIONS_ACCEPT');
 
@@ -67,10 +72,24 @@ test('admin review screen presents terms and contract screen readies accepted co
 
   await expect(page.getByRole('heading', { name: '계약 정보' })).toBeVisible();
   await expect(page.getByRole('button', { name: '체결' })).toBeEnabled();
+  const contractResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${created.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '체결' }).click();
+  await expectApiResponse(contractResponsePromise);
   await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
   await expectStatus(created.mbid, 'ACCOUNT_STANDBY');
 });
+
+function waitForApiResponse(page, pathname, method) {
+  return page.waitForResponse((response) => (
+    response.url().includes(pathname)
+    && response.request().method() === method
+  ), { timeout: 30_000 });
+}
+
+async function expectApiResponse(responsePromise) {
+  const response = await responsePromise;
+  expect(response.ok(), await response.text()).toBeTruthy();
+}
 
 function createContractFixture() {
   const suffix = String(Date.now()).slice(-9);
@@ -82,10 +101,9 @@ from cubici_service.db.connection import get_connection
 suffix = sys.argv[1]
 with get_connection() as conn:
     with conn.cursor() as cur:
-        cur.execute("select coalesce(max(user_no), 0) + 1 from users")
-        user_no = int(cur.fetchone()[0])
-        cur.execute("select coalesce(max(id), 0) + 1 from shop_accounts")
-        shop_id = int(cur.fetchone()[0])
+        numeric_id = int(''.join(ch for ch in suffix if ch.isdigit())[-6:].ljust(6, "0"))
+        user_no = 7500000 + numeric_id
+        shop_id = 8500000 + numeric_id
         user_name = f"DBUIUser{suffix}"
         biz_name = f"DBUIBiz{suffix}"
         cur.execute(

@@ -601,12 +601,17 @@ function ShopConnectionPanel({ auth }) {
   });
   const [state, setState] = useState({ loading: false, message: '' });
 
+  async function fetchShopItems() {
+    const response = await fetchAuthJson('/v1/api/accounts/me/shops');
+    return response.items ?? [];
+  }
+
   const loadShops = useCallback(async () => {
     if (!auth?.access_token) return;
     setState((current) => ({ ...current, loading: true, message: '' }));
     try {
-      const response = await fetchAuthJson('/v1/api/accounts/me/shops');
-      setItems(response.items ?? []);
+      const nextItems = await fetchShopItems();
+      setItems(nextItems);
       setState({ loading: false, message: '' });
     } catch (error) {
       setState({ loading: false, message: `쇼핑몰 조회 실패: ${error.message}` });
@@ -625,13 +630,17 @@ function ShopConnectionPanel({ auth }) {
     setState({ loading: true, message: '쇼핑몰 계정 저장 중' });
     try {
       const payload = buildShopPayload(form, Boolean(editingId));
+      let result;
       if (editingId) {
-        await putAuthJson(`/v1/api/accounts/me/shops/${encodeURIComponent(editingId)}`, payload);
+        result = await putAuthJson(`/v1/api/accounts/me/shops/${encodeURIComponent(editingId)}`, payload);
+        setItems((current) => current.map((item) => (
+          item.id === editingId ? result.item : item
+        )));
       } else {
-        await postAuthJson('/v1/api/accounts/me/shops', payload);
+        result = await postAuthJson('/v1/api/accounts/me/shops', payload);
+        setItems((current) => [result.item, ...current]);
       }
       resetShopForm();
-      await loadShops();
       setState({ loading: false, message: editingId ? '쇼핑몰 계정이 수정되었습니다.' : '쇼핑몰 계정이 저장되었습니다.' });
     } catch (error) {
       setState({ loading: false, message: `쇼핑몰 저장 실패: ${error.message}` });
@@ -673,8 +682,10 @@ function ShopConnectionPanel({ auth }) {
     const nextStatus = item.status === 'N' ? 'Y' : 'N';
     setState({ loading: true, message: nextStatus === 'Y' ? '쇼핑몰 계정 활성화 중' : '쇼핑몰 계정 비활성화 중' });
     try {
-      await putAuthJson(`/v1/api/accounts/me/shops/${encodeURIComponent(item.id)}`, { status: nextStatus });
-      await loadShops();
+      const result = await putAuthJson(`/v1/api/accounts/me/shops/${encodeURIComponent(item.id)}`, { status: nextStatus });
+      setItems((current) => current.map((currentItem) => (
+        currentItem.id === item.id ? result.item : currentItem
+      )));
       setState({ loading: false, message: nextStatus === 'Y' ? '쇼핑몰 계정이 활성화되었습니다.' : '쇼핑몰 계정이 비활성화되었습니다.' });
     } catch (error) {
       setState({ loading: false, message: `쇼핑몰 상태 변경 실패: ${error.message}` });
@@ -686,7 +697,7 @@ function ShopConnectionPanel({ auth }) {
     try {
       await deleteAuthJson(`/v1/api/accounts/me/shops/${encodeURIComponent(item.id)}`);
       if (editingId === item.id) resetShopForm();
-      await loadShops();
+      setItems((current) => current.filter((currentItem) => currentItem.id !== item.id));
       setState({ loading: false, message: '쇼핑몰 계정이 삭제되었습니다.' });
     } catch (error) {
       setState({ loading: false, message: `쇼핑몰 삭제 실패: ${error.message}` });

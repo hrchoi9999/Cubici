@@ -27,6 +27,9 @@ class Settings(BaseModel):
     auth_secret: SecretStr = Field(
         default_factory=lambda: SecretStr(getenv("CUBICI_AUTH_SECRET", "local-dev-only-change-me"))
     )
+    master_admin_email: str = Field(
+        default_factory=lambda: getenv("CUBICI_MASTER_ADMIN_EMAIL", "")
+    )
     document_storage_dir: str = Field(
         default_factory=lambda: getenv(
             "CUBICI_DOCUMENT_STORAGE_DIR",

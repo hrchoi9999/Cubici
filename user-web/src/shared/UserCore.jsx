@@ -158,14 +158,19 @@ function latestFeeDetail(fees) {
 }
 
 async function fetchJson(path) {
+  const authHeaders = buildAuthHeaders();
   let lastError;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 5000);
+    }, 12_000);
     try {
-      const response = await fetch(`${API_BASE_URL}${path}`, { signal: controller.signal });
+      const response = await fetch(`${API_BASE_URL}${path}`, {
+        cache: 'no-store',
+        signal: controller.signal,
+        headers: authHeaders,
+      });
       if (!response.ok) {
         throw new Error(`${response.status}`);
       }
@@ -174,7 +179,7 @@ async function fetchJson(path) {
     } catch (error) {
       lastError = error;
       if (/^\d+$/.test(String(error.message)) || attempt === 2) {
-        throw error;
+        throw normalizeApiError(error);
       }
       await new Promise((resolve) => {
         setTimeout(resolve, 200 * (attempt + 1));
@@ -186,8 +191,19 @@ async function fetchJson(path) {
   throw lastError;
 }
 
+function normalizeApiError(error) {
+  if (error?.name === 'AbortError') {
+    return new Error('API 서버 응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.');
+  }
+  if (String(error?.message ?? '').includes('Failed to fetch')) {
+    return new Error('API 서버에 연결할 수 없습니다. 서버 점검 중일 수 있습니다.');
+  }
+  return error;
+}
+
 async function requestJson(path, options = {}) {
   const { timeoutMs = 12_000, ...fetchOptions } = options;
+  const authHeaders = buildAuthHeaders();
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort();
@@ -195,8 +211,10 @@ async function requestJson(path, options = {}) {
   try {
     const response = await fetch(`${API_BASE_URL}${path}`, {
       ...fetchOptions,
+      cache: 'no-store',
       signal: controller.signal,
       headers: {
+        ...authHeaders,
         ...(fetchOptions.headers ?? {}),
       },
     });
@@ -211,27 +229,31 @@ async function requestJson(path, options = {}) {
     if (error.name === 'AbortError') {
       throw new Error('요청 시간이 초과되었습니다.');
     }
-    throw error;
+    throw normalizeApiError(error);
   } finally {
     clearTimeout(timeoutId);
   }
 }
 
-async function postJson(path, payload) {
+async function postJson(path, payload, options = {}) {
   return requestJson(path, {
+    ...options,
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
+      ...(options.headers ?? {}),
     },
     body: JSON.stringify(payload),
   });
 }
 
-async function putJson(path, payload) {
+async function putJson(path, payload, options = {}) {
   return requestJson(path, {
+    ...options,
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
+      ...(options.headers ?? {}),
     },
     body: JSON.stringify(payload),
   });
@@ -263,6 +285,11 @@ function clearAuthSession() {
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+function buildAuthHeaders() {
+  const auth = readAuthSession();
+  return auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : {};
+}
+
 function buildShopPairs(items) {
   const pairs = (items ?? [])
     .filter((item) => item.shop_type && item.shop_id)
@@ -282,13 +309,15 @@ async function fetchAuthJson(path, options = {}) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       controller.abort();
-    }, 8000);
+    }, options.timeoutMs ?? 15_000);
     try {
+      const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
       const response = await fetch(`${API_BASE_URL}${path}`, {
-        ...options,
+        ...fetchOptions,
+        cache: 'no-store',
         signal: controller.signal,
         headers: {
-          ...(options.headers ?? {}),
+          ...(fetchOptions.headers ?? {}),
           Authorization: `Bearer ${auth.access_token}`,
         },
       });
@@ -374,19 +403,36 @@ async function deleteAuthJson(path) {
 }
 
 async function uploadDocumentFile(mbid, { documentType, file, uploadedBy }) {
+  const authHeaders = buildAuthHeaders();
   const formData = new FormData();
   formData.append('document_type', documentType);
   formData.append('uploaded_by', uploadedBy);
   formData.append('file', file);
-  const response = await fetch(`${API_BASE_URL}/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`, {
-    method: 'POST',
-    body: formData,
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(body.detail ?? `${response.status}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 45_000);
+  try {
+    const response = await fetch(`${API_BASE_URL}/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`, {
+      method: 'POST',
+      cache: 'no-store',
+      signal: controller.signal,
+      headers: authHeaders,
+      body: formData,
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(body.detail ?? `${response.status}`);
+    }
+    return body;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw new Error('서류 업로드 요청 시간이 초과되었습니다.');
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return body;
 }
 
 async function updateContractDocumentStatus(mbid, action, reason) {

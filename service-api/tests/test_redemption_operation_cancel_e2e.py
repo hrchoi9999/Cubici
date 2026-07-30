@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 from fastapi.testclient import TestClient
 
+from cubici_service.accounts.repository import AccountAuthUser, _build_auth_response
 from cubici_service.app import create_app
 from cubici_service.db.connection import get_connection
 
@@ -106,8 +107,105 @@ def test_redemption_cancel_uses_latest_balance_after_followup_operations() -> No
                 "operated_by": "local-test",
                 "reason": "duplicate cancel must fail",
             },
+            headers=_master_admin_headers(),
         )
         assert duplicate_cancel.status_code == 409
+    finally:
+        _cleanup(
+            operation_ids=created_operation_ids,
+            history_ids=created_history_ids,
+            provision_codes=[provision_code, followup_provision_code],
+            repayment_codes=[repayment_code],
+        )
+
+
+def test_provision_cancel_uses_latest_balance_after_followup_operations() -> None:
+    mbid = _pick_contract_mbid()
+    _ensure_reversal_columns()
+
+    suffix = datetime.now().strftime("%H%M%S%f")[:9]
+    provision_code = f"VP{suffix}"[:15]
+    repayment_code = f"VR{suffix}"[:15]
+    followup_provision_code = f"VF{suffix}"[:15]
+    cancel_code = f"VC{suffix}"[:15]
+    client = TestClient(create_app())
+    created_history_ids: list[int] = []
+    created_operation_ids: list[int] = []
+
+    try:
+        base = _latest_amounts(mbid)
+        provision = _post_json(
+            client,
+            f"/v1/api/redemptions/{mbid}/provisions",
+            {
+                "provision_code": provision_code,
+                "total_payment_amount": 1000,
+                "total_usage_fee": 0,
+                "total_provision_amount": 1000,
+                "status": "PROVISION",
+                "operated_by": "local-test",
+                "reason": "provision cancel test provision",
+                "sales": [],
+            },
+        )
+        _track(provision, created_history_ids, created_operation_ids)
+
+        repayment = _post_json(
+            client,
+            f"/v1/api/redemptions/{mbid}/repayments",
+            {
+                "repayment_code": repayment_code,
+                "repayment_amount": 100,
+                "repayment_usage_fee": 0,
+                "remittance_fee": 0,
+                "balance_provision_amount": 0,
+                "status": "END",
+                "operated_by": "local-test",
+                "reason": "provision cancel test repayment",
+                "deposits": [],
+            },
+        )
+        _track(repayment, created_history_ids, created_operation_ids)
+
+        followup_provision = _post_json(
+            client,
+            f"/v1/api/redemptions/{mbid}/provisions",
+            {
+                "provision_code": followup_provision_code,
+                "total_payment_amount": 200,
+                "total_usage_fee": 0,
+                "total_provision_amount": 200,
+                "status": "PROVISION",
+                "operated_by": "local-test",
+                "reason": "provision cancel test followup provision",
+                "sales": [],
+            },
+        )
+        _track(followup_provision, created_history_ids, created_operation_ids)
+
+        cancel = _post_json(
+            client,
+            f"/v1/api/redemptions/{mbid}/operations/{provision['operation_history_id']}/cancel",
+            {
+                "cancel_code": cancel_code,
+                "operated_by": "local-test",
+                "reason": "provision cancel test cancel",
+            },
+        )
+        _track(cancel, created_history_ids, created_operation_ids)
+
+        assert cancel["operation_type"] == "PROVISION_CANCEL"
+        assert cancel["cumulative_provision_amount"] == base["provision"] + 200
+        assert cancel["cumulative_repayment_amount"] == base["repayment"] + 100
+        assert cancel["outstanding_balance"] == (
+            cancel["cumulative_provision_amount"]
+            - cancel["cumulative_repayment_amount"]
+        )
+        assert _latest_amounts(mbid) == {
+            "provision": cancel["cumulative_provision_amount"],
+            "repayment": cancel["cumulative_repayment_amount"],
+            "balance": cancel["outstanding_balance"],
+        }
     finally:
         _cleanup(
             operation_ids=created_operation_ids,
@@ -174,9 +272,24 @@ def _latest_amounts(mbid: str) -> dict[str, int]:
 
 
 def _post_json(client: TestClient, path: str, payload: dict) -> dict:
-    response = client.post(path, json=payload)
+    response = client.post(path, json=payload, headers=_master_admin_headers())
     assert response.status_code == 200, response.text
     return response.json()
+
+
+def _master_admin_headers() -> dict[str, str]:
+    auth = _build_auth_response(
+        AccountAuthUser(
+            user_no=900000000,
+            email=os.getenv("CUBICI_MASTER_ADMIN_EMAIL", "admin@example.com"),
+            user_type="ADMIN_USER",
+            name="DB E2E Admin",
+            phone=None,
+            biz_num=None,
+            biz_name=None,
+        )
+    )
+    return {"Authorization": f"Bearer {auth.access_token}"}
 
 
 def _track(body: dict, history_ids: list[int], operation_ids: list[int]) -> None:

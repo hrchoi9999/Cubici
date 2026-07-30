@@ -132,10 +132,18 @@ user-web/test-results/
 user-web/playwright-report/
 service-api/.logs/
 service-api/.pytest_cache/
+**/.codex/
+.codex/
+data_local/
 data_local/**
+reports/
 reports/**
 .docs/hyphen-api-docs/**
+backup.sql
 backup_*.sql
+*_backup.sql
+*.dump
+*.sql.local
 db/mysql_legacy/*.sql
 db/mysql_legacy/*.dump
 db/mysql_legacy/*.bak
@@ -146,5 +154,6 @@ db/postgres/*.sql.local
 .env
 .env.*
 !.env.example
+src/main/java/egovframework/azon/cmmn/service/cubicianalytics-8912962469e6.json
 src/main/java/egovframework/azon/cmmn/service/cubicianalytics-*.json
 *service-account*.json

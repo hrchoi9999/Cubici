@@ -197,7 +197,33 @@ function RequestPage({ kind = 'together' }) {
   const variant = requestVariantConfig[kind] ?? requestVariantConfig.together;
   const [auth] = useState(readAuthSession);
   const account = auth?.user;
-  const data = useUserDashboardData({ userNo: account?.user_no, shopPairs: '__none__', enabled: Boolean(account?.user_no) });
+  const [requestSummary, setRequestSummary] = useState({
+    loading: Boolean(account?.user_no),
+    error: '',
+    contracts: { limit: 0, offset: 0, total: 0, items: [] },
+  });
+  const loadRequestSummary = useCallback(async () => {
+    if (!account?.user_no) {
+      const emptyState = { loading: false, error: '로그인 후 사용자 데이터를 조회합니다.', contracts: { limit: 0, offset: 0, total: 0, items: [] } };
+      setRequestSummary(emptyState);
+      return emptyState;
+    }
+    setRequestSummary((current) => ({ ...current, loading: true, error: '' }));
+    try {
+      const contracts = await fetchJson(`/v1/api/contracts?limit=5&offset=0&user_no=${encodeURIComponent(account.user_no)}`);
+      const nextState = { loading: false, error: '', contracts };
+      setRequestSummary(nextState);
+      return nextState;
+    } catch (error) {
+      const nextState = { loading: false, error: `API 연결 대기: ${error.message}`, contracts: { limit: 0, offset: 0, total: 0, items: [] } };
+      setRequestSummary(nextState);
+      return nextState;
+    }
+  }, [account?.user_no]);
+  useEffect(() => {
+    loadRequestSummary();
+  }, [loadRequestSummary]);
+  const data = { ...requestSummary, refresh: loadRequestSummary };
   const latestContract = data.contracts?.items?.[0];
   const [connectedShops, setConnectedShops] = useState([]);
   const [shopState, setShopState] = useState({ loading: false, message: '' });
@@ -358,25 +384,29 @@ function RequestPage({ kind = 'together' }) {
     }
     setSubmitState({ submitting: true, message: '신청 저장 중', mbid: '', uploaded: [] });
     try {
-      const result = await postJson('/v1/api/contracts/requests', {
-        user_no: account.user_no,
-        request_shop_types: selectedShops,
-        product_code: 'MP',
-        sales_amount: variant.showB2b ? Number(legacyInputs.totalLimitAmount) * 1000000 : 0,
-        demand_acc_bank_code: variant.showAccounts ? accountInputs.demandAccBankCode : null,
-        demand_acc_holder: variant.showAccounts ? accountInputs.demandAccHolder : null,
-        demand_acc_number: variant.showAccounts ? accountInputs.demandAccNumber : null,
-        main_acc_bank_code: variant.showAccounts ? accountInputs.mainAccBankCode : null,
-        main_acc_holder: variant.showAccounts ? accountInputs.mainAccHolder : null,
-        main_acc_number: variant.showAccounts ? accountInputs.mainAccNumber : null,
-        identity_confirmed: policyChecks.identity,
-        identity_verification_method: identityVerification.method,
-        identity_verification_status: identityVerification.status,
-        identity_verification_reference: identityVerification.reference,
-        terms_agreed: policyChecks.terms,
-        submitted_document_types: requiredFiles.map(([documentType]) => documentType),
-        requested_by: variant.requestedBy,
-      });
+      const result = await postJson(
+        '/v1/api/contracts/requests',
+        {
+          user_no: account.user_no,
+          request_shop_types: selectedShops,
+          product_code: 'MP',
+          sales_amount: variant.showB2b ? Number(legacyInputs.totalLimitAmount) * 1000000 : 0,
+          demand_acc_bank_code: variant.showAccounts ? accountInputs.demandAccBankCode : null,
+          demand_acc_holder: variant.showAccounts ? accountInputs.demandAccHolder : null,
+          demand_acc_number: variant.showAccounts ? accountInputs.demandAccNumber : null,
+          main_acc_bank_code: variant.showAccounts ? accountInputs.mainAccBankCode : null,
+          main_acc_holder: variant.showAccounts ? accountInputs.mainAccHolder : null,
+          main_acc_number: variant.showAccounts ? accountInputs.mainAccNumber : null,
+          identity_confirmed: policyChecks.identity,
+          identity_verification_method: identityVerification.method,
+          identity_verification_status: identityVerification.status,
+          identity_verification_reference: identityVerification.reference,
+          terms_agreed: policyChecks.terms,
+          submitted_document_types: requiredFiles.map(([documentType]) => documentType),
+          requested_by: variant.requestedBy,
+        },
+        { timeoutMs: 45_000 },
+      );
       const uploadTargets = [
         ...requiredFiles,
         ...(!variant.requireAccountFiles ? [

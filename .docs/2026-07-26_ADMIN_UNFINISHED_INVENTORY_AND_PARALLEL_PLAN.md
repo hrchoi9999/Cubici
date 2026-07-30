@@ -27,8 +27,8 @@
 | 머니뱅크 운영 | 신청 접수 | `AdminDashboardPage` | `contract-request-*`, `moneybank-*-db-e2e` | 76% | 상태 버튼 1차 보강 완료, 권한/audit/legacy 예외 흐름 추가 대조 |
 | 머니뱅크 운영 | 심사 승인 | `ApprovalManagementPage` | `moneybank-contract-*` | 75% | 조건 제시 전 단계 판정 보강, 심사항목/수수료 조건 legacy 대조 |
 | 머니뱅크 운영 | 계약 관리 | `ContractManagementPage` | `moneybank-contract-*`, `moneybank-full-lifecycle-*` | 73% | 체결 가능 상태 판정 보강, 계약서/전자서명 실연동 제외 범위 명확화 |
-| 머니뱅크 운영 | 정산 관리 | `SettlementManagementPage` | `settlement-management.spec.js` | 67% | 정산 검산 표시 완료, `settlement_amount` 원천 batch/procedure 대조 잔여 |
-| 머니뱅크 운영 | 상환 관리 | `RedemptionManagementPage` | `redemption-management.spec.js` | 69% | 잔액 검산 표시 완료, 해지/강제해지 운영정책 반복 검수 잔여 |
+| 머니뱅크 운영 | 정산 관리 | `SettlementManagementPage` | `settlement-management.spec.js` | 76% | 정산 검산 집계/실제 DB 반복검수 완료, legacy batch/procedure 추가 확보 시 재대조 |
+| 머니뱅크 운영 | 상환 관리 | `RedemptionManagementPage` | `redemption-management.spec.js` | 78% | 잔액검산 집계/실제 DB 반복검수 완료, 해지/강제해지 운영검수 반복 확인 잔여 |
 | 머니뱅크 운영 | 프리즘 지표 관리 | `PrizmManagementPage` | `prizm-management.spec.js` | 70% | PCS/PMS 결과 조회/상세/상태 표시 1차 보강 완료, 재계산/Alt_CSM 실연동은 2차 |
 | 고객관리 | 고객문의 | `CustomerInquiryPage` | `customer-inquiry-management.spec.js` | 73% | 답변 CRUD/후속상태 표시 보강, 알림/메일 실발송 잔여 |
 | 고객관리 | 문자/이메일 | `MessageTemplatePage` | `message-template-management.spec.js` | 67% | 템플릿 CRUD/실발송 미연동/변수정책 상태 표시 보강, 실제 발송 연동 잔여 |
@@ -50,8 +50,8 @@
 - 저장/변경 workflow: 60~68%
 - legacy 정책 재현: 55~62%
 - E2E/운영 검수: 45~55%
-- 관리자단 전체 운영 재현: 75~79%
-- 1차 제외 항목을 제외한 관리자단 운영 재현: 86~90%
+- 관리자단 전체 운영 재현: 77~81%
+- 1차 제외 항목을 제외한 관리자단 운영 재현: 88~91%
 
 ## 1차 개발 범위 확정 후보
 
@@ -173,6 +173,15 @@ Moneybank 신청/심사/계약/서류는 계약 상태 공통 로직과 충돌 �
 - Hyphen/은행, 외부 쇼핑몰, SMS/Email/Alert 실발송, 외부 서버 metric, 첨부/팝업/상단고정/노출기간, 금융상품 seed, Prism/RawData 산식 재계산/Alt_CSM 실연동은 1차 제외 또는 후순위로 분리했다.
 - 금융상품 master 조회/관리와 Prism/RawData 결과 조회/참조는 1차 범위로 재분류해 보강했다.
 - 관리자단 전체 E2E milestone은 34 passed로 완료했다.
+
+## 9단계 1차 보완 마무리 반영
+
+- 결과 문서: `2026-07-26_ADMIN_BATCH_STAGE9_FIRST_PHASE_CLOSURE_RESULT.md`
+- 정산 API와 화면에 전체 검산 counts를 추가했다.
+- 상환 API와 화면에 전체 잔액검산 counts를 추가했다.
+- 실제 PostgreSQL 반복 검수 결과 정산 469건, 차이 28건, 원본산출값 441건, 상환 6건 전부 잔액검산 일치로 확인했다.
+- 통합현황 잔액검산 차이 `-43,050,505`는 자동 보정하지 않고 운영검수 항목으로 유지한다.
+- focused 검증은 backend 72 passed, 정산/상환 E2E 2 passed로 완료했다.
 
 ## 관리자 E2E Runner 준비
 

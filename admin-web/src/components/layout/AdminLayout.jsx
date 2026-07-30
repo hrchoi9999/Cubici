@@ -79,7 +79,9 @@ function LoadingSpinner() {
   );
 }
 
-function AdminHeader() {
+function AdminHeader({ adminSession }) {
+  const adminEmail = adminSession?.user?.email ?? 'admin@example.com';
+
   return (
     <header id="header">
       <div className="topLine">
@@ -90,7 +92,7 @@ function AdminHeader() {
             </a>
           </div>
           <div className="userMenu">
-            <div className="userInfo">admin 님, 안녕하세요!</div>
+            <div className="userInfo">{adminEmail} 님, 안녕하세요!</div>
             <div className="btns">
               <a href="/logout" className="sBtn bsColorN hrBtn modalOpen">
                 로그아웃
@@ -171,7 +173,7 @@ function CommonModal({ id }) {
   );
 }
 
-export function AdminLayout({ activeCategoryId, activePageId, children }) {
+export function AdminLayout({ activeCategoryId, activePageId, adminSession, children }) {
   const activeCategory = adminMenu.find((category) => category.id === activeCategoryId)
     ?? { id: activeCategoryId, title: activeCategoryId === 'unmappedRoute' ? 'Route 점검' : '' };
   const activePage = activeCategory?.pages?.find((page) => page.id === activePageId)
@@ -181,7 +183,7 @@ export function AdminLayout({ activeCategoryId, activePageId, children }) {
     <>
       <LoadingSpinner />
       <div id="wrap" className="adminReactWrap">
-        <AdminHeader />
+        <AdminHeader adminSession={adminSession} />
         <div className="container">
           <figure className="subVisualArea">
             <div className="inner">

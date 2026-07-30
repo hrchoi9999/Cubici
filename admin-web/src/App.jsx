@@ -1,6 +1,16 @@
+import { useEffect, useState } from 'react';
+
+import {
+  clearAdminSession,
+  installAdminFetchInterceptor,
+  readAdminSession,
+  setAdminFetchSession,
+  verifyMasterAdminSession,
+} from './auth/adminAuth.js';
 import { AdminLayout, adminMenu } from './components/layout/AdminLayout.jsx';
 import { AdminAccountManagementPage } from './pages/AdminAccountManagementPage.jsx';
 import { AdminDashboardPage } from './pages/AdminDashboardPage.jsx';
+import { AdminLoginPage } from './pages/AdminLoginPage.jsx';
 import { ApprovalManagementPage } from './pages/ApprovalManagementPage.jsx';
 import { ChargeManagementPage } from './pages/ChargeManagementPage.jsx';
 import { ContractManagementPage } from './pages/ContractManagementPage.jsx';
@@ -32,6 +42,41 @@ import { SettlementManagementPage } from './pages/SettlementManagementPage.jsx';
 import { ServerMonitorPage } from './pages/ServerMonitorPage.jsx';
 
 function findRoute(path) {
+  const routeAliases = [
+    {
+      match: '/admin/cubici/manageMember/member_tab2',
+      categoryId: 'memberInfo',
+      pageId: 'member',
+    },
+    {
+      match: '/admin/cubici/manageMember/member_tab3',
+      categoryId: 'memberInfo',
+      pageId: 'member',
+    },
+    {
+      match: '/admin/cubici/manageMember/userstatus',
+      categoryId: 'memberInfo',
+      pageId: 'member',
+    },
+    {
+      match: '/admin/cubici/manageMember/payment_tab2',
+      categoryId: 'memberInfo',
+      pageId: 'payment',
+    },
+    {
+      match: '/admin/cubici/supportMember/manageBoard_tab2',
+      categoryId: 'supportMember',
+      pageId: 'notice',
+    },
+  ];
+
+  const alias = routeAliases.find((item) => path.includes(item.match));
+  if (alias) {
+    const category = adminMenu.find((item) => item.id === alias.categoryId);
+    const page = category.pages.find((item) => item.id === alias.pageId);
+    return { category, page };
+  }
+
   if (path.includes('/admin/cubici/adminPreference/manageMoneybank_tab2')) {
     const category = adminMenu.find((item) => item.id === 'preferInfo');
     const page = category.pages.find((item) => item.id === 'moneybank');
@@ -66,6 +111,72 @@ function findRoute(path) {
 
 export default function App() {
   const path = window.location.pathname;
+  const [adminSession, setAdminSession] = useState(() => {
+    const session = readAdminSession();
+    setAdminFetchSession(session);
+    installAdminFetchInterceptor();
+    return session;
+  });
+  const [isCheckingSession, setIsCheckingSession] = useState(Boolean(adminSession));
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!adminSession) {
+      setIsCheckingSession(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    verifyMasterAdminSession(adminSession)
+      .then((verifiedSession) => {
+        if (cancelled) return;
+        setAdminFetchSession(verifiedSession);
+        setAdminSession(verifiedSession);
+        setIsCheckingSession(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        clearAdminSession();
+        setAdminFetchSession(null);
+        setAdminSession(null);
+        setIsCheckingSession(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (path === '/logout' || path === '/admin/logout') {
+    clearAdminSession();
+    window.location.replace('/admin');
+    return null;
+  }
+
+  if (isCheckingSession) {
+    return <div className="adminLoginPage">관리자 권한 확인 중입니다.</div>;
+  }
+
+  if (!adminSession) {
+    return (
+      <AdminLoginPage
+        onLogin={(session) => {
+          setAdminFetchSession(session);
+          setAdminSession(session);
+          if (path === '/admin') {
+            window.location.replace('/admin/cubici/infoIntegrated/cubici_tab1');
+          }
+        }}
+      />
+    );
+  }
+
+  if (path === '/admin') {
+    window.location.replace('/admin/cubici/infoIntegrated/cubici_tab1');
+    return null;
+  }
+
   const isSettlementPage = path.includes('/admin/moneybank/settlement');
   const isRedemptionPage = path.includes('/admin/moneybank/redemption');
   const isCubiciIntegratedInfoPage = path.includes('/admin/cubici/infoIntegrated/cubici_tab1');
@@ -99,7 +210,7 @@ export default function App() {
   const { category, page } = findRoute(path);
 
   return (
-    <AdminLayout activeCategoryId={category.id} activePageId={page.id}>
+    <AdminLayout activeCategoryId={category.id} activePageId={page.id} adminSession={adminSession}>
       {isManagementOverviewPage ? <ManagementOverviewPage /> : null}
       {isCubiciIntegratedInfoPage ? <CubiciIntegratedInfoPage /> : null}
       {isMoneybankIntegratedInfoPage ? <MoneybankIntegratedInfoPage /> : null}

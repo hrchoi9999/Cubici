@@ -10,7 +10,7 @@ const cubiciRoot = path.resolve(adminRoot, '..');
 const userRoot = path.join(cubiciRoot, 'user-web');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
 const browserPath = path.join(workspaceRoot, '.downloads', 'ms-playwright');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const dynamicPortOffset = String(process.pid % 1000).padStart(3, '0');
 const previewPort = process.env.CUBICI_E2E_PORT || `28${dynamicPortOffset}`;
 const apiPort = process.env.CUBICI_API_E2E_PORT || `29${dynamicPortOffset}`;
@@ -25,6 +25,8 @@ const env = {
   CUBICI_API_BASE_URL: process.env.CUBICI_API_BASE_URL || apiUrl,
   CUBICI_USER_BASE_URL: process.env.CUBICI_USER_BASE_URL || userUrl,
   CUBICI_USER_E2E_PORT: userPort,
+  CUBICI_CORS_ALLOW_ORIGINS: process.env.CUBICI_CORS_ALLOW_ORIGINS || [baseUrl, userUrl].join(','),
+  CUBICI_CORS_ALLOW_ORIGIN_REGEX: process.env.CUBICI_CORS_ALLOW_ORIGIN_REGEX || 'https?://(127\\.0\\.0\\.1|localhost):\\d+',
   PLAYWRIGHT_BROWSERS_PATH: process.env.PLAYWRIGHT_BROWSERS_PATH || browserPath,
   VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || apiUrl,
 };
@@ -165,7 +167,7 @@ function buildAdminWeb() {
 
 function runPlaywright(args) {
   return new Promise((resolve) => {
-    const cliPath = path.join(adminRoot, 'node_modules', 'playwright', 'cli.js');
+    const cliPath = path.join(adminRoot, 'node_modules', '@playwright', 'test', 'cli.js');
     const child = spawn(process.execPath, [cliPath, 'test', ...args], {
       cwd: adminRoot,
       env,

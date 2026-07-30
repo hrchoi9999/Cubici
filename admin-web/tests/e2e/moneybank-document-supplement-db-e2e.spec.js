@@ -10,7 +10,7 @@ const adminRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(adminRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const tempRoot = path.join(workspaceRoot, '.tmp', 'cubici-e2e');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || 'http://127.0.0.1:8000';
 const adminBaseUrl = process.env.CUBICI_ADMIN_BASE_URL || 'http://127.0.0.1:5174';
@@ -61,11 +61,14 @@ test('admin document supplement request and user reupload return contract to req
 });
 
 async function submitUserRequest(page, currentFixture, regFile, cbFile) {
+  await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/request`);
 
   await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.userNo}"]`)).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.bizName}"]`)).toBeVisible();
+  await expect(page.getByText('연결 완료')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('input[value="1개"]')).toBeVisible();
   await expect(page.getByLabel('네이버')).toBeChecked();
 
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
@@ -76,9 +79,18 @@ async function submitUserRequest(page, currentFixture, regFile, cbFile) {
   await expect(page.getByText(/주민등록증 진위확인 mock 완료/)).toBeVisible();
   await expect(page.getByLabel('본인확인을 완료했습니다.')).toBeChecked();
   await page.getByLabel('머니뱅크 신청 약관에 동의합니다.').check();
+  const requestResponsePromise = waitForApiResponse(page, '/v1/api/contracts/requests', 'POST');
   await page.getByRole('button', { name: '서비스 신청' }).click();
+  await expectApiResponse(requestResponsePromise);
 
-  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText(/신청 되었습니다!.*서류 2건 업로드 완료/)).toBeVisible({ timeout: 30_000 });
+}
+
+async function setUserSession(page, session) {
+  await page.goto(userBaseUrl);
+  await page.evaluate((value) => {
+    window.localStorage.setItem('cubiciUserAuth', JSON.stringify(value));
+  }, session);
 }
 
 async function requestSupplementFromAdmin(page, currentFixture) {
@@ -92,23 +104,71 @@ async function requestSupplementFromAdmin(page, currentFixture) {
 
   await expect(page.getByText('상태 상세')).toBeVisible();
   await expect(page.getByRole('button', { name: '서류보완 요청' })).toBeVisible();
+  const statusResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '서류보완 요청' }).click();
+  await expectApiResponse(statusResponsePromise);
   await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
   await expect(page.locator('td').filter({ hasText: '서류보완' }).first()).toBeVisible();
 }
 
 async function submitSupplementFromUser(page, currentFixture, regFile, cbFile) {
+  await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/current`);
 
   await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '보완서류 제출' })).toBeVisible();
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
   await page.getByLabel('대표자 신분증').setInputFiles(cbFile);
+  const supplementResponsesPromise = waitForApiResponses(page, `/v1/api/contracts/${currentFixture.mbid}/documents/files`, 'POST', 2);
   await page.getByRole('button', { name: '보완서류 제출' }).click();
+  await expectApiResponses(supplementResponsesPromise);
 
   await expect(page.getByText('보완서류 업로드가 완료되었습니다.')).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText(`regNo: cubici-supp-rereg-${currentFixture.suffix}.pdf`)).toBeVisible();
   await expect(page.getByText(`CBInfo: cubici-supp-recb-${currentFixture.suffix}.pdf`)).toBeVisible();
+}
+
+function waitForApiResponse(page, pathname, method) {
+  return page.waitForResponse((response) => (
+    response.url().includes(pathname)
+    && response.request().method() === method
+  ), { timeout: 30_000 });
+}
+
+async function expectApiResponse(responsePromise) {
+  const response = await responsePromise;
+  expect(response.ok(), await response.text()).toBeTruthy();
+}
+
+function waitForApiResponses(page, pathname, method, count) {
+  const responses = [];
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      page.off('response', onResponse);
+      reject(new Error(`Timed out waiting for ${count} ${method} responses to ${pathname}`));
+    }, 30_000);
+
+    function onResponse(response) {
+      if (!response.url().includes(pathname) || response.request().method() !== method) {
+        return;
+      }
+      responses.push(response);
+      if (responses.length >= count) {
+        clearTimeout(timer);
+        page.off('response', onResponse);
+        resolve(responses);
+      }
+    }
+
+    page.on('response', onResponse);
+  });
+}
+
+async function expectApiResponses(responsesPromise) {
+  const responses = await responsesPromise;
+  for (const response of responses) {
+    expect(response.ok(), await response.text()).toBeTruthy();
+  }
 }
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
@@ -129,10 +189,9 @@ from cubici_service.db.connection import get_connection
 suffix = sys.argv[1]
 with get_connection() as conn:
     with conn.cursor() as cur:
-        cur.execute("select coalesce(max(user_no), 0) + 1 from users")
-        user_no = int(cur.fetchone()[0])
-        cur.execute("select coalesce(max(id), 0) + 1 from shop_accounts")
-        shop_account_id = int(cur.fetchone()[0])
+        numeric_id = int(''.join(ch for ch in suffix if ch.isdigit())[-6:].ljust(6, "0"))
+        user_no = 7200000 + numeric_id
+        shop_account_id = 8200000 + numeric_id
         email = f"local-db-supp-e2e-{suffix}@example.test"
         user_name = f"SuppUIUser{suffix}"
         biz_name = f"SuppUIBiz{suffix}"
@@ -265,7 +324,11 @@ with get_connection() as conn:
         cur.execute("delete from users where user_no = %s", (user_no,))
   `, [currentFixture.mbid || '', String(currentFixture.userNo), String(currentFixture.shopAccountId)]);
   for (const filePath of currentFixture.tempFiles || []) {
-    fs.rmSync(filePath, { force: true });
+    try {
+      fs.rmSync(filePath, { force: true });
+    } catch {
+      // The browser can briefly hold uploaded files after a failed DB E2E run.
+    }
   }
 }
 

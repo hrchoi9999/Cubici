@@ -10,7 +10,7 @@ const userRoot = path.resolve(__dirname, '..', '..');
 const cubiciRoot = path.resolve(userRoot, '..');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const workspaceTmpRoot = path.join(workspaceRoot, '.tmp', 'cubici-user-web-e2e');
 const apiBaseUrl = process.env.CUBICI_API_BASE_URL || process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
@@ -71,10 +71,10 @@ test('user moneybank request screen creates contract and uploads required docume
   await page.getByLabel('머니뱅크 신청 약관에 동의합니다.').check();
   await page.getByRole('button', { name: '서비스 신청' }).click();
 
-  const mbid = await waitForLatestContractWithDocuments(fixture.userNo, 2);
+  const mbid = await waitForLatestContractWithDocuments(fixture.userNo, 2, fixture.session.access_token);
   fixture.mbid = mbid;
-  await expectContractCreated({ mbid, userNo: fixture.userNo });
-  await expectUploadedDocumentCount(mbid, 2);
+  await expectContractCreated({ mbid, userNo: fixture.userNo, token: fixture.session.access_token });
+  await expectUploadedDocumentCount(mbid, 2, fixture.session.access_token);
   await page.goto('/moneybank/processContinue');
   await expect(page).toHaveURL(/\/moneybank\/advcalc\/evaluate$/);
   await expect(page.getByRole('heading', { name: '매출 선정산 검토 및 심사' })).toBeVisible();
@@ -120,11 +120,11 @@ test('legacy advcalc request route stores account fields and required documents 
   await page.getByLabel('머니뱅크 신청 약관에 동의합니다.').check();
   await page.getByRole('button', { name: '선정산 신청' }).click();
 
-  const mbid = await waitForLatestContractWithDocuments(fixture.userNo, 5);
+  const mbid = await waitForLatestContractWithDocuments(fixture.userNo, 5, fixture.session.access_token);
   fixture.mbid = mbid;
-  await expectContractCreated({ mbid, userNo: fixture.userNo });
-  await expectContractAccountFields(mbid, fixture.userNo);
-  await expectUploadedDocumentCount(mbid, 5);
+  await expectContractCreated({ mbid, userNo: fixture.userNo, token: fixture.session.access_token });
+  await expectContractAccountFields(mbid, fixture.userNo, fixture.session.access_token);
+  await expectUploadedDocumentCount(mbid, 5, fixture.session.access_token);
 
   await page.goto('/moneybank/advcalc/request/clause-details/4');
   await expect(page.getByRole('heading', { level: 1, name: '선정산 서비스 약관' })).toBeVisible();
@@ -212,22 +212,22 @@ print(json.dumps({
   `, [suffix]));
 }
 
-async function waitForLatestContractWithDocuments(userNo, expectedCount) {
+async function waitForLatestContractWithDocuments(userNo, expectedCount, token) {
   let mbid = '';
   await expect.poll(async () => {
-    const response = await apiJson(`/v1/api/contracts?limit=1&offset=0&user_no=${encodeURIComponent(userNo)}`);
+    const response = await apiJson(`/v1/api/contracts?limit=1&offset=0&user_no=${encodeURIComponent(userNo)}`, token);
     if (response.total < 1) {
       return 0;
     }
     mbid = response.items[0].mbid;
-    const documents = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`);
+    const documents = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`, token);
     return documents.total;
   }, { timeout: 30000 }).toBe(expectedCount);
   return mbid;
 }
 
-async function expectContractCreated({ mbid, userNo }) {
-  const detail = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}?user_no=${encodeURIComponent(userNo)}`);
+async function expectContractCreated({ mbid, userNo, token }) {
+  const detail = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}?user_no=${encodeURIComponent(userNo)}`, token);
   expect(detail.contract.user_no).toBe(userNo);
   expect(detail.contract.status).toBe('REQUEST');
   expect(detail.contract.identity_verification_status).toBe('mock_verified');
@@ -235,8 +235,8 @@ async function expectContractCreated({ mbid, userNo }) {
   expect(detail.shops.map((shop) => shop.contract_shop_type)).toEqual(['NAVER']);
 }
 
-async function expectUploadedDocumentCount(mbid, expectedCount) {
-  const response = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`);
+async function expectUploadedDocumentCount(mbid, expectedCount, token) {
+  const response = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files`, token);
   expect(response.total).toBe(expectedCount);
   const divisions = response.items.map((item) => item.file_division).sort();
   if (expectedCount === 2) {
@@ -246,8 +246,8 @@ async function expectUploadedDocumentCount(mbid, expectedCount) {
   }
 }
 
-async function expectContractAccountFields(mbid, userNo) {
-  const detail = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}?user_no=${encodeURIComponent(userNo)}`);
+async function expectContractAccountFields(mbid, userNo, token) {
+  const detail = await apiJson(`/v1/api/contracts/${encodeURIComponent(mbid)}?user_no=${encodeURIComponent(userNo)}`, token);
   expect(detail.contract.demand_acc_bank_code).toBe('039');
   expect(detail.contract.demand_acc_holder).toBe('정산예금주');
   expect(detail.contract.demand_acc_number).toBe('1234567890');
@@ -256,12 +256,14 @@ async function expectContractAccountFields(mbid, userNo) {
   expect(detail.contract.main_acc_number).toBe('9876543210');
 }
 
-async function apiJson(pathname) {
+async function apiJson(pathname, token = '') {
   let response;
   let lastError;
   for (let attempt = 0; attempt < 3; attempt += 1) {
     try {
-      response = await fetch(`${apiBaseUrl}${pathname}`);
+      response = await fetch(`${apiBaseUrl}${pathname}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       break;
     } catch (error) {
       lastError = error;

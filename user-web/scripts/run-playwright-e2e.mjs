@@ -11,7 +11,7 @@ const serviceApiRoot = path.join(cubiciRoot, 'service-api');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const browserPath = path.join(workspaceRoot, '.downloads', 'ms-playwright');
 const nodeExe = process.execPath;
-const pythonExe = path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
 const apiPort = process.env.CUBICI_API_E2E_PORT || '8000';
 const userPort = process.env.CUBICI_USER_E2E_PORT || '4175';
 const apiUrl = `http://127.0.0.1:${apiPort}`;
@@ -88,7 +88,7 @@ try {
 
 function runPlaywright(args) {
   return new Promise((resolve) => {
-    const cliPath = path.join(adminRoot, 'node_modules', 'playwright', 'cli.js');
+    const cliPath = path.join(adminRoot, 'node_modules', '@playwright', 'test', 'cli.js');
     const child = spawn(nodeExe, [cliPath, 'test', ...args], {
       cwd: userRoot,
       env,
