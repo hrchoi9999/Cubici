@@ -6,6 +6,9 @@ test.skip(!process.env.CUBICI_MASTER_ADMIN_PASSWORD, 'set CUBICI_MASTER_ADMIN_PA
 const MASTER_ADMIN_EMAIL = process.env.CUBICI_MASTER_ADMIN_EMAIL ?? 'admin@example.com';
 
 test('admin pages require master admin login and logout clears access', async ({ page }) => {
+  await page.addInitScript(() => {
+    window.localStorage.removeItem('cubiciAdminAuth');
+  });
   await page.goto('/admin/cubici/infoIntegrated/cubici_tab1');
   await expect(page.getByRole('heading', { name: '관리자 로그인' })).toBeVisible();
   await expect(page.getByLabel('관리자 계정')).toHaveValue(MASTER_ADMIN_EMAIL);

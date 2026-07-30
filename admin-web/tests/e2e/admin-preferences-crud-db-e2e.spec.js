@@ -27,7 +27,8 @@ test.afterEach(() => {
 
 test('admin account approval, update, and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createPreferenceFixture(request, fixture, ['admin']);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createPreferenceFixture(request, fixture, ['admin'], masterAdminSession);
 
   await approveUpdateAndDeleteAdmin(page, fixture);
   expect(readPreferenceState(fixture)).toMatchObject({ admin_count: 0 });
@@ -35,7 +36,8 @@ test('admin account approval, update, and delete persist with real database thro
 
 test('charge update and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createPreferenceFixture(request, fixture, ['charge']);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createPreferenceFixture(request, fixture, ['charge'], masterAdminSession);
 
   await updateAndDeleteCharge(page, fixture);
   expect(readPreferenceState(fixture)).toMatchObject({ charge_count: 0 });
@@ -43,7 +45,8 @@ test('charge update and delete persist with real database through admin UI', asy
 
 test('partner update and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createPreferenceFixture(request, fixture, ['partner']);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createPreferenceFixture(request, fixture, ['partner'], masterAdminSession);
 
   await updateAndDeletePartner(page, fixture);
   expect(readPreferenceState(fixture)).toMatchObject({
@@ -54,7 +57,8 @@ test('partner update and delete persist with real database through admin UI', as
 
 test('promotion update and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createPreferenceFixture(request, fixture, ['charge', 'promotion']);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createPreferenceFixture(request, fixture, ['charge', 'promotion'], masterAdminSession);
 
   await updateAndDeletePromotion(page, fixture);
   expect(readPreferenceState(fixture)).toMatchObject({
@@ -65,7 +69,8 @@ test('promotion update and delete persist with real database through admin UI', 
 
 test('moneybank product update persists with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createPreferenceFixture(request, fixture, ['product']);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createPreferenceFixture(request, fixture, ['product'], masterAdminSession);
 
   await updateMoneybankProduct(page, fixture);
   expect(readPreferenceState(fixture)).toMatchObject({
@@ -253,6 +258,41 @@ async function expectApiJsonResponse(responsePromise) {
   return text ? JSON.parse(text) : null;
 }
 
+async function prepareMasterAdminSession(page, request) {
+  const session = await loginMasterAdminForFixture(request);
+  await page.addInitScript((masterAdminSession) => {
+    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify(masterAdminSession));
+  }, session);
+  return session;
+}
+
+async function loginMasterAdminForFixture(request) {
+  const email = process.env.CUBICI_MASTER_ADMIN_EMAIL;
+  const password = process.env.CUBICI_MASTER_ADMIN_PASSWORD;
+  expect(Boolean(email && password), 'CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required').toBeTruthy();
+
+  const response = await request.post(`${apiBaseUrl}/v1/api/accounts/login`, {
+    data: { email, password },
+  });
+  const text = await response.text();
+  expect(response.ok(), text).toBeTruthy();
+
+  const session = text ? JSON.parse(text) : null;
+  expect(session?.access_token).toBeTruthy();
+  expect(String(session?.user?.user_type ?? '').toUpperCase()).toBe('ADMIN_USER');
+  return session;
+}
+
+function withMasterAdminAuth(session, options = {}) {
+  return {
+    ...options,
+    headers: {
+      ...(options.headers ?? {}),
+      Authorization: `${session.token_type ?? 'Bearer'} ${session.access_token}`,
+    },
+  };
+}
+
 function makeFixture() {
   const suffix = String(Date.now()).slice(-8);
   const shortSuffix = suffix.slice(-4);
@@ -276,11 +316,11 @@ function makeFixture() {
   };
 }
 
-async function createPreferenceFixture(request, currentFixture, scopes) {
+async function createPreferenceFixture(request, currentFixture, scopes, masterAdminSession) {
   const scopeSet = new Set(scopes);
 
   if (scopeSet.has('admin')) {
-    const adminResponse = await request.post(`${apiBaseUrl}/v1/api/preferences/admin-accounts/request`, {
+    const adminResponse = await request.post(`${apiBaseUrl}/v1/api/preferences/admin-accounts/request`, withMasterAdminAuth(masterAdminSession, {
       data: {
         admin_type: '00',
         admin_name: currentFixture.adminName,
@@ -288,13 +328,13 @@ async function createPreferenceFixture(request, currentFixture, scopes) {
         admin_email: `admin-pref-${currentFixture.suffix}@example.test`,
         admin_department: '검증팀',
       },
-    });
+    }));
     expect(adminResponse.ok()).toBeTruthy();
     currentFixture.pendingAdminId = (await adminResponse.json()).admin_id;
   }
 
   if (scopeSet.has('charge')) {
-    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/charges`, {
+    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/charges`, withMasterAdminAuth(masterAdminSession, {
       data: {
         charge_code: currentFixture.chargeCode,
         charge_name: currentFixture.chargeName,
@@ -309,11 +349,11 @@ async function createPreferenceFixture(request, currentFixture, scopes) {
         period_unit: 'M',
         charge_detail: '실DB 설정 E2E 요금제',
       },
-    }));
+    })));
   }
 
   if (scopeSet.has('partner')) {
-    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/partners`, {
+    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/partners`, withMasterAdminAuth(masterAdminSession, {
       data: {
         partner_id: currentFixture.partnerId,
         partner_code: currentFixture.partnerCode,
@@ -341,11 +381,11 @@ async function createPreferenceFixture(request, currentFixture, scopes) {
           },
         ],
       },
-    }));
+    })));
   }
 
   if (scopeSet.has('promotion')) {
-    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/promotions`, {
+    await expectOk(request.post(`${apiBaseUrl}/v1/api/preferences/promotions`, withMasterAdminAuth(masterAdminSession, {
       data: {
         promo_code: currentFixture.promoCode,
         promo_name: currentFixture.promoName,
@@ -361,11 +401,11 @@ async function createPreferenceFixture(request, currentFixture, scopes) {
         period_unit: 'M',
         promo_detail: '실DB 설정 E2E 연계코드',
       },
-    }));
+    })));
   }
 
   if (scopeSet.has('product')) {
-    const productResponse = await request.post(`${apiBaseUrl}/v1/api/preferences/moneybank-products`, {
+    const productResponse = await request.post(`${apiBaseUrl}/v1/api/preferences/moneybank-products`, withMasterAdminAuth(masterAdminSession, {
       data: {
         firm_id: currentFixture.firmId,
         firm_name: currentFixture.firmName,
@@ -403,7 +443,7 @@ async function createPreferenceFixture(request, currentFixture, scopes) {
         mid_repay_yn: 'Y',
         product_type: 'STD',
       },
-    });
+    }));
     expect(productResponse.ok()).toBeTruthy();
     currentFixture.firmNo = (await productResponse.json()).firm_no;
   }

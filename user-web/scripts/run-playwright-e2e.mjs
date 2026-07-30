@@ -47,6 +47,8 @@ try {
     await waitForServer(`${apiUrl}/v1/api/health`, 20_000);
   }
 
+  await prepareMasterAdminApiAuth();
+
   if (!(await canConnect(userUrl))) {
     const buildResult = spawnSync(
       nodeExe,
@@ -84,6 +86,32 @@ try {
     await stopProcess(apiProcess);
   }
   process.exit(finalExitCode);
+}
+
+async function prepareMasterAdminApiAuth() {
+  if (env.CUBICI_RUN_DB_E2E !== '1') {
+    return;
+  }
+
+  const email = env.CUBICI_MASTER_ADMIN_EMAIL;
+  const password = env.CUBICI_MASTER_ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error('CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required for user-web DB E2E setup API calls.');
+  }
+
+  const response = await fetch(`${apiUrl}/v1/api/accounts/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    throw new Error(`Master admin login for user-web DB E2E setup failed with status ${response.status}.`);
+  }
+  const session = await response.json();
+  if (!session?.access_token || String(session?.user?.user_type ?? '').toUpperCase() !== 'ADMIN_USER') {
+    throw new Error('Master admin login for user-web DB E2E setup did not return an ADMIN_USER session.');
+  }
+  env.CUBICI_ADMIN_BEARER_TOKEN = `${session.token_type ?? 'Bearer'} ${session.access_token}`;
 }
 
 function runPlaywright(args) {

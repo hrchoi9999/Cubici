@@ -60,7 +60,9 @@ test('admin document upload, confirm, checks, review note, and download persist 
   expect(uploaded.file_division).toBe('regNo');
   expect(uploaded.origin_file_name).toBe(`admin-document-${fixture.suffix}`);
 
-  const downloadResponse = await fetch(`${apiBaseUrl}/v1/api/contracts/${encodeURIComponent(fixture.mbid)}/documents/files/${encodeURIComponent(uploaded.uuid)}/download`);
+  const downloadResponse = await fetch(`${apiBaseUrl}/v1/api/contracts/${encodeURIComponent(fixture.mbid)}/documents/files/${encodeURIComponent(uploaded.uuid)}/download`, {
+    headers: adminAuthHeaders(),
+  });
   expect(downloadResponse.ok).toBe(true);
   const downloadContent = Buffer.from(await downloadResponse.arrayBuffer()).toString('utf8');
   expect(downloadContent).toContain(`cubici admin document review ${fixture.suffix}`);
@@ -229,12 +231,21 @@ async function latestUploadedDocument(mbid) {
 async function apiJson(pathname, options = {}) {
   const response = await fetch(`${apiBaseUrl}${pathname}`, {
     method: options.method || 'GET',
-    headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+    headers: {
+      ...adminAuthHeaders(),
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected admin DB E2E API calls').toBe(true);
+  return { Authorization: authorization };
 }
 
 function readPersistedDocumentReview(mbid) {

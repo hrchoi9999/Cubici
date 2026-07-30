@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import http from 'node:http';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -35,10 +37,12 @@ let apiProcess = null;
 let previewProcess = null;
 let userProcess = null;
 let finalExitCode = 1;
+let adminStorageStatePath = null;
 
 try {
   checkDatabase();
   await ensureServiceApi();
+  await prepareMasterAdminTestAuth();
   await ensureUserWeb();
   buildAdminWeb();
 
@@ -69,6 +73,9 @@ try {
   if (apiProcess) {
     await stopProcess(apiProcess);
   }
+  if (adminStorageStatePath) {
+    fs.rmSync(adminStorageStatePath, { force: true });
+  }
   process.exit(finalExitCode);
 }
 
@@ -90,6 +97,62 @@ async function ensureServiceApi() {
     },
   );
   await waitForServer(`${apiUrl}/v1/api/health`, 20_000);
+}
+
+async function prepareMasterAdminTestAuth() {
+  if (env.CUBICI_RUN_DB_E2E !== '1') {
+    return;
+  }
+
+  const email = env.CUBICI_MASTER_ADMIN_EMAIL;
+  const password = env.CUBICI_MASTER_ADMIN_PASSWORD;
+  if (!email || !password) {
+    throw new Error('CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required for admin DB E2E authentication.');
+  }
+
+  const session = await loginMasterAdmin(email, password);
+  const tokenType = session.token_type ?? 'Bearer';
+  env.CUBICI_ADMIN_BEARER_TOKEN = `${tokenType} ${session.access_token}`;
+
+  adminStorageStatePath = env.CUBICI_ADMIN_STORAGE_STATE_PATH || path.join(
+    os.tmpdir(),
+    `cubici-admin-storage-state-${process.pid}.json`,
+  );
+  env.CUBICI_ADMIN_STORAGE_STATE_PATH = adminStorageStatePath;
+  fs.writeFileSync(
+    adminStorageStatePath,
+    JSON.stringify({
+      cookies: [],
+      origins: [
+        {
+          origin: baseUrl,
+          localStorage: [
+            {
+              name: 'cubiciAdminAuth',
+              value: JSON.stringify(session),
+            },
+          ],
+        },
+      ],
+    }),
+    'utf8',
+  );
+}
+
+async function loginMasterAdmin(email, password) {
+  const response = await fetch(`${apiUrl}/v1/api/accounts/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!response.ok) {
+    throw new Error(`Master admin login for DB E2E failed with status ${response.status}.`);
+  }
+  const session = await response.json();
+  if (!session?.access_token || String(session?.user?.user_type ?? '').toUpperCase() !== 'ADMIN_USER') {
+    throw new Error('Master admin login for DB E2E did not return an ADMIN_USER session.');
+  }
+  return session;
 }
 
 async function ensureUserWeb() {

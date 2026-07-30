@@ -27,7 +27,8 @@ test.afterEach(() => {
 
 test('customer inquiry reply create and update persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
-  await createInquiryFixture(request, fixture);
+  const masterAdminSession = await prepareMasterAdminSession(page, request);
+  await createInquiryFixture(request, fixture, masterAdminSession);
 
   await page.goto(`${adminBaseUrl}/admin/cubici/supportMember/manageInquiry`);
   await page.getByLabel('검색').fill(fixture.inquiryTitle);
@@ -69,8 +70,9 @@ test('customer inquiry reply create and update persist with real database throug
   });
 });
 
-test('customer board create, update, and delete persist with real database through admin UI', async ({ page }) => {
+test('customer board create, update, and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
+  await prepareMasterAdminSession(page, request);
 
   await page.goto(`${adminBaseUrl}/admin/cubici/supportMember/manageBoard_tab1`);
   const editor = page.locator('.customerBoardEditor');
@@ -114,8 +116,9 @@ test('customer board create, update, and delete persist with real database throu
   expect(readBoardState(fixture)).toMatchObject({ post_count: 0 });
 });
 
-test('message template create, update, and delete persist with real database through admin UI', async ({ page }) => {
+test('message template create, update, and delete persist with real database through admin UI', async ({ page, request }) => {
   fixture = makeFixture();
+  await prepareMasterAdminSession(page, request);
   fixture.templateCode = findAvailableTemplateCode();
 
   await page.goto(`${adminBaseUrl}/admin/cubici/supportMember/manageSms`);
@@ -176,6 +179,41 @@ async function expectApiResponse(responsePromise) {
   expect(response.ok(), await response.text()).toBeTruthy();
 }
 
+async function prepareMasterAdminSession(page, request) {
+  const session = await loginMasterAdminForFixture(request);
+  await page.addInitScript((masterAdminSession) => {
+    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify(masterAdminSession));
+  }, session);
+  return session;
+}
+
+async function loginMasterAdminForFixture(request) {
+  const email = process.env.CUBICI_MASTER_ADMIN_EMAIL;
+  const password = process.env.CUBICI_MASTER_ADMIN_PASSWORD;
+  expect(Boolean(email && password), 'CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required').toBeTruthy();
+
+  const response = await request.post(`${apiBaseUrl}/v1/api/accounts/login`, {
+    data: { email, password },
+  });
+  const text = await response.text();
+  expect(response.ok(), text).toBeTruthy();
+
+  const session = text ? JSON.parse(text) : null;
+  expect(session?.access_token).toBeTruthy();
+  expect(String(session?.user?.user_type ?? '').toUpperCase()).toBe('ADMIN_USER');
+  return session;
+}
+
+function withMasterAdminAuth(session, options = {}) {
+  return {
+    ...options,
+    headers: {
+      ...(options.headers ?? {}),
+      Authorization: `${session.token_type ?? 'Bearer'} ${session.access_token}`,
+    },
+  };
+}
+
 function makeFixture() {
   const suffix = String(Date.now()).slice(-8);
   return {
@@ -192,8 +230,8 @@ function makeFixture() {
   };
 }
 
-async function createInquiryFixture(request, currentFixture) {
-  const response = await request.post(`${apiBaseUrl}/v1/api/support/inquiries`, {
+async function createInquiryFixture(request, currentFixture, masterAdminSession) {
+  const response = await request.post(`${apiBaseUrl}/v1/api/support/inquiries`, withMasterAdminAuth(masterAdminSession, {
     data: {
       user_no: 36,
       type: 'CUBICI',
@@ -202,7 +240,7 @@ async function createInquiryFixture(request, currentFixture) {
       visibility: 'private',
       operated_by: 'local-db-support-e2e',
     },
-  });
+  }));
   expect(response.ok()).toBeTruthy();
   currentFixture.inquiryQnaId = (await response.json()).qna_id;
 }

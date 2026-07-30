@@ -55,8 +55,11 @@ test('user commerce pages filter paginate expand export and render settlement ca
   await page.goto('/cubici/calculateInfo/details');
   await expect(page.getByRole('heading', { name: '정산 상세' })).toBeVisible();
   await page.getByLabel('검색어').fill(String(fixture.settlementId));
-  await expect(page.getByText(String(fixture.settlementId))).toBeVisible();
-  await page.getByRole('button', { name: '보기' }).first().click();
+  const settlementRow = page.getByRole('row').filter({
+    has: page.getByRole('cell', { name: String(fixture.settlementId), exact: true }),
+  });
+  await expect(settlementRow).toBeVisible();
+  await settlementRow.getByRole('button', { name: '보기' }).click();
   await expect(page.getByText('테스트은행')).toBeVisible();
 
   await page.goto('/cubici/calculateInfo/calendar');

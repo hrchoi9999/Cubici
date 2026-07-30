@@ -18,7 +18,7 @@
                 </li>
                 <li>
                     <b>이메일</b>
-                    <span>admin@cubici.co.kr</span>
+				<span>contact@example.com</span>
                 </li>
                 <li>
                     <b>본사 주소</b>

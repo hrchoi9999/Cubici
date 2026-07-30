@@ -159,7 +159,7 @@ function requestAdminResponse(data){
         <div class="footerTxt">
             <span><b>㈜큐빅아이</b></span>
             <span>서울 강남구 봉은사로 435 5층</span>
-            <span>admin@cubici.co.kr</span>
+								<span>contact@example.com</span>
             <span>02-6925-6373   </span>
         </div>
     </footer>
@@ -258,4 +258,4 @@ function requestAdminResponse(data){
 </div>
     
 </body>
-</html> 
+</html>

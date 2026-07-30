@@ -273,10 +273,18 @@ async function expectUploadedDocumentCount(mbid, expectedCount) {
 }
 
 async function apiJson(pathname) {
-  const response = await fetch(`${apiBaseUrl}${pathname}`);
+  const response = await fetch(`${apiBaseUrl}${pathname}`, {
+    headers: adminAuthHeaders(),
+  });
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected admin DB E2E API calls').toBe(true);
+  return { Authorization: authorization };
 }
 
 function cleanupDocumentSupplementFixture(currentFixture) {

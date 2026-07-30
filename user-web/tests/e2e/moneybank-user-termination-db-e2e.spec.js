@@ -211,7 +211,10 @@ async function apiJson(pathname, options = {}) {
     try {
       response = await fetch(`${apiBaseUrl}${pathname}`, {
         method: options.method || 'GET',
-        headers: options.body ? { 'Content-Type': 'application/json' } : undefined,
+        headers: {
+          ...adminAuthHeaders(),
+          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+        },
         body: options.body ? JSON.stringify(options.body) : undefined,
       });
       break;
@@ -226,6 +229,12 @@ async function apiJson(pathname, options = {}) {
   const text = await response.text();
   expect(response.ok, text).toBe(true);
   return text ? JSON.parse(text) : null;
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected setup API calls').toBe(true);
+  return { Authorization: authorization };
 }
 
 function cleanupFixture(currentFixture) {
