@@ -28,6 +28,7 @@ fs.rmSync(outputRoot, { recursive: true, force: true });
 fs.mkdirSync(outputRoot, { recursive: true });
 copyDirectory(path.join(userRoot, 'dist'), outputRoot);
 copyDirectory(path.join(adminRoot, 'dist'), path.join(outputRoot, 'admin'));
+fs.copyFileSync(path.join(outputRoot, 'admin', 'index.html'), path.join(outputRoot, 'admin-spa.html'));
 copyDirectory(path.join(legacyWebappRoot, 'resources'), path.join(outputRoot, 'resources'));
 copyDirectory(path.join(adminRoot, 'public', 'resources'), path.join(outputRoot, 'resources'));
 writeCloudflareRoutingFiles(outputRoot);
@@ -69,8 +70,50 @@ function writeCloudflareRoutingFiles(target) {
   fs.writeFileSync(
     path.join(target, '_redirects'),
     [
-      '/admin/* /admin/index.html 200',
+      '/assets/* /assets/:splat 200',
+      '/admin/assets/* /admin/assets/:splat 200',
+      '/resources/* /resources/:splat 200',
       '/* /index.html 200',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+  fs.writeFileSync(
+    path.join(target, '_routes.json'),
+    JSON.stringify(
+      {
+        version: 1,
+        include: ['/*'],
+        exclude: ['/assets/*', '/admin/assets/*', '/resources/*'],
+      },
+      null,
+      2,
+    ) + '\n',
+    'utf8',
+  );
+  fs.writeFileSync(
+    path.join(target, '_worker.js'),
+    [
+      'export default {',
+      '  async fetch(request, env) {',
+      '    const url = new URL(request.url);',
+      '    const lastSegment = url.pathname.split("/").pop() ?? "";',
+      '    const looksLikeFile = lastSegment.includes(".");',
+      '    if ((url.pathname === "/admin" || url.pathname.startsWith("/admin/")) && !looksLikeFile) {',
+      '      const adminUrl = new URL("/admin-spa.html", url.origin);',
+      '      return env.ASSETS.fetch(new Request(adminUrl, request));',
+      '    }',
+      '    const assetResponse = await env.ASSETS.fetch(request);',
+      '    if (assetResponse.status !== 404) {',
+      '      return assetResponse;',
+      '    }',
+      '    const fallbackPath = url.pathname === "/admin" || url.pathname.startsWith("/admin/")',
+      '      ? "/admin/index.html"',
+      '      : "/index.html";',
+      '    const fallbackUrl = new URL(fallbackPath, url.origin);',
+      '    return env.ASSETS.fetch(new Request(fallbackUrl, request));',
+      '  },',
+      '};',
       '',
     ].join('\n'),
     'utf8',
