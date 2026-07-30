@@ -8,10 +8,9 @@ from __future__ import annotations
 
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
-
-import psycopg
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -24,28 +23,71 @@ MIGRATION_DIR = REPO_ROOT / "db" / "postgres" / "migrations"
 
 
 def main() -> None:
-    connection_info = {
-        "host": os.environ["CUBICI_DB_HOST"],
-        "port": int(os.environ["CUBICI_DB_PORT"]),
-        "dbname": os.environ["CUBICI_DB_NAME"],
-        "user": os.environ["CUBICI_DB_USER"],
-        "password": os.environ["CUBICI_DB_PASSWORD"],
-    }
-    with psycopg.connect(**connection_info) as connection:
-        with connection.cursor() as cursor:
-            apply_sql(cursor, _postgres_compatible_legacy_schema())
-            apply_file(cursor, SCHEMA_DIR / "002_application_schema_draft.sql")
-            for migration in sorted(MIGRATION_DIR.glob("*.sql")):
-                apply_file(cursor, migration)
-            seed_minimal_data(cursor)
+    run_psql_sql(_postgres_compatible_legacy_schema())
+    run_psql_file(SCHEMA_DIR / "002_application_schema_draft.sql")
+    for migration in sorted(MIGRATION_DIR.glob("*.sql")):
+        run_psql_file(migration)
+    seed_minimal_data()
 
 
-def apply_file(cursor: psycopg.Cursor, path: Path) -> None:
-    apply_sql(cursor, path.read_text(encoding="utf-8"))
+def run_psql_file(path: Path) -> None:
+    run_psql_sql(path.read_text(encoding="utf-8"))
 
 
-def apply_sql(cursor: psycopg.Cursor, sql: str) -> None:
-    cursor.execute(sql)
+def run_psql_sql(sql: str) -> None:
+    subprocess.run(
+        [*_psql_base_args(), "--file", "-"],
+        cwd=REPO_ROOT,
+        env=_psql_env(),
+        input=sql,
+        text=True,
+        check=True,
+    )
+
+
+def _psql_base_args() -> list[str]:
+    docker_container = os.environ.get("PSQL_DOCKER_CONTAINER")
+    if docker_container:
+        return [
+            "docker",
+            "exec",
+            "-i",
+            "--env",
+            "PGPASSWORD",
+            docker_container,
+            os.environ.get("PSQL_BIN", "psql"),
+            "--host",
+            os.environ["CUBICI_DB_HOST"],
+            "--port",
+            os.environ["CUBICI_DB_PORT"],
+            "--username",
+            os.environ["CUBICI_DB_USER"],
+            "--dbname",
+            os.environ["CUBICI_DB_NAME"],
+            "--no-password",
+            "--quiet",
+            "--set=ON_ERROR_STOP=1",
+        ]
+    return [
+        os.environ.get("PSQL_BIN", "psql"),
+        "--host",
+        os.environ["CUBICI_DB_HOST"],
+        "--port",
+        os.environ["CUBICI_DB_PORT"],
+        "--username",
+        os.environ["CUBICI_DB_USER"],
+        "--dbname",
+        os.environ["CUBICI_DB_NAME"],
+        "--no-password",
+        "--quiet",
+        "--set=ON_ERROR_STOP=1",
+    ]
+
+
+def _psql_env() -> dict[str, str]:
+    env = os.environ.copy()
+    env["PGPASSWORD"] = os.environ["CUBICI_DB_PASSWORD"]
+    return env
 
 
 def _postgres_compatible_legacy_schema() -> str:
@@ -56,10 +98,10 @@ def _postgres_compatible_legacy_schema() -> str:
     return sql
 
 
-def seed_minimal_data(cursor: psycopg.Cursor) -> None:
+def seed_minimal_data() -> None:
     password_hash = _hash_password(os.environ["CUBICI_MASTER_ADMIN_PASSWORD"])
-    cursor.execute(
-        """
+    run_psql_sql(
+        f"""
         insert into fintech (
             id,
             fintech_name,
@@ -88,10 +130,8 @@ def seed_minimal_data(cursor: psycopg.Cursor) -> None:
             now()
         )
         on conflict (id) do nothing
-        """
-    )
-    cursor.execute(
-        """
+        ;
+
         insert into users (
             user_no,
             email,
@@ -107,8 +147,8 @@ def seed_minimal_data(cursor: psycopg.Cursor) -> None:
             reg_date,
             modified_date
         ) values
-            (1, 'master-admin@example.test', %s, 'ADMIN_USER', 'CI Master Admin', '', '', '', 'CORP', 'ETC', 1, now(), now()),
-            (900000000, 'master-admin@example.test', %s, 'ADMIN_USER', 'CI Master Admin', '', '', '', 'CORP', 'ETC', 1, now(), now())
+            (1, 'master-admin@example.test', {sql_literal(password_hash)}, 'ADMIN_USER', 'CI Master Admin', '', '', '', 'CORP', 'ETC', 1, now(), now()),
+            (900000000, 'master-admin@example.test', {sql_literal(password_hash)}, 'ADMIN_USER', 'CI Master Admin', '', '', '', 'CORP', 'ETC', 1, now(), now())
         on conflict (user_no) do update
         set
             email = excluded.email,
@@ -117,9 +157,13 @@ def seed_minimal_data(cursor: psycopg.Cursor) -> None:
             name = excluded.name,
             fintech_id = excluded.fintech_id,
             modified_date = now()
-        """,
-        (password_hash, password_hash),
+        ;
+        """
     )
+
+
+def sql_literal(value: str) -> str:
+    return "'" + value.replace("'", "''") + "'"
 
 
 if __name__ == "__main__":
