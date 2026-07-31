@@ -4,6 +4,8 @@ import {
   Layout,
   PageTitle,
   Tabs,
+  LegacyPanel,
+  LegacyFormPanel,
   DocumentNotice,
   ReadOnlyField,
   ContractStatusStrip,
@@ -80,7 +82,7 @@ function LoginPage() {
       const session = await postJson('/v1/api/accounts/login', form);
       saveAuthSession(session);
       setState({ submitting: false, message: '로그인되었습니다.' });
-      window.location.href = '/cubici/mypage/profile';
+      window.location.href = resolveLoginReturnUrl();
     } catch (error) {
       setState({ submitting: false, message: `로그인 실패: ${error.message}` });
     }
@@ -88,39 +90,62 @@ function LoginPage() {
 
   return (
     <Layout>
-      <main className="auth-page">
-        <section className="auth-card">
-          <h1>로그인</h1>
-          <label>
-            아이디
+      <main className="login-box react-login-box">
+        <section className="login-inner">
+          <h2>LOGIN</h2>
+          <h3>큐빅아이에 오신것을 환영합니다!</h3>
+          <div className="input-box id">
+            <label aria-label="아이디" htmlFor="userId" />
             <input
+              id="userId"
               onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-              placeholder="아이디를 입력해주세요"
-              type="email"
+              placeholder="ID"
+              type="text"
               value={form.email}
             />
-          </label>
-          <label>
-            비밀번호
+          </div>
+          <div className="input-box pw">
+            <label aria-label="패스워드" htmlFor="userPw" />
             <input
+              id="userPw"
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') submitLogin();
               }}
-              placeholder="비밀번호를 입력해주세요"
+              placeholder="PASSWORD"
               type="password"
               value={form.password}
             />
-          </label>
-          <button disabled={state.submitting} onClick={submitLogin} type="button">
+          </div>
+          <button className="big-btn primary-login-btn" disabled={state.submitting} onClick={submitLogin} type="button">
             {state.submitting ? '로그인 중' : '로그인'}
           </button>
+          <a className="big-btn secondary-signup-btn" href="/mainSignUp">회원가입</a>
+          <fieldset>
+            <div className="f-left">
+              <input name="idSaveCheck" type="checkbox" />
+              <label>아이디 저장</label>
+            </div>
+            <div className="f-right">
+              <a className="sm-btn" href="/idSearch">아이디 찾기</a>
+              <a className="sm-btn" href="/pwdReset">비밀번호 찾기</a>
+            </div>
+          </fieldset>
           {state.message ? <p className={state.message.includes('실패') ? 'auth-message error' : 'auth-message success'}>{state.message}</p> : null}
-          <div><a href="/idSearch">아이디 찾기</a><a href="/pwdReset">비밀번호 찾기</a></div>
+          <hr />
+          <div className="cs-box">
+            <b>큐빅아이 고객지원</b> <span>02-6925-6373 / 카톡 ID : cubici</span>
+          </div>
         </section>
       </main>
     </Layout>
   );
+}
+
+function resolveLoginReturnUrl() {
+  const value = new URLSearchParams(window.location.search).get('returnUrl');
+  if (value?.startsWith('/') && !value.startsWith('//')) return value;
+  return '/cubici/mypage/profile';
 }
 
 function IdSearchPage() {
@@ -313,17 +338,19 @@ function MyPage({ path }) {
       <main className="sub-page">
         <PageTitle title="마이페이지" text="회사정보, 사업정보, 인증정보, 이용요금을 관리합니다." />
         <Tabs tabs={mypageTabs} />
-        <section className="profile-summary">
-          <ReadOnlyField label="회원번호" value={user?.user_no ?? '-'} />
-          <ReadOnlyField label="회원유형" value={user?.user_type ?? '-'} />
-          <ReadOnlyField label="회원ID" value={user?.email ?? '-'} />
-          <ReadOnlyField label="상호" value={user?.biz_name ?? '-'} />
-          <ReadOnlyField label="사업자번호" value={user?.biz_num ?? '-'} />
-          <ReadOnlyField label="제휴코드" value={user?.partner_code ?? '-'} />
-          <ReadOnlyField label="쇼핑몰 연결 수" value={shopFilter.loading ? '확인 중' : `${shopFilter.shops.length}개`} />
-          <ReadOnlyField label="마지막 로그인" value={formatDate(user?.last_login_date)} />
-          <ReadOnlyField label="등록일" value="-" />
-        </section>
+        <LegacyPanel title="회원 기본정보" className="react-legacy-mypage-panel">
+          <div className="profile-summary">
+            <ReadOnlyField label="회원번호" value={user?.user_no ?? '-'} />
+            <ReadOnlyField label="회원유형" value={user?.user_type ?? '-'} />
+            <ReadOnlyField label="회원ID" value={user?.email ?? '-'} />
+            <ReadOnlyField label="상호" value={user?.biz_name ?? '-'} />
+            <ReadOnlyField label="사업자번호" value={user?.biz_num ?? '-'} />
+            <ReadOnlyField label="제휴코드" value={user?.partner_code ?? '-'} />
+            <ReadOnlyField label="쇼핑몰 연결 수" value={shopFilter.loading ? '확인 중' : `${shopFilter.shops.length}개`} />
+            <ReadOnlyField label="마지막 로그인" value={formatDate(user?.last_login_date)} />
+            <ReadOnlyField label="등록일" value="-" />
+          </div>
+        </LegacyPanel>
         {!auth?.access_token ? <p className="auth-message error">로그인 후 마이페이지 정보를 확인할 수 있습니다.</p> : null}
         {shopFilter.message ? <p className="auth-message error">{shopFilter.message}</p> : null}
         <MypageSummaryPanel
@@ -431,16 +458,14 @@ function CompanyInfoPanel({ auth, onAuthChange, user }) {
 
   if (!auth?.access_token) {
     return (
-      <section className="form-panel">
-        <h2>회사정보</h2>
+      <LegacyFormPanel title="회사정보">
         <p className="auth-message error">로그인 후 회사정보를 수정할 수 있습니다.</p>
-      </section>
+      </LegacyFormPanel>
     );
   }
 
   return (
-    <section className="form-panel">
-      <h2>회사정보</h2>
+    <LegacyFormPanel title="회사정보">
       <div className="field-grid">
         <ReadOnlyField label="회원ID" value={user?.email ?? '-'} />
         <label>대표자명<input onChange={(event) => updateField('name', event.target.value)} type="text" value={form.name} /></label>
@@ -464,7 +489,7 @@ function CompanyInfoPanel({ auth, onAuthChange, user }) {
         {state.submitting ? '저장 중' : '회사정보 저장'}
       </button>
       {state.message ? <p className={state.message.includes('실패') ? 'auth-message error' : 'auth-message success'}>{state.message}</p> : null}
-    </section>
+    </LegacyFormPanel>
   );
 }
 
@@ -484,15 +509,14 @@ function buildCompanyForm(user) {
 function BusinessInfoPanel({ auth, user }) {
   return (
     <>
-      <section className="form-panel">
-        <h2>사업정보</h2>
+      <LegacyFormPanel title="사업정보">
         <div className="field-grid">
           <ReadOnlyField label="상호" value={user?.biz_name ?? '-'} />
           <ReadOnlyField label="사업자등록번호" value={user?.biz_num ?? '-'} />
           <ReadOnlyField label="회원유형" value={user?.user_type ?? '-'} />
           <ReadOnlyField label="회원번호" value={user?.user_no ?? '-'} />
         </div>
-      </section>
+      </LegacyFormPanel>
       <ShopConnectionPanel auth={auth} />
     </>
   );
@@ -500,8 +524,7 @@ function BusinessInfoPanel({ auth, user }) {
 
 function AuthInfoPanel({ auth }) {
   return (
-    <section className="form-panel">
-      <h2>인증정보</h2>
+    <LegacyFormPanel title="인증정보">
       <div className="field-grid">
         <ReadOnlyField label="로그인 토큰" value={auth?.access_token ? '발급됨' : '없음'} />
         <ReadOnlyField label="API 연동정보" value="쇼핑몰 계정별 관리" />
@@ -509,7 +532,7 @@ function AuthInfoPanel({ auth }) {
         <ReadOnlyField label="접근감사" value="운영 구현 필요" />
       </div>
       <p className="auth-message error">API Key, Secret, 계좌 식별정보는 화면에 원문 표시하지 않습니다. 운영 구현 시 마스킹, 암호화, 접근감사가 필요합니다.</p>
-    </section>
+    </LegacyFormPanel>
   );
 }
 
@@ -531,8 +554,7 @@ function ChargeInfoPanelLite({ latestContract }) {
   }, []);
 
   return (
-    <section className="form-panel">
-      <h2>요금정보</h2>
+    <LegacyFormPanel title="요금정보">
       <div className="profile-summary">
         <ReadOnlyField label="현재 계약" value={latestContract?.mbid ?? '-'} />
         <ReadOnlyField label="상품" value={formatProductCode(latestContract?.product_code)} />
@@ -540,37 +562,40 @@ function ChargeInfoPanelLite({ latestContract }) {
         <ReadOnlyField label="계약일" value={formatDate(latestContract?.contract_date)} />
       </div>
       {state.message ? <p className="auth-message error">{state.message}</p> : null}
-      <div className="data-table-wrap compact">
-        <h2>요금제</h2>
-        <table>
-          <thead>
-            <tr><th>코드</th><th>구분</th><th>금액</th><th>주기</th><th>상태</th></tr>
-          </thead>
-          <tbody>
-            {state.loading ? (
-              <tr><td colSpan="5">요금 정보를 조회 중입니다.</td></tr>
-            ) : state.items.length ? state.items.map((item) => (
-              <tr key={item.charge_code}>
-                <td>{item.charge_code}</td>
-                <td>{formatChargeType(item.charge_type)}</td>
-                <td>{formatAmount(item.amount)}</td>
-                <td>{formatPeriod(item.charge_period, item.period_unit)}</td>
-                <td>{item.use_yn ?? '-'}</td>
-              </tr>
-            )) : (
-              <tr><td colSpan="5">등록된 요금제가 없습니다.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="react-legacy-inline-table">
+        <h3>요금제</h3>
+        <div className="tableSet">
+          <div className="fixTable">
+            <table>
+              <thead>
+                <tr><th>코드</th><th>구분</th><th>금액</th><th>주기</th><th>상태</th></tr>
+              </thead>
+              <tbody>
+                {state.loading ? (
+                  <tr><td colSpan="5">요금 정보를 조회 중입니다.</td></tr>
+                ) : state.items.length ? state.items.map((item) => (
+                  <tr key={item.charge_code}>
+                    <td>{item.charge_code}</td>
+                    <td>{formatChargeType(item.charge_type)}</td>
+                    <td>{formatAmount(item.amount)}</td>
+                    <td>{formatPeriod(item.charge_period, item.period_unit)}</td>
+                    <td>{item.use_yn ?? '-'}</td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="5">등록된 요금제가 없습니다.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </section>
+    </LegacyFormPanel>
   );
 }
 
 function WithdrawPanel({ latestContract, latestRedemption, user }) {
   return (
-    <section className="form-panel">
-      <h2>회원탈퇴</h2>
+    <LegacyFormPanel title="회원탈퇴">
       <div className="field-grid">
         <ReadOnlyField label="회원번호" value={user?.user_no ?? '-'} />
         <ReadOnlyField label="회원ID" value={user?.email ?? '-'} />
@@ -581,7 +606,7 @@ function WithdrawPanel({ latestContract, latestRedemption, user }) {
       </div>
       <p className="auth-message error">회원탈퇴/해지신청 API는 아직 연결되지 않았습니다. 미상환잔액 보유 계약의 차단/허용 정책 확정 후 구현해야 합니다.</p>
       <button className="secondary-action" disabled type="button">탈퇴 신청 준비중</button>
-    </section>
+    </LegacyFormPanel>
   );
 }
 
@@ -706,16 +731,14 @@ function ShopConnectionPanel({ auth }) {
 
   if (!auth?.access_token) {
     return (
-      <section className="form-panel">
-        <h2>쇼핑몰 계정 연결</h2>
+      <LegacyFormPanel title="쇼핑몰 계정 연결">
         <p className="auth-message error">로그인 후 쇼핑몰 계정을 연결할 수 있습니다.</p>
-      </section>
+      </LegacyFormPanel>
     );
   }
 
   return (
-    <section className="form-panel">
-      <h2>쇼핑몰 계정 연결</h2>
+    <LegacyFormPanel title="쇼핑몰 계정 연결">
       <div className="field-grid">
         <label>
           쇼핑몰
@@ -749,35 +772,39 @@ function ShopConnectionPanel({ auth }) {
         {editingId ? <button className="secondary-action" disabled={state.loading} onClick={resetShopForm} type="button">수정 취소</button> : null}
       </div>
       {state.message ? <p className={state.message.includes('실패') ? 'auth-message error' : 'auth-message success'}>{state.message}</p> : null}
-      <div className="data-table-wrap compact">
-        <h2>연결된 쇼핑몰</h2>
-        <table>
-          <thead>
-            <tr><th>쇼핑몰</th><th>상점 ID</th><th>계정 ID</th><th>상태</th><th>등록일</th><th>관리</th></tr>
-          </thead>
-          <tbody>
-            {items.length ? items.map((item) => (
-              <tr key={item.id}>
-                <td>{item.shop_type ?? '-'}</td>
-                <td>{item.shop_id ?? '-'}</td>
-                <td>{item.shop_account_id ?? '-'}</td>
-                <td>{item.status ?? '-'}</td>
-                <td>{formatDate(item.reg_date)}</td>
-                <td>
-                  <button className="secondary-action" disabled={state.loading} onClick={() => editShop(item)} type="button">수정</button>
-                  <button className="secondary-action" disabled={state.loading} onClick={() => toggleShopStatus(item)} type="button">
-                    {item.status === 'N' ? '활성' : '비활성'}
-                  </button>
-                  <button className="secondary-action" disabled={state.loading} onClick={() => deleteShop(item)} type="button">삭제</button>
-                </td>
-              </tr>
-            )) : (
-              <tr><td colSpan="6">연결된 쇼핑몰 계정이 없습니다.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="react-legacy-inline-table">
+        <h3>연결된 쇼핑몰</h3>
+        <div className="tableSet">
+          <div className="fixTable">
+            <table>
+              <thead>
+                <tr><th>쇼핑몰</th><th>상점 ID</th><th>계정 ID</th><th>상태</th><th>등록일</th><th>관리</th></tr>
+              </thead>
+              <tbody>
+                {items.length ? items.map((item) => (
+                  <tr key={item.id}>
+                    <td>{item.shop_type ?? '-'}</td>
+                    <td>{item.shop_id ?? '-'}</td>
+                    <td>{item.shop_account_id ?? '-'}</td>
+                    <td>{item.status ?? '-'}</td>
+                    <td>{formatDate(item.reg_date)}</td>
+                    <td>
+                      <button className="secondary-action" disabled={state.loading} onClick={() => editShop(item)} type="button">수정</button>
+                      <button className="secondary-action" disabled={state.loading} onClick={() => toggleShopStatus(item)} type="button">
+                        {item.status === 'N' ? '활성' : '비활성'}
+                      </button>
+                      <button className="secondary-action" disabled={state.loading} onClick={() => deleteShop(item)} type="button">삭제</button>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr><td colSpan="6">연결된 쇼핑몰 계정이 없습니다.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </section>
+    </LegacyFormPanel>
   );
 }
 

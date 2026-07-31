@@ -15,6 +15,10 @@ def test_health_route_registered() -> None:
     app = create_app()
     paths = set(app.openapi()["paths"])
 
+    assert "/health" in paths
+    assert "/health/db" in paths
+    assert "/v1/health" in paths
+    assert "/v1/health/db" in paths
     assert "/v1/api/health" in paths
     assert "/v1/api/health/db" in paths
 

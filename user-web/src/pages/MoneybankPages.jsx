@@ -4,6 +4,7 @@ import {
   Layout,
   PageTitle,
   Tabs,
+  LegacyIntroSection,
   DocumentNotice,
   ReadOnlyField,
   ContractStatusStrip,
@@ -124,9 +125,9 @@ function getMoneybankLegacyProgress(status) {
 
 function MoneybankIntroPage({ kind }) {
   const content = {
-    advpay: ['구매자금 선지급 서비스', '선지급 자금으로 상품을 구매하고 쇼핑몰 정산금으로 자동 상환합니다.', '/rudicks/img/sub/moneybank-img01.png'],
-    advcalc: ['매출 선정산 서비스', '정산 예정 매출을 기준으로 필요한 운영자금을 빠르게 이용합니다.', '/rudicks/img/sub/moneybank-img06.png'],
-    creditpay: ['신용대출', '사업 현황 분석 결과를 기반으로 금융 조건을 확인합니다.', '/rudicks/img/sub/moneybank-img07.png'],
+    advpay: ['구매자금 선지급 서비스', '선지급 자금으로 상품을 구매하고 쇼핑몰 정산금으로 자동 상환합니다.', '/resources/rudicks/img/sub/moneybank-img01.png'],
+    advcalc: ['매출 선정산 서비스', '정산 예정 매출을 기준으로 필요한 운영자금을 빠르게 이용합니다.', '/resources/rudicks/img/sub/moneybank-img06.png'],
+    creditpay: ['신용대출', '사업 현황 분석 결과를 기반으로 금융 조건을 확인합니다.', '/resources/rudicks/img/sub/moneybank-img07.png'],
   }[kind];
 
   return (
@@ -134,20 +135,20 @@ function MoneybankIntroPage({ kind }) {
       <main className="sub-page">
         <PageTitle title="머니뱅크" text="온라인 셀러의 사업자금 마련을 위한 큐빅아이 금융 서비스" />
         <Tabs tabs={moneybankTabs} />
-        <section className="intro-split">
-          <div>
-            <h2>{content[0]}</h2>
-            <p>{content[1]}</p>
-            <ol>
-              <li>비대면 신청으로 쉽고 편리하게</li>
-              <li>한도 내에서 필요한 만큼 이용</li>
-              <li>사용 기간 기준 수수료 적용</li>
-              <li>신청, 심사, 계약, 이용 현황을 한 화면에서 확인</li>
-            </ol>
-            <a href="/moneybank/request">서비스 신청</a>
-          </div>
-          <img src={content[2]} alt={content[0]} />
-        </section>
+        <LegacyIntroSection
+          eyebrow="머니뱅크"
+          title={content[0]}
+          imageSrc={content[2]}
+          imageAlt={content[0]}
+          ctaHref="/moneybank/request"
+          ctaLabel="서비스 신청"
+        >
+          <ul className="description">
+            <li>{content[1]}</li>
+            <li>비대면 신청으로 쉽고 편리하게 한도 내에서 필요한 만큼 이용합니다.</li>
+            <li>사용 기간 기준 수수료를 적용하고 신청, 심사, 계약, 이용 현황을 한 화면에서 확인할 수 있습니다.</li>
+          </ul>
+        </LegacyIntroSection>
         <DocumentNotice />
       </main>
     </Layout>

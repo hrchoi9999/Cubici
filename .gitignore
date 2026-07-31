@@ -132,6 +132,11 @@ user-web/test-results/
 user-web/playwright-report/
 service-api/.logs/
 service-api/.pytest_cache/
+.pnpm-store/
+.wrangler/
+dist-cloudflare/
+user-web/pnpm-lock.yaml
+user-web/pnpm-workspace.yaml
 **/.codex/
 .codex/
 data_local/

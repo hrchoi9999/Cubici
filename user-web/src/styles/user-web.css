@@ -1,5 +1,7 @@
-@import url('/rudicks/css/common.css');
-@import url('/rudicks/css/module.css');
+@import url('../../../src/main/webapp/resources/rudicks/css/common.css');
+@import url('../../../src/main/webapp/resources/rudicks/css/module.css');
+@import url('../../../src/main/webapp/resources/rudicks/css/style-main.css');
+@import url('../../../src/main/webapp/resources/rudicks/css/style-sub.css');
 
 :root {
   color: #202938;
@@ -9,10 +11,12 @@
 
 * {
   box-sizing: border-box;
+  letter-spacing: 0;
 }
 
 body {
   margin: 0;
+  background: #fafafa;
 }
 
 a {
@@ -1108,7 +1112,661 @@ th {
   color: #27364a;
 }
 
+#wrap.user-web-wrap {
+  min-width: 0;
+  padding-top: 65px;
+  background: #fafafa;
+}
+
+#header.react-legacy-header {
+  min-width: 0;
+}
+
+#header.react-legacy-header .inner,
+#footer .inner {
+  min-width: 1120px;
+  width: 80%;
+  max-width: 1536px;
+}
+
+#header.react-legacy-header .topLine .userMenu .btns button.sBtn {
+  color: #fff;
+  vertical-align: middle;
+}
+
+.mainContents {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.mainContents .inner {
+  width: 1120px;
+  min-width: 0;
+}
+
+.react-main-slide .sObj {
+  opacity: 1;
+  transform: none;
+}
+
+.react-main-slide #mainPcSlide .swiper-wrapper,
+.react-main-slide #mainPcSlide .swiper-slide {
+  display: block;
+}
+
+.react-main-slide #mainPcSlide img {
+  width: 565px;
+  height: 420px;
+  object-fit: cover;
+}
+
+.react-main-slide .swiper-button-prev,
+.react-main-slide .swiper-button-next,
+.react-main-slide .swiper-pagination {
+  display: none;
+}
+
+.react-action-visual {
+  height: auto;
+  min-height: 560px;
+  padding-bottom: 85px;
+}
+
+.react-action-visual .sTitle {
+  padding-top: 110px;
+}
+
+.react-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.react-feature-grid .conArticle {
+  position: relative;
+  display: block;
+  top: auto;
+  left: auto;
+  width: auto;
+  height: auto;
+  transform: none;
+  min-height: 190px;
+  margin: 0;
+  padding: 34px 28px;
+  background: #fff;
+  border: 1px solid #e2e7ee;
+  box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.react-feature-grid .conArticle h3 {
+  margin: 0 0 18px;
+  color: #002e6e;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.react-feature-grid .conArticle p {
+  color: #32373e;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.8;
+}
+
+.partnerArea .logoList li.smartStore span {
+  background-image: url('/resources/rudicks/img/partner/partner-smart.png');
+}
+
+.sub-page {
+  width: 100%;
+  padding: 0 0 70px;
+}
+
+.sub-page > :not(.subVisualArea) {
+  width: 1180px;
+  max-width: calc(100% - 32px);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.sub-page > .subVisualArea + * {
+  margin-top: 42px;
+}
+
+.subVisual .txtBox h2 {
+  min-width: 110px;
+  width: auto;
+  padding-left: 18px;
+  padding-right: 18px;
+  white-space: nowrap;
+}
+
+.subVisual .txtBox h3 {
+  max-width: 760px;
+  font-size: 28px;
+  line-height: 1.35;
+  word-break: keep-all;
+}
+
+.react-login-box {
+  position: relative;
+  min-height: 620px;
+}
+
+.react-login-box .login-inner {
+  height: auto;
+}
+
+.react-login-box .login-inner .input-box {
+  display: flex;
+  align-items: center;
+}
+
+.react-login-box .login-inner .input-box label {
+  flex: 0 0 35px;
+}
+
+.react-login-box .login-inner .input-box input {
+  flex: 1;
+  min-width: 0;
+}
+
+.react-login-box .primary-login-btn,
+.react-login-box .secondary-signup-btn {
+  display: block;
+  width: 100%;
+  height: 60px;
+  line-height: 60px;
+  text-align: center;
+}
+
+.react-login-box .primary-login-btn {
+  margin-bottom: 10px;
+  color: #fff;
+  background-color: #0e57bf;
+}
+
+.react-login-box .secondary-signup-btn {
+  margin-bottom: 20px;
+  color: #0e57bf;
+  border: 1px solid #0e57bf;
+  background-color: #fff;
+}
+
+.react-login-box fieldset .f-left {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.react-login-box fieldset .f-left label {
+  display: inline;
+  color: #002e6e;
+}
+
+.react-login-box input[type='checkbox'] {
+  width: auto;
+  height: auto;
+}
+
+.react-legacy-tabs {
+  margin-top: 35px;
+}
+
+.react-legacy-tabs ul {
+  gap: 8px;
+}
+
+.react-legacy-tabs ul li {
+  flex: 1;
+  width: auto;
+}
+
+.react-legacy-tabs ul li a {
+  height: 64px;
+  line-height: 64px;
+  font-size: 18px;
+}
+
+.react-legacy-panel,
+.data-table-wrap,
+.form-panel,
+.terms-panel {
+  margin-top: 28px;
+  padding: 0;
+  background: #fff;
+  border: 0;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.react-legacy-panel > header,
+.data-table-wrap > h2,
+.form-panel > h2,
+.terms-panel > h2 {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 15px 35px;
+  color: #fff;
+  background: #012e6f;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.react-legacy-panel > header h4 {
+  margin: 0;
+}
+
+.data-table-wrap > h2::before,
+.form-panel > h2::before,
+.terms-panel > h2::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  background: url('/resources/rudicks/img/icon/bullet-icon01.svg') center / contain no-repeat;
+}
+
+.react-legacy-panel .contentArea,
+.data-table-wrap > :not(h2),
+.form-panel > :not(h2),
+.terms-panel > :not(h2) {
+  margin-left: 30px;
+  margin-right: 30px;
+}
+
+.react-legacy-panel .contentArea {
+  margin: 0;
+  padding: 30px;
+}
+
+.data-table-wrap > table,
+.data-table-wrap > .support-detail,
+.data-table-wrap > .api-note,
+.data-table-wrap > .secondary-link,
+.form-panel > .field-grid,
+.form-panel > .profile-summary,
+.form-panel > .api-note,
+.form-panel > .auth-message,
+.form-panel > .primary-action,
+.form-panel > .secondary-action,
+.form-panel > .form-actions,
+.terms-panel > .field-grid,
+.terms-panel > .api-note,
+.terms-panel > .terms-actions,
+.terms-panel > .submit-message {
+  margin-top: 30px;
+}
+
+.data-table-wrap > table:last-child,
+.data-table-wrap > .secondary-link:last-child,
+.form-panel > :last-child,
+.terms-panel > :last-child {
+  margin-bottom: 30px;
+}
+
+.data-table-wrap table,
+.react-legacy-table-panel table,
+.react-legacy-board table,
+.react-legacy-panel .tableSet table,
+.react-legacy-inline-table table {
+  border-top: 2px solid #012e6f;
+}
+
+.data-table-wrap th,
+.react-legacy-table-panel th,
+.react-legacy-board th,
+.react-legacy-panel .tableSet th,
+.react-legacy-inline-table th {
+  height: 45px;
+  color: #002e6e;
+  background: #f0f3f8;
+  text-align: center;
+}
+
+.data-table-wrap td,
+.react-legacy-table-panel td,
+.react-legacy-board td,
+.react-legacy-panel .tableSet td,
+.react-legacy-inline-table td {
+  height: 45px;
+  color: #32373e;
+  border-color: #e1e5ea;
+  text-align: center;
+}
+
+.data-table-wrap td:nth-child(3),
+.react-legacy-board td:nth-child(3) {
+  text-align: left;
+}
+
+.react-legacy-search-panel .m-search {
+  margin: 0;
+  box-shadow: none;
+}
+
+.react-legacy-search-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.react-legacy-search-actions {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.react-legacy-search-panel .api-note {
+  grid-column: 1 / -1;
+  margin: 6px 0 0;
+}
+
+.react-legacy-panel .tableSet,
+.react-legacy-inline-table .tableSet {
+  margin: 0;
+}
+
+.react-legacy-panel .fixTable,
+.react-legacy-inline-table .fixTable {
+  overflow-x: auto;
+}
+
+.react-legacy-form-panel .primary-action,
+.react-legacy-form-panel .secondary-action,
+.react-legacy-form-panel .form-actions,
+.react-legacy-form-panel .auth-message,
+.react-legacy-form-panel .api-note {
+  margin-top: 24px;
+}
+
+.react-legacy-inline-table {
+  margin-top: 30px;
+}
+
+.react-legacy-inline-table h3 {
+  margin: 0 0 14px;
+  color: #002e6e;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.react-legacy-inline-table h3::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: middle;
+  background: url('/resources/rudicks/img/icon/bullet-icon01.svg') center / contain no-repeat;
+}
+
+.react-legacy-mypage-panel .profile-summary,
+.react-legacy-form-panel .profile-summary {
+  margin: 0;
+}
+
+.react-legacy-board {
+  margin-top: 28px;
+}
+
+.react-legacy-board .boardTop {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 35px;
+  color: #fff;
+  background: #012e6f;
+}
+
+.react-legacy-board .boardTop h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 400;
+}
+
+.react-legacy-board .boardTop h3::before {
+  content: "";
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: middle;
+  background: url('/resources/rudicks/img/icon/bullet-icon01.svg') center / contain no-repeat;
+}
+
+.react-legacy-board .boardTop span {
+  font-size: 13px;
+  font-weight: 300;
+}
+
+.react-legacy-board .boardList {
+  padding: 30px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.react-legacy-intro {
+  margin-top: 35px;
+  background: #fff;
+}
+
+.react-legacy-intro-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  gap: 42px;
+  align-items: center;
+}
+
+.react-legacy-intro .halfImg {
+  width: 100%;
+  max-width: 380px;
+}
+
+.react-legacy-intro .descriptionBox .description {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.react-legacy-intro .descriptionBox .description li {
+  color: #555;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.react-legacy-intro .descriptionBox .description li + li {
+  margin-top: 16px;
+}
+
+.react-legacy-intro .descriptionBox .btnBox {
+  margin-top: 34px;
+}
+
+.react-legacy-detail-panel .support-detail dl {
+  margin-top: 0;
+}
+
+.react-legacy-detail-panel .support-detail h3 {
+  margin-top: 28px;
+}
+
+.react-legacy-detail-panel .secondary-link,
+.react-legacy-reply-panel .secondary-link {
+  margin-top: 24px;
+}
+
+.react-legacy-reply-panel .support-reply:first-child {
+  margin-top: 0;
+}
+
 @media (max-width: 760px) {
+  #wrap.user-web-wrap {
+    padding-top: 65px;
+  }
+
+  #header.react-legacy-header,
+  #header.react-legacy-header .inner,
+  #footer .inner,
+  .subVisualArea .inner,
+  .contentGrid > .inner,
+  .mainContents,
+  .mainContents .inner {
+    min-width: 0;
+    width: 100%;
+    max-width: none;
+  }
+
+  #header.react-legacy-header .inner,
+  #footer .inner,
+  .subVisualArea .inner,
+  .contentGrid > .inner {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  #header.react-legacy-header .topLine .logo img {
+    height: 26px;
+  }
+
+  #header.react-legacy-header .topLine .userMenu .btns .sBtn {
+    min-width: 64px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+
+  #header.react-legacy-header #gnb {
+    overflow-x: auto;
+    padding-top: 10px;
+    text-align: left;
+    white-space: nowrap;
+  }
+
+  #header.react-legacy-header #gnb > li {
+    padding: 0 12px;
+  }
+
+  #header.react-legacy-header #gnb > li > a {
+    font-size: 16px;
+  }
+
+  #header.react-legacy-header .gnbArea:hover {
+    padding-bottom: 0;
+  }
+
+  #header.react-legacy-header #gnb > li > ul {
+    display: none;
+  }
+
+  #mainSlide .visualBox {
+    height: 680px;
+  }
+
+  #mainSlide .visualBox .vCon {
+    width: calc(100% - 32px);
+  }
+
+  #mainSlide .visualBox .txtBox {
+    float: none;
+    width: 100%;
+    padding-top: 0;
+  }
+
+  #mainSlide .visualBox .txtBox .t-medium {
+    font-size: 32px;
+  }
+
+  #mainSlide .visualBox .txtBox .t-light {
+    font-size: 17px;
+  }
+
+  #mainSlide .visualBox .imgBox {
+    display: none;
+  }
+
+  .react-feature-grid {
+    grid-template-columns: 1fr;
+    width: calc(100% - 32px);
+  }
+
+  .react-legacy-search-fields,
+  .react-legacy-intro-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .react-legacy-tabs ul {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .react-legacy-tabs ul li a {
+    height: 52px;
+    line-height: 52px;
+    font-size: 16px;
+  }
+
+  .react-legacy-board .boardList,
+  .data-table-wrap > :not(h2),
+  .form-panel > :not(h2),
+  .terms-panel > :not(h2) {
+    margin-left: 16px;
+    margin-right: 16px;
+    overflow-x: auto;
+  }
+
+  .react-legacy-panel .contentArea {
+    margin: 0;
+    padding: 22px 16px;
+    overflow-x: auto;
+  }
+
+  .react-legacy-panel > header,
+  .react-legacy-board .boardTop,
+  .data-table-wrap > h2,
+  .form-panel > h2,
+  .terms-panel > h2 {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .react-legacy-panel .tableSet table,
+  .react-legacy-inline-table table,
+  .react-legacy-board table,
+  .data-table-wrap table {
+    min-width: 680px;
+  }
+
+  .react-legacy-panel .field-grid,
+  .react-legacy-form-panel .profile-summary,
+  .react-legacy-mypage-panel .profile-summary {
+    min-width: 0;
+  }
+
+  .react-legacy-search-panel .m-search {
+    padding: 0;
+  }
+
+  .react-legacy-search-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .partnerArea .logoList li {
+    width: 50%;
+  }
+
+  .subVisual .txtBox h3 {
+    font-size: 20px;
+  }
+
+  .react-login-box .login-inner {
+    width: calc(100% - 32px);
+  }
+
   .user-header,
   .top-line,
   .gnb,
@@ -1147,6 +1805,37 @@ th {
   .support-detail dl,
   .charge-plan-grid {
     grid-template-columns: 1fr;
+  }
+
+  .react-legacy-intro {
+    margin-top: 28px;
+  }
+
+  .contentGrid.react-legacy-intro header {
+    padding-top: 36px;
+  }
+
+  .contentGrid.react-legacy-intro header h4 {
+    font-size: 18px;
+  }
+
+  .contentGrid.react-legacy-intro header h3 {
+    font-size: 25px;
+    line-height: 1.35;
+  }
+
+  .contentGrid.react-legacy-intro .conArticle {
+    margin: 34px 0;
+  }
+
+  .react-legacy-intro .halfImg {
+    max-width: 260px;
+    margin: 0 auto;
+  }
+
+  .react-legacy-board .boardList {
+    margin: 0;
+    padding: 18px 16px;
   }
 
   .contract-progress {

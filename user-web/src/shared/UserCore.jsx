@@ -590,37 +590,48 @@ function Header() {
   }
 
   return (
-    <header className="user-header">
-      <div className="top-line">
-        <a className="logo" href="/">
-          <img src="/rudicks/img/logo-w.svg" alt="Cubici" />
-        </a>
-        <div className="user-actions">
-          {auth?.user ? (
-            <>
-              <a href="/cubici/mypage/profile">{auth.user.name ?? auth.user.email}</a>
-              <button className="link-button" onClick={logout} type="button">로그아웃</button>
-            </>
-          ) : (
-            <>
-              <a href="/login">로그인</a>
-              <a className="signup" href="/mainSignUp">회원가입</a>
-            </>
-          )}
+    <header id="header" className="react-legacy-header">
+      <div className="topLine">
+        <div className="inner">
+          <div className="logo">
+            <a href="/">
+              <img src="/resources/rudicks/img/logo-w.svg" alt="Cubici" />
+            </a>
+          </div>
+          <div className="userMenu">
+            {auth?.user ? (
+              <>
+                <div className="userInfo">{auth.user.name ?? auth.user.email}님, 안녕하세요!</div>
+                <div className="btns">
+                  <button className="sBtn bsColorN hrBtn" onClick={logout} type="button">로그아웃</button>
+                  <a className="sBtn bsColorN hrBtn" href="/cubici/mypage/companyInfo">마이페이지</a>
+                </div>
+              </>
+            ) : (
+              <div className="btns">
+                <a className="sBtn bsColorN hrBtn" href="/login">로그인</a>
+                <a className="sBtn bsColorN hrBtn signUpBtn" href="/mainSignUp">회원가입</a>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-      <nav className="gnb" aria-label="Cubici user navigation">
-        {nav.map((group) => (
-          <div className="gnb-group" key={group.title}>
-            <button type="button">{group.title}</button>
-            <div className="gnb-sub">
-              {group.items.map(([label, href]) => (
-                <a href={href} key={href}>{label}</a>
-              ))}
-            </div>
-          </div>
-        ))}
-        <a className="trial" href="/mainSignUp">무료체험</a>
+      <nav className="gnbArea" aria-label="Cubici user navigation">
+        <div className="inner">
+          <ul id="gnb">
+            {nav.map((group) => (
+              <li className="has" key={group.title}>
+                <a href={group.items[0]?.[1] ?? '/'}>{group.title}</a>
+                <ul>
+                  {group.items.map(([label, href]) => (
+                    <li key={href}><a href={href}>{label}</a></li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+            {!auth?.user ? <li><a href="/mainSignUp">무료체험</a></li> : null}
+          </ul>
+        </div>
       </nav>
     </header>
   );
@@ -628,14 +639,33 @@ function Header() {
 
 function Layout({ children }) {
   return (
-    <>
+    <div id="wrap" className="user-web-wrap">
       <Header />
-      {children}
-      <footer className="user-footer">
-        <strong>Cubici</strong>
-        <span>Python/React migration local user service</span>
+      <div className="container">
+        {children}
+      </div>
+      <nav className="goTop">
+        <a className="goTopBtn" href="#wrap">top</a>
+      </nav>
+      <footer id="footer">
+        <div className="inner">
+          <div className="logo">
+            <a href="/"><img src="/resources/rudicks/img/logo-w.svg" alt="Cubici" /></a>
+          </div>
+          <div className="txt">
+            <p className="notice">인공지능 쇼핑몰 통합 지원 서비스 큐빅아이</p>
+            <ul className="infoList">
+              <li><b>법인명</b><span>주식회사 큐빅아이</span></li>
+              <li><b>대표전화</b><span>02-6925-6373</span></li>
+              <li><b>이메일</b><span>contact@example.com</span></li>
+              <li><b>사업자 등록번호</b><span>567-88-00419</span></li>
+              <li><b>본사 주소</b><span>서울 영등포구 의사당대로 83 오투타워 서울핀테크랩</span></li>
+            </ul>
+            <p className="copyright">Copyright (c) 2021 by Cubici INC ALL RIGHT RESERVED.</p>
+          </div>
+        </div>
       </footer>
-    </>
+    </div>
   );
 }
 
@@ -685,21 +715,182 @@ function DashboardSummary({ data }) {
 
 function PageTitle({ title, text }) {
   return (
-    <section className="page-title">
-      <h1>{title}</h1>
-      <p>{text}</p>
-    </section>
+    <figure className="subVisualArea">
+      <div className="inner">
+        <div className="subVisual">
+          <div className="txtBox">
+            <h2>{title}</h2>
+            <h3>{text}</h3>
+          </div>
+        </div>
+      </div>
+    </figure>
   );
 }
 
 function Tabs({ tabs }) {
   const path = window.location.pathname;
   return (
-    <nav className="tabs">
-      {tabs.map(([label, href]) => (
-        <a className={path === href ? 'active' : ''} href={href} key={href}>{label}</a>
-      ))}
+    <nav className="s-tab react-legacy-tabs">
+      <ul>
+        {tabs.map(([label, href]) => (
+          <li className={path === href ? 'active' : ''} key={href}>
+            <a href={href}>{label}</a>
+          </li>
+        ))}
+      </ul>
     </nav>
+  );
+}
+
+function LegacyPanel({ title, children, className = '', actions = null }) {
+  return (
+    <section className={`subBox react-legacy-panel ${className}`.trim()}>
+      <header>
+        <h4>{title}</h4>
+        {actions ? <div className="btns">{actions}</div> : null}
+      </header>
+      <div className="contentArea">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function LegacySearchPanel({ title = '검색조건', children, actions = null, onSubmit }) {
+  return (
+    <LegacyPanel title={title} className="react-legacy-search-panel">
+      <form className="m-search react-legacy-search" onSubmit={onSubmit ?? ((event) => event.preventDefault())}>
+        <div className="react-legacy-search-fields">
+          {children}
+        </div>
+        {actions ? <div className="btns react-legacy-search-actions">{actions}</div> : null}
+      </form>
+    </LegacyPanel>
+  );
+}
+
+function LegacyDataTable({
+  title,
+  columns,
+  items,
+  renderRow,
+  emptyMessage = '조회 결과가 없습니다.',
+  loading = false,
+  className = '',
+  footer = null,
+}) {
+  return (
+    <LegacyPanel title={title} className={`react-legacy-table-panel ${className}`.trim()}>
+      <div className="tableSet">
+        <div className="fixTable">
+          <table className="m-shadowTable">
+            <thead>
+              <tr>
+                {columns.map((column) => (
+                  <th key={column.key ?? column.label}>{column.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {items.length ? items.map(renderRow) : (
+                <tr>
+                  <td colSpan={columns.length}>{loading ? '조회 중입니다.' : emptyMessage}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {footer}
+    </LegacyPanel>
+  );
+}
+
+function LegacyBoardList({
+  title,
+  items,
+  kind = 'notice',
+  loading = false,
+  emptyMessage = '등록된 게시글이 없습니다.',
+}) {
+  const isQa = kind === 'qa';
+  return (
+    <section className="m-baordSet react-legacy-board">
+      <div className="boardTop">
+        <h3>{title}</h3>
+        <span>총 {items.length.toLocaleString('ko-KR')}건</span>
+      </div>
+      <div className="boardList">
+        <table className="list">
+          <thead>
+            <tr>
+              <th>번호</th>
+              <th>구분</th>
+              <th>제목</th>
+              {isQa ? <th>상태</th> : null}
+              <th>작성자</th>
+              <th>등록일</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.length ? items.map((item) => {
+              const id = item.post_id ?? item.qna_id;
+              const href = isQa ? `/board/qa/${encodeURIComponent(item.qna_id)}` : `/board/${kind}/${encodeURIComponent(item.post_id)}`;
+              return (
+                <tr key={`${kind}-${id}`}>
+                  <td>{id}</td>
+                  <td>{item.type_label ?? item.type ?? '-'}</td>
+                  <td>
+                    <a className="support-title support-title-link" href={href}>{item.title ?? '-'}</a>
+                    <span className="support-snippet">{plainText(item.content)}</span>
+                  </td>
+                  {isQa ? <td>{item.answer_status ?? '-'}</td> : null}
+                  <td>{item.created_by ?? '-'}</td>
+                  <td>{formatDate(item.reg_date)}</td>
+                </tr>
+              );
+            }) : (
+              <tr><td colSpan={isQa ? 6 : 5}>{loading ? '조회 중입니다.' : emptyMessage}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function LegacyFormPanel({ title, children, className = '', actions = null }) {
+  return (
+    <LegacyPanel title={title} className={`react-legacy-form-panel ${className}`.trim()} actions={actions}>
+      {children}
+    </LegacyPanel>
+  );
+}
+
+function LegacyIntroSection({ eyebrow, title, children, imageSrc, imageAlt, ctaHref, ctaLabel }) {
+  return (
+    <section className="contentGrid box-border react-legacy-intro">
+      <div className="inner">
+        <header>
+          {eyebrow ? <h4>{eyebrow}</h4> : null}
+          <h3>{title}</h3>
+        </header>
+        <article className="conArticle">
+          <div className="conArticle-inner react-legacy-intro-inner">
+            <div className="descriptionBox">
+              {children}
+              {ctaHref && ctaLabel ? (
+                <div className="btnBox">
+                  <a className="mBtn sColorS" href={ctaHref}>{ctaLabel}</a>
+                </div>
+              ) : null}
+            </div>
+            {imageSrc ? <img className="halfImg" src={imageSrc} alt={imageAlt ?? title} /> : null}
+          </div>
+        </article>
+      </div>
+    </section>
   );
 }
 
@@ -897,6 +1088,12 @@ export {
   DashboardSummary,
   PageTitle,
   Tabs,
+  LegacyPanel,
+  LegacySearchPanel,
+  LegacyDataTable,
+  LegacyBoardList,
+  LegacyFormPanel,
+  LegacyIntroSection,
   DocumentNotice,
   ReadOnlyField,
   ContractProgress,

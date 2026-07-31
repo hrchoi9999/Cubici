@@ -4,9 +4,15 @@ from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
 from cubici_service.api.router import router as api_router
+from cubici_service.api.v1.endpoints.health import (
+    HealthResponse,
+    database_health_check,
+    health_check,
+)
 from cubici_service.core.access_control import enforce_user_ownership_for_common_api
 from cubici_service.core.admin_auth import enforce_master_admin_for_protected_api
 from cubici_service.core.config import Settings, get_settings
+from cubici_service.db.connection import DatabaseCheck
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -36,6 +42,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if ownership_response is not None:
             return ownership_response
         return await call_next(request)
+
+    @app.get("/health", response_model=HealthResponse, include_in_schema=False)
+    def root_health_check() -> HealthResponse:
+        return health_check()
+
+    @app.get("/health/db", response_model=DatabaseCheck, include_in_schema=False)
+    def root_database_health_check() -> DatabaseCheck:
+        return database_health_check()
+
+    @app.get("/v1/health", response_model=HealthResponse, include_in_schema=False)
+    def v1_health_check() -> HealthResponse:
+        return health_check()
+
+    @app.get("/v1/health/db", response_model=DatabaseCheck, include_in_schema=False)
+    def v1_database_health_check() -> DatabaseCheck:
+        return database_health_check()
 
     app.include_router(api_router)
     return app

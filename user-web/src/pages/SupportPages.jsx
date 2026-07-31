@@ -4,6 +4,8 @@ import {
   Layout,
   PageTitle,
   Tabs,
+  LegacyPanel,
+  LegacyBoardList,
   DocumentNotice,
   ReadOnlyField,
   ContractStatusStrip,
@@ -226,42 +228,13 @@ function SupportBoardPage({ kind }) {
             {submitState.message ? <p className={submitState.message.includes('실패') || submitState.message.includes('로그인') ? 'auth-message error' : 'auth-message success'}>{submitState.message}</p> : null}
           </section>
         ) : null}
-        <section className="data-table-wrap">
-          <h2>{config.title} 목록</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>번호</th>
-                <th>구분</th>
-                <th>제목</th>
-                {kind === 'qa' ? <th>상태</th> : null}
-                <th>작성자</th>
-                <th>등록일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.length ? visibleItems.map((item) => (
-                <tr key={`${kind}-${item.post_id ?? item.qna_id}`}>
-                  <td>{item.post_id ?? item.qna_id}</td>
-                  <td>{item.type_label ?? item.type ?? '-'}</td>
-                  <td>
-                    {kind === 'qa' ? (
-                      <a className="support-title support-title-link" href={`/board/qa/${encodeURIComponent(item.qna_id)}`}>{item.title ?? '-'}</a>
-                    ) : (
-                      <a className="support-title support-title-link" href={`/board/${kind}/${encodeURIComponent(item.post_id)}`}>{item.title ?? '-'}</a>
-                    )}
-                    <span className="support-snippet">{plainText(item.content)}</span>
-                  </td>
-                  {kind === 'qa' ? <td>{item.answer_status ?? '-'}</td> : null}
-                  <td>{item.created_by ?? '-'}</td>
-                  <td>{formatDate(item.reg_date)}</td>
-                </tr>
-              )) : (
-                <tr><td colSpan={kind === 'qa' ? 6 : 5}>{state.loading ? '조회 중입니다.' : config.empty}</td></tr>
-              )}
-            </tbody>
-          </table>
-        </section>
+        <LegacyBoardList
+          title={`${config.title} 목록`}
+          items={visibleItems}
+          kind={kind}
+          loading={state.loading}
+          emptyMessage={config.empty}
+        />
       </main>
     </Layout>
   );
@@ -297,8 +270,7 @@ function BoardDetailPage({ kind, postId }) {
       <main className="sub-page">
         <PageTitle title={`${config.title} 상세`} text="게시글 내용을 확인합니다." />
         {state.error ? <p className="auth-message error">{state.error}</p> : null}
-        <section className="data-table-wrap">
-          <h2>{config.title} 내용</h2>
+        <LegacyPanel title={`${config.title} 내용`} className="react-legacy-detail-panel">
           {state.loading ? <p className="api-note">조회 중입니다.</p> : null}
           {post ? (
             <div className="support-detail">
@@ -315,7 +287,7 @@ function BoardDetailPage({ kind, postId }) {
             </div>
           ) : null}
           <a className="secondary-link" href={`/board/${kind}/index`}>목록으로</a>
-        </section>
+        </LegacyPanel>
       </main>
     </Layout>
   );
@@ -412,8 +384,7 @@ function InquiryDetailPage({ qnaId }) {
       <main className="sub-page">
         <PageTitle title="Q&A 상세" text="문의 내용과 답변을 확인합니다." />
         {state.error ? <p className="auth-message error">{state.error}</p> : null}
-        <section className="data-table-wrap">
-          <h2>문의 내용</h2>
+        <LegacyPanel title="문의 내용" className="react-legacy-detail-panel">
           {state.loading ? <p className="api-note">조회 중입니다.</p> : null}
           {inquiry ? (
             <div className="support-detail">
@@ -479,9 +450,8 @@ function InquiryDetailPage({ qnaId }) {
               {actionState.message ? <p className={actionState.message.includes('실패') ? 'auth-message error' : 'auth-message success'}>{actionState.message}</p> : null}
             </div>
           ) : null}
-        </section>
-        <section className="data-table-wrap">
-          <h2>답변</h2>
+        </LegacyPanel>
+        <LegacyPanel title="답변" className="react-legacy-reply-panel">
           {replies.length ? replies.map((reply) => (
             <article className="support-reply" key={reply.reply_id}>
               <strong>{reply.created_by ?? '관리자'}</strong>
@@ -492,7 +462,7 @@ function InquiryDetailPage({ qnaId }) {
             <p className="api-note">등록된 답변이 없습니다.</p>
           )}
           <a className="secondary-link" href="/board/qa/index">목록으로</a>
-        </section>
+        </LegacyPanel>
       </main>
     </Layout>
   );

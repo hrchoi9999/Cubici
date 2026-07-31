@@ -4,6 +4,8 @@ import {
   Layout,
   PageTitle,
   Tabs,
+  LegacyPanel,
+  LegacySearchPanel,
   DocumentNotice,
   ReadOnlyField,
   ContractStatusStrip,
@@ -45,40 +47,94 @@ import {
 } from '../shared/UserCore.jsx';
 
 function MainPage() {
-  const [auth] = useState(readAuthSession);
-  const shopFilter = useAuthenticatedShopPairs(auth);
-  const dashboard = useUserDashboardData({
-    userNo: auth?.user?.user_no,
-    shopPairs: shopFilter.shopPairs,
-    enabled: Boolean(auth?.access_token && auth?.user?.user_no),
-  });
   return (
     <Layout>
-      <main className="main-page">
-        <section className="hero">
-          <div className="hero-copy">
-            <p>큐빅아이</p>
-            <h1>온라인 쇼핑몰 통합관리 서비스</h1>
-            <span>복잡한 쇼핑몰 관리를 매출, 정산, 재고, 머니뱅크 흐름으로 한 번에 확인합니다.</span>
-            <a href="/mainSignUp">1개월 무료이용</a>
+      <main className="mainContents">
+        <figure className="mainSlideArea">
+          <div id="mainSlide" className="swiper-container slideAni react-main-slide">
+            <div className="swiper-wrapper">
+              <div className="swiper-slide swiper-slide-active">
+                <div className="visualBox visual01">
+                  <span className="bg" />
+                  <div className="vCon inner">
+                    <div className="txtBox">
+                      <p className="sObj t-medium t1">큐빅아이</p>
+                      <p className="sObj t-light t2">
+                        인공지능 기반의 온라인 쇼핑몰 통합관리 서비스 <br />
+                        복잡하고 어려웠던 쇼핑몰 관리를 쉽고 편리하게 <br />
+                        바로 확인할 수 있는 차세대 서비스를 경험하세요.
+                      </p>
+                      <p className="sObj t-light t2">새로운 e-Commerce 큐빅아이가 시작합니다!</p>
+                      <div className="sObj btnArea">
+                        <a href="/mainSignUp" className="mBtn sColorS">1개월 무료이용</a>
+                      </div>
+                    </div>
+                    <div className="sObj imgBox">
+                      <div className="pcMockup">
+                        <div className="pcFrame">
+                          <div id="mainPcSlide" className="swiper-container">
+                            <ul className="swiper-wrapper">
+                              <li className="swiper-slide swiper-slide-active">
+                                <img src="/resources/rudicks/img/main/main-pc-slide01-1.jpg" alt="큐빅아이 대시보드" />
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="hero-device">
-            <img src="/rudicks/img/main/main-pc-slide01-1.jpg" alt="큐빅아이 대시보드" />
+        </figure>
+
+        <section className="actionVisual react-action-visual">
+          <div className="tabList inner">
+            <ul>
+              <li className="info on"><a href="/cubici/integratedInfo/tab1">통합정보</a></li>
+              <li className="sales"><a href="/cubici/salesInfo/sales">매출정보</a></li>
+              <li className="settle"><a href="/cubici/calculateInfo/calendar">정산정보</a></li>
+              <li className="stock"><a href="/cubici/invento/index">재고정보</a></li>
+              <li className="bank"><a href="/moneybank/intro/advpay">머니뱅크</a></li>
+            </ul>
+          </div>
+          <h2 className="sTitle"><b>쇼핑몰 운영</b>을 하나의 흐름으로 관리합니다.</h2>
+          <div className="inner react-feature-grid">
+            {[
+              ['통합정보', '쇼핑몰 주요 지표와 판매 흐름을 한 화면에서 확인합니다.'],
+              ['매출정보', '판매, 반품, 교환 내역을 조회합니다.'],
+              ['정산관리', '정산 예정과 완료 금액을 캘린더와 상세 목록으로 확인합니다.'],
+              ['머니뱅크', '선정산 신청, 계약, 상환 현황을 관리합니다.'],
+            ].map(([title, text]) => (
+              <article className="conArticle shadowBox hasPadding" key={title}>
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
           </div>
         </section>
-        <DashboardSummary data={dashboard} />
-        <section className="feature-tabs">
-          {[
-            ['통합정보', '쇼핑몰 주요 지표와 판매 흐름을 한 화면에서 확인합니다.'],
-            ['매출정보', '판매, 반품, 교환 내역을 조회합니다.'],
-            ['정산관리', '정산 예정과 완료 금액을 캘린더와 상세 목록으로 확인합니다.'],
-            ['머니뱅크', '선정산 신청, 계약, 상환 현황을 관리합니다.'],
-          ].map(([title, text]) => (
-            <article key={title}>
-              <h2>{title}</h2>
-              <p>{text}</p>
-            </article>
-          ))}
+
+        <section className="partnerArea">
+          <h2 className="sTitle">다양한 <b>쇼핑몰 채널</b>을 지원합니다.</h2>
+          <div className="inner">
+            <ul className="logoList">
+              {[
+                ['gmarket', '지마켓'],
+                ['auction', '옥션'],
+                ['m11st', '11번가'],
+                ['coupang', '쿠팡'],
+                ['interpark', '인터파크'],
+                ['smartStore', '스마트스토어'],
+                ['ssg', 'SSG'],
+                ['lotteon', '롯데온'],
+                ['tmon', '티몬'],
+                ['wmp', '위메프'],
+              ].map(([className, label]) => (
+                <li className={className} key={className}><span>{label}</span></li>
+              ))}
+            </ul>
+          </div>
         </section>
       </main>
     </Layout>
@@ -159,8 +215,7 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
         ) : null}
 
         {activeTab === 'tab1' ? (
-          <section className="data-table-wrap">
-            <h2>당월현황</h2>
+          <LegacyPanel title="당월현황" className="react-legacy-integrated-panel">
             <div className="field-grid">
               <ReadOnlyField label="판매금액" value={formatAmount(summary.salesAmount)} />
               <ReadOnlyField label="판매수량" value={`${summary.salesQuantity.toLocaleString('ko-KR')}개`} />
@@ -170,73 +225,79 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
               <ReadOnlyField label="연결 쇼핑몰" value={shopFilter.loading ? '확인 중' : `${shopFilter.shops.length}개`} />
             </div>
             <p className="api-note">{state.loading ? 'DB API 조회 중' : state.message || '조회 완료'}</p>
-          </section>
+          </LegacyPanel>
         ) : null}
 
         {activeTab === 'tab2' ? (
-          <section className="data-table-wrap">
-            <h2>매출분석</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>구분</th>
-                  <th>건수</th>
-                  <th>금액</th>
-                  <th>최근일</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>판매</td>
-                  <td>{summary.salesCount.toLocaleString('ko-KR')}</td>
-                  <td>{formatAmount(summary.salesAmount)}</td>
-                  <td>{formatDate(summary.latestSalesDate)}</td>
-                </tr>
-                <tr>
-                  <td>반품/교환</td>
-                  <td>{summary.returnCount.toLocaleString('ko-KR')}</td>
-                  <td>{formatAmount(summary.returnAmount)}</td>
-                  <td>{formatDate(summary.latestReturnDate)}</td>
-                </tr>
-                <tr>
-                  <td>정산</td>
-                  <td>{summary.settlementCount.toLocaleString('ko-KR')}</td>
-                  <td>{formatAmount(summary.settlementAmount)}</td>
-                  <td>{formatDate(summary.latestSettlementDate)}</td>
-                </tr>
-              </tbody>
-            </table>
+          <LegacyPanel title="매출분석" className="react-legacy-integrated-panel">
+            <div className="tableSet">
+              <div className="fixTable">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>구분</th>
+                      <th>건수</th>
+                      <th>금액</th>
+                      <th>최근일</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>판매</td>
+                      <td>{summary.salesCount.toLocaleString('ko-KR')}</td>
+                      <td>{formatAmount(summary.salesAmount)}</td>
+                      <td>{formatDate(summary.latestSalesDate)}</td>
+                    </tr>
+                    <tr>
+                      <td>반품/교환</td>
+                      <td>{summary.returnCount.toLocaleString('ko-KR')}</td>
+                      <td>{formatAmount(summary.returnAmount)}</td>
+                      <td>{formatDate(summary.latestReturnDate)}</td>
+                    </tr>
+                    <tr>
+                      <td>정산</td>
+                      <td>{summary.settlementCount.toLocaleString('ko-KR')}</td>
+                      <td>{formatAmount(summary.settlementAmount)}</td>
+                      <td>{formatDate(summary.latestSettlementDate)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <p className="api-note">{state.loading ? 'DB API 조회 중' : state.message || '조회 완료'}</p>
-          </section>
+          </LegacyPanel>
         ) : null}
 
         {activeTab === 'tab3' ? (
-          <section className="data-table-wrap">
-            <h2>상품분석</h2>
-            <table>
-              <thead>
-                <tr>
-                  <th>상품명</th>
-                  <th>판매수량</th>
-                  <th>판매금액</th>
-                  <th>결제금액</th>
-                </tr>
-              </thead>
-              <tbody>
-                {productRows.length ? productRows.map((row) => (
-                  <tr key={row.productName}>
-                    <td>{row.productName}</td>
-                    <td>{row.quantity.toLocaleString('ko-KR')}</td>
-                    <td>{formatAmount(row.salesAmount)}</td>
-                    <td>{formatAmount(row.paymentAmount)}</td>
-                  </tr>
-                )) : (
-                  <tr><td colSpan="4">{state.loading ? '조회 중입니다.' : '상품 판매 데이터가 없습니다.'}</td></tr>
-                )}
-              </tbody>
-            </table>
+          <LegacyPanel title="상품분석" className="react-legacy-integrated-panel">
+            <div className="tableSet">
+              <div className="fixTable">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>상품명</th>
+                      <th>판매수량</th>
+                      <th>판매금액</th>
+                      <th>결제금액</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productRows.length ? productRows.map((row) => (
+                      <tr key={row.productName}>
+                        <td>{row.productName}</td>
+                        <td>{row.quantity.toLocaleString('ko-KR')}</td>
+                        <td>{formatAmount(row.salesAmount)}</td>
+                        <td>{formatAmount(row.paymentAmount)}</td>
+                      </tr>
+                    )) : (
+                      <tr><td colSpan="4">{state.loading ? '조회 중입니다.' : '상품 판매 데이터가 없습니다.'}</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             <p className="api-note">{state.loading ? 'DB API 조회 중' : state.message || '조회 완료'}</p>
-          </section>
+          </LegacyPanel>
         ) : null}
       </main>
     </Layout>
@@ -294,46 +355,46 @@ function InventoryPage() {
         />
         {!auth?.access_token ? <p className="auth-message error">로그인 후 상품현황을 조회할 수 있습니다.</p> : null}
         {shopFilter.message ? <p className="auth-message error">{shopFilter.message}</p> : null}
-        <section className="data-table-wrap">
-          <h2>검색조건</h2>
-          <form className="request-form" onSubmit={(event) => event.preventDefault()}>
-            <label>판매상태<input aria-label="판매상태" name="status" value={filters.status} onChange={updateFilter} placeholder="상태 코드" /></label>
-            <label>검색어<input aria-label="상품 검색어" name="keyword" value={filters.keyword} onChange={updateFilter} placeholder="상품명, 상품번호" /></label>
-          </form>
+        <LegacySearchPanel title="검색조건">
+          <label>판매상태<input aria-label="판매상태" name="status" value={filters.status} onChange={updateFilter} placeholder="상태 코드" /></label>
+          <label>검색어<input aria-label="상품 검색어" name="keyword" value={filters.keyword} onChange={updateFilter} placeholder="상품명, 상품번호" /></label>
           <p className="api-note">
             legacy 재고 원천 테이블은 현재 PostgreSQL migration 대상에 없어 판매 데이터 기반 상품현황으로 표시합니다.
           </p>
-        </section>
-        <section className="data-table-wrap">
-          <h2>상품 목록</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>상품명</th>
-                <th>상품번호</th>
-                <th>판매수량</th>
-                <th>판매금액</th>
-                <th>결제금액</th>
-                <th>최근 판매일</th>
-              </tr>
-            </thead>
-            <tbody>
-              {productRows.length ? productRows.map((row) => (
-                <tr key={`${row.productNo}-${row.productName}`}>
-                  <td>{row.productName}</td>
-                  <td>{row.productNo}</td>
-                  <td>{row.quantity.toLocaleString('ko-KR')}</td>
-                  <td>{formatAmount(row.salesAmount)}</td>
-                  <td>{formatAmount(row.paymentAmount)}</td>
-                  <td>{formatDate(row.latestPaidDate)}</td>
-                </tr>
-              )) : (
-                <tr><td colSpan="6">{state.loading ? '조회 중입니다.' : '상품 데이터가 없습니다.'}</td></tr>
-              )}
-            </tbody>
-          </table>
+        </LegacySearchPanel>
+        <LegacyPanel title="상품 목록" className="react-legacy-inventory-panel">
+          <div className="tableSet">
+            <div className="fixTable">
+              <table>
+                <thead>
+                  <tr>
+                    <th>상품명</th>
+                    <th>상품번호</th>
+                    <th>판매수량</th>
+                    <th>판매금액</th>
+                    <th>결제금액</th>
+                    <th>최근 판매일</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {productRows.length ? productRows.map((row) => (
+                    <tr key={`${row.productNo}-${row.productName}`}>
+                      <td>{row.productName}</td>
+                      <td>{row.productNo}</td>
+                      <td>{row.quantity.toLocaleString('ko-KR')}</td>
+                      <td>{formatAmount(row.salesAmount)}</td>
+                      <td>{formatAmount(row.paymentAmount)}</td>
+                      <td>{formatDate(row.latestPaidDate)}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="6">{state.loading ? '조회 중입니다.' : '상품 데이터가 없습니다.'}</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
           <p className="api-note">{state.loading ? 'DB API 조회 중' : state.message || '조회 완료'}</p>
-        </section>
+        </LegacyPanel>
       </main>
     </Layout>
   );

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   Layout,
   PageTitle,
+  LegacyPanel,
+  LegacySearchPanel,
   fetchJson,
   formatAmount,
   formatDate,
@@ -131,82 +133,87 @@ function SalesOrSettlementPage({ type }) {
           <p className="auth-message error">연결된 쇼핑몰 계정이 없습니다. 마이페이지에서 쇼핑몰 계정을 먼저 연결해주세요.</p>
         ) : null}
 
-        <section className="data-table-wrap">
-          <h2>검색조건</h2>
-          <form className="request-form" onSubmit={(event) => event.preventDefault()}>
-            <label>
-              시작일
-              <input
-                aria-label="시작일"
-                type="date"
-                value={filters.fromDate}
-                onChange={(event) => updateFilter('fromDate', event.target.value)}
-              />
-            </label>
-            <label>
-              종료일
-              <input
-                aria-label="종료일"
-                type="date"
-                value={filters.toDate}
-                onChange={(event) => updateFilter('toDate', event.target.value)}
-              />
-            </label>
-            <label>
-              쇼핑몰
-              <select
-                aria-label="쇼핑몰"
-                value={filters.shopType}
-                onChange={(event) => updateFilter('shopType', event.target.value)}
-              >
-                <option value="">전체</option>
-                {shopOptions
-                  .filter(([code]) => !connectedShopTypes.size || connectedShopTypes.has(code))
-                  .map(([code, name]) => (
-                    <option key={code} value={code}>{name}</option>
-                  ))}
-              </select>
-            </label>
-            <label>
-              상태
-              <input
-                aria-label="상태"
-                value={filters.status}
-                onChange={(event) => updateFilter('status', event.target.value)}
-                placeholder="상태 코드"
-              />
-            </label>
-            <label>
-              검색어
-              <input
-                aria-label="검색어"
-                value={filters.keyword}
-                onChange={(event) => updateFilter('keyword', event.target.value)}
-                placeholder="주문번호, 상품명 등"
-              />
-            </label>
-            <div>
+        <LegacySearchPanel
+          title="검색조건"
+          actions={(
+            <>
               <button type="button" onClick={resetFilters}>초기화</button>
               <button type="button" onClick={exportCsv} disabled={!state.items.length}>CSV 다운로드</button>
-            </div>
-          </form>
+            </>
+          )}
+        >
+          <label>
+            시작일
+            <input
+              aria-label="시작일"
+              type="date"
+              value={filters.fromDate}
+              onChange={(event) => updateFilter('fromDate', event.target.value)}
+            />
+          </label>
+          <label>
+            종료일
+            <input
+              aria-label="종료일"
+              type="date"
+              value={filters.toDate}
+              onChange={(event) => updateFilter('toDate', event.target.value)}
+            />
+          </label>
+          <label>
+            쇼핑몰
+            <select
+              aria-label="쇼핑몰"
+              value={filters.shopType}
+              onChange={(event) => updateFilter('shopType', event.target.value)}
+            >
+              <option value="">전체</option>
+              {shopOptions
+                .filter(([code]) => !connectedShopTypes.size || connectedShopTypes.has(code))
+                .map(([code, name]) => (
+                  <option key={code} value={code}>{name}</option>
+                ))}
+            </select>
+          </label>
+          <label>
+            상태
+            <input
+              aria-label="상태"
+              value={filters.status}
+              onChange={(event) => updateFilter('status', event.target.value)}
+              placeholder="상태 코드"
+            />
+          </label>
+          <label>
+            검색어
+            <input
+              aria-label="검색어"
+              value={filters.keyword}
+              onChange={(event) => updateFilter('keyword', event.target.value)}
+              placeholder="주문번호, 상품명 등"
+            />
+          </label>
           <p className="api-note">
             조회 쇼핑몰: {shopFilter.loading ? '확인 중' : shopFilter.shops.length ? `${shopFilter.shops.length}개` : '-'}
             {' / '}
             조회 결과: {state.total.toLocaleString('ko-KR')}건
           </p>
-        </section>
+        </LegacySearchPanel>
 
         {isCalendar ? (
           <CalendarSummary rows={calendarRows} loading={state.loading} error={state.error} />
         ) : (
-          <section className="data-table-wrap">
-            <CommerceTable
-              items={state.items}
-              type={type}
-              expandedId={expandedId}
-              onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
-            />
+          <LegacyPanel title={`${isCalendar ? '정산 캘린더' : config.title} 목록`} className="react-legacy-commerce-panel">
+            <div className="tableSet">
+              <div className="fixTable">
+                <CommerceTable
+                  items={state.items}
+                  type={type}
+                  expandedId={expandedId}
+                  onToggle={(id) => setExpandedId((current) => (current === id ? null : id))}
+                />
+              </div>
+            </div>
             <Pagination
               page={page}
               pageCount={pageCount}
@@ -215,7 +222,7 @@ function SalesOrSettlementPage({ type }) {
               onNext={() => setPage((current) => Math.min(pageCount - 1, current + 1))}
             />
             <p className="api-note">{state.loading ? 'DB API 조회 중' : state.error || '조회 완료'}</p>
-          </section>
+          </LegacyPanel>
         )}
       </main>
     </Layout>
@@ -350,28 +357,31 @@ function DetailPanel({ item, type }) {
 
 function CalendarSummary({ rows, loading, error }) {
   return (
-    <section className="data-table-wrap">
-      <h2>정산 캘린더 요약</h2>
-      <table>
-        <thead>
-          <tr><th>정산일</th><th>건수</th><th>정산액 합계</th><th>쇼핑몰</th></tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.date}>
-              <td>{row.date}</td>
-              <td>{row.count.toLocaleString('ko-KR')}건</td>
-              <td>{formatAmount(row.amount)}</td>
-              <td>{row.shops.join(', ')}</td>
-            </tr>
-          ))}
-          {!rows.length ? (
-            <tr><td colSpan="4">조회 결과가 없습니다.</td></tr>
-          ) : null}
-        </tbody>
-      </table>
+    <LegacyPanel title="정산 캘린더 요약" className="react-legacy-commerce-panel">
+      <div className="tableSet">
+        <div className="fixTable">
+          <table>
+            <thead>
+              <tr><th>정산일</th><th>건수</th><th>정산액 합계</th><th>쇼핑몰</th></tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.date}>
+                  <td>{row.date}</td>
+                  <td>{row.count.toLocaleString('ko-KR')}건</td>
+                  <td>{formatAmount(row.amount)}</td>
+                  <td>{row.shops.join(', ')}</td>
+                </tr>
+              ))}
+              {!rows.length ? (
+                <tr><td colSpan="4">조회 결과가 없습니다.</td></tr>
+              ) : null}
+            </tbody>
+          </table>
+        </div>
+      </div>
       <p className="api-note">{loading ? 'DB API 조회 중' : error || '조회 완료'}</p>
-    </section>
+    </LegacyPanel>
   );
 }
 
