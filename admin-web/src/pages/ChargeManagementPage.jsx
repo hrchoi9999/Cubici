@@ -90,6 +90,7 @@ export function ChargeManagementPage() {
   const [formValues, setFormValues] = useState({ status: 'all', chargeCode: '', chargeName: '', orderBy: 'reg_date_desc' });
   const [selected, setSelected] = useState(null);
   const [chargeForm, setChargeForm] = useState(emptyForm);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -151,6 +152,7 @@ export function ChargeManagementPage() {
     event.preventDefault();
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setFilters({
       status: formValues.status,
       charge_code: formValues.chargeCode,
@@ -163,6 +165,7 @@ export function ChargeManagementPage() {
     setSelected(null);
     setChargeForm({ ...emptyForm, chargeCode: suggestedChargeCode(emptyForm) });
     setMessage('');
+    setIsEditorOpen(true);
   }
 
   async function loadDetail(chargeCode) {
@@ -172,8 +175,10 @@ export function ChargeManagementPage() {
       const data = await fetchCharge(chargeCode);
       setSelected(data);
       setChargeForm(mapChargeToForm(data));
+      setIsEditorOpen(true);
     } catch (error) {
       setSelected(null);
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -246,6 +251,7 @@ export function ChargeManagementPage() {
       await deleteCharge(selected.charge_code);
       setSelected(null);
       setChargeForm({ ...emptyForm, chargeCode: suggestedChargeCode(emptyForm) });
+      setIsEditorOpen(false);
       await reloadList(0);
       setMessage('요금제를 삭제했습니다.');
     } catch (error) {
@@ -362,13 +368,13 @@ export function ChargeManagementPage() {
         </div>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagingControls">
         <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
       </div>
 
-      <form className="chargeEditorPanel" onSubmit={handleSave}>
+      {isEditorOpen ? <form className="chargeEditorPanel" onSubmit={handleSave}>
         <div className="chargeEditorHeader">
           <h4>{selected ? '요금제 수정' : '요금제 등록'}</h4>
           <span>{selected ? `최종 수정 ${formatDateTime(selected.update_date)}` : '신규 요금제'}</span>
@@ -437,7 +443,7 @@ export function ChargeManagementPage() {
           <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
           {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
-      </form>
+      </form> : null}
     </>
   );
 }

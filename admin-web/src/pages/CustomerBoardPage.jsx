@@ -46,6 +46,7 @@ export function CustomerBoardPage() {
   const [formValues, setFormValues] = useState({ keyword: '', postType: '', orderBy: 'reg_date_desc' });
   const [postForm, setPostForm] = useState(emptyForm);
   const [selected, setSelected] = useState(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -105,6 +106,7 @@ export function CustomerBoardPage() {
     setActiveKind(nextKind);
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setPostForm(emptyForm);
     setFilters({ keyword: formValues.keyword, post_type: formValues.postType, order_by: formValues.orderBy });
   }
@@ -123,6 +125,7 @@ export function CustomerBoardPage() {
     event.preventDefault();
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setFilters({
       keyword: formValues.keyword,
       post_type: formValues.postType,
@@ -132,6 +135,7 @@ export function CustomerBoardPage() {
 
   function handleNew() {
     setSelected(null);
+    setIsEditorOpen(true);
     setPostForm(emptyForm);
     setMessage('');
   }
@@ -141,6 +145,7 @@ export function CustomerBoardPage() {
     try {
       const data = await fetchBoardPost(activeKind, postId);
       setSelected(data);
+      setIsEditorOpen(true);
       setPostForm({
         type: data.type,
         title: data.title,
@@ -150,6 +155,7 @@ export function CustomerBoardPage() {
       });
     } catch (error) {
       setSelected(null);
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -206,6 +212,7 @@ export function CustomerBoardPage() {
     try {
       await deleteBoardPost(activeKind, selected.post_id);
       setSelected(null);
+      setIsEditorOpen(false);
       setPostForm(emptyForm);
       setOffset(0);
       await reloadList(0);
@@ -327,7 +334,7 @@ export function CustomerBoardPage() {
         </div>
       </section>
 
-      <section className="detailSection customerBoardEditor">
+      <section className={`detailSection customerBoardEditor${isEditorOpen ? ' isOpen' : ''}`}>
         <h3>{selected ? '게시글 수정' : '게시글 등록'}</h3>
         <form className="messageTemplateForm" onSubmit={handleSave}>
           <label>

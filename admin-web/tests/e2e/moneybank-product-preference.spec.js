@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const productRow = {
   row_no: 1,
   firm_no: 10,
@@ -64,6 +66,7 @@ const productRow = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/moneybank-products?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

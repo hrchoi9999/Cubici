@@ -3,16 +3,6 @@ import { fetchMemberInfo } from '../api/management.js';
 
 const PAGE_SIZE = 20;
 
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function beforeIso(days) {
-  const date = new Date();
-  date.setDate(date.getDate() - days);
-  return date.toISOString().slice(0, 10);
-}
-
 function formatDate(value) {
   return value ? value.slice(0, 10) : '-';
 }
@@ -26,8 +16,8 @@ export function MemberInfoPage() {
   const [counts, setCounts] = useState({ total_count: 0, cubici_count: 0, moneybank_count: 0 });
   const [offset, setOffset] = useState(0);
   const [filters, setFilters] = useState({
-    from_date: beforeIso(3650),
-    to_date: todayIso(),
+    from_date: '',
+    to_date: '',
     use_service: 'all',
     order_by: 'reg_date_desc',
   });

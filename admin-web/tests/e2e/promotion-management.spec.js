@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const promotion = {
   row_no: 1,
   promo_code: 'NCBCI',
@@ -42,6 +44,7 @@ const options = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/promotions?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

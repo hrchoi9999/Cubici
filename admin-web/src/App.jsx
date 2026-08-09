@@ -68,6 +68,11 @@ function findRoute(path) {
       categoryId: 'supportMember',
       pageId: 'notice',
     },
+    {
+      match: '/admin/cubici/supportMember/manageEmail',
+      categoryId: 'supportMember',
+      pageId: 'message',
+    },
   ];
 
   const alias = routeAliases.find((item) => path.includes(item.match));
@@ -95,6 +100,18 @@ function findRoute(path) {
     return { category, page };
   }
 
+  if (path === '/admin/moneybank/manage') {
+    const category = adminMenu.find((item) => item.id === 'moneybankOperation');
+    const page = category.pages.find((item) => item.id === 'manage');
+    return { category, page };
+  }
+
+  if (path === '/admin/cubici/adminPreference/prizmConfig') {
+    const category = adminMenu.find((item) => item.id === 'preferInfo');
+    const page = category.pages.find((item) => item.id === 'prizm');
+    return { category, page };
+  }
+
   for (const category of adminMenu) {
     for (const page of category.pages) {
       if (path === page.href || path.startsWith(`${page.href}/`)) {
@@ -110,7 +127,14 @@ function findRoute(path) {
 }
 
 export default function App() {
-  const path = window.location.pathname;
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  const path = requestedView === 'prism-config'
+    ? '/admin/cubici/adminPreference/prizmConfig'
+    : requestedView === 'prism-management'
+      ? '/admin/moneybank/manage'
+      : requestedView === 'prism'
+        ? '/admin/cubici/adminPreference/prizmConfig'
+        : window.location.pathname;
   const [adminSession, setAdminSession] = useState(() => {
     const session = readAdminSession();
     setAdminFetchSession(session);
@@ -193,7 +217,7 @@ export default function App() {
   const isRequestPage = path.includes('/admin/moneybank/request');
   const isApprovalPage = path.includes('/admin/moneybank/approval_tab1');
   const isContractManagementPage = path.includes('/admin/moneybank/approval_tab2');
-  const isPrizmManagementPage = path.includes('/admin/moneybank/manage');
+  const isPrizmManagementPage = path === '/admin/moneybank/manage';
   const isCustomerInquiryPage = path.includes('/admin/cubici/supportMember/manageInquiry');
   const isMessageTemplatePage = path.includes('/admin/cubici/supportMember/manageSms') || path.includes('/admin/cubici/supportMember/manageEmail');
   const isCustomerBoardPage = path.includes('/admin/cubici/supportMember/manageBoard_tab1') || path.includes('/admin/cubici/supportMember/manageBoard_tab2');

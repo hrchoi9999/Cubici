@@ -40,6 +40,22 @@ const errorLogPayload = {
   ],
 };
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/v1/api/accounts/me', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' }),
+    });
+  });
+  await page.addInitScript(() => {
+    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify({
+      token_type: 'Bearer',
+      access_token: 'error-log-test-token',
+      user: { email: 'admin@example.com', user_type: 'ADMIN_USER' },
+    }));
+  });
+});
+
 test('error log monitoring list and detail work with mock data', async ({ page }) => {
   await page.route('**/v1/api/monitoring/error-logs?**', async (route) => {
     await route.fulfill({
@@ -50,15 +66,14 @@ test('error log monitoring list and detail work with mock data', async ({ page }
 
   await page.goto('/admin/cubici/adminMonitor/error_report');
 
-  await expect(page.getByRole('heading', { name: 'Error Log' })).toBeVisible();
+  await expect(page.locator('.subVisual h3', { hasText: 'Error Log' })).toBeVisible();
   await expect(page.getByText('전체 2건')).toBeVisible();
   await expect(page.getByText('조치필요 1건')).toBeVisible();
   await expect(page.getByText('Workflow 조치필요')).toBeVisible();
   await expect(page.getByRole('cell', { name: '테스트몰' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '오류몰' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '원인 확인 후 재수집/배치 재실행' })).toBeVisible();
-
   await page.getByRole('row', { name: /오류몰/ }).click();
   await expect(page.locator('.errorLogPreview p')).toContainText('API 응답 오류');
   await expect(page.locator('.errorLogPreview')).toContainText('cbci_err_report');
+  await expect(page.locator('.errorLogPreview')).toContainText('원인 확인 후 재수집/배치 재실행');
 });

@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const pendingAccount = {
   row_no: 1,
   admin_id: 'temp_id_1',
@@ -27,6 +29,7 @@ const approvedAccount = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/admin-accounts?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

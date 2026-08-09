@@ -21,6 +21,7 @@ const routes = [
   ['/admin/moneybank/manage', '머니뱅크 운영', '프리즘 지표 관리'],
   ['/admin/cubici/supportMember/manageInquiry', '고객관리', '고객문의'],
   ['/admin/cubici/supportMember/manageSms', '고객관리', '문자/이메일'],
+  ['/admin/cubici/supportMember/manageEmail', '고객관리', '문자/이메일'],
   ['/admin/cubici/supportMember/manageBoard_tab1', '고객관리', '고객 공지 관리'],
   ['/admin/cubici/supportMember/manageBoard_tab2', '고객관리', '고객 공지 관리'],
   ['/admin/cubici/adminMonitor/error_report', '모니터링', 'Error Log'],

@@ -50,6 +50,7 @@ export function MessageTemplatePage() {
   const [filters, setFilters] = useState({ msg_key: initialKey, order_by: 'menu_asc' });
   const [formValues, setFormValues] = useState({ keyword: '', orderBy: 'menu_asc' });
   const [selected, setSelected] = useState(null);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [templateForm, setTemplateForm] = useState({ ...emptyForm, msgKey: initialKey });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -117,6 +118,7 @@ export function MessageTemplatePage() {
     setActiveKey(nextKey);
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setTemplateForm({ ...emptyForm, msgKey: nextKey });
     setFilters({ msg_key: nextKey, keyword: formValues.keyword, order_by: formValues.orderBy });
   }
@@ -135,6 +137,7 @@ export function MessageTemplatePage() {
     event.preventDefault();
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setFilters({
       msg_key: activeKey,
       keyword: formValues.keyword,
@@ -144,6 +147,7 @@ export function MessageTemplatePage() {
 
   function handleNew() {
     setSelected(null);
+    setIsEditorOpen(true);
     setTemplateForm({ ...emptyForm, msgKey: activeKey });
     setMessage('');
   }
@@ -153,6 +157,7 @@ export function MessageTemplatePage() {
     try {
       const data = await fetchMessageTemplate(messageNo);
       setSelected(data);
+      setIsEditorOpen(true);
       setTemplateForm({
         msgKey: data.msg_key,
         msgCode: data.msg_code,
@@ -165,6 +170,7 @@ export function MessageTemplatePage() {
       });
     } catch (error) {
       setSelected(null);
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -226,6 +232,7 @@ export function MessageTemplatePage() {
     try {
       await deleteMessageTemplate(selected.message_no);
       setSelected(null);
+      setIsEditorOpen(false);
       setTemplateForm({ ...emptyForm, msgKey: activeKey });
       await reloadList(0);
       setOffset(0);
@@ -344,7 +351,7 @@ export function MessageTemplatePage() {
         </div>
       </section>
 
-      <section className="detailSection messageTemplateEditor">
+      <section className={`detailSection messageTemplateEditor${isEditorOpen ? ' isOpen' : ''}`}>
         <h3>{selected ? '템플릿 수정' : '템플릿 등록'}</h3>
         <form className="messageTemplateForm" onSubmit={handleSave}>
           <label>

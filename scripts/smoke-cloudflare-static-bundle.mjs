@@ -36,6 +36,9 @@ const redirectRules = fs.readFileSync(redirectsPath, 'utf8')
 
 assertRedirectRule('/assets/*', '/assets/:splat', '200');
 assertRedirectRule('/admin/assets/*', '/admin/assets/:splat', '200');
+assertRedirectRule('/admin', '/admin/', '200');
+assertRedirectRule('/admin/*', '/admin/', '200');
+assertRedirectRule('/admin-spa', '/admin/', '200');
 assertRedirectRule('/resources/*', '/resources/:splat', '200');
 assertRedirectRule('/*', '/index.html', '200');
 assertRuleOrder('/assets/*', '/*');
@@ -163,7 +166,7 @@ function assertRoutesJson() {
 
 function assertWorkerFallback() {
   const worker = fs.readFileSync(path.join(bundleRoot, '_worker.js'), 'utf8');
-  for (const expected of ['env.ASSETS.fetch', 'looksLikeFile', 'url.pathname === "/admin"', 'url.pathname.startsWith("/admin/")', '"/admin-spa.html"', '"/index.html"']) {
+  for (const expected of ['env.ASSETS.fetch', 'looksLikeFile', 'url.pathname === "/admin"', 'url.pathname.startsWith("/admin/")', 'url.pathname === "/admin-spa"', '"/admin/"', '"/index.html"']) {
     if (!worker.includes(expected)) {
       throw new Error(`_worker.js missing routing marker: ${expected}`);
     }
@@ -215,14 +218,14 @@ function resolveCloudflarePagesPath(pathname) {
   }
   const lastSegment = pathname.split('/').pop() ?? '';
   const looksLikeFile = lastSegment.includes('.');
-  if ((pathname === '/admin' || pathname.startsWith('/admin/')) && !looksLikeFile) {
-    return 'admin-spa.html';
+  if ((pathname === '/admin' || pathname.startsWith('/admin/') || pathname === '/admin-spa') && !looksLikeFile) {
+    return 'admin/index.html';
   }
   const redirectTarget = findRedirectTarget(pathname);
   if (redirectTarget) {
     return redirectTarget.replace(/^\//, '');
   }
-  return pathname.startsWith('/admin/') || pathname === '/admin'
+  return pathname.startsWith('/admin/') || pathname === '/admin' || pathname === '/admin-spa'
     ? 'admin/index.html'
     : 'index.html';
 }

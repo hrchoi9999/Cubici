@@ -132,6 +132,7 @@ export function PartnerManagementPage() {
   });
   const [selected, setSelected] = useState(null);
   const [partnerForm, setPartnerForm] = useState(emptyForm);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [bizCheckMessage, setBizCheckMessage] = useState('');
@@ -203,6 +204,7 @@ export function PartnerManagementPage() {
     event.preventDefault();
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setFilters({
       partner_name: formValues.partnerName,
       partner_status: formValues.partnerStatus,
@@ -218,6 +220,7 @@ export function PartnerManagementPage() {
     setBizCheckMessage('');
     setCodeCheckMessage('');
     setMessage('');
+    setIsEditorOpen(true);
   }
 
   async function loadDetail(partnerId) {
@@ -228,8 +231,10 @@ export function PartnerManagementPage() {
       const data = await fetchPartner(partnerId);
       setSelected(data);
       setPartnerForm(mapPartnerToForm(data));
+      setIsEditorOpen(true);
     } catch (error) {
       setSelected(null);
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -337,6 +342,7 @@ export function PartnerManagementPage() {
       await deletePartner(selected.partner.partner_id);
       setSelected(null);
       setPartnerForm({ ...emptyForm, partnerCode: buildPartnerCode(emptyForm) });
+      setIsEditorOpen(false);
       await reloadList(0);
       setMessage('협력사를 삭제했습니다.');
     } catch (error) {
@@ -445,13 +451,13 @@ export function PartnerManagementPage() {
         </div>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagingControls">
         <button type="button" className="grayBtn" onClick={() => setOffset((value) => Math.max(0, value - PAGE_SIZE))} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" className="grayBtn" onClick={() => setOffset((value) => (value + PAGE_SIZE >= counts.total_count ? value : value + PAGE_SIZE))} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
       </div>
 
-      <form className="partnerEditorPanel" onSubmit={handleSave}>
+      {isEditorOpen ? <form className="partnerEditorPanel" onSubmit={handleSave}>
         <div className="partnerEditorHeader">
           <h4>{selected ? '협력사 상세' : '협력사 등록'}</h4>
           <span>{selected ? selected.partner.partner_status_label : '신규 협력사'}</span>
@@ -550,7 +556,7 @@ export function PartnerManagementPage() {
           <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
           {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
-      </form>
+      </form> : null}
     </>
   );
 }

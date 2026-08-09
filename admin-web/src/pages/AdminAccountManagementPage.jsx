@@ -78,6 +78,7 @@ export function AdminAccountManagementPage() {
   const [accountForm, setAccountForm] = useState(emptyForm);
   const [idCheckResult, setIdCheckResult] = useState('');
   const [mode, setMode] = useState('request');
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -143,6 +144,7 @@ export function AdminAccountManagementPage() {
     setOffset(0);
     setSelected(null);
     setMode('request');
+    setIsEditorOpen(false);
     setFilters({
       admin_type: formValues.adminType,
       admin_grade: formValues.adminGrade,
@@ -158,6 +160,7 @@ export function AdminAccountManagementPage() {
     setMode('request');
     setMessage('');
     setIdCheckResult('');
+    setIsEditorOpen(true);
   }
 
   async function loadDetail(adminId) {
@@ -169,9 +172,11 @@ export function AdminAccountManagementPage() {
       setSelected(data);
       setAccountForm(mapAccountToForm(data));
       setMode(isPending(data) ? 'approval' : 'update');
+      setIsEditorOpen(true);
     } catch (error) {
       setSelected(null);
       setMode('request');
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -276,6 +281,7 @@ export function AdminAccountManagementPage() {
       setSelected(null);
       setAccountForm(emptyForm);
       setMode('request');
+      setIsEditorOpen(false);
       await reloadList(0);
       setMessage('관리자 등록을 해지했습니다.');
     } catch (error) {
@@ -412,13 +418,13 @@ export function AdminAccountManagementPage() {
         </div>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagingControls">
         <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
       </div>
 
-      <form className="adminAccountPanel" onSubmit={handleSave}>
+      {isEditorOpen ? <form className="adminAccountPanel" onSubmit={handleSave}>
         <div className="adminAccountHeader">
           <h4>{mode === 'approval' ? '관리자 등록 승인' : mode === 'update' ? '관리자 정보 수정' : '관리자 신청 등록'}</h4>
           <span>{selected ? selected.approval_status : '신규 신청'}</span>
@@ -477,7 +483,7 @@ export function AdminAccountManagementPage() {
           <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
           {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>등록 해지</button> : null}
         </div>
-      </form>
+      </form> : null}
     </>
   );
 }

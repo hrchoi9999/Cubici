@@ -50,6 +50,22 @@ const serverStatus = {
   ],
 };
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/v1/api/accounts/me', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' }),
+    });
+  });
+  await page.addInitScript(() => {
+    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify({
+      token_type: 'Bearer',
+      access_token: 'server-monitor-test-token',
+      user: { email: 'admin@example.com', user_type: 'ADMIN_USER' },
+    }));
+  });
+});
+
 test('server monitoring status cards render with mock data', async ({ page }) => {
   await page.route('**/v1/api/monitoring/server-status?**', async (route) => {
     await route.fulfill({
@@ -60,7 +76,7 @@ test('server monitoring status cards render with mock data', async ({ page }) =>
 
   await page.goto('/admin/cubici/adminMonitor/server_monitor');
 
-  await expect(page.locator('.adminPageHeader h2', { hasText: '모니터링' })).toBeVisible();
+  await expect(page.locator('.subVisual h3', { hasText: '서버 관리' })).toBeVisible();
   await expect(page.getByText('상태 주의')).toBeVisible();
   await expect(page.getByText('FastAPI/DB/배치 로그 기반')).toBeVisible();
   await expect(page.getByText('외부 서버 metric 미연동')).toBeVisible();

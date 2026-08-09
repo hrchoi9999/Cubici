@@ -311,7 +311,7 @@ export function CustomerInquiryPage() {
         </div>
       </section>
 
-      <section className="detailSection inquiryDetail">
+      <section className={`detailSection inquiryDetail${detailLoading || selected ? ' isOpen' : ''}`}>
         <h3>문의 상세</h3>
         {detailLoading ? <p>상세 조회 중입니다.</p> : null}
         {!detailLoading && !selected ? <p>목록에서 문의를 선택하세요.</p> : null}

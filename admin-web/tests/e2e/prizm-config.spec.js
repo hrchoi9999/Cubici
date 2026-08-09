@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const configRow = {
   row_no: 1,
   division: 1,
@@ -36,6 +38,7 @@ const updateRecord = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/prizm-config/items?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

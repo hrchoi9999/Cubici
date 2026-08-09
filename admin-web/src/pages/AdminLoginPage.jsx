@@ -24,7 +24,7 @@ function AdminLoginPage({ onLogin }) {
   }
 
   return (
-    <main className="adminLoginPage">
+    <main className="adminLoginPage adminIntroContents">
       <form className="adminLoginCard" onSubmit={submit}>
         <img src="/resources/rudicks/img/logo.svg" alt="Cubici" />
         <h1>관리자 로그인</h1>

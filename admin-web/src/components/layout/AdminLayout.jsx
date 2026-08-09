@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export const adminMenu = [
   {
@@ -34,7 +34,7 @@ export const adminMenu = [
       { id: 'contract', title: '계약 관리', href: '/admin/moneybank/approval_tab2' },
       { id: 'settlement', title: '정산 관리', href: '/admin/moneybank/settlement' },
       { id: 'redemption', title: '상환 관리', href: '/admin/moneybank/redemption' },
-      { id: 'manage', title: '프리즘 지표 관리', href: '/admin/moneybank/manage' },
+      { id: 'manage', title: '프리즘 지표 관리', href: '/admin-spa?view=prism-management' },
     ],
   },
   {
@@ -64,7 +64,7 @@ export const adminMenu = [
       { id: 'promotion', title: '연계코드 관리', href: '/admin/cubici/adminPreference/managePromotion' },
       { id: 'partner', title: '협력사 관리', href: '/admin/cubici/adminPreference/managePartner' },
       { id: 'moneybank', title: '머니뱅크 관리', href: '/admin/cubici/adminPreference/manageMoneybank_tab1' },
-      { id: 'prizm', title: 'Prism System', href: '/admin/cubici/adminPreference/prizmConfig' },
+      { id: 'prizm', title: 'Prism System', href: '/admin-spa?view=prism-config' },
     ],
   },
 ];
@@ -79,7 +79,7 @@ function LoadingSpinner() {
   );
 }
 
-function AdminHeader({ adminSession }) {
+function AdminHeader({ adminSession, isNavigationOpen, onToggleNavigation }) {
   const adminEmail = adminSession?.user?.email ?? 'admin@example.com';
 
   return (
@@ -91,6 +91,16 @@ function AdminHeader({ adminSession }) {
               <img src="/resources/rudicks/img/logo-w.svg" alt="Cubici" />
             </a>
           </div>
+          <button
+            aria-controls="admin-navigation"
+            aria-expanded={isNavigationOpen}
+            aria-label={isNavigationOpen ? '관리자 메뉴 닫기' : '관리자 메뉴 열기'}
+            className="adminNavigationToggle"
+            onClick={onToggleNavigation}
+            type="button"
+          >
+            <span aria-hidden="true" />
+          </button>
           <div className="userMenu">
             <div className="userInfo">{adminEmail} 님, 안녕하세요!</div>
             <div className="btns">
@@ -115,7 +125,7 @@ function AdminSidebar({ activeCategoryId, activePageId }) {
   }
 
   return (
-    <aside className="snbArea">
+    <aside className="snbArea" id="admin-navigation">
       <ul id="snb">
         {adminMenu.map((category) => {
           const isActiveCategory = category.id === activeCategoryId;
@@ -174,16 +184,42 @@ function CommonModal({ id }) {
 }
 
 export function AdminLayout({ activeCategoryId, activePageId, adminSession, children }) {
+  const [isNavigationOpen, setIsNavigationOpen] = useState(false);
   const activeCategory = adminMenu.find((category) => category.id === activeCategoryId)
     ?? { id: activeCategoryId, title: activeCategoryId === 'unmappedRoute' ? 'Route 점검' : '' };
   const activePage = activeCategory?.pages?.find((page) => page.id === activePageId)
     ?? { id: activePageId, title: activePageId === 'unmappedRoute' ? '미구현 경로' : '' };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+    setIsNavigationOpen(false);
+  }, [activeCategoryId, activePageId]);
+
+  useEffect(() => {
+    if (!isNavigationOpen) return undefined;
+
+    function closeOnEscape(event) {
+      if (event.key === 'Escape') setIsNavigationOpen(false);
+    }
+
+    document.body.classList.add('adminNavigationOpen');
+    window.addEventListener('keydown', closeOnEscape);
+
+    return () => {
+      document.body.classList.remove('adminNavigationOpen');
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isNavigationOpen]);
+
   return (
     <>
       <LoadingSpinner />
       <div id="wrap" className="adminReactWrap">
-        <AdminHeader adminSession={adminSession} />
+        <AdminHeader
+          adminSession={adminSession}
+          isNavigationOpen={isNavigationOpen}
+          onToggleNavigation={() => setIsNavigationOpen((current) => !current)}
+        />
         <div className="container">
           <figure className="subVisualArea">
             <div className="inner">
@@ -195,7 +231,13 @@ export function AdminLayout({ activeCategoryId, activePageId, adminSession, chil
               </div>
             </div>
           </figure>
-          <div className="subContainer" id="subNavigation">
+          <div className={isNavigationOpen ? 'subContainer navigationOpen' : 'subContainer'} id="subNavigation">
+            <button
+              aria-label="관리자 메뉴 닫기"
+              className="adminNavigationBackdrop"
+              onClick={() => setIsNavigationOpen(false)}
+              type="button"
+            />
             <div className="inner">
               <AdminSidebar activeCategoryId={activeCategoryId} activePageId={activePageId} />
               <div className="subContents">

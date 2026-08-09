@@ -75,12 +75,13 @@ export function MoneybankIntegratedInfoPage() {
   }
 
   return (
-    <section className="adminPage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>통합정보</h2>
-          <p>머니뱅크 선정산, 정산, 상환, 잔액 현황을 확인합니다.</p>
-        </div>
+    <section className="adminPage integratedInfoPage">
+      <div className="legacyTabs">
+        <a href="/admin/cubici/infoIntegrated/cubici_tab1">큐빅아이</a>
+        <a className="active" href="/admin/cubici/infoIntegrated/moneybank_tab1">머니뱅크</a>
+      </div>
+
+      <div className="integratedStatusLine">
         <div className="summaryPills">
           <span>기준 {formatDate(summary?.standard_date)}</span>
           <span>{summary?.data_source_label ?? 'PostgreSQL 직접집계'}</span>
@@ -88,11 +89,6 @@ export function MoneybankIntegratedInfoPage() {
           <span>{summary?.balance_reconcile_status_label ?? '미검증'}</span>
           <span>{isLoading ? '조회 중' : '조회 완료'}</span>
         </div>
-      </div>
-
-      <div className="legacyTabs">
-        <a href="/admin/cubici/infoIntegrated/cubici_tab1">큐빅아이</a>
-        <a className="active" href="/admin/cubici/infoIntegrated/moneybank_tab1">머니뱅크</a>
       </div>
 
       {message ? <p className="statusMessage">{message}</p> : null}

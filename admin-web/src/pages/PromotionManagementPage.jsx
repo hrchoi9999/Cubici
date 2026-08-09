@@ -80,6 +80,7 @@ export function PromotionManagementPage() {
   const [formValues, setFormValues] = useState({ promoCode: '', status: 'all', partnerName: '', orderBy: 'start_date_desc' });
   const [selected, setSelected] = useState(null);
   const [promotionForm, setPromotionForm] = useState(emptyForm);
+  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -188,6 +189,7 @@ export function PromotionManagementPage() {
     event.preventDefault();
     setOffset(0);
     setSelected(null);
+    setIsEditorOpen(false);
     setFilters({
       promo_code: formValues.promoCode,
       status: formValues.status,
@@ -201,6 +203,7 @@ export function PromotionManagementPage() {
     setSelected(null);
     setPromotionForm(next);
     setMessage('');
+    setIsEditorOpen(true);
   }
 
   async function loadDetail(promoCode) {
@@ -209,8 +212,10 @@ export function PromotionManagementPage() {
       const data = await fetchPromotion(promoCode);
       setSelected(data);
       setPromotionForm(mapPromotionToForm(data));
+      setIsEditorOpen(true);
     } catch (error) {
       setSelected(null);
+      setIsEditorOpen(false);
       setMessage(error.message);
     }
   }
@@ -305,6 +310,7 @@ export function PromotionManagementPage() {
       await deletePromotion(selected.promo_code);
       setSelected(null);
       setPromotionForm({ ...emptyForm, promoCode: buildPromoCode(emptyForm) });
+      setIsEditorOpen(false);
       await reloadList(0);
       setMessage('연계코드를 삭제했습니다.');
     } catch (error) {
@@ -420,13 +426,13 @@ export function PromotionManagementPage() {
         </div>
       </div>
 
-      <div className="pagination">
+      <div className="pagination pagingControls">
         <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
       </div>
 
-      <form className="promotionEditorPanel" onSubmit={handleSave}>
+      {isEditorOpen ? <form className="promotionEditorPanel" onSubmit={handleSave}>
         <div className="promotionEditorHeader">
           <h4>{selected ? '연계코드 상세' : '연계코드 등록'}</h4>
           <span>{selected ? selected.status_label : '신규 연계코드'}</span>
@@ -522,7 +528,7 @@ export function PromotionManagementPage() {
           <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
           {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
-      </form>
+      </form> : null}
     </>
   );
 }

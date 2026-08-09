@@ -95,6 +95,7 @@ export function FintechTradeRequestPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [mockForm, setMockForm] = useState(INITIAL_MOCK_FORM);
+  const [isMockFormOpen, setIsMockFormOpen] = useState(false);
   const [isMockSaving, setIsMockSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [detailMessage, setDetailMessage] = useState('');
@@ -143,7 +144,7 @@ export function FintechTradeRequestPage() {
             if (current && nextItems.some((item) => rowKey(item) === rowKey(current))) {
               return current;
             }
-            return nextItems[0] ?? null;
+            return null;
           });
         }
       } catch (error) {
@@ -293,23 +294,21 @@ export function FintechTradeRequestPage() {
   }
 
   return (
-    <section className="adminPage fintechTradePage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>펌뱅킹 전문</h2>
-          <p>TRADE_REQUEST_BIN 요청/응답 전문을 조회하고 300 byte parser 결과를 확인합니다.</p>
-        </div>
-        <div className="summaryPills">
+    <section className="adminPage monitoringPage fintechTradePage">
+      <div className="m-options managementOptions monitoringOptions">
+        <div className="pRight summaryPills">
           <span>전체 {total.toLocaleString()}건</span>
           <span>실송금 {status?.live_transfer_enabled ? '활성' : '비활성'}</span>
           <span>{isLoading ? '조회 중' : `페이지 ${currentPage} / ${pageCount}`}</span>
+          <button
+            className="sBtn sColorN fintechMockToggle"
+            type="button"
+            aria-expanded={isMockFormOpen}
+            onClick={() => setIsMockFormOpen((value) => !value)}
+          >
+            MOCK 생성
+          </button>
         </div>
-      </div>
-
-      <div className="legacyTabs">
-        <a href="/admin/cubici/adminMonitor/error_report">Error Log</a>
-        <a href="/admin/cubici/adminMonitor/server_monitor">서버 관리</a>
-        <a className="active" href="/admin/cubici/adminMonitor/fintech_trade">펌뱅킹 전문</a>
       </div>
 
       <form className="m-search searchArea" onSubmit={handleSearch}>
@@ -367,12 +366,12 @@ export function FintechTradeRequestPage() {
           </div>
         </div>
         <div className="line fintechSearchActions">
-          <button className="m-btn m-btnPrimary" type="submit">검색</button>
-          <button className="m-btn" type="button" onClick={resetSearch}>초기화</button>
+          <button className="sBtn sColorLB" type="submit">검색</button>
+          <button className="sBtn sColorN" type="button" onClick={resetSearch}>초기화</button>
         </div>
       </form>
 
-      <form className="m-search searchArea fintechMockForm" onSubmit={handleMockSubmit}>
+      {isMockFormOpen ? <form className="m-search searchArea fintechMockForm" onSubmit={handleMockSubmit}>
         <div className="fintechMockHeader">
           <h3>MOCK 송금요청 생성</h3>
           <span>외부 송금 비활성</span>
@@ -422,11 +421,11 @@ export function FintechTradeRequestPage() {
             <label htmlFor="mockWithdrawalSummary">출금적요</label>
             <input id="mockWithdrawalSummary" name="withdrawal_summary" type="text" maxLength="20" value={mockForm.withdrawal_summary} onChange={updateMockValue} />
           </div>
-          <button className="m-btn m-btnPrimary" type="submit" disabled={isMockSaving}>
+          <button className="sBtn sColorLB" type="submit" disabled={isMockSaving}>
             {isMockSaving ? '저장 중' : 'MOCK 저장'}
           </button>
           <button
-            className="m-btn"
+            className="sBtn sColorN"
             type="button"
             onClick={() => setMockForm({ ...INITIAL_MOCK_FORM, seq_no: makeDefaultSeqNo() })}
             disabled={isMockSaving}
@@ -435,12 +434,13 @@ export function FintechTradeRequestPage() {
           </button>
         </div>
         {mockMessage ? <div className="fintechMockMessage">{mockMessage}</div> : null}
-      </form>
+      </form> : null}
 
       {message ? <div className="m-alert">{message}</div> : null}
 
       <div className="tableScroll">
-        <table className="m-table fintechTradeTable">
+        <table className="m-shadowTable fintechTradeTable">
+          <caption className="caption">펌뱅킹 전문 목록</caption>
           <thead>
             <tr>
               <th>요청일시</th>
@@ -487,13 +487,13 @@ export function FintechTradeRequestPage() {
         </table>
       </div>
 
-      <div className="pagination">
-        <button className="m-btn" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+      <div className="pagingControls">
+        <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
-        <button className="m-btn" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+        <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
       </div>
 
-      <TradeRequestDetailPanel detail={detail} message={detailMessage} isLoading={isDetailLoading} />
+      {selected ? <TradeRequestDetailPanel detail={detail} message={detailMessage} isLoading={isDetailLoading} /> : null}
     </section>
   );
 }

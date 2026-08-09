@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const partnerRow = {
   row_no: 1,
   partner_id: '1234567890',
@@ -40,6 +42,7 @@ const partnerDetail = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/partners?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

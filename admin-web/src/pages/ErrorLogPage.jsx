@@ -65,7 +65,7 @@ export function ErrorLogPage() {
             pending: data.pending_action_count ?? data.fail_count ?? 0,
             workflow: data.workflow_status_label ?? '-',
           });
-          setSelected((current) => current ?? data.items?.[0] ?? null);
+          setSelected(null);
         }
       } catch (error) {
         if (!ignore) {
@@ -123,13 +123,7 @@ export function ErrorLogPage() {
   }
 
   return (
-    <>
-      <div className="legacyTabs">
-        <a className="active" href="/admin/cubici/adminMonitor/error_report">Error Log</a>
-        <a href="/admin/cubici/adminMonitor/server_monitor">서버 관리</a>
-        <a href="/admin/cubici/adminMonitor/fintech_trade">펌뱅킹 전문</a>
-      </div>
-
+    <section className="adminPage monitoringPage errorLogPage">
       <form className="m-search searchArea" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
@@ -156,11 +150,11 @@ export function ErrorLogPage() {
             <label htmlFor="errorScenario">시나리오명</label>
             <input id="errorScenario" name="scenario" type="text" value={formValues.scenario} onChange={updateSearchValue} />
           </div>
-          <button className="m-btn m-btnPrimary" type="submit">검색</button>
+          <button className="sBtn sColorLB" type="submit">검색</button>
         </div>
       </form>
 
-      <div className="inquirySummary">
+      <div className="summaryStrip inquirySummary monitoringSummary">
         <span>전체 {total.toLocaleString()}건</span>
         <span>성공 {counts.success.toLocaleString()}건</span>
         <span>실패 {counts.fail.toLocaleString()}건</span>
@@ -172,60 +166,65 @@ export function ErrorLogPage() {
       {message ? <div className="m-alert">{message}</div> : null}
 
       <div className="tableScroll">
-        <table className="m-table errorLogTable">
+        <table className="m-shadowTable errorLogTable">
+          <caption className="caption">에러로그 목록</caption>
           <thead>
             <tr>
               <th>쇼핑몰</th>
               <th>ID</th>
               <th>시나리오</th>
               <th>시작일</th>
-              <th>실행시간</th>
               <th>상태</th>
-              <th>처리</th>
-              <th>후속조치</th>
               <th>에러로그</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, index) => (
-              <tr key={`${row.status}-${row.shop_id ?? 'shop'}-${row.started_at ?? index}`} onClick={() => setSelected(row)}>
+              <tr
+                key={`${row.status}-${row.shop_id ?? 'shop'}-${row.started_at ?? index}`}
+                className={selected === row ? 'active' : ''}
+                onClick={() => setSelected(row)}
+              >
                 <td>{row.shop_name ?? '-'}</td>
                 <td>{row.shop_id ?? '-'}</td>
                 <td className="subject">{row.scenario ?? '-'}</td>
                 <td>{formatDateTime(row.started_at)}</td>
-                <td>{row.runtime_label}</td>
                 <td>
                   <span className={`sBtn ${row.status === '성공' ? 'sColorLS' : 'sColorR'} rBtn`}>{row.status}</span>
                 </td>
-                <td>{row.processing_status_label ?? '-'}</td>
-                <td>{row.follow_up_action_label ?? '-'}</td>
                 <td className="subject">{shortLog(row.error_log)}</td>
               </tr>
             ))}
+            {isLoading ? (
+              <tr>
+                <td colSpan="6">조회 중입니다.</td>
+              </tr>
+            ) : null}
             {!isLoading && rows.length === 0 ? (
               <tr>
-                <td colSpan="9">조회된 데이터가 없습니다.</td>
+                <td colSpan="6">조회된 데이터가 없습니다.</td>
               </tr>
             ) : null}
           </tbody>
         </table>
       </div>
 
-      <div className="pagination">
-        <button className="m-btn" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+      <div className="pagingControls">
+        <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
-        <button className="m-btn" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+        <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
       </div>
 
-      <section className="messageTemplatePreview errorLogPreview">
+      {selected ? <section className="messageTemplatePreview errorLogPreview">
         <h4>에러로그 상세</h4>
         <div className="summaryPills">
           <span>{selected?.processing_status_label ?? '미선택'}</span>
+          <span>{selected?.runtime_label ?? '-'}</span>
           <span>{selected?.source_table ?? '-'}</span>
           <span>{selected?.follow_up_action_label ?? '-'}</span>
         </div>
         <p>{selected ? selected.error_log || '-' : '선택된 로그가 없습니다.'}</p>
-      </section>
-    </>
+      </section> : null}
+    </section>
   );
 }

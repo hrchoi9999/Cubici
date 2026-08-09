@@ -78,12 +78,13 @@ export function CubiciIntegratedInfoPage() {
   }
 
   return (
-    <section className="adminPage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>통합정보</h2>
-          <p>큐빅아이 회원, 머니뱅크 전환, 해지, 결제 요약을 확인합니다.</p>
-        </div>
+    <section className="adminPage integratedInfoPage">
+      <div className="legacyTabs">
+        <a className="active" href="/admin/cubici/infoIntegrated/cubici_tab1">큐빅아이</a>
+        <a href="/admin/cubici/infoIntegrated/moneybank_tab1">머니뱅크</a>
+      </div>
+
+      <div className="integratedStatusLine">
         <div className="summaryPills">
           <span>기준 {formatDate(metrics?.standard_date)}</span>
           <span>{metrics?.data_source_label ?? 'PostgreSQL 직접집계'}</span>
@@ -91,11 +92,6 @@ export function CubiciIntegratedInfoPage() {
           <span>{metrics?.shop_grouping_status_label ?? 'shop grouping 대조 필요'}</span>
           <span>{isLoading ? '조회 중' : '조회 완료'}</span>
         </div>
-      </div>
-
-      <div className="legacyTabs">
-        <a className="active" href="/admin/cubici/infoIntegrated/cubici_tab1">큐빅아이</a>
-        <a href="/admin/cubici/infoIntegrated/moneybank_tab1">머니뱅크</a>
       </div>
 
       {message ? <p className="statusMessage">{message}</p> : null}

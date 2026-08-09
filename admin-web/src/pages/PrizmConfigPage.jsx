@@ -335,13 +335,13 @@ export function PrizmConfigPage() {
         </table>
       </div>
 
-      <div className="paginationBar">
+      <div className="paginationBar pagingControls">
         <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" onClick={goToNextPage} disabled={currentPage >= pageCount}>다음</button>
       </div>
 
-      <form className="prizmConfigPanel" onSubmit={handleSave}>
+      {selected ? <form className="prizmConfigPanel" onSubmit={handleSave}>
         <div className="prizmConfigHeader">
           <div>
             <h4>{selected ? '평가항목 수정' : '평가항목 선택'}</h4>
@@ -394,7 +394,7 @@ export function PrizmConfigPage() {
         <div className="prizmConfigActions">
           <button type="submit" className="primaryButton" disabled={!selected || isSaving}>수정</button>
         </div>
-      </form>
+      </form> : null}
 
       <div className="prizmRecordPanel">
         <h4>최근 변경이력</h4>

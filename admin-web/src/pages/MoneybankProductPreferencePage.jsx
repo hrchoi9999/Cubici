@@ -500,14 +500,14 @@ export function MoneybankProductPreferencePage() {
       ) : null}
 
       {!isRegisterRoute ? (
-        <div className="paginationBar">
+        <div className="paginationBar pagingControls">
           <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
           <span>{currentPage} / {pageCount}</span>
           <button type="button" onClick={goToNextPage} disabled={currentPage >= pageCount}>다음</button>
         </div>
       ) : null}
 
-      <form className="moneybankProductPanel" onSubmit={handleSave}>
+      {isRegisterRoute || selected ? <form className="moneybankProductPanel" onSubmit={handleSave}>
         <div className="moneybankProductHeader">
           <div>
             <h4>{selected ? '상품 상세' : '상품등록'}</h4>
@@ -621,7 +621,7 @@ export function MoneybankProductPreferencePage() {
         <div className="moneybankProductActions">
           <button type="submit" className="primaryButton" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
         </div>
-      </form>
+      </form> : null}
     </section>
   );
 }

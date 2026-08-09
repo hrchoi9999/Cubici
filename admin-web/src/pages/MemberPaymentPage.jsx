@@ -231,7 +231,7 @@ export function MemberPaymentPage() {
         </table>
       </div>
 
-      <div className="pagination">
+      <div className="pagingControls pagination">
         <button className="m-btn" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button className="m-btn" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>

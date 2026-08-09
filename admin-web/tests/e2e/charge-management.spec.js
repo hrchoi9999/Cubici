@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const charge = {
   row_no: 1,
   charge_code: 'B0101',
@@ -20,6 +22,7 @@ const charge = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/preferences/charges?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',

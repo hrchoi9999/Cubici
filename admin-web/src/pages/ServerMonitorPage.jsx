@@ -53,13 +53,9 @@ export function ServerMonitorPage() {
   }, [hours, refreshKey]);
 
   return (
-    <section className="adminPage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>모니터링</h2>
-          <p>API, PostgreSQL, 배치 실행 상태를 점검합니다.</p>
-        </div>
-        <div className="summaryPills">
+    <section className="adminPage monitoringPage serverMonitorPage">
+      <div className="m-options managementOptions monitoringOptions">
+        <div className="pRight summaryPills">
           <span>상태 {status?.overall_status ?? (isLoading ? '조회 중' : '-')}</span>
           <span>{status?.metric_source_label ?? 'FastAPI/DB/배치 로그 기반'}</span>
           <span>{status?.metric_source_status_label ?? '외부 서버 metric 미연동'}</span>
@@ -70,24 +66,20 @@ export function ServerMonitorPage() {
         </div>
       </div>
 
-      <div className="legacyTabs">
-        <a href="/admin/cubici/adminMonitor/error_report">Error Log</a>
-        <a className="active" href="/admin/cubici/adminMonitor/server_monitor">서버 관리</a>
-        <a href="/admin/cubici/adminMonitor/fintech_trade">펌뱅킹 전문</a>
-      </div>
-
-      <form className="legacySearchBox" onSubmit={(event) => event.preventDefault()}>
-        <label>
-          <span>조회범위</span>
-          <select name="hours" value={hours} onChange={(event) => setHours(event.target.value)}>
-            <option value="1">최근 1시간</option>
-            <option value="6">최근 6시간</option>
-            <option value="24">최근 24시간</option>
-            <option value="72">최근 72시간</option>
-            <option value="168">최근 7일</option>
-          </select>
-        </label>
-        <button type="button" className="primaryButton" onClick={() => setRefreshKey((value) => value + 1)}>새로고침</button>
+      <form className="m-search searchArea monitoringFilterBar" onSubmit={(event) => event.preventDefault()}>
+        <div className="line">
+          <div className="inputBox">
+            <label htmlFor="serverMonitorHours">조회범위</label>
+            <select id="serverMonitorHours" name="hours" value={hours} onChange={(event) => setHours(event.target.value)}>
+              <option value="1">최근 1시간</option>
+              <option value="6">최근 6시간</option>
+              <option value="24">최근 24시간</option>
+              <option value="72">최근 72시간</option>
+              <option value="168">최근 7일</option>
+            </select>
+          </div>
+          <button type="button" className="sBtn sColorLB" onClick={() => setRefreshKey((value) => value + 1)}>새로고침</button>
+        </div>
       </form>
 
       {message ? <div className="m-alert">{message}</div> : null}
@@ -112,30 +104,33 @@ export function ServerMonitorPage() {
 
       <div className="serverStatusPanel">
         <h4>점검 기준</h4>
-        <table className="legacyTable serverStatusTable">
-          <tbody>
-            <tr>
-              <th>Metric Source</th>
-              <td>현재는 FastAPI self-check, PostgreSQL 연결, `cbci_scheduled_report`, `cbci_err_report` 기준이다. 외부 서버 metric은 2차 연동 범위다.</td>
-            </tr>
-            <tr>
-              <th>API 서버</th>
-              <td>FastAPI `/v1/api/monitoring/server-status` 응답 기준</td>
-            </tr>
-            <tr>
-              <th>PostgreSQL</th>
-              <td>DB 연결 후 `select now()` 실행 기준</td>
-            </tr>
-            <tr>
-              <th>배치 성공</th>
-              <td>`cbci_scheduled_report`의 최근 실행 건수 기준</td>
-            </tr>
-            <tr>
-              <th>배치 실패</th>
-              <td>`cbci_err_report`의 최근 실패 건수 기준</td>
-            </tr>
-          </tbody>
-        </table>
+        <div className="tableScroll">
+          <table className="legacyTable serverStatusTable">
+            <caption className="caption">서버 점검 기준</caption>
+            <tbody>
+              <tr>
+                <th>Metric Source</th>
+                <td>현재는 FastAPI self-check, PostgreSQL 연결, `cbci_scheduled_report`, `cbci_err_report` 기준이다. 외부 서버 metric은 2차 연동 범위다.</td>
+              </tr>
+              <tr>
+                <th>API 서버</th>
+                <td>FastAPI `/v1/api/monitoring/server-status` 응답 기준</td>
+              </tr>
+              <tr>
+                <th>PostgreSQL</th>
+                <td>DB 연결 후 `select now()` 실행 기준</td>
+              </tr>
+              <tr>
+                <th>배치 성공</th>
+                <td>`cbci_scheduled_report`의 최근 실행 건수 기준</td>
+              </tr>
+              <tr>
+                <th>배치 실패</th>
+                <td>`cbci_err_report`의 최근 실패 건수 기준</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

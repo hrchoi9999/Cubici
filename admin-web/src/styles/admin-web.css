@@ -2,37 +2,72 @@
   min-height: 100vh;
 }
 
+html,
+body {
+  min-width: 0;
+  margin: 0;
+  background: #f8f9fc;
+}
+
+.adminReactWrap,
+.adminReactWrap * {
+  box-sizing: border-box;
+}
+
+.adminReactWrap figure,
+.adminReactWrap ul,
+.adminReactWrap ol {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 #wrap.adminReactWrap {
   min-width: 0;
 }
 
 .adminLoginPage {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background: #eef3f8;
+  background-color: #002e6e;
+  background-position: center center;
+  background-size: cover;
+}
+
+.adminLoginPage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 46, 110, 0.18);
 }
 
 .adminLoginCard {
+  position: relative;
+  z-index: 1;
   width: 380px;
-  padding: 34px;
+  padding: 38px 34px 34px;
   background: #fff;
-  border: 1px solid #d8e2ec;
-  box-shadow: 0 16px 38px rgba(31, 49, 74, 0.14);
+  border: 1px solid rgba(0, 46, 110, 0.18);
+  border-top: 4px solid #002e6e;
+  box-shadow: 0 22px 48px rgba(0, 20, 48, 0.26);
 }
 
 .adminLoginCard img {
-  width: 128px;
+  width: 142px;
   display: block;
-  margin-bottom: 28px;
+  margin: 0 auto 28px;
 }
 
 .adminLoginCard h1 {
-  margin: 0 0 24px;
-  color: #1c2f46;
-  font-size: 24px;
+  margin: 0 0 26px;
+  color: #002e6e;
+  font-size: 25px;
+  font-weight: 500;
+  text-align: center;
 }
 
 .adminLoginCard label {
@@ -48,6 +83,7 @@
   padding: 0 12px;
   border: 1px solid #c9d5e2;
   color: #1d2d3f;
+  font-size: 14px;
 }
 
 .adminLoginCard button {
@@ -77,6 +113,19 @@
 
 .adminReactWrap #header {
   min-width: 0;
+}
+
+.adminReactWrap #header .topLine {
+  box-shadow: 0 0 24px rgba(24, 66, 129, 0.58);
+}
+
+.adminReactWrap #header .topLine .inner {
+  max-width: 1440px;
+}
+
+.adminNavigationToggle,
+.adminNavigationBackdrop {
+  display: none;
 }
 
 .adminReactWrap .inner {
@@ -109,10 +158,12 @@
 }
 
 #snb > li > .snbCategoryButton {
+  appearance: none;
   display: block;
   position: relative;
   width: 100%;
-  padding: 15px 30px;
+  min-height: 47px;
+  padding: 14px 30px;
   border: 0;
   border-bottom: 1px solid #ddd;
   background: #bec1c7;
@@ -155,6 +206,17 @@
   display: block;
 }
 
+.adminReactWrap .subVisual .txtBox h2 {
+  width: auto;
+  min-width: 118px;
+  padding: 0 18px;
+  white-space: nowrap;
+}
+
+.adminReactWrap .subVisual .txtBox h3 {
+  white-space: nowrap;
+}
+
 .searchArea {
   margin-bottom: 30px;
 }
@@ -172,6 +234,8 @@
 
 .searchArea.m-search {
   padding: 25px;
+  border: 1px solid rgba(0, 0, 0, .03);
+  background: #fff;
 }
 
 .searchArea .inputBox {
@@ -183,6 +247,10 @@
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+}
+
+.searchArea .inputBox:focus-within {
+  border-color: #8ca9ce;
 }
 
 .searchArea label {
@@ -201,6 +269,16 @@
   border: 0;
   border-left: 1px solid #ddd;
   padding: 0 8px;
+}
+
+.searchArea input:focus,
+.searchArea select:focus {
+  outline: none;
+}
+
+.searchArea input[type="date"] {
+  color: #666;
+  text-align: right;
 }
 
 .searchArea select {
@@ -238,9 +316,39 @@
 .adminReactPage .fixBottom .tableTotal {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 10px 16px;
   align-items: center;
-  padding: 16px 10px 0;
+  padding: 8px 12px 0;
+  color: #333;
+  font-size: 13px;
+}
+
+.adminReactPage .fixTable .fixBottom {
+  padding: 12px 0;
+}
+
+.adminReactPage .fixBottom .tableTotal li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.adminReactPage .fixBottom .tableTotal .txt {
+  color: #555;
+}
+
+.adminReactPage .fixBottom .tableTotal .result {
+  color: #002e6e;
+  font-weight: 500;
+}
+
+.adminReactPage .fixTable .fixBottom .tableTotal .txt,
+.adminReactPage .fixTable .fixBottom .tableTotal .result {
+  color: #fff;
+}
+
+.adminReactPage .fixTable .fixBottom .tableTotal .result {
+  margin-left: 0;
 }
 
 #fixTbody td {
@@ -250,6 +358,7 @@
 .table-scroll {
   max-width: 100%;
   overflow-x: auto;
+  padding-bottom: 2px;
 }
 
 .tableScroll,
@@ -262,6 +371,47 @@
   height: auto;
   min-width: max-content;
   overflow: visible;
+}
+
+.adminReactPage .legacyListTable {
+  border-top: 2px solid #002e6e;
+  background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, .04);
+}
+
+.adminReactPage .legacyListTable .overflowBox {
+  min-width: 100%;
+}
+
+.adminReactPage .legacyListTable .overflowBox::before {
+  width: 100%;
+}
+
+.adminReactPage table {
+  border-collapse: collapse;
+}
+
+.adminReactPage .m-shadowTable {
+  color: #333;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.adminReactPage .m-shadowTable thead th {
+  padding: 12px 10px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.adminReactPage .m-shadowTable tbody tr > * {
+  padding: 12px 10px 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+.adminReactPage .m-shadowTable tbody tr:hover > * {
+  background-color: #f8fbff;
 }
 
 .detailPanel {
@@ -332,17 +482,28 @@
   align-items: center;
 }
 
+#pagingButton .num,
 #pagingButton button {
-  min-width: 32px;
-  min-height: 28px;
-  border: 1px solid #ccc;
-  background: #fff;
-  color: #333;
+  box-sizing: border-box;
+  width: 40px;
+  min-width: 40px;
+  height: 38px;
+  min-height: 38px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #9fb2cf;
+  line-height: 36px;
+}
+
+#pagingButton button {
+  background: #9fb2cf;
+  background-image: none;
+  color: #fff;
   font-size: 12px;
 }
 
 #pagingButton button:disabled {
-  opacity: 0.4;
+  opacity: 1;
   cursor: default;
 }
 
@@ -353,11 +514,49 @@
 }
 
 .detailPanel {
-  margin-top: 28px;
+  margin-top: 26px;
+  padding-top: 2px;
 }
 
 .detailSection {
+  margin-top: 20px;
+}
+
+.pagingControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: 22px;
+}
+
+.pagingControls .sBtn,
+.pagingControls > button {
+  min-width: 52px;
+  height: 38px;
+  margin: 0;
+  padding: 0 10px;
+  border: 1px solid #9fb2cf;
+  background: #9fb2cf;
+  color: #fff;
+  line-height: 36px;
+}
+
+.pagingControls > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 38px;
+  background: #002e6e;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pagingControls button:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 .detailSection h3 {
@@ -388,6 +587,184 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
 }
 
+.detailPanel .m-tab {
+  margin-bottom: 14px;
+}
+
+.adminPageHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #e2e6ec;
+}
+
+.adminPageHeader h2 {
+  margin: 0 0 6px;
+  color: #222;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.adminPageHeader p {
+  margin: 0;
+  color: #666;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.summaryPills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 560px;
+}
+
+.summaryPills span,
+.summaryStrip span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #d8dee7;
+  background: #fff;
+  color: #555;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.legacyTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+
+.legacyTabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: 100%;
+  height: 36px;
+  border: 1px solid #d8dee7;
+  background: #fff;
+  color: #555;
+  font-size: 13px;
+}
+
+.legacyTabs a + a {
+  margin-left: -1px;
+}
+
+.legacyTabs a.active {
+  position: relative;
+  z-index: 1;
+  border-color: #002e6e;
+  background: #002e6e;
+  color: #fff;
+}
+
+.legacySearchBox {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(170px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 14px;
+  padding: 18px;
+  border: 1px solid rgba(0, 0, 0, .03);
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .05);
+}
+
+.legacySearchBox label {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 30px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+
+.legacySearchBox label span {
+  flex: 0 0 82px;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.legacySearchBox input,
+.legacySearchBox select {
+  min-width: 0;
+  width: 100%;
+  height: 28px;
+  border: 0;
+  border-left: 1px solid #ddd;
+  padding: 0 8px;
+  background: #fff;
+  color: #555;
+}
+
+.legacyTable {
+  width: 100%;
+  border-top: 2px solid #002e6e;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+
+.legacyTable th,
+.legacyTable td {
+  height: 38px;
+  border-bottom: 1px solid #e1e1e1;
+  padding: 9px 10px;
+  line-height: 1.4;
+}
+
+.legacyTable th {
+  background: #f4f6f9;
+  color: #222;
+  font-weight: 500;
+}
+
+.statusMessage,
+.formMessage {
+  margin: 10px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #444;
+  font-size: 13px;
+}
+
+.formMessage.error {
+  border-color: #efb5a7;
+  background: #fff3ef;
+  color: #8a2c1d;
+}
+
+.adminReactPage input,
+.adminReactPage select,
+.adminReactPage textarea,
+.adminReactPage button {
+  font-family: inherit;
+}
+
+.adminReactPage input[readonly],
+.adminReactPage input:disabled,
+.adminReactPage select:disabled,
+.adminReactPage textarea:disabled {
+  color: #777;
+  background-color: #f6f7f9;
+}
+
+.adminReactPage textarea {
+  line-height: 1.55;
+}
+
 .migrationStatusPanel {
   margin-bottom: 22px;
 }
@@ -413,6 +790,12 @@
   margin-bottom: 24px;
 }
 
+.managementWarningArea .maxHeight {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .managementWarningTable {
   min-width: 920px;
 }
@@ -424,10 +807,17 @@
 }
 
 .managementChartBox {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
   margin-top: 22px;
 }
 
 .managementChartBox .contentArea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
 }
 
@@ -553,17 +943,18 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
 .detailActionRow {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-top: 12px;
-  padding: 10px 12px;
+  margin-top: 14px;
+  padding: 12px 14px;
   border: 1px solid #ddd;
-  background: #fafafa;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
 }
 
 .detailActionRow span {
@@ -577,7 +968,7 @@
 }
 
 .contractFeeForm {
-  padding: 16px;
+  padding: 18px;
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
@@ -592,6 +983,7 @@
 
 .contractFeeGrid label {
   display: grid;
+  grid-template-rows: auto 30px;
   gap: 6px;
   color: #333;
   font-size: 13px;
@@ -610,11 +1002,16 @@
 
 .contractFeeRateTable {
   background: #fff;
+  border-top: 2px solid #002e6e;
 }
 
 .contractFeeRateTable th,
 .contractFeeRateTable td {
   text-align: center;
+  height: 36px;
+  border-bottom: 1px solid #e1e1e1;
+  padding: 7px 8px;
+  font-size: 13px;
 }
 
 .contractFeeActions {
@@ -626,12 +1023,12 @@
 
 .redemptionOperationForms {
   display: grid;
-  gap: 14px;
-  margin-top: 16px;
+  gap: 16px;
+  margin-top: 18px;
 }
 
 .redemptionOperationHistory {
-  margin-top: 16px;
+  margin-top: 18px;
 }
 
 .redemptionOperationHistory h3 {
@@ -645,8 +1042,8 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: end;
-  margin-bottom: 10px;
-  padding: 10px;
+  margin-bottom: 12px;
+  padding: 12px;
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
@@ -761,7 +1158,7 @@
 }
 
 .redemptionOperationForm {
-  padding: 16px;
+  padding: 18px;
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
@@ -787,6 +1184,7 @@
 
 .redemptionOperationGrid label {
   display: grid;
+  grid-template-rows: auto 30px;
   gap: 5px;
   color: #333;
   font-size: 13px;
@@ -811,7 +1209,7 @@
 
 .documentCheckForm {
   margin-bottom: 14px;
-  padding: 16px;
+  padding: 18px;
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
@@ -825,6 +1223,7 @@
 
 .documentCheckGrid label {
   display: grid;
+  grid-template-rows: auto 30px;
   gap: 5px;
   color: #333;
   font-size: 13px;
@@ -904,7 +1303,7 @@
 
 .reviewNotePanel,
 .documentFiles {
-  padding: 16px;
+  padding: 18px;
   border: 1px solid #ddd;
   background: #fff;
   box-shadow: 0 0 10px rgba(0, 0, 0, .04);
@@ -918,16 +1317,15 @@
 .inquirySummary {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 6px;
+  margin-bottom: 12px;
   color: #333;
   font-size: 13px;
 }
 
 .inquirySummary span {
-  padding: 4px 8px;
-  border: 1px solid #ddd;
-  background: #fff;
+  min-width: 112px;
+  justify-content: center;
 }
 
 .inquiryTable {
@@ -947,11 +1345,18 @@
   margin-top: 18px;
 }
 
+.inquiryDetail:not(.isOpen),
+.messageTemplateEditor:not(.isOpen),
+.customerBoardEditor:not(.isOpen) {
+  display: none;
+}
+
 .inquiryContent {
   margin-top: 12px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid #ddd;
   background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
 }
 
 .inquiryContent h4 {
@@ -970,9 +1375,10 @@
 
 .inquiryReplyForm {
   margin-top: 12px;
-  padding: 14px;
+  padding: 16px;
   border: 1px solid #ddd;
   background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
 }
 
 .inquiryReplyForm label {
@@ -1025,7 +1431,7 @@
 }
 
 .errorLogTable {
-  min-width: 1120px;
+  min-width: 980px;
 }
 
 .errorLogTable th,
@@ -1035,6 +1441,18 @@
 
 .errorLogTable .subject {
   text-align: left;
+}
+
+.errorLogTable tbody tr {
+  cursor: pointer;
+}
+
+.errorLogTable tbody tr.active td {
+  background: #f3f7ff;
+}
+
+.monitoringSummary {
+  margin-bottom: 12px;
 }
 
 .messageTemplateEditor {
@@ -1109,15 +1527,16 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(170px, 1fr));
   gap: 12px;
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .memberMetricGrid article {
   display: grid;
-  grid-template-columns: 92px 1fr;
-  min-height: 76px;
+  grid-template-columns: 96px 1fr;
+  min-height: 84px;
   border: 1px solid #ddd;
   background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, .04);
 }
 
 .memberMetricGrid .colorBox {
@@ -1128,22 +1547,35 @@
   color: #fff;
   font-size: 13px;
   font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .memberMetricGrid .txtBox {
   display: flex;
   align-items: center;
-  padding: 8px 10px;
+  padding: 10px 12px;
+  color: #333;
+  font-size: 13px;
+}
+
+.memberMetricGrid .txtBox table {
+  width: 100%;
+}
+
+.memberMetricGrid .txtBox td {
+  height: 26px;
   color: #333;
   font-size: 13px;
 }
 
 .memberTrendPanel {
   margin-top: 12px;
-  margin-bottom: 14px;
-  padding: 14px;
+  margin-bottom: 16px;
+  padding: 16px;
   border: 1px solid #ddd;
   background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
 }
 
 .memberTrendHeader {
@@ -1168,7 +1600,7 @@
 
 .memberTrendRow {
   display: grid;
-  grid-template-columns: 92px 1fr 110px;
+  grid-template-columns: 96px minmax(180px, 1fr) 120px;
   align-items: center;
   gap: 10px;
   font-size: 12px;
@@ -1913,6 +2345,10 @@
   margin-top: 14px;
 }
 
+.monitoringFilterBar .line {
+  grid-template-columns: minmax(220px, 1fr) 140px;
+}
+
 .serverStatusCard,
 .serverStatusEmpty,
 .serverStatusPanel {
@@ -2156,6 +2592,18 @@
   grid-template-columns: repeat(4, minmax(180px, 1fr));
   gap: 12px;
   margin-top: 14px;
+  margin-bottom: 14px;
+}
+
+.integratedStatusLine {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 28px;
+  margin-bottom: 14px;
+}
+
+.integratedStatusLine .summaryPills {
+  max-width: none;
 }
 
 .integratedMetricGrid article,
@@ -2166,7 +2614,8 @@
 
 .integratedMetricGrid article {
   min-height: 126px;
-  padding: 14px;
+  padding: 16px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, .04);
 }
 
 .integratedMetricGrid h4,
@@ -2180,7 +2629,8 @@
   display: block;
   margin-top: 14px;
   color: #222;
-  font-size: 24px;
+  font-size: 26px;
+  font-weight: 500;
 }
 
 .integratedMetricGrid span {
@@ -2191,8 +2641,11 @@
 }
 
 .integratedPanel {
+  max-width: 100%;
+  overflow-x: auto;
   margin-top: 14px;
-  padding: 14px;
+  padding: 16px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
 }
 
 .integratedPanel h4 {
@@ -2370,6 +2823,12 @@
   border-top: 2px solid #576071;
 }
 
+.fintechMockToggle {
+  min-height: 30px;
+  border: 0;
+  cursor: pointer;
+}
+
 .fintechMockHeader {
   display: flex;
   align-items: center;
@@ -2528,7 +2987,732 @@
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
 
+  .managementKpiArea article {
+    width: calc(50% - 6px);
+  }
+
+  .legacySearchBox {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .integratedStatusLine {
+    justify-content: flex-start;
+  }
+
+  .integratedStatusLine .summaryPills {
+    justify-content: flex-start;
+  }
+
   .fintechParserSummary {
     grid-template-columns: 1fr;
   }
+
+  .fintechMockForm .line:last-of-type {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* LV visual language for the shared admin shell. */
+#wrap.adminReactWrap {
+  background: #f8f9fc;
+  color: #333;
+}
+
+#wrap.adminReactWrap a {
+  text-decoration: none;
+}
+
+#wrap.adminReactWrap #header .topLine {
+  background: linear-gradient(105deg, #0e57bf 0%, #29347e 100%);
+  box-shadow: 0 8px 24px rgba(41, 52, 126, 0.2);
+}
+
+#wrap.adminReactWrap #header .topLine .inner {
+  min-height: 74px;
+}
+
+#wrap.adminReactWrap #header .logo img {
+  width: 142px;
+}
+
+#wrap.adminReactWrap #header .userMenu,
+#wrap.adminReactWrap #header .userInfo {
+  color: #fff;
+}
+
+#wrap.adminReactWrap #header .userMenu .hrBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 4px;
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 13px;
+  text-decoration: none;
+}
+
+#wrap.adminReactWrap .subVisualArea {
+  background: linear-gradient(105deg, #5a9aff 0%, #3d47c5 58%, #29347e 100%);
+}
+
+#wrap.adminReactWrap .subVisual .txtBox h2,
+#wrap.adminReactWrap .subVisual .txtBox h3 {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .subVisual .txtBox h2 {
+  border-color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+#wrap.adminReactWrap .subContainer {
+  background: #f8f9fc;
+}
+
+#wrap.adminReactWrap #snb {
+  overflow: hidden;
+  width: 170px;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  list-style: none;
+  border: 1px solid #e2e4ea;
+  background: #fff;
+  box-shadow: 0 10px 24px rgba(41, 52, 126, 0.06);
+}
+
+#wrap.adminReactWrap #snb li {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#wrap.adminReactWrap .snbArea {
+  width: 170px;
+}
+
+#wrap.adminReactWrap #snb > li > .snbCategoryButton {
+  min-height: 52px;
+  border-bottom-color: #e2e4ea;
+  background: #fff;
+  color: #333;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap #snb > li > .snbCategoryButton:hover {
+  background: #f0f4ff;
+  color: #0d37a4;
+}
+
+#wrap.adminReactWrap #snb > li.active > .snbCategoryButton {
+  background: #0e57bf;
+  color: #fff;
+}
+
+#wrap.adminReactWrap #snb > li > ul {
+  display: none;
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid #e2e4ea;
+  background: #fff;
+}
+
+#wrap.adminReactWrap #snb > li.open > ul {
+  display: block;
+}
+
+#wrap.adminReactWrap #snb > li > ul a {
+  display: block;
+  padding: 15px;
+  border-bottom: 1px solid #e2e4ea;
+  color: #666;
+}
+
+#wrap.adminReactWrap #snb > li > ul li.active a {
+  color: #0d37a4;
+  background: #f0f4ff;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .subContents {
+  min-width: 0;
+  margin-left: 200px;
+  width: calc(100% - 200px);
+}
+
+#wrap.adminReactWrap .subBox {
+  border: 0;
+  background: transparent;
+}
+
+#wrap.adminReactWrap .contentArea {
+  color: #333;
+}
+
+#wrap.adminReactWrap .contentArea > .m-tab,
+#wrap.adminReactWrap .contentArea > .summaryPills,
+#wrap.adminReactWrap .contentArea > .searchArea,
+#wrap.adminReactWrap .contentArea > .fixTable,
+#wrap.adminReactWrap .contentArea > .prizmConfigPanel,
+#wrap.adminReactWrap .contentArea > .prizmConfigHistory {
+  border-color: #e2e4ea;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(41, 52, 126, 0.05);
+}
+
+#wrap.adminReactWrap .contentArea .m-tab {
+  border-bottom-color: #d3d5ed;
+}
+
+#wrap.adminReactWrap .contentArea .m-tab ul,
+#wrap.adminReactWrap .contentArea .m-tab li {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+#wrap.adminReactWrap .contentArea .m-tab li.active a,
+#wrap.adminReactWrap .contentArea .m-tab li.active button {
+  border-bottom-color: #07377f;
+  background: #07377f;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .contentArea .searchArea {
+  border-color: #d3d5ed;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .contentArea .searchArea input,
+#wrap.adminReactWrap .contentArea .searchArea select {
+  border-color: #ccd1d9;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .contentArea .sBtn.sColorLB,
+#wrap.adminReactWrap .contentArea .sBtn.sColorLS2,
+#wrap.adminReactWrap .contentArea .primaryButton {
+  min-width: 88px;
+  height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 3px;
+  background: #0e57bf;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 36px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .contentArea .primaryButton:disabled {
+  background: #ccd1d9;
+  color: #9499a1;
+  cursor: not-allowed;
+}
+
+#wrap.adminReactWrap .contentArea table {
+  border-top-color: #0e57bf;
+}
+
+#wrap.adminReactWrap .contentArea table thead th {
+  background: #f0f4ff;
+  color: #29347e;
+}
+
+#wrap.adminReactWrap .contentArea table tbody tr:hover td {
+  background: #f8f9fc;
+}
+
+@media (max-width: 960px) {
+  #wrap.adminReactWrap {
+    padding-top: 0;
+  }
+
+  #wrap.adminReactWrap .inner {
+    width: calc(100% - 32px);
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap #header {
+    position: relative;
+  }
+
+  #wrap.adminReactWrap #header .topLine .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+    min-height: 68px;
+  }
+
+  #wrap.adminReactWrap #header .logo,
+  #wrap.adminReactWrap #header .userMenu {
+    position: static;
+    transform: none;
+  }
+
+  #wrap.adminReactWrap #header .logo img {
+    display: block;
+    width: 132px;
+    height: auto;
+  }
+
+  #wrap.adminReactWrap #header .userMenu {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap #header .userInfo {
+    overflow: hidden;
+    max-width: 250px;
+    font-size: 12px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  #wrap.adminReactWrap #header .topLine .userMenu .userInfo::after {
+    height: 24px;
+    margin: 0 10px;
+  }
+
+  #wrap.adminReactWrap #header .userMenu .hrBtn {
+    min-width: 72px;
+    height: 34px;
+    line-height: 32px;
+  }
+
+  #wrap.adminReactWrap .subVisualArea {
+    width: 100%;
+    height: 136px;
+    margin: 0;
+  }
+
+  #wrap.adminReactWrap .subVisual .txtBox h2 {
+    height: 30px;
+    min-width: 96px;
+    margin-bottom: 10px;
+    padding: 0 14px;
+    border-radius: 15px;
+    font-size: 13px;
+    line-height: 28px;
+  }
+
+  #wrap.adminReactWrap .subVisual .txtBox h3 {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  #wrap.adminReactWrap .subContainer {
+    padding: 28px 0 80px;
+  }
+
+  #wrap.adminReactWrap .subContainer > .inner {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 20px;
+    align-items: start;
+  }
+
+  #wrap.adminReactWrap .snbArea {
+    position: static;
+    grid-column: 1;
+    width: 180px;
+  }
+
+  #wrap.adminReactWrap #snb {
+    width: 180px;
+  }
+
+  #wrap.adminReactWrap #snb > li > .snbCategoryButton {
+    min-height: 46px;
+    padding: 13px 18px;
+    font-size: 14px;
+  }
+
+  #wrap.adminReactWrap #snb > li > .snbCategoryButton::after {
+    right: 16px;
+    width: 12px;
+    height: 12px;
+  }
+
+  #wrap.adminReactWrap #snb > li > ul a {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  #wrap.adminReactWrap .subContents {
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+  }
+
+  #wrap.adminReactWrap .contentArea {
+    font-size: 13px;
+  }
+
+  #wrap.adminReactWrap .summaryPills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  #wrap.adminReactWrap .searchArea .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #wrap.adminReactWrap .table-scroll,
+  #wrap.adminReactWrap .overflowBox {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 680px) {
+  #wrap.adminReactWrap .serverStatusGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .serverStatusEmpty {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .serverStatusPanel {
+    padding: 12px;
+  }
+
+  #wrap.adminReactWrap .serverStatusTable {
+    min-width: 620px;
+  }
+
+  #wrap.adminReactWrap .fintechMockForm .line:last-of-type {
+    grid-template-columns: 1fr;
+  }
+
+  body.adminNavigationOpen {
+    overflow: hidden;
+  }
+
+  .adminLoginPage {
+    align-items: flex-start;
+    padding: 72px 16px 32px;
+  }
+
+  .adminLoginCard {
+    width: min(100%, 380px);
+    padding: 32px 24px 28px;
+  }
+
+  .adminLoginCard img {
+    width: 128px;
+    margin-bottom: 22px;
+  }
+
+  .adminLoginCard h1 {
+    margin-bottom: 22px;
+    font-size: 22px;
+  }
+
+  #wrap.adminReactWrap .inner {
+    width: calc(100% - 24px);
+  }
+
+  #wrap.adminReactWrap #header .topLine .inner {
+    gap: 10px;
+  }
+
+  #wrap.adminReactWrap #header .logo img {
+    width: 116px;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle {
+    appearance: none;
+    display: inline-flex;
+    flex: 0 0 38px;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-left: auto;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle span,
+  #wrap.adminReactWrap .adminNavigationToggle span::before,
+  #wrap.adminReactWrap .adminNavigationToggle span::after {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: #fff;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle span {
+    position: relative;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle span::before,
+  #wrap.adminReactWrap .adminNavigationToggle span::after {
+    content: "";
+    position: absolute;
+    left: 0;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle span::before {
+    top: -6px;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle span::after {
+    top: 6px;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle[aria-expanded="true"] span {
+    background: transparent;
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle[aria-expanded="true"] span::before {
+    top: 0;
+    transform: rotate(45deg);
+  }
+
+  #wrap.adminReactWrap .adminNavigationToggle[aria-expanded="true"] span::after {
+    top: 0;
+    transform: rotate(-45deg);
+  }
+
+  #wrap.adminReactWrap #header .userInfo {
+    display: none;
+  }
+
+  #wrap.adminReactWrap #header .topLine .userMenu .userInfo::after {
+    display: none;
+  }
+
+  #wrap.adminReactWrap #header .userMenu .hrBtn {
+    min-width: 62px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  #wrap.adminReactWrap .subVisualArea {
+    height: 118px;
+  }
+
+  #wrap.adminReactWrap .subVisual .txtBox h3 {
+    max-width: calc(100vw - 40px);
+    overflow: hidden;
+    font-size: 23px;
+    text-overflow: ellipsis;
+  }
+
+  #wrap.adminReactWrap .subContainer > .inner {
+    display: block;
+  }
+
+  #wrap.adminReactWrap .snbArea {
+    position: fixed;
+    z-index: 9998;
+    top: 68px;
+    left: 0;
+    width: min(82vw, 320px);
+    height: calc(100vh - 68px);
+    margin: 0;
+    overflow-y: auto;
+    background: #fff;
+    box-shadow: 12px 0 30px rgba(0, 21, 61, 0.2);
+    transform: translateX(-105%);
+    transition: transform 0.2s ease;
+  }
+
+  #wrap.adminReactWrap .navigationOpen .snbArea {
+    transform: translateX(0);
+  }
+
+  #wrap.adminReactWrap #snb {
+    width: 100%;
+    min-height: 100%;
+    border: 0;
+    box-shadow: none;
+  }
+
+  #wrap.adminReactWrap .adminNavigationBackdrop {
+    appearance: none;
+    position: fixed;
+    z-index: 9997;
+    inset: 68px 0 0;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: rgba(0, 25, 64, 0.46);
+  }
+
+  #wrap.adminReactWrap .navigationOpen .adminNavigationBackdrop {
+    display: block;
+  }
+
+  #wrap.adminReactWrap .searchArea .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .legacySearchBox {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  #wrap.adminReactWrap .integratedMetricGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  #wrap.adminReactWrap .integratedMetricGrid article {
+    min-height: 112px;
+    padding: 14px 12px;
+  }
+
+  #wrap.adminReactWrap .integratedMetricGrid strong {
+    font-size: 22px;
+  }
+
+  #wrap.adminReactWrap .managementWarningArea {
+    display: block;
+  }
+
+  #wrap.adminReactWrap .managementWarningArea .stateBox {
+    min-height: 74px;
+    margin: 0 0 8px;
+  }
+
+  #wrap.adminReactWrap .managementWarningArea .maxHeight {
+    margin: 0;
+    padding-right: 0;
+  }
+
+  #wrap.adminReactWrap .managementOptions > .pRight {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  #wrap.adminReactWrap .managementOptions > .pRight > * + * {
+    margin-left: 0;
+  }
+
+  #wrap.adminReactWrap .managementOptions .baseDate {
+    flex: 1 1 100%;
+    min-width: 0;
+    padding: 8px 12px;
+    line-height: 1.4;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .managementKpiArea article {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .managementKpiArea .colorBox {
+    flex: 0 0 86px;
+  }
+
+  #wrap.adminReactWrap .managementKpiArea .txtBox,
+  #wrap.adminReactWrap .managementKpiArea .txtBox table {
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .memberMetricGrid article {
+    grid-template-columns: 76px minmax(0, 1fr);
+  }
+
+  #wrap.adminReactWrap .memberMetricGrid .txtBox {
+    min-width: 0;
+    padding: 8px;
+  }
+
+  #wrap.adminReactWrap .memberMetricGrid .txtBox td {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  #wrap.adminReactWrap .memberTrendRow {
+    grid-template-columns: 80px minmax(0, 1fr) 88px;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .memberTrendRow strong {
+    white-space: nowrap;
+  }
+
+  #wrap.adminReactWrap .fixTable .fixBottom .tableTotal {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    padding: 0;
+  }
+
+  #wrap.adminReactWrap .fixTable .fixBottom {
+    padding: 6px 0;
+  }
+
+  #wrap.adminReactWrap .fixTable .fixBottom .tableTotal li {
+    display: flex;
+    flex: none;
+    justify-content: space-between;
+    min-width: 0;
+    min-height: 42px;
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  #wrap.adminReactWrap .fixTable .fixBottom .tableTotal li + li {
+    border-left: 1px solid rgba(255, 255, 255, 0.28);
+  }
+
+  #wrap.adminReactWrap .contentArea .searchArea {
+    padding: 18px 16px;
+  }
+
+  #wrap.adminReactWrap .contentArea input,
+  #wrap.adminReactWrap .contentArea select,
+  #wrap.adminReactWrap .contentArea textarea {
+    max-width: 100%;
+  }
+
+  #wrap.adminReactWrap .pagingControls {
+    gap: 6px;
+    margin-top: 18px;
+  }
+
+  #wrap.adminReactWrap .pagingControls .sBtn,
+  #wrap.adminReactWrap .pagingControls > button,
+  #wrap.adminReactWrap .pagingControls > span {
+    min-width: 48px;
+    height: 36px;
+  }
+
+  #wrap.adminReactWrap #pagingButton .num,
+  #wrap.adminReactWrap #pagingButton button {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+    line-height: 34px;
+  }
+}
+
+.modal-container {
+  display: none;
 }
