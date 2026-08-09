@@ -44,7 +44,7 @@ async function verifyMasterAdminSession(session) {
 
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/v1/api/accounts/me`, {
+    response = await fetch(`${API_BASE_URL}/v1/api/accounts/admin-me`, {
       method: 'GET',
       cache: 'no-store',
       headers: {
@@ -80,7 +80,7 @@ async function loginMasterAdmin({ email, password }) {
 
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}/v1/api/accounts/login`, {
+    response = await fetch(`${API_BASE_URL}/v1/api/accounts/admin-login`, {
       method: 'POST',
       cache: 'no-store',
       headers: {
@@ -125,7 +125,7 @@ function shouldAttachAdminAuthorization(input) {
   const url = getRequestUrl(input);
   if (!isCubiciApiUrl(url)) return false;
   const pathname = getRequestPathname(url);
-  return !pathname.startsWith('/v1/api/accounts/login') && !pathname.startsWith('/v1/api/accounts/signup');
+  return !pathname.startsWith('/v1/api/accounts/admin-login') && !pathname.startsWith('/v1/api/accounts/signup');
 }
 
 function getRequestUrl(input) {

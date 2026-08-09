@@ -23,6 +23,7 @@ from cubici_service.accounts.repository import (
     get_dashboard_summary_for_user,
     list_shop_accounts_for_user,
     list_user_accounts,
+    login_admin,
     login_user,
     signup_user,
     update_company_for_user,
@@ -60,9 +61,19 @@ def account_login(payload: AccountLoginRequest) -> AccountAuthResponse:
     return login_user(payload)
 
 
+@router.post("/admin-login", response_model=AccountAuthResponse)
+def account_admin_login(payload: AccountLoginRequest) -> AccountAuthResponse:
+    return login_admin(payload)
+
+
 @router.get("/me", response_model=AccountAuthUser)
 def account_me(authorization: str | None = Header(default=None)) -> AccountAuthUser:
-    return _authenticated_user(authorization)
+    return _authenticated_user(authorization, required_user_type="USER")
+
+
+@router.get("/admin-me", response_model=AccountAuthUser)
+def account_admin_me(authorization: str | None = Header(default=None)) -> AccountAuthUser:
+    return _authenticated_user(authorization, required_user_type="ADMIN_USER")
 
 
 @router.get("/me/dashboard-summary", response_model=AccountDashboardSummaryResponse)
@@ -116,7 +127,14 @@ def account_my_shop_delete(
     return delete_shop_account_for_user(user.user_no, account_id)
 
 
-def _authenticated_user(authorization: str | None) -> AccountAuthUser:
+def _authenticated_user(
+    authorization: str | None,
+    *,
+    required_user_type: str = "USER",
+) -> AccountAuthUser:
     if not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="bearer token required")
-    return get_authenticated_user(authorization.split(" ", 1)[1].strip())
+    user = get_authenticated_user(authorization.split(" ", 1)[1].strip())
+    if (user.user_type or "").strip().upper() != required_user_type:
+        raise HTTPException(status_code=403, detail=f"{required_user_type.lower()} account required")
+    return user

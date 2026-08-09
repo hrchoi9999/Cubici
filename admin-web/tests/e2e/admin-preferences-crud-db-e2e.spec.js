@@ -271,7 +271,7 @@ async function loginMasterAdminForFixture(request) {
   const password = process.env.CUBICI_MASTER_ADMIN_PASSWORD;
   expect(Boolean(email && password), 'CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required').toBeTruthy();
 
-  const response = await request.post(`${apiBaseUrl}/v1/api/accounts/login`, {
+  const response = await request.post(`${apiBaseUrl}/v1/api/accounts/admin-login`, {
     data: { email, password },
   });
   const text = await response.text();

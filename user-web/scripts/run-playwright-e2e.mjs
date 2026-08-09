@@ -99,7 +99,7 @@ async function prepareMasterAdminApiAuth() {
     throw new Error('CUBICI_MASTER_ADMIN_EMAIL and CUBICI_MASTER_ADMIN_PASSWORD are required for user-web DB E2E setup API calls.');
   }
 
-  const response = await fetch(`${apiUrl}/v1/api/accounts/login`, {
+  const response = await fetch(`${apiUrl}/v1/api/accounts/admin-login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),

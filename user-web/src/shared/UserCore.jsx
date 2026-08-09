@@ -291,7 +291,12 @@ function readAuthSession() {
   const raw = window.localStorage.getItem(AUTH_STORAGE_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw);
+    const session = JSON.parse(raw);
+    if (String(session?.user?.user_type ?? '').trim().toUpperCase() !== 'USER') {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY);
+      return null;
+    }
+    return session;
   } catch {
     window.localStorage.removeItem(AUTH_STORAGE_KEY);
     return null;
@@ -299,6 +304,10 @@ function readAuthSession() {
 }
 
 function saveAuthSession(session) {
+  if (String(session?.user?.user_type ?? '').trim().toUpperCase() !== 'USER') {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY);
+    throw new Error('사용자 계정만 사용자 서비스에 접속할 수 있습니다.');
+  }
   window.localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 }
 

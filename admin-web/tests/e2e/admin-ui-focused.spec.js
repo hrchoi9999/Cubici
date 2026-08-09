@@ -39,7 +39,7 @@ const routes = [
 
 test.describe('admin legacy-like UI focused smoke', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/v1/api/accounts/me', async (route) => {
+    await page.route('**/v1/api/accounts/admin-me', async (route) => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',

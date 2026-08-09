@@ -41,7 +41,7 @@ const errorLogPayload = {
 };
 
 test.beforeEach(async ({ page }) => {
-  await page.route('**/v1/api/accounts/me', async (route) => {
+  await page.route('**/v1/api/accounts/admin-me', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({ user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' }),

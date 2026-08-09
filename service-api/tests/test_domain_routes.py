@@ -25,7 +25,9 @@ def test_domain_routes_registered() -> None:
         "/v1/api/accounts/users",
         "/v1/api/accounts/signup",
         "/v1/api/accounts/login",
+        "/v1/api/accounts/admin-login",
         "/v1/api/accounts/me",
+        "/v1/api/accounts/admin-me",
         "/v1/api/accounts/me/company",
         "/v1/api/accounts/me/shops",
         "/v1/api/accounts/me/shops/{account_id}",
@@ -1382,6 +1384,44 @@ def test_account_login_endpoint_payload(monkeypatch) -> None:
 
     assert response.user.user_no == 76
     assert captured["payload"].email == "seller@example.com"
+
+
+def test_account_admin_login_endpoint_payload(monkeypatch) -> None:
+    from cubici_service.accounts.repository import (
+        AccountAuthResponse,
+        AccountAuthUser,
+        AccountLoginRequest,
+    )
+
+    captured = {}
+
+    def fake_login_admin(payload: AccountLoginRequest) -> AccountAuthResponse:
+        captured["payload"] = payload
+        return AccountAuthResponse(
+            access_token="admin-token",
+            expires_in=28800,
+            user=AccountAuthUser(
+                user_no=2,
+                email=payload.email,
+                user_type="ADMIN_USER",
+                name="관리자",
+                phone=None,
+                biz_num=None,
+                biz_name=None,
+            ),
+        )
+
+    monkeypatch.setattr(accounts, "login_admin", fake_login_admin)
+
+    response = accounts.account_admin_login(
+        payload=accounts.AccountLoginRequest(
+            email="master-admin@example.com",
+            password="test-password",
+        ),
+    )
+
+    assert response.user.user_type == "ADMIN_USER"
+    assert captured["payload"].email == "master-admin@example.com"
 
 
 def test_account_me_requires_bearer_token() -> None:

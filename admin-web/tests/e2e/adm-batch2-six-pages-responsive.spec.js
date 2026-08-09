@@ -190,7 +190,7 @@ const routeConfigs = [
 ];
 
 function apiPayload(url) {
-  if (url.includes('/accounts/me')) {
+  if (url.includes('/accounts/admin-me')) {
     return { user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' };
   }
   if (url.includes('/management/member-summary')) return memberSummary;

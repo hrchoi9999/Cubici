@@ -17,6 +17,10 @@ from cubici_service.core.shop_types import normalize_shop_type
 from cubici_service.db.connection import get_connection
 
 
+AUTH_AUDIENCE_USER = "user"
+AUTH_AUDIENCE_ADMIN = "admin"
+
+
 class AccountListItem(BaseModel):
     user_no: int
     user_type: str | None
@@ -338,6 +342,14 @@ def update_company_for_user(user_no: int, payload: AccountCompanyUpdateRequest) 
 
 
 def login_user(payload: AccountLoginRequest) -> AccountAuthResponse:
+    return _login_account(payload, audience=AUTH_AUDIENCE_USER)
+
+
+def login_admin(payload: AccountLoginRequest) -> AccountAuthResponse:
+    return _login_account(payload, audience=AUTH_AUDIENCE_ADMIN)
+
+
+def _login_account(payload: AccountLoginRequest, *, audience: str) -> AccountAuthResponse:
     email = _normalize_email(payload.email)
     with get_connection() as connection:
         with connection.transaction():
@@ -368,6 +380,14 @@ def login_user(payload: AccountLoginRequest) -> AccountAuthResponse:
                 if row is None or not _verify_password(payload.password, row["password"]):
                     raise HTTPException(status_code=401, detail="invalid email or password")
 
+                user_type = (row["user_type"] or "").strip().upper()
+                if audience == AUTH_AUDIENCE_USER and user_type != "USER":
+                    raise HTTPException(status_code=403, detail="user service account required")
+                if audience == AUTH_AUDIENCE_ADMIN:
+                    master_email = get_settings().master_admin_email.strip().lower()
+                    if user_type != "ADMIN_USER" or email != master_email:
+                        raise HTTPException(status_code=403, detail="master admin account required")
+
                 cursor.execute(
                     """
                     update users
@@ -391,7 +411,7 @@ def login_user(payload: AccountLoginRequest) -> AccountAuthResponse:
                 )
                 user = AccountAuthUser(**cursor.fetchone())
 
-    return _build_auth_response(user)
+    return _build_auth_response(user, audience=audience)
 
 
 def get_authenticated_user(token: str) -> AccountAuthUser:
@@ -421,7 +441,10 @@ def get_authenticated_user(token: str) -> AccountAuthUser:
             row = cursor.fetchone()
             if row is None:
                 raise HTTPException(status_code=401, detail="invalid token user")
-    return AccountAuthUser(**row)
+    user = AccountAuthUser(**row)
+    if payload.get("aud") != _auth_audience_for_user(user):
+        raise HTTPException(status_code=401, detail="invalid token audience")
+    return user
 
 
 def list_shop_accounts_for_user(user_no: int) -> ShopAccountListResponse:
@@ -869,16 +892,31 @@ def delete_shop_account_for_user(user_no: int, account_id: int) -> ShopAccountWr
     return ShopAccountWriteResponse(action="deleted", item=ShopAccountItem(**row))
 
 
-def _build_auth_response(user: AccountAuthUser) -> AccountAuthResponse:
+def _build_auth_response(user: AccountAuthUser, *, audience: str | None = None) -> AccountAuthResponse:
     expires_in = 60 * 60 * 8
+    resolved_audience = audience or _auth_audience_for_user(user)
+    if resolved_audience is None:
+        raise HTTPException(status_code=403, detail="unsupported account service")
     token = _encode_token(
         {
             "user_no": user.user_no,
             "email": user.email,
+            "aud": resolved_audience,
             "exp": int(time.time()) + expires_in,
         }
     )
     return AccountAuthResponse(access_token=token, expires_in=expires_in, user=user)
+
+
+def _auth_audience_for_user(user: AccountAuthUser) -> str | None:
+    user_type = (user.user_type or "").strip().upper()
+    if user_type == "USER":
+        return AUTH_AUDIENCE_USER
+    if user_type == "ADMIN_USER":
+        master_email = get_settings().master_admin_email.strip().lower()
+        if user.email.strip().lower() == master_email:
+            return AUTH_AUDIENCE_ADMIN
+    return None
 
 
 def _hash_password(password: str) -> str:

@@ -91,7 +91,7 @@ const fintechItem = {
 
 function apiPayload(request) {
   const url = new URL(request.url());
-  if (url.pathname.endsWith('/accounts/me')) {
+  if (url.pathname.endsWith('/accounts/admin-me')) {
     return { user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' };
   }
   if (url.pathname.endsWith('/monitoring/error-logs')) return errorLogPayload;

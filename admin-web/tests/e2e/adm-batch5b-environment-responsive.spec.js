@@ -181,7 +181,7 @@ const routeConfigs = [
 function apiPayload(request) {
   const { pathname } = new URL(request.url());
 
-  if (pathname.endsWith('/accounts/me')) {
+  if (pathname.endsWith('/accounts/admin-me')) {
     return { user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' };
   }
   if (pathname.endsWith('/preferences/admin-accounts/temp_admin_1')) return adminAccount;

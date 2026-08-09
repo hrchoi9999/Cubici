@@ -140,7 +140,7 @@ async function prepareMasterAdminTestAuth() {
 }
 
 async function loginMasterAdmin(email, password) {
-  const response = await fetch(`${apiUrl}/v1/api/accounts/login`, {
+  const response = await fetch(`${apiUrl}/v1/api/accounts/admin-login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),

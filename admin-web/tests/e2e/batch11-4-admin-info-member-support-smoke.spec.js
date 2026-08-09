@@ -104,7 +104,7 @@ function inquiriesPayload() {
 }
 
 function apiPayload(url) {
-  if (url.includes('/v1/api/accounts/me')) {
+  if (url.includes('/v1/api/accounts/admin-me')) {
     return {
       user_no: 1,
       email: MASTER_ADMIN_EMAIL,

@@ -15,7 +15,7 @@ fs.mkdirSync(candidateDir, { recursive: true });
 function installApiMocks(page) {
   return page.route('**/v1/api/**', async (route) => {
     const url = route.request().url();
-    const payload = url.includes('/accounts/me')
+    const payload = url.includes('/accounts/admin-me')
       ? {
           user_no: 1,
           email: 'admin@example.com',
