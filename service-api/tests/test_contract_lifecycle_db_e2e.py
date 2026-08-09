@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from cubici_service.accounts.repository import AccountAuthUser, _build_auth_response
 from cubici_service.app import create_app
+from cubici_service.core.config import get_settings
 from cubici_service.db.connection import get_connection
 
 
@@ -74,6 +75,9 @@ def test_contract_lifecycle_reaches_account_standby_with_real_db() -> None:
         assert adjusted["mbid"] == mbid
         assert adjusted["fee"]["payment_rate"] == 80
         assert len(adjusted["fee"]["rates"]) == 2
+
+        detail = _get_json(client, f"/v1/api/contracts/{mbid}")
+        assert detail["contract"]["latest_fee_rate"] == 1.35
 
         presented = _put_json(
             client,
@@ -293,10 +297,26 @@ def _get_json(client: TestClient, path: str) -> dict:
 
 
 def _master_admin_headers() -> dict[str, str]:
+    email = get_settings().master_admin_email.strip()
+    assert email, "CUBICI_MASTER_ADMIN_EMAIL is required for DB E2E"
+    with get_connection() as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select user_no
+                from users
+                where lower(email) = lower(%s)
+                  and upper(coalesce(user_type, '')) = 'ADMIN_USER'
+                """,
+                (email,),
+            )
+            row = cursor.fetchone()
+    assert row is not None, "configured master admin must exist in users"
+
     auth = _build_auth_response(
         AccountAuthUser(
-            user_no=900000000,
-            email=os.getenv("CUBICI_MASTER_ADMIN_EMAIL", "admin@example.com"),
+            user_no=row[0],
+            email=email,
             user_type="ADMIN_USER",
             name="DB E2E Admin",
             phone=None,

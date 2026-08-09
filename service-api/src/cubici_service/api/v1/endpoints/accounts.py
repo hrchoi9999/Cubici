@@ -8,6 +8,7 @@ from cubici_service.accounts.repository import (
     AccountAuthUser,
     AccountCompanyUpdateRequest,
     AccountCompanyUpdateResponse,
+    AccountDashboardSummaryResponse,
     AccountListResponse,
     AccountLoginRequest,
     AccountSignupRequest,
@@ -19,6 +20,7 @@ from cubici_service.accounts.repository import (
     create_shop_account_for_user,
     delete_shop_account_for_user,
     get_authenticated_user,
+    get_dashboard_summary_for_user,
     list_shop_accounts_for_user,
     list_user_accounts,
     login_user,
@@ -61,6 +63,14 @@ def account_login(payload: AccountLoginRequest) -> AccountAuthResponse:
 @router.get("/me", response_model=AccountAuthUser)
 def account_me(authorization: str | None = Header(default=None)) -> AccountAuthUser:
     return _authenticated_user(authorization)
+
+
+@router.get("/me/dashboard-summary", response_model=AccountDashboardSummaryResponse)
+def account_my_dashboard_summary(
+    authorization: str | None = Header(default=None),
+) -> AccountDashboardSummaryResponse:
+    user = _authenticated_user(authorization)
+    return get_dashboard_summary_for_user(user.user_no)
 
 
 @router.put("/me/company", response_model=AccountCompanyUpdateResponse)

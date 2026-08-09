@@ -41,6 +41,7 @@ export default function App() {
   if (path === '/board/notice/index') return <SupportBoardPage kind="notice" />;
   if (path.startsWith('/board/notice/')) return <BoardDetailPage kind="notice" postId={decodeURIComponent(path.split('/').pop() ?? '')} />;
   if (path === '/board/qa/index') return requireAuth(<SupportBoardPage kind="qa" />);
+  if (path === '/board/qa/write') return requireAuth(<SupportBoardPage kind="qa" mode="write" />);
   if (path.startsWith('/board/qa/')) return requireAuth(<InquiryDetailPage qnaId={decodeURIComponent(path.split('/').pop() ?? '')} />);
   if (path === '/board/faq/index') return <SupportBoardPage kind="faq" />;
   if (path.startsWith('/board/faq/')) return <BoardDetailPage kind="faq" postId={decodeURIComponent(path.split('/').pop() ?? '')} />;

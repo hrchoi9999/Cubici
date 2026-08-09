@@ -6,6 +6,7 @@ tmp/
 *.bak
 *.swp
 *~.nib
+desktop.ini
 .settings/
 .loadpath
 .recommenders
@@ -130,6 +131,10 @@ user-web/.vite/
 user-web/.logs/
 user-web/test-results/
 user-web/playwright-report/
+/.vite/
+/test-results/
+/.deploy-worktrees/
+service-api/.venv/
 service-api/.logs/
 service-api/.pytest_cache/
 .pnpm-store/
@@ -162,3 +167,22 @@ db/postgres/*.sql.local
 src/main/java/egovframework/azon/cmmn/service/cubicianalytics-8912962469e6.json
 src/main/java/egovframework/azon/cmmn/service/cubicianalytics-*.json
 *service-account*.json
+
+# Local LV source, captures, and generated visual evidence
+/240130_큐빅아이/
+/cubici LV admin capture/
+/docs/240130_render_check/
+/docs/batch3_shell_smoke/
+/docs/batch4_main_auth_smoke/
+/docs/batch5_core_pages_smoke/
+/docs/batch6_moneybank_smoke/
+/docs/batch7_support_mypage_smoke/
+/docs/batch8_mobile_edge_smoke/
+/docs/batch9_release_candidate_smoke/
+
+# Vendor source files not used by the React runtime
+/user-web/public/final-ui/static/js/
+/user-web/public/final-ui/static/scss/
+/user-web/public/final-ui/static/css/*.map
+/user-web/public/final-ui/static/fonts/fontello/config.json
+/user-web/public/final-ui/static/fonts/fontello/demo.html

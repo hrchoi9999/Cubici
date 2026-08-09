@@ -3,13 +3,12 @@ import {
   DashboardSummary,
   Layout,
   PageTitle,
-  Tabs,
-  LegacyIntroSection,
   DocumentNotice,
   ReadOnlyField,
   ContractStatusStrip,
   TermsDecisionPanel,
   REQUEST_DOCUMENT_ACCEPT,
+  canDecideTerms,
   contractDetailPath,
   contractDocumentDownloadUrl,
   createInquiryForUser,
@@ -125,33 +124,218 @@ function getMoneybankLegacyProgress(status) {
 
 function MoneybankIntroPage({ kind }) {
   const content = {
-    advpay: ['구매자금 선지급 서비스', '선지급 자금으로 상품을 구매하고 쇼핑몰 정산금으로 자동 상환합니다.', '/resources/rudicks/img/sub/moneybank-img01.png'],
-    advcalc: ['매출 선정산 서비스', '정산 예정 매출을 기준으로 필요한 운영자금을 빠르게 이용합니다.', '/resources/rudicks/img/sub/moneybank-img06.png'],
-    creditpay: ['신용대출', '사업 현황 분석 결과를 기반으로 금융 조건을 확인합니다.', '/resources/rudicks/img/sub/moneybank-img07.png'],
+    advpay: {
+      title: '구매자금',
+      accent: '선지급 서비스',
+      lead: 'B2B 도매몰을 통해 온라인 쇼핑몰에서 판매를 하시는 셀러를 위한 성공 솔루션!',
+      desc: '먼저 선지급 자금으로 상품을 구매하시고, 쇼핑몰 정산금으로 자동 상환하세요.',
+      icon: '/final-ui/static/img/icon/tab-icon1.png',
+      headline: '5백만원에서 5천만원까지 필요한 만큼',
+      listStyle: 'style-1',
+      points: ['비대면 신청으로 쉽고 편리하게', '선지불 한도내에서 사용은 자유롭게', '이자와 수수료는 사용하신 기간동안만', '1년 단위로 계약되는 넉넉한 사용기간'],
+      targetIcon: '/final-ui/static/img/icon/tab-icon2.png',
+      targets: ['개인온라인 사업 대표(미성년 및 법인 제외)', '사업경력 1년이상, 온라인 판매 6개월 이상', '월 평균 매출액 5백만원 이상', 'B2B 도매몰 위탁배송 이용 셀러', '타 선지급 및 선정산 서비스 중복이용 불가'],
+      documents: ['대표자 신분증 (사본)', '사업자등록증', '지정은행통장사본', '주거래 통장사본'],
+      requestHref: '/moneybank/advPay/request',
+    },
+    advcalc: {
+      title: '쇼핑몰매출',
+      accent: '선정산 서비스',
+      lead: '운영하고 계시는 온라인 쇼핑몰의 판매대금을 한번에 한곳에서 편리하게!',
+      desc: '판매상품이 고객에게 배송되면 바로 입금되는 쉽고 빠른 서비스',
+      icon: '/final-ui/static/img/icon/tab-icon4.png',
+      headline: '운영하고 있는 쇼핑몰만 등록하면 끝',
+      listStyle: 'style-3',
+      points: ['비대면 신청으로 쉽고 편리하게', '정산까지 기다릴 필요없이 판매금액이 미리 입금', '선정산 총액 제한 없이 주문 금액당 최대 한도로만 관리', '사용 실적에 따라 자동으로 연장되는 계약 기간'],
+      targetIcon: '/final-ui/static/img/icon/tab-icon5.png',
+      targets: ['개인온라인 사업 대표(미성년 및 법인 제외)', '사업경력 1년이상, 온라인 판매 6개월 이상', '월 평균 매출액 1,000만원 이상', 'B2B 도매몰 위탁배송 이용 셀러'],
+      documents: ['대표자 신분증 (사본)', '사업자등록증', '지정은행통장사본', '주거래 통장사본'],
+      shops: true,
+      requestHref: '/moneybank/advcalc/request',
+    },
+    creditpay: {
+      title: '소상공인',
+      accent: '신용대출',
+      lead: '자체 신용평가시스템, 프리즘 기반 온라인 셀러 신용대출 서비스!',
+      desc: '서비스 신청만으로 셀러의 경영상태를 진단하고 바로 운영자금을 입금',
+      icon: '/final-ui/static/img/icon/tab-icon7.png',
+      headline: '100% 비대면기반 완벽 신용대출!',
+      listStyle: 'style-3',
+      points: ['신용평가시스템, 프리즘에 기반한 신용대출서비스', '비대면 신청만으로 신용대출이 진행됩니다.', '5백만원의 사업자금을 한달간 자유롭게', '사용 실적에 따라 이용기간 연장이 가능'],
+      targetIcon: '/final-ui/static/img/icon/tab-icon5.png',
+      targets: ['개인온라인 사업 대표(미성년 및 법인 제외)', '사업경력 1년이상, 온라인 판매 6개월 이상', '월 평균 매출액 20백만원 이상', '타 선지급 및 선정산 서비스 중복이용 불가'],
+      documents: ['대표자 신분증 (사본)', '사업자등록증', '주거래 통장사본'],
+      requestHref: '/moneybank/request',
+    },
   }[kind];
 
   return (
-    <Layout>
-      <main className="sub-page">
-        <PageTitle title="머니뱅크" text="온라인 셀러의 사업자금 마련을 위한 큐빅아이 금융 서비스" />
-        <Tabs tabs={moneybankTabs} />
-        <LegacyIntroSection
-          eyebrow="머니뱅크"
-          title={content[0]}
-          imageSrc={content[2]}
-          imageAlt={content[0]}
-          ctaHref="/moneybank/request"
-          ctaLabel="서비스 신청"
-        >
-          <ul className="description">
-            <li>{content[1]}</li>
-            <li>비대면 신청으로 쉽고 편리하게 한도 내에서 필요한 만큼 이용합니다.</li>
-            <li>사용 기간 기준 수수료를 적용하고 신청, 심사, 계약, 이용 현황을 한 화면에서 확인할 수 있습니다.</li>
-          </ul>
-        </LegacyIntroSection>
-        <DocumentNotice />
+    <Layout variant="moneybank">
+      <PageTitle title="머니뱅크" />
+      <MoneybankSectionNav active="intro" />
+      <main className="content-wrap c4p1-1 final-core-page final-moneybank-page final-moneybank-intro-page" id="Main">
+        <section className="section sec-1">
+          <h3 className="hidden">서비스 소개</h3>
+          <div className="full-box bg-gray">
+            <article className="col-card">
+              <div className="txt-box">
+                <div className="tit-wrap">
+                  <h3 className="tit">
+                    온라인 셀러의<br />
+                    <strong className="icon">사업자금 마련을 위한</strong><br />
+                    새로운 방식
+                  </h3>
+                </div>
+                <p className="desc">
+                  머니뱅크 서비스는 독자 신용평가시스템 프리즘을 통해 사업현황을 분석하고 사업에 필요한 금융서비스를 제공합니다.
+                  구매자금 선지급, 쇼핑몰 선정산 등 사업현황에 맞는 서비스를 검토하고 필요한 서비스를 이용할 수 있습니다.
+                </p>
+              </div>
+              <div className="img-box">
+                <figure className="figure">
+                  <img src="/final-ui/static/img/sub/c4/full-card.png" alt="머니뱅크 서비스" />
+                </figure>
+              </div>
+            </article>
+          </div>
+        </section>
+        <section className="section sec-2">
+          <h3 className="hidden">머니뱅크 이용방법 소개</h3>
+          <div className="inner">
+            <article className="col-card bank-info">
+              <div className="txt-box">
+                <div className="line-tit-wrap">
+                  <h4 className="tit">머니뱅크 이용방법</h4>
+                </div>
+                <p className="desc">필요한 사업 자금을 쉽고 편리하게<br />큐빅아이 머니뱅크 서비스와 함께 하십시오.</p>
+              </div>
+              <div className="img-box">
+                <ul>
+                  {[
+                    ['item-1', '01', '/final-ui/static/img/icon/info-icon-1.png', '머니뱅크 신청'],
+                    ['item-2', '02', '/final-ui/static/img/icon/info-icon-2.png', '평가 및 심사'],
+                    ['item-3', '03', '/final-ui/static/img/icon/info-icon-3.png', '계약 체결'],
+                    ['item-4', '04', '/final-ui/static/img/icon/info-icon-4.png', '서비스 이용'],
+                  ].map(([className, no, src, label]) => (
+                    <li className={className} key={className}>
+                      <span>{no}</span>
+                      <figure className="figure"><img src={src} alt="" /></figure>
+                      <p>{label}</p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </article>
+          </div>
+        </section>
+        <section className="section sec-3">
+          <h3 className="hidden">서비스 상품</h3>
+          <div className="inner">
+            <div className="tab-wrap">
+              <ul className="tab">
+                {moneybankTabs.map(([label, href]) => (
+                  <li className={href.endsWith(kind) ? 'active' : ''} key={href}>
+                    <a href={href}>{label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="panel-wrap">
+              <article className="panel">
+                <div className="wrap-type-1">
+                  <div className="item">
+                    <div className="tit-card">
+                      <h4 className="tit">{content.title} <b>{content.accent}</b></h4>
+                      <p className="desc"><b>{content.lead}</b><br /><span>{content.desc}</span></p>
+                    </div>
+                  </div>
+                  <MoneybankIconCard icon={content.icon} title={content.headline} listStyle={content.listStyle} items={content.points} />
+                  <MoneybankIconCard icon={content.targetIcon} title="신청대상" listStyle={content.listStyle} items={content.targets} />
+                  {content.shops ? <MoneybankShopCard /> : null}
+                  <MoneybankIconCard icon="/final-ui/static/img/icon/tab-icon3.png" title="신청 준비서류" listStyle="style-2" items={content.documents} description="선지급 서비스 신청시, 미리 아래 서류 사본 파일(PDF 또는 JPG등)을 준비하시면 더욱 쉽게 준비하실 수 있습니다." />
+                </div>
+                <div className="btn-box txt-center">
+                  <a className="btn wide-btn btn-color4" href={content.requestHref}>신청하기</a>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
       </main>
     </Layout>
+  );
+}
+
+function MoneybankSectionNav({ active }) {
+  const items = [
+    ['intro', '서비스 소개', '/moneybank/intro/advpay'],
+    ['request', '서비스 신청', '/moneybank/request'],
+    ['current', '서비스 현황', '/moneybank/current'],
+  ];
+  return (
+    <nav className="sub-nav-wrap react-final-tabs">
+      <ul className="sub-nav">
+        {items.map(([key, label, href]) => (
+          <li className={active === key ? 'active' : ''} key={key}>
+            <a href={href}><span>{label}</span></a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function MoneybankIconCard({ icon, title, items, listStyle, description = '' }) {
+  return (
+    <div className="item">
+      <div className="icon-card">
+        <div className="icon"><img src={icon} alt="" /></div>
+        <div className="txt-box">
+          <div className="item-tit-wrap">
+            <h5 className="item-tit">{title}</h5>
+            {description ? <p className="desc">{description}</p> : null}
+          </div>
+          <ul className={`num-list ${listStyle}`}>
+            {items.map((item, index) => (
+              <li key={item}><span className="c-num">{index + 1}</span>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MoneybankShopCard() {
+  return (
+    <div className="item">
+      <div className="icon-card">
+        <div className="icon"><img src="/final-ui/static/img/icon/tab-icon6.png" alt="" /></div>
+        <div className="txt-box pb-0">
+          <div className="item-tit-wrap mb-10"><h5 className="item-tit">선정산 가능 쇼핑몰</h5></div>
+          <dl className="desc-box">
+            <dt>큐빅아이 가입 시, 등록하신 쇼핑몰 중 선정산 대상 쇼핑몰 클릭만으로 모든 계산이 자동으로 진행됩니다.<br />현재 대상 쇼핑몰은 다음과 같습니다.</dt>
+            <dd className="u14-shop-logos">
+              <img src="/final-ui/static/img/logo/11st.jpg" alt="11번가" />
+              <img src="/final-ui/static/img/logo/smartstore.jpg" alt="스마트스토어" />
+              <img src="/final-ui/static/img/logo/coupang.jpg" alt="쿠팡" />
+            </dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MoneybankStep({ active }) {
+  return (
+    <div className="app-step">
+      <ul className="step">
+        {['01 서비스 신청', '02 검토 및 심사', '03 계약 체결'].map((label, index) => (
+          <li className={active === index + 1 ? 'active' : ''} key={label}>{label}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -445,60 +629,62 @@ function RequestPage({ kind = 'together' }) {
     }
   }
 
+  const isAdvancePayment = kind === 'advpay';
+  const serviceName = isAdvancePayment ? '구매자금 선지급' : '매출 선정산';
+  const serviceDescription = isAdvancePayment
+    ? 'B2B 도매몰 구매자금과 쇼핑몰 정산 정보를 기준으로 한도를 신청합니다.'
+    : '등록한 쇼핑몰의 판매 대금을 정산일 전에 미리 지급받는 서비스입니다.';
+
   return (
-    <Layout>
-      <main className="sub-page">
-        <PageTitle title={variant.title} text={variant.text} />
-        <ContractStatusStrip data={data} contract={latestContract} onRefresh={data.refresh} />
-        <section className="form-panel">
-          <div className="field-grid">
-            <ReadOnlyField label="회원번호" value={account?.user_no ?? '-'} />
-            <ReadOnlyField label="회원유형" value={account?.user_type ?? '-'} />
-            <ReadOnlyField label="회원ID" value={account?.email ?? '-'} />
-            <ReadOnlyField label="상호" value={account?.biz_name ?? '-'} />
-            <ReadOnlyField label="제휴코드" value={account?.partner_code ?? '-'} />
-            <ReadOnlyField label="연결 쇼핑몰" value={`${connectedShops.length}개`} />
+    <Layout variant="moneybank">
+      <PageTitle title="머니뱅크" />
+      <MoneybankSectionNav active="request" />
+      <main className="content-wrap c4p2-1 final-core-page final-moneybank-page final-moneybank-request-page" data-product={kind} id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">서비스 신청</h2>
+          <div className="full-box py-80 bg-gray">
+            <div className="inner">
+              <MoneybankStep active={1} />
+              <article className="u15-request-block u15-member-block">
+                <div className="sub-tit-wrap"><h3 className="sub-tit sm">유지 정보</h3></div>
+                <div className="u15-member-table">
+                  <ReadOnlyField label="아이디" value={account?.email ?? '-'} />
+                  <ReadOnlyField label="회사명" value={account?.biz_name ?? '-'} />
+                  <ReadOnlyField label="회원명" value={account?.name ?? account?.biz_name ?? '-'} />
+                  <ReadOnlyField label="사업자등록번호" value={account?.biz_num ?? '-'} />
+                </div>
+                {!auth?.access_token ? <p className="auth-message error">로그인 후 머니뱅크를 신청할 수 있습니다.</p> : null}
+              </article>
+              {latestContract || data.error ? (
+                <div className="u15-contract-status">
+                  <ContractStatusStrip data={data} contract={latestContract} onRefresh={data.refresh} />
+                </div>
+              ) : null}
+              <article className="u15-request-block u15-service-block">
+                <div className="sub-tit-wrap"><h3 className="sub-tit sm">서비스 소개</h3></div>
+                <div className="u15-icon-copy">
+                  <img src="/final-ui/static/img/icon/bank-icon2.png" alt="" />
+                  <div>
+                    <h4>{serviceName} 서비스 신청</h4>
+                    <p>{serviceDescription}</p>
+                    <ul>
+                      <li>개인 온라인 사업 대표 대상</li>
+                      <li>온라인 판매 및 쇼핑몰 정산 정보 연결 필요</li>
+                      <li>신청 후 심사 결과에 따라 한도와 수수료 확정</li>
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            </div>
           </div>
-          {!auth?.access_token ? <p className="auth-message error">로그인 후 머니뱅크를 신청할 수 있습니다.</p> : null}
-          {shopState.message ? <p className="auth-message error">{shopState.message}</p> : null}
-          {variant.showB2b ? (
-            <>
-              <h2>구매자금 선지급 조건</h2>
-              <div className="field-grid">
-                <label>
-                  B2B 도매몰
-                  <select
-                    aria-label="B2B 도매몰"
-                    onChange={(event) => setLegacyInputs((current) => ({ ...current, b2bMall: event.target.value }))}
-                    value={legacyInputs.b2bMall}
-                  >
-                    <option value="비밀특가">비밀특가</option>
-                  </select>
-                </label>
-                <label>
-                  B2B몰 ID
-                  <input
-                    aria-label="B2B몰 ID"
-                    onChange={(event) => setLegacyInputs((current) => ({ ...current, b2bId: event.target.value }))}
-                    type="text"
-                    value={legacyInputs.b2bId}
-                  />
-                </label>
-                <label>
-                  희망 선지급 한도
-                  <input
-                    aria-label="희망 선지급 한도"
-                    onChange={(event) => setLegacyInputs((current) => ({ ...current, totalLimitAmount: event.target.value.replace(/[^0-9]/g, '') }))}
-                    placeholder="백만원 단위"
-                    type="text"
-                    value={legacyInputs.totalLimitAmount}
-                  />
-                </label>
-              </div>
-              <p className="api-note">legacy 기준 희망한도는 최소 5백만원, 최대 50백만원입니다. B2B몰 ID는 현재 신청 메모성 화면 입력으로만 유지되며 별도 DB 컬럼은 후속 확장 대상입니다.</p>
-            </>
-          ) : null}
-          <h2>운영 쇼핑몰</h2>
+        </section>
+
+        <section className="section sec-2 u15-form-section">
+          <div className="inner">
+            <div className="sub-tit-wrap"><h3 className="sub-tit sm">{isAdvancePayment ? '선지급' : '선정산'} 대상 쇼핑몰</h3></div>
+            <div className="u15-section-body">
+              <h4>{isAdvancePayment ? '구매자금 선지급을 적용할 쇼핑몰을 선택해 주십시오.' : '선정산 서비스를 적용할 쇼핑몰을 선택해 주십시오.'}</h4>
+              {shopState.message ? <p className="auth-message error">{shopState.message}</p> : null}
           <div className="shop-checks">
             {shopOptions.filter(([code]) => connectedShopTypes.includes(code)).map(([code, name, src]) => (
               <label key={code}>
@@ -523,9 +709,48 @@ function RequestPage({ kind = 'together' }) {
               <p className="auth-message error">연결된 쇼핑몰 계정이 없습니다. 마이페이지에서 쇼핑몰 계정을 먼저 연결해주세요.</p>
             ) : null}
           </div>
-          {variant.showAccounts ? (
-            <>
-              <h2>계좌 정보</h2>
+              {variant.showB2b ? (
+                <div className="field-grid u15-b2b-grid">
+                  <label>
+                    B2B 도매몰
+                    <select aria-label="B2B 도매몰" onChange={(event) => setLegacyInputs((current) => ({ ...current, b2bMall: event.target.value }))} value={legacyInputs.b2bMall}>
+                      <option value="비밀특가">비밀특가</option>
+                    </select>
+                  </label>
+                  <label>
+                    B2B몰 ID
+                    <input aria-label="B2B몰 ID" onChange={(event) => setLegacyInputs((current) => ({ ...current, b2bId: event.target.value }))} type="text" value={legacyInputs.b2bId} />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="section sec-3 u15-form-section">
+          <div className="inner">
+            <div className="sub-tit-wrap"><h3 className="sub-tit sm">{isAdvancePayment ? '희망 선지급 최대총액' : '서비스 계좌 정보'}</h3></div>
+            <div className="u15-section-body u15-icon-section">
+              <img src="/final-ui/static/img/icon/bank-icon3.png" alt="" />
+              <div className="u15-icon-section-content">
+                {variant.showB2b ? (
+                  <>
+                    <h4>희망하는 구매자금 선지급 총액을 백만원 단위로 입력해 주십시오.</h4>
+                    <label className="u15-limit-field">
+                      <span>희망 선지급 이용한도</span>
+                      <span className="u15-input-with-unit">
+                        <input aria-label="희망 선지급 한도" onChange={(event) => setLegacyInputs((current) => ({ ...current, totalLimitAmount: event.target.value.replace(/[^0-9]/g, '') }))} placeholder="희망 금액" type="text" value={legacyInputs.totalLimitAmount} />
+                        <b>백만원</b>
+                      </span>
+                    </label>
+                    <p className="api-note">최소 5백만원에서 최대 50백만원까지 입력할 수 있으며, 심사 결과에 따라 이용가능 금액이 달라질 수 있습니다.</p>
+                  </>
+                ) : (
+                  <h4>선정산 입금 계좌와 주거래 계좌를 확인해 주십시오.</h4>
+                )}
+              </div>
+            </div>
+            {variant.showAccounts ? (
               <div className="field-grid">
                 <label>
                   정산계좌 은행
@@ -584,58 +809,16 @@ function RequestPage({ kind = 'together' }) {
                   />
                 </label>
               </div>
-            </>
-          ) : null}
-          <h2>신청서류 제출</h2>
-          <div className="file-grid">
-            <label>
-              사업자등록증
-              <input
-                accept={REQUEST_DOCUMENT_ACCEPT}
-                onChange={(event) => setFiles((current) => ({ ...current, regNo: event.target.files?.[0] ?? null }))}
-                type="file"
-              />
-            </label>
-            <label>
-              대표자 신분증
-              <input
-                accept={REQUEST_DOCUMENT_ACCEPT}
-                onChange={(event) => setFiles((current) => ({ ...current, CBInfo: event.target.files?.[0] ?? null }))}
-                type="file"
-              />
-            </label>
-            {variant.showAccounts ? (
-              <>
-                <label>
-                  정산계좌 통장사본
-                  <input
-                    accept={REQUEST_DOCUMENT_ACCEPT}
-                    onChange={(event) => setExtraFiles((current) => ({ ...current, demandAccCopy: event.target.files?.[0] ?? null }))}
-                    type="file"
-                  />
-                </label>
-                <label>
-                  주거래 통장사본
-                  <input
-                    accept={REQUEST_DOCUMENT_ACCEPT}
-                    onChange={(event) => setExtraFiles((current) => ({ ...current, mainAccCopy: event.target.files?.[0] ?? null }))}
-                    type="file"
-                  />
-                </label>
-                <label>
-                  출금이체 동의서
-                  <input
-                    accept={REQUEST_DOCUMENT_ACCEPT}
-                    onChange={(event) => setExtraFiles((current) => ({ ...current, transferConsent: event.target.files?.[0] ?? null }))}
-                    type="file"
-                  />
-                </label>
-              </>
             ) : null}
           </div>
-          <p className="file-guide">* 신청서류는 3MB 이하의 jpg, jpeg, png, pdf 파일만 업로드합니다.</p>
-          <h2>본인확인</h2>
-          <div className="identity-verification-panel">
+        </section>
+
+        <section className="section sec-4 u15-form-section">
+          <div className="inner">
+            <div className="sub-tit-wrap"><h3 className="sub-tit sm">동의서 확인</h3></div>
+            <div className="u15-section-body">
+              <p className="u15-section-lead">{serviceName} 신청을 위해 본인확인과 필수 동의 항목을 확인해 주십시오.</p>
+              <div className="identity-verification-panel">
             <div className="field-grid">
               <label>
                 확인 방식
@@ -691,7 +874,7 @@ function RequestPage({ kind = 'together' }) {
                 {identityVerification.message}{identityVerification.reference ? ` (${identityVerification.reference})` : ''}
               </p>
             ) : null}
-            <p className="api-note">현재는 내부 테스트용 mock 확인입니다. 실제 Hyphen 본인확인 API 호출은 운영 실연동 단계에서 별도 모드로 분리합니다.</p>
+            <p className="api-note">현재는 내부 테스트용 mock 확인입니다. 실제 본인확인 API는 운영 실연동 단계에서 분리합니다.</p>
           </div>
           <div className="policy-checks">
             <label>
@@ -718,6 +901,33 @@ function RequestPage({ kind = 'together' }) {
               ))}
             </div>
           ) : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="section sec-5 u15-form-section">
+          <div className="inner">
+            <div className="sub-tit-wrap"><h3 className="sub-tit sm">신청서류 업로드</h3></div>
+            <div className="u15-section-body u15-document-section">
+              <div className="u15-document-heading">
+                <img src="/final-ui/static/img/icon/bank-icon4.png" alt="" />
+                <div>
+                  <h4>{serviceName} 신청서류를 업로드해 주십시오.</h4>
+                  <p>선택한 파일은 신청 저장 후 계약 문서로 등록됩니다.</p>
+                </div>
+              </div>
+              <div className="file-grid">
+                <label>사업자등록증<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setFiles((current) => ({ ...current, regNo: event.target.files?.[0] ?? null }))} type="file" /></label>
+                <label>대표자 신분증<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setFiles((current) => ({ ...current, CBInfo: event.target.files?.[0] ?? null }))} type="file" /></label>
+                {variant.showAccounts ? (
+                  <>
+                    <label>정산계좌 통장사본<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setExtraFiles((current) => ({ ...current, demandAccCopy: event.target.files?.[0] ?? null }))} type="file" /></label>
+                    <label>주거래 통장사본<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setExtraFiles((current) => ({ ...current, mainAccCopy: event.target.files?.[0] ?? null }))} type="file" /></label>
+                    <label>출금이체 동의서<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setExtraFiles((current) => ({ ...current, transferConsent: event.target.files?.[0] ?? null }))} type="file" /></label>
+                  </>
+                ) : null}
+              </div>
+              <p className="file-guide">* 신청서류는 3MB 이하의 jpg, jpeg, png, pdf 파일만 업로드합니다.</p>
           <button className="primary-action" disabled={submitState.submitting || !auth?.access_token || !connectedShops.length} onClick={submitRequest} type="button">
             {submitState.submitting ? '신청 저장 중' : variant.submitLabel}
           </button>
@@ -734,6 +944,8 @@ function RequestPage({ kind = 'together' }) {
               ))}
             </ul>
           ) : null}
+            </div>
+          </div>
         </section>
       </main>
     </Layout>
@@ -804,19 +1016,25 @@ function MoneybankProcessRoutePage({ mode = 'continue' }) {
 
   return (
     <Layout>
-      <main className="sub-page">
-        <PageTitle title="머니뱅크 진행상태 확인" text="legacy 중간 route를 최신 신청 상태 기준으로 React 화면에 연결합니다." />
-        <section className="form-panel">
-          <h2>이동 경로</h2>
-          {!auth?.access_token ? <p className="auth-message error">로그인 후 진행상태를 확인할 수 있습니다.</p> : null}
-          <div className="field-grid">
-            <ReadOnlyField label="legacy role" value={target.legacyRole} />
-            <ReadOnlyField label="이동 화면" value={target.label} />
-            <ReadOnlyField label="최근 계약" value={latestContract?.mbid ?? '-'} />
-            <ReadOnlyField label="계약상태" value={formatContractStatus(latestContract?.status)} />
+      <PageTitle title="머니뱅크" text="진행상태를 확인합니다." />
+      <MoneybankSectionNav active="request" />
+      <main className="content-wrap c4p2-2 final-core-page final-moneybank-page final-moneybank-derived-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">진행상태 확인</h2>
+          <div className="inner">
+            <section className="form-panel final-moneybank-form-panel">
+              <h2>이동 경로</h2>
+              {!auth?.access_token ? <p className="auth-message error">로그인 후 진행상태를 확인할 수 있습니다.</p> : null}
+              <div className="field-grid">
+                <ReadOnlyField label="legacy role" value={target.legacyRole} />
+                <ReadOnlyField label="이동 화면" value={target.label} />
+                <ReadOnlyField label="최근 계약" value={latestContract?.mbid ?? '-'} />
+                <ReadOnlyField label="계약상태" value={formatContractStatus(latestContract?.status)} />
+              </div>
+              <p className="api-note">{data.loading ? '진행상태를 조회 중입니다.' : target.reason}</p>
+              <a className="primary-action" href={target.href}>{target.label} 바로가기</a>
+            </section>
           </div>
-          <p className="api-note">{data.loading ? '진행상태를 조회 중입니다.' : target.reason}</p>
-          <a className="primary-action" href={target.href}>{target.label} 바로가기</a>
         </section>
       </main>
     </Layout>
@@ -825,75 +1043,193 @@ function MoneybankProcessRoutePage({ mode = 'continue' }) {
 
 function EvaluatePage({ kind = 'advcalc' }) {
   const [auth] = useState(readAuthSession);
+  const userNo = auth?.user?.user_no;
   const data = useUserDashboardData({
-    userNo: auth?.user?.user_no,
+    userNo,
     shopPairs: '__none__',
-    enabled: Boolean(auth?.access_token && auth?.user?.user_no),
+    enabled: Boolean(auth?.access_token && userNo),
   });
   const latestContract = data.contracts?.items?.[0];
-  const currentStatus = moneybankStatusKey(latestContract?.status);
-  const latestFee = latestFeeDetail(latestContract?.fees);
+  const [detailState, setDetailState] = useState({ loading: false, message: '', detail: null });
+
+  const loadEvaluationDetail = useCallback(async (mbid = latestContract?.mbid) => {
+    if (!auth?.access_token || !userNo || !mbid) {
+      setDetailState({ loading: false, message: '', detail: null });
+      return null;
+    }
+    setDetailState((current) => ({ ...current, loading: true, message: '' }));
+    try {
+      const detail = await fetchContractDetailForUser(mbid, userNo);
+      setDetailState({ loading: false, message: '', detail });
+      return detail;
+    } catch (error) {
+      setDetailState({ loading: false, message: `계약 상세 조회 대기: ${error.message}`, detail: null });
+      return null;
+    }
+  }, [auth?.access_token, latestContract?.mbid, userNo]);
+
+  useEffect(() => {
+    loadEvaluationDetail();
+  }, [loadEvaluationDetail]);
+
+  const contract = detailState.detail?.contract ?? latestContract;
+  const fees = detailState.detail?.fees ?? latestContract?.fees ?? [];
+  const contractShops = detailState.detail?.shops ?? [];
+  const currentStatus = moneybankStatusKey(contract?.status);
+  const latestFee = latestFeeDetail(fees);
   const progress = getMoneybankLegacyProgress(currentStatus);
-  const heading = kind === 'advpay' ? '구매자금 선지급 검토 및 심사' : '매출 선정산 검토 및 심사';
+  const serviceName = kind === 'advpay' ? '구매자금 선지급' : '매출 선정산';
   const hasTerms = ['CONDITIONS_ACCEPT', 'CONDITIONS_ACCEPT_ADJN', 'CONDITIONS_ACCEPT_ADJY', '04', '401', '402'].includes(currentStatus);
   const needsDocuments = currentStatus === 'PENDING_DOCUMENTS';
   const readyForContract = MONEYBANK_CONTRACT_STATUS_KEYS.has(currentStatus);
 
+  function patchLocalContract(patch) {
+    setDetailState((current) => {
+      if (!current.detail?.contract) return current;
+      return {
+        ...current,
+        detail: {
+          ...current.detail,
+          contract: { ...current.detail.contract, ...patch },
+        },
+      };
+    });
+  }
+
+  async function refreshEvaluation() {
+    const refreshed = await data.refresh();
+    const mbid = refreshed.contracts?.items?.[0]?.mbid ?? contract?.mbid;
+    await loadEvaluationDetail(mbid);
+  }
+
+  const resultValue = (value, formatter = (item) => item) => (
+    hasTerms || readyForContract ? formatter(value) : '심사중'
+  );
+
   return (
-    <Layout>
-      <main className="sub-page">
-        <PageTitle title={heading} text="신청서류 검토, 심사 결과, 이용조건 동의 상태를 확인합니다." />
-        <ContractStatusStrip data={data} contract={latestContract} onRefresh={data.refresh} />
-        <section className="form-panel">
-          <h2>심사진행상태</h2>
-          {!auth?.access_token ? <p className="auth-message error">로그인 후 심사 상태를 확인할 수 있습니다.</p> : null}
-          <div className="field-grid">
-            <ReadOnlyField label="최근 계약" value={latestContract?.mbid ?? '-'} />
-            <ReadOnlyField label="현재상태" value={formatMoneybankContractStatus(latestContract?.status)} />
-            <ReadOnlyField label="신청일" value={formatDate(latestContract?.request_date)} />
-            <ReadOnlyField label="평가등급" value={latestContract?.prizm_score ?? '-'} />
-          </div>
-          <ol className="uploaded-list">
-            {['신청 자격 확인', '신청정보 취합', '프리즘평가', '종합심사'].map((label, index) => (
-              <li key={label}>{index < progress ? '완료' : '대기'}: {label}</li>
-            ))}
-          </ol>
-          <p className="api-note">
-            제출하신 사업정보와 신청서류를 기준으로 심사를 진행합니다. 조건이 제시되면 이용조건 동의 후 계약 체결 단계로 이동합니다.
-          </p>
-        </section>
-        {needsDocuments ? (
-          <section className="form-panel">
-            <h2>다음 액션</h2>
-            <p className="submit-message">서류 보완이 필요한 신청건입니다. 서비스 현황에서 보완서류를 제출해주세요.</p>
-            <a className="primary-action" href="/moneybank/current">보완서류 제출</a>
-          </section>
-        ) : null}
-        {hasTerms ? (
-          <section className="form-panel">
-            <h2>심사결과</h2>
-            <div className="field-grid">
-              <ReadOnlyField label="이용 수수료율" value={formatPercent(latestContract?.latest_fee_rate ?? latestFee?.fee_rate)} />
-              <ReadOnlyField label="머니뱅크 지급율" value={formatPercent(latestContract?.latest_payment_rate ?? latestFee?.payment_rate)} />
-              <ReadOnlyField label="주문건당 매출인정 한도" value={formatAmount(latestFee?.sales_limit_per_order)} />
-              <ReadOnlyField label="계약기간" value="1년" />
+    <Layout variant="moneybank">
+      <PageTitle title="머니뱅크" />
+      <MoneybankSectionNav active="request" />
+      <main className="content-wrap c4p2-2 final-core-page final-moneybank-page final-moneybank-evaluate-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">서비스 신청</h2>
+          <div className="full-box py-80 bg-gray">
+            <div className="inner">
+              <MoneybankStep active={2} />
+              <article className="u16-review-progress step-wrap">
+                <p className="desc">
+                  제출하신 사업정보 및 신청서류를 기반으로 자료를 취합하고 쇼핑몰 계좌 정보를 확인하고 있습니다.<br />
+                  심사 완료 후 이용 가능한 {serviceName} 한도와 조건을 알려드립니다.
+                </p>
+                <div className="u16-title-row">
+                  <div className="sub-tit-wrap"><h3 className="sub-tit sm">심사진행상태</h3></div>
+                  <button className="secondary-action" disabled={data.loading || detailState.loading} onClick={refreshEvaluation} type="button">새로고침</button>
+                </div>
+                {!auth?.access_token ? <p className="auth-message error">로그인 후 심사 상태를 확인할 수 있습니다.</p> : null}
+                {detailState.message ? <p className="auth-message error">{detailState.message}</p> : null}
+                <ul className="step-list">
+                  {[
+                    ['item-1', '/final-ui/static/img/icon/step1.png', '신청 자격 확인 완료'],
+                    ['item-2', '/final-ui/static/img/icon/step2.png', '신청정보 취합 완료'],
+                    ['item-4', '/final-ui/static/img/icon/step4.png', '신용평가 완료'],
+                    ['item-5', '/final-ui/static/img/icon/step5.png', '종합심사 완료'],
+                  ].map(([className, src, label], index) => (
+                    <li className={`${className}${index < progress ? ' active' : ''}`} key={className}>
+                      <span>{String(index + 1).padStart(2, '0')}</span>
+                      <figure className="figure"><img src={src} alt="" /></figure>
+                      <p>{label}</p>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+
+              <article className="u16-info-block">
+                <div className="sub-tit-wrap"><h3 className="sub-tit sm">기본정보</h3></div>
+                <div className="u16-info-table">
+                  <ReadOnlyField label="회사정보" value={contract?.firm_name ?? auth?.user?.biz_name ?? '-'} />
+                  <ReadOnlyField label="대표자" value={contract?.user_name ?? auth?.user?.name ?? '-'} />
+                  <ReadOnlyField label="사업자번호" value={auth?.user?.biz_num ?? '-'} />
+                  <ReadOnlyField label="큐빅아이 ID" value={contract?.user_email ?? auth?.user?.email ?? '-'} />
+                  <ReadOnlyField label="가입일자" value={formatDate(auth?.user?.reg_date)} />
+                  <ReadOnlyField label="서비스 신청일" value={formatDate(contract?.request_date)} />
+                  <ReadOnlyField label="선정산 상환 계좌" value={formatBankAccount(contract?.demand_acc_bank_code, contract?.demand_acc_number, contract?.demand_acc_holder)} />
+                  <ReadOnlyField label="선정산 입금 계좌" value={formatBankAccount(contract?.main_acc_bank_code, contract?.main_acc_number, contract?.main_acc_holder)} />
+                </div>
+                <div className="u16-shop-table">
+                  <h4>{kind === 'advpay' ? '선지급' : '선정산'} 대상 쇼핑몰</h4>
+                  <div>
+                    {contractShops.length ? contractShops.map((shop) => {
+                      const option = shopOptions.find(([code]) => code === shop.contract_shop_type);
+                      return (
+                        <span className="u16-shop" key={shop.id ?? `${shop.contract_shop_type}-${shop.contract_shop_id}`}>
+                          {option ? <img src={option[2]} alt={option[1]} /> : null}
+                          <b>{option?.[1] ?? shop.contract_shop_type ?? '-'}</b>
+                        </span>
+                      );
+                    }) : <span>{contract?.request_shop ? `연결 쇼핑몰 ${contract.request_shop}개` : '대상 쇼핑몰 정보를 조회 중입니다.'}</span>}
+                  </div>
+                </div>
+              </article>
+
+              <article className="u16-result-block">
+                <div className="u16-title-row">
+                  <div className="sub-tit-wrap"><h3 className="sub-tit sm">심사결과</h3></div>
+                  <div className="u16-result-date"><strong>기준</strong><span>{formatDate(contract?.modified_date ?? contract?.approval_date ?? contract?.request_date)}</span></div>
+                </div>
+                <div className="u16-result-table">
+                  <ReadOnlyField label="지급율" value={resultValue(contract?.latest_payment_rate ?? latestFee?.payment_rate, formatPercent)} />
+                  <ReadOnlyField label="주문 건당 한도" value={resultValue(latestFee?.sales_limit_per_order, formatAmount)} />
+                  <ReadOnlyField label="계약기간" value={resultValue(contract?.expire_date, (value) => (value ? `${formatDate(contract?.contract_date)} ~ ${formatDate(value)}` : '1년'))} />
+                  <ReadOnlyField label="최대 미상환 금액" value={resultValue(latestFee?.max_outstanding_balance, formatAmount)} />
+                  <ReadOnlyField label="이용 수수료율" value={resultValue(contract?.latest_fee_rate, formatPercent)} />
+                  <ReadOnlyField label="평가등급" value={resultValue(contract?.prizm_score)} />
+                </div>
+              </article>
+
+              {needsDocuments ? (
+                <div className="u16-next-action">
+                  <p className="submit-message">서류 보완이 필요한 신청건입니다.</p>
+                  <a className="primary-action" href="/moneybank/current">보완서류 제출</a>
+                </div>
+              ) : null}
+              {!contract && !data.loading ? (
+                <div className="u16-next-action">
+                  <p className="api-note">진행 중인 신청건이 없습니다.</p>
+                  <a className="primary-action" href={kind === 'advpay' ? '/moneybank/advPay/request' : '/moneybank/advcalc/request'}>서비스 신청</a>
+                </div>
+              ) : null}
             </div>
-            <p className="api-note">조건에 동의하면 계약 체결 단계로 이동합니다. 동의 후 3일 이내 계약이 진행되지 않으면 운영 정책에 따라 신청이 취소될 수 있습니다.</p>
-          </section>
-        ) : null}
-        <TermsDecisionPanel contract={latestContract} fees={latestContract?.fees ?? []} onDone={data.refresh} />
-        {readyForContract ? (
-          <section className="form-panel">
-            <h2>다음 액션</h2>
-            <p className="submit-message success">이용조건 동의가 완료되었습니다. 계약 체결 화면에서 전자서명과 계약 진행 상태를 확인해주세요.</p>
-            <a className="primary-action" href="/moneybank/advcalc/contract">계약 체결</a>
-          </section>
-        ) : null}
-        {!latestContract && !data.loading ? (
-          <section className="form-panel">
-            <h2>다음 액션</h2>
-            <p className="api-note">진행 중인 신청건이 없습니다. 신청 화면에서 서비스를 신청해주세요.</p>
-            <a className="primary-action" href="/moneybank/advcalc/request">서비스 신청</a>
+          </div>
+        </section>
+
+        {contract ? (
+          <section className="section sec-2 u16-terms-section">
+            <div className="inner">
+              <div className="sub-tit-wrap"><h3 className="sub-tit sm">심사결과 및 이용조건 확인</h3></div>
+              <div className="u16-terms-copy">
+                <img src="/final-ui/static/img/icon/bank-icon4.png" alt="" />
+                <div>
+                  <p>{serviceName} 서비스는 1년 계약으로 운영됩니다.</p>
+                  <p>심사 결과의 한도와 지급율, 수수료를 확인한 후 이용조건에 동의해 주십시오.</p>
+                  <p>이용조건 동의 후 계약 체결 단계로 진행됩니다.</p>
+                </div>
+              </div>
+              <div className="u16-terms-decision">
+                <TermsDecisionPanel
+                  contract={contract}
+                  fees={fees}
+                  onDone={refreshEvaluation}
+                  onLocalChange={patchLocalContract}
+                />
+              </div>
+              {hasTerms ? <p className="u16-decision-guide">위의 심사결과를 확인하고 이용조건에 동의하면 계약체결 단계로 진행됩니다.</p> : null}
+              {readyForContract ? (
+                <div className="u16-next-action">
+                  <p className="submit-message success">이용조건 동의가 완료되었습니다.</p>
+                  <a className="primary-action" href={kind === 'advpay' ? '/moneybank/advPay/contractForm' : '/moneybank/advcalc/contract'}>계약 체결</a>
+                </div>
+              ) : null}
+            </div>
           </section>
         ) : null}
       </main>
@@ -903,19 +1239,90 @@ function EvaluatePage({ kind = 'advcalc' }) {
 
 function CurrentPage() {
   const [auth] = useState(readAuthSession);
+  const userNo = auth?.user?.user_no;
   const shopFilter = useAuthenticatedShopPairs(auth);
   const data = useUserDashboardData({
-    userNo: auth?.user?.user_no,
+    userNo,
     shopPairs: shopFilter.shopPairs,
-    enabled: Boolean(auth?.access_token && auth?.user?.user_no),
+    enabled: Boolean(auth?.access_token && userNo),
   });
   const latestContract = data.contracts?.items?.[0];
+  const [detailState, setDetailState] = useState({ loading: false, message: '', detail: null });
+  const [payoutFilters, setPayoutFilters] = useState({ shopType: '', fromDate: '', toDate: '' });
+  const [repaymentFilters, setRepaymentFilters] = useState({ fromDate: '', toDate: '' });
   const [supplementFiles, setSupplementFiles] = useState({ regNo: null, CBInfo: null });
   const [supplementState, setSupplementState] = useState({ submitting: false, message: '', uploaded: [] });
-  const needsDocumentSupplement = latestContract?.status === 'PENDING_DOCUMENTS';
+
+  const loadCurrentDetail = useCallback(async (mbid = latestContract?.mbid) => {
+    if (!auth?.access_token || !userNo || !mbid) {
+      setDetailState({ loading: false, message: '', detail: null });
+      return null;
+    }
+    setDetailState((current) => ({ ...current, loading: true, message: '' }));
+    try {
+      const detail = await fetchContractDetailForUser(mbid, userNo);
+      setDetailState({ loading: false, message: '', detail });
+      return detail;
+    } catch (error) {
+      setDetailState({ loading: false, message: `계약 상세 조회 대기: ${error.message}`, detail: null });
+      return null;
+    }
+  }, [auth?.access_token, latestContract?.mbid, userNo]);
+
+  useEffect(() => {
+    loadCurrentDetail();
+  }, [loadCurrentDetail]);
+
+  const contract = detailState.detail?.contract ?? latestContract;
+  const latestFee = latestFeeDetail(detailState.detail?.fees ?? latestContract?.fees ?? []);
+  const contractShops = detailState.detail?.shops ?? [];
+  const redemption = (data.redemptions?.items ?? []).find((item) => item.mbid === contract?.mbid)
+    ?? data.redemptions?.items?.[0];
+  const needsDocumentSupplement = contract?.status === 'PENDING_DOCUMENTS';
+
+  function inDateRange(value, fromDate, toDate) {
+    if (!value) return !fromDate && !toDate;
+    const date = String(value).slice(0, 10);
+    if (fromDate && date < fromDate) return false;
+    if (toDate && date > toDate) return false;
+    return true;
+  }
+
+  const payoutRows = useMemo(() => (data.settlements?.items ?? []).filter((item) => (
+    (!payoutFilters.shopType || item.shop_type === payoutFilters.shopType)
+    && inDateRange(item.settlement_date, payoutFilters.fromDate, payoutFilters.toDate)
+  )), [data.settlements?.items, payoutFilters]);
+
+  const repaymentRows = useMemo(() => (data.redemptions?.items ?? []).filter((item) => (
+    inDateRange(item.latest_history_date, repaymentFilters.fromDate, repaymentFilters.toDate)
+  )), [data.redemptions?.items, repaymentFilters]);
+
+  const feeRateItems = (latestFee?.rates ?? []).slice(0, 3).map((rate) => {
+    const option = shopOptions.find(([code]) => code === rate.fee_type);
+    return {
+      label: `${option?.[1] ?? rate.fee_type ?? '서비스'} 수수료율`,
+      value: formatPercent(rate.fee_rate),
+    };
+  });
+
+  const conditionItems = [
+    ...feeRateItems,
+    { label: '지급율', value: formatPercent(contract?.latest_payment_rate ?? latestFee?.payment_rate) },
+    { label: '주문 건당 한도', value: formatAmount(latestFee?.sales_limit_per_order) },
+    { label: '최대 미상환금', value: formatAmount(latestFee?.max_outstanding_balance) },
+    { label: '상환계좌', value: formatBankAccount(contract?.demand_acc_bank_code, contract?.demand_acc_number, contract?.demand_acc_holder) },
+    { label: '지급계좌', value: formatBankAccount(contract?.main_acc_bank_code, contract?.main_acc_number, contract?.main_acc_holder) },
+    { label: '계약기간', value: contract?.expire_date ? `${formatDate(contract?.contract_date)} ~ ${formatDate(contract.expire_date)}` : '-' },
+    { label: '총 지급금', value: formatAmount(redemption?.latest_cumulative_provision_amount ?? redemption?.total_provision_amount) },
+    { label: '총 상환금', value: formatAmount(redemption?.latest_cumulative_repayment_amount ?? redemption?.total_repayment_amount) },
+    { label: '미상환금', value: formatAmount(redemption?.latest_outstanding_balance) },
+    { label: '서비스 수수료', value: formatAmount(redemption?.total_usage_fee) },
+    { label: '지급 수수료', value: formatAmount(redemption?.total_repayment_usage_fee) },
+    { label: '반환금', value: formatAmount(redemption?.total_balance_provision_amount) },
+  ];
 
   async function submitSupplementDocuments() {
-    if (!latestContract?.mbid) {
+    if (!contract?.mbid) {
       setSupplementState({ submitting: false, message: '보완할 신청건이 없습니다.', uploaded: [] });
       return;
     }
@@ -940,7 +1347,7 @@ function CurrentPage() {
     try {
       const uploaded = [];
       for (const [documentType, file] of uploadTargets) {
-        const uploadResult = await uploadDocumentFile(latestContract.mbid, {
+        const uploadResult = await uploadDocumentFile(contract.mbid, {
           documentType,
           file,
           uploadedBy: 'user-web',
@@ -951,140 +1358,143 @@ function CurrentPage() {
       data.refresh().catch(() => null);
       setSupplementFiles({ regNo: null, CBInfo: null });
     } catch (error) {
-      await updateContractDocumentStatus(latestContract.mbid, 'document_pending', `document supplement failed: ${error.message}`).catch(() => null);
+      await updateContractDocumentStatus(contract.mbid, 'document_pending', `document supplement failed: ${error.message}`).catch(() => null);
       setSupplementState({ submitting: false, message: `보완서류 업로드 실패: ${error.message}`, uploaded: [] });
     }
   }
 
   return (
-    <Layout>
-      <main className="sub-page">
-        <PageTitle title="머니뱅크 현황" text="계약, 지급, 상환 현황을 로컬 DB API 기준으로 확인합니다." />
-        <ContractStatusStrip data={data} contract={latestContract} onRefresh={data.refresh} />
-        <TermsDecisionPanel contract={latestContract} onDone={data.refresh} />
-        <DashboardSummary data={data} />
-        <section className="data-table-wrap">
-          <h2>계약/신청 현황</h2>
-          <table>
-            <thead>
-              <tr><th>계약번호</th><th>회원</th><th>상품</th><th>상태</th><th>지급율</th><th>평균 수수료</th><th>신청일</th><th>매출액</th></tr>
-            </thead>
-            <tbody>
-              {(data.contracts?.items ?? []).map((item) => (
-                <tr key={item.mbid}>
-                  <td><a className="status-link" href={contractDetailPath(item.mbid)}>{item.mbid}</a></td>
-                  <td>{item.user_email ?? item.user_no ?? '-'}</td>
-                  <td>{formatProductCode(item.product_code)}</td>
-                  <td>{formatContractStatus(item.status)}</td>
-                  <td>{formatPercent(item.latest_payment_rate)}</td>
-                  <td>{formatPercent(item.latest_fee_rate)}</td>
-                  <td>{formatDate(item.request_date)}</td>
-                  <td>{formatAmount(item.sales_amount)}</td>
-                </tr>
-              ))}
-              {!(data.contracts?.items ?? []).length ? (
-                <tr><td colSpan="8">{data.loading ? '조회 중입니다.' : '계약/신청 내역이 없습니다.'}</td></tr>
-              ) : null}
-            </tbody>
-          </table>
-        </section>
-        <section className="finance-summary-grid">
-          {(data.contracts?.items ?? []).slice(0, 3).map((item) => {
-            const matchingRedemption = (data.redemptions?.items ?? []).find((redemption) => redemption.mbid === item.mbid);
-            return (
-              <article key={`finance-${item.mbid}`}>
-                <div>
-                  <span>{item.mbid}</span>
-                  <strong>{formatContractStatus(item.status)}</strong>
+    <Layout variant="moneybank">
+      <PageTitle title="머니뱅크" />
+      <MoneybankSectionNav active="current" />
+      <main className="content-wrap c4p3 final-core-page final-moneybank-page final-moneybank-current-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">서비스 현황</h2>
+          <div className="full-box bg-gray">
+            <div className="inner">
+              <article className="u17-condition-block">
+                <div className="u17-title-row">
+                  <div className="sub-tit-wrap"><h3 className="sub-tit sm mb-0">이용조건</h3></div>
+                  <div className="u17-title-actions">
+                    <button className="secondary-action" disabled={data.loading || detailState.loading} onClick={() => loadCurrentDetail()} type="button">새로고침</button>
+                    {contract?.mbid ? <a className="primary-action" href={contractDetailPath(contract.mbid)}>인증서/계약 관리</a> : null}
+                  </div>
                 </div>
-                <dl>
-                  <div><dt>상품</dt><dd>{formatProductCode(item.product_code)}</dd></div>
-                  <div><dt>지급율</dt><dd>{formatPercent(item.latest_payment_rate)}</dd></div>
-                  <div><dt>평균 수수료</dt><dd>{formatPercent(item.latest_fee_rate)}</dd></div>
-                  <div><dt>총 지급</dt><dd>{formatAmount(matchingRedemption?.latest_cumulative_provision_amount)}</dd></div>
-                  <div><dt>총 상환</dt><dd>{formatAmount(matchingRedemption?.latest_cumulative_repayment_amount)}</dd></div>
-                  <div><dt>미상환잔액</dt><dd>{formatAmount(matchingRedemption?.latest_outstanding_balance)}</dd></div>
-                </dl>
-                <a className="status-link" href={contractDetailPath(item.mbid)}>상세보기</a>
+                {detailState.message ? <p className="auth-message error">{detailState.message}</p> : null}
+                <div className="u17-condition-grid">
+                  {conditionItems.map((item) => <ReadOnlyField key={item.label} label={item.label} value={item.value} />)}
+                </div>
+                <div className="u17-shop-row">
+                  <strong>신청 쇼핑몰</strong>
+                  <div>
+                    {contractShops.length ? contractShops.map((shop) => {
+                      const option = shopOptions.find(([code]) => code === shop.contract_shop_type);
+                      return (
+                        <span key={shop.id ?? `${shop.contract_shop_type}-${shop.contract_shop_id}`}>
+                          {option ? <img src={option[2]} alt={option[1]} /> : null}
+                          <b>{option?.[1] ?? shop.contract_shop_type ?? '-'}</b>
+                        </span>
+                      );
+                    }) : <span>{contract?.request_shop ? `${contract.request_shop}개 쇼핑몰` : '-'}</span>}
+                  </div>
+                </div>
+                <p className="u17-condition-note">미상환금이 최대 미상환금에 도달하면 지급이 일시 중단될 수 있습니다.</p>
+                <div className="u17-contract-links">
+                  {(data.contracts?.items ?? []).map((item) => <a href={contractDetailPath(item.mbid)} key={item.mbid}>{item.mbid} · {formatContractStatus(item.status)}</a>)}
+                </div>
               </article>
-            );
-          })}
-          {!(data.contracts?.items ?? []).length ? (
-            <p className="api-note">{data.loading ? '계약별 금융조건을 조회 중입니다.' : '표시할 계약별 금융조건이 없습니다.'}</p>
-          ) : null}
-        </section>
-        <section className="data-table-wrap">
-          <h2>상환 현황</h2>
-          <table>
-            <thead>
-              <tr><th>계약번호</th><th>총 지급</th><th>이용수수료</th><th>총 상환</th><th>상환수수료</th><th>미상환잔액</th><th>최근 이력일</th></tr>
-            </thead>
-            <tbody>
-              {(data.redemptions?.items ?? []).map((item) => (
-                <tr key={item.mbid}>
-                  <td>{item.mbid}</td>
-                  <td>{formatAmount(item.latest_cumulative_provision_amount)}</td>
-                  <td>{formatAmount(item.total_usage_fee)}</td>
-                  <td>{formatAmount(item.latest_cumulative_repayment_amount)}</td>
-                  <td>{formatAmount(item.total_repayment_usage_fee)}</td>
-                  <td>{formatAmount(item.latest_outstanding_balance)}</td>
-                  <td>{formatDate(item.latest_history_date)}</td>
-                </tr>
-              ))}
-              {!(data.redemptions?.items ?? []).length ? (
-                <tr><td colSpan="7">{data.loading ? '조회 중입니다.' : '상환 현황이 없습니다.'}</td></tr>
+              {canDecideTerms(contract) ? (
+                <div className="u17-terms-panel"><TermsDecisionPanel contract={contract} fees={detailState.detail?.fees ?? []} onDone={data.refresh} /></div>
               ) : null}
-            </tbody>
-          </table>
+            </div>
+          </div>
+        </section>
+        <section className="section sec-2 select-z-index">
+          <h2 className="hidden">지급현황</h2>
+          <div className="inner">
+            <article className="u17-status-block">
+              <div className="sub-tit-wrap"><h3 className="sub-tit sm pb-0">지급현황</h3></div>
+              <div className="u17-filter-bar">
+                <label>쇼핑몰
+                  <select aria-label="지급현황 쇼핑몰" onChange={(event) => setPayoutFilters((current) => ({ ...current, shopType: event.target.value }))} value={payoutFilters.shopType}>
+                    <option value="">전체 쇼핑몰</option>
+                    {shopOptions.map(([code, name]) => <option key={code} value={code}>{name}</option>)}
+                  </select>
+                </label>
+                <label>지급 시작일<input aria-label="지급 시작일" onChange={(event) => setPayoutFilters((current) => ({ ...current, fromDate: event.target.value }))} type="date" value={payoutFilters.fromDate} /></label>
+                <label>지급 종료일<input aria-label="지급 종료일" onChange={(event) => setPayoutFilters((current) => ({ ...current, toDate: event.target.value }))} type="date" value={payoutFilters.toDate} /></label>
+              </div>
+              <div className="table basic-table table-r-border auto-xy-scroll u17-data-table u17-payout-table">
+                <table>
+                  <thead><tr><th>No.</th><th>쇼핑몰</th><th>지급일자</th><th>지급금</th><th>서비스 수수료</th></tr></thead>
+                  <tbody>
+                    {payoutRows.map((item, index) => (
+                      <tr key={item.settlements_id ?? item.settlement_id ?? `${item.shop_type}-${item.settlement_date}-${index}`}>
+                        <td>{index + 1}</td><td>{shopOptions.find(([code]) => code === item.shop_type)?.[1] ?? item.shop_type ?? '-'}</td><td>{formatDate(item.settlement_date)}</td><td>{formatAmount(item.settlement_amount ?? item.settlement_target_amount)}</td><td>{formatAmount(item.service_fee)}</td>
+                      </tr>
+                    ))}
+                    {!payoutRows.length ? <tr><td colSpan="5">{data.loading ? '조회 중입니다.' : '지급 현황이 없습니다.'}</td></tr> : null}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+        </section>
+        <section className="section sec-3 select-z-index">
+          <h2 className="hidden">상환현황</h2>
+          <div className="inner">
+            <article className="u17-status-block">
+              <div className="sub-tit-wrap"><h3 className="sub-tit sm pb-0">상환현황</h3></div>
+              <div className="u17-filter-bar u17-repayment-filter">
+                <label>상환 시작일<input aria-label="상환 시작일" onChange={(event) => setRepaymentFilters((current) => ({ ...current, fromDate: event.target.value }))} type="date" value={repaymentFilters.fromDate} /></label>
+                <label>상환 종료일<input aria-label="상환 종료일" onChange={(event) => setRepaymentFilters((current) => ({ ...current, toDate: event.target.value }))} type="date" value={repaymentFilters.toDate} /></label>
+              </div>
+              <div className="table basic-table type-2 table-r-border auto-xy-scroll u17-data-table u17-repayment-table">
+                <table>
+                  <thead><tr><th>No.</th><th>상환일자</th><th>출금액</th><th>상환금</th><th>서비스 수수료</th><th>지급 수수료</th><th>반환금</th></tr></thead>
+                  <tbody>
+                    {repaymentRows.map((item, index) => (
+                      <tr key={item.mbid}>
+                        <td>{index + 1}</td><td>{formatDate(item.latest_history_date)}</td><td>{formatAmount(item.total_deposit_amount)}</td><td>{formatAmount(item.latest_cumulative_repayment_amount ?? item.total_repayment_amount)}</td><td>{formatAmount(item.total_usage_fee)}</td><td>{formatAmount(item.total_repayment_usage_fee)}</td><td>{formatAmount(item.total_balance_provision_amount)}</td>
+                      </tr>
+                    ))}
+                    {!repaymentRows.length ? <tr><td colSpan="7">{data.loading ? '조회 중입니다.' : '상환 현황이 없습니다.'}</td></tr> : null}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </div>
         </section>
         {needsDocumentSupplement ? (
-          <section className="form-panel">
-            <h2>보완서류 제출</h2>
-            <p className="api-note">서류 업로드가 완료되지 않은 신청건입니다. 기존 신청번호에 보완서류를 다시 업로드합니다.</p>
-            <div className="file-grid">
-              <label>
-                사업자등록증
-                <input
-                  accept={REQUEST_DOCUMENT_ACCEPT}
-                  onChange={(event) => setSupplementFiles((current) => ({ ...current, regNo: event.target.files?.[0] ?? null }))}
-                  type="file"
-                />
-              </label>
-              <label>
-                대표자 신분증
-                <input
-                  accept={REQUEST_DOCUMENT_ACCEPT}
-                  onChange={(event) => setSupplementFiles((current) => ({ ...current, CBInfo: event.target.files?.[0] ?? null }))}
-                  type="file"
-                />
-              </label>
-            </div>
-            <p className="file-guide">* 보완서류는 3MB 이하의 jpg, jpeg, png, pdf 파일만 업로드합니다.</p>
-            <button className="primary-action" disabled={supplementState.submitting} onClick={submitSupplementDocuments} type="button">
-              {supplementState.submitting ? '보완서류 업로드 중' : '보완서류 제출'}
-            </button>
-            {supplementState.message ? <p className={supplementState.uploaded.length ? 'submit-message success' : 'submit-message'}>{supplementState.message}</p> : null}
-            {supplementState.uploaded.length ? (
-              <ul className="uploaded-list">
-                {supplementState.uploaded.map((item) => (
-                  <li key={item.uuid}>{item.file_division}: {item.origin_file_name}.{item.file_ext}</li>
-                ))}
-              </ul>
-            ) : null}
+          <section className="section sec-4 u17-supplement-section">
+            <div className="inner"><section className="form-panel final-moneybank-form-panel">
+              <h2>보완서류 제출</h2>
+              <p className="api-note">서류 업로드가 완료되지 않은 신청건입니다. 기존 신청번호에 보완서류를 다시 업로드합니다.</p>
+              <div className="file-grid">
+                <label>사업자등록증<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setSupplementFiles((current) => ({ ...current, regNo: event.target.files?.[0] ?? null }))} type="file" /></label>
+                <label>대표자 신분증<input accept={REQUEST_DOCUMENT_ACCEPT} onChange={(event) => setSupplementFiles((current) => ({ ...current, CBInfo: event.target.files?.[0] ?? null }))} type="file" /></label>
+              </div>
+              <p className="file-guide">* 보완서류는 3MB 이하의 jpg, jpeg, png, pdf 파일만 업로드합니다.</p>
+              <button className="primary-action" disabled={supplementState.submitting} onClick={submitSupplementDocuments} type="button">{supplementState.submitting ? '보완서류 업로드 중' : '보완서류 제출'}</button>
+              {supplementState.message ? <p className={supplementState.uploaded.length ? 'submit-message success' : 'submit-message'}>{supplementState.message}</p> : null}
+              {supplementState.uploaded.length ? <ul className="uploaded-list">{supplementState.uploaded.map((item) => <li key={item.uuid}>{item.file_division}: {item.origin_file_name}.{item.file_ext}</li>)}</ul> : null}
+            </section></div>
           </section>
         ) : null}
         {!needsDocumentSupplement && supplementState.message ? (
-          <section className="form-panel">
-            <p className={supplementState.uploaded.length ? 'submit-message success' : 'submit-message'}>
-              {supplementState.message}
-            </p>
-            {supplementState.uploaded.length ? (
-              <ul className="uploaded-list">
-                {supplementState.uploaded.map((item) => (
-                  <li key={item.uuid}>{item.file_division}: {item.origin_file_name}.{item.file_ext}</li>
-                ))}
-              </ul>
-            ) : null}
+          <section className="section sec-4 u17-supplement-section">
+            <div className="inner"><section className="form-panel final-moneybank-form-panel">
+              <p className={supplementState.uploaded.length ? 'submit-message success' : 'submit-message'}>
+                {supplementState.message}
+              </p>
+              {supplementState.uploaded.length ? (
+                <ul className="uploaded-list">
+                  {supplementState.uploaded.map((item) => (
+                    <li key={item.uuid}>{item.file_division}: {item.origin_file_name}.{item.file_ext}</li>
+                  ))}
+                </ul>
+              ) : null}
+            </section></div>
           </section>
         ) : null}
       </main>
@@ -1204,6 +1614,30 @@ function ContractDetailPage({ mbid }) {
   const canRequestTermination = TERMINATION_REQUEST_ALLOWED_STATUS_KEYS.has(currentStatus);
   const terminationPending = TERMINATION_PENDING_STATUS_KEYS.has(currentStatus);
   const terminated = TERMINATED_STATUS_KEYS.has(currentStatus);
+  const shopSummary = (state.detail?.shops ?? [])
+    .map((item) => `${item.contract_shop_type ?? '-'} ${item.contract_shop_id ?? ''}`.trim())
+    .join(', ') || '-';
+  const feeRateSummary = (latestFee?.rates ?? [])
+    .map((item) => `${item.fee_type ?? '수수료'} ${formatPercent(item.fee_rate)}`)
+    .join(', ') || formatPercent(contract?.latest_fee_rate);
+  const contractPeriod = contract?.expire_date
+    ? `${formatDate(contract?.contract_date)} ~ ${formatDate(contract.expire_date)}`
+    : formatDate(contract?.contract_date);
+  const conditionItems = [
+    ['계약번호', contract?.mbid ?? mbid],
+    ['상품', formatProductCode(contract?.product_code)],
+    ['상태', contract ? formatMoneybankContractStatus(contract.status) : state.loading ? '조회 중' : '-'],
+    ['지급율', formatPercent(latestFee?.payment_rate ?? contract?.latest_payment_rate)],
+    ['수수료율', feeRateSummary],
+    ['주문 건당 한도', formatAmount(latestFee?.sales_limit_per_order)],
+    ['최대 미상환금', formatAmount(latestFee?.max_outstanding_balance)],
+    ['정산계좌', formatBankAccount(contract?.demand_acc_bank_code, contract?.demand_acc_number, contract?.demand_acc_holder)],
+    ['주거래계좌', formatBankAccount(contract?.main_acc_bank_code, contract?.main_acc_number, contract?.main_acc_holder)],
+    ['계약기간', contractPeriod],
+    ['총 지급', formatAmount(redemption?.latest_cumulative_provision_amount)],
+    ['총 상환', formatAmount(redemption?.latest_cumulative_repayment_amount)],
+    ['미상환금', formatAmount(redemption?.latest_outstanding_balance)],
+  ];
 
   function patchContract(patch) {
     setState((current) => {
@@ -1252,161 +1686,159 @@ function ContractDetailPage({ mbid }) {
 
   return (
     <Layout>
-      <main className="sub-page">
-        <PageTitle title="머니뱅크 계약 상세" text="계약, 쇼핑몰, 수수료, 제출서류, 상환 정보를 확인합니다." />
-        <p className="api-note"><a className="status-link" href="/moneybank/current">서비스 현황으로 돌아가기</a></p>
-        {state.message ? <p className="auth-message error">{state.message}</p> : null}
-        <section className="form-panel">
-          <h2>계약 기본정보</h2>
-          <div className="field-grid">
-            <ReadOnlyField label="계약번호" value={contract?.mbid ?? mbid} />
-            <ReadOnlyField label="상태" value={contract ? formatMoneybankContractStatus(contract.status) : state.loading ? '조회 중' : '-'} />
-            <ReadOnlyField label="상품" value={formatProductCode(contract?.product_code)} />
-            <ReadOnlyField label="지급율" value={formatPercent(latestFee?.payment_rate ?? contract?.latest_payment_rate)} />
-            <ReadOnlyField label="평균 수수료" value={formatPercent(contract?.latest_fee_rate)} />
-            <ReadOnlyField label="신청일" value={formatDate(contract?.request_date)} />
-            <ReadOnlyField label="승인일" value={formatDate(contract?.approval_date)} />
-            <ReadOnlyField label="이용조건 동의일" value={formatDate(contract?.agree_date)} />
-            <ReadOnlyField label="계약일" value={formatDate(contract?.contract_date)} />
-            <ReadOnlyField label="매출액" value={formatAmount(contract?.sales_amount)} />
-            <ReadOnlyField label="정산계좌" value={formatBankAccount(contract?.demand_acc_bank_code, contract?.demand_acc_number, contract?.demand_acc_holder)} />
-            <ReadOnlyField label="주거래계좌" value={formatBankAccount(contract?.main_acc_bank_code, contract?.main_acc_number, contract?.main_acc_holder)} />
-            <ReadOnlyField label="서류 파일 수" value={`${contract?.document_file_count ?? 0}건`} />
-            <ReadOnlyField label="최근 평가등급" value={contract?.prizm_score ?? '-'} />
-            <ReadOnlyField label="전자서명" value={contract?.electronic_signature_status ?? '-'} />
-            <ReadOnlyField label="전자서명일" value={formatDate(contract?.electronic_signed_at)} />
+      <PageTitle title="머니뱅크" />
+      <MoneybankSectionNav active="current" />
+      <main className="content-wrap c4p3 final-core-page final-moneybank-page final-moneybank-derived-page final-moneybank-contract-detail-page u24-contract-detail-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">계약 상세</h2>
+          <div className="inner">
+            <p className="u24-back-link"><a href="/moneybank/current">서비스 현황으로 돌아가기</a></p>
+            {state.message ? <p className="auth-message error">{state.message}</p> : null}
+            <section className="u24-contract-conditions">
+              <div className="u24-detail-heading">
+                <h2>이용조건</h2>
+                <span>{contract?.electronic_signature_status === 'SIGNED' ? '전자서명 완료' : '계약 확인 중'}</span>
+              </div>
+              <div className="u24-condition-grid">
+                {conditionItems.map(([label, value]) => (
+                  <dl key={label}><dt>{label}</dt><dd>{value ?? '-'}</dd></dl>
+                ))}
+                <dl className="u24-condition-wide"><dt>신청 쇼핑몰</dt><dd>{shopSummary}</dd></dl>
+              </div>
+              <p>미상환금이 최대 미상환금에 도달할 경우 지급이 중단될 수 있습니다.</p>
+            </section>
+            <TermsDecisionPanel
+              contract={contract}
+              fees={state.detail?.fees ?? []}
+              onDone={load}
+              onLocalChange={patchContract}
+            />
+            <ElectronicSignaturePanel contract={contract} onDone={load} onLocalChange={patchContract} />
+            <section className="form-panel">
+              <h2>해지신청</h2>
+              <div className="field-grid">
+                <ReadOnlyField label="현재상태" value={formatMoneybankContractStatus(contract?.status)} />
+                <ReadOnlyField label="해지신청일" value={formatDate(contract?.cancel_request_date)} />
+                <ReadOnlyField label="미상환잔액" value={formatAmount(outstandingBalance)} />
+                <ReadOnlyField label="처리기준" value={terminationPending ? '관리자 확인 대기' : terminated ? '해지 처리 완료' : canRequestTermination ? '사용자 해지신청 가능' : '현재 단계에서는 해지신청 불가'} />
+              </div>
+              {outstandingBalance > 0 && canRequestTermination ? (
+                <p className="submit-message">
+                  미상환잔액이 남아 있습니다. 해지신청은 접수할 수 있지만 최종 해지와 잔액 처리는 관리자 검토가 필요합니다.
+                </p>
+              ) : null}
+              {terminationPending ? <p className="submit-message success">해지신청이 접수되어 관리자 확인을 기다리고 있습니다.</p> : null}
+              {terminated ? <p className="submit-message success">해지 처리된 계약입니다.</p> : null}
+              {canRequestTermination ? (
+                <button className="secondary-action" disabled={terminationState.submitting} onClick={requestTermination} type="button">
+                  {terminationState.submitting ? '해지신청 중' : '해지신청'}
+                </button>
+              ) : null}
+              {terminationState.message ? <p className={terminationState.message.includes('접수') ? 'submit-message success' : 'submit-message'}>{terminationState.message}</p> : null}
+              <p className="api-note">본인해지, 강제해지, 계좌해지는 legacy 상태 기준 표시만 우선 반영했습니다. 최종 처리 정책은 관리자 검토 흐름에서 확정합니다.</p>
+            </section>
+            <section className="data-table-wrap">
+              <h2>연결 쇼핑몰</h2>
+              <table>
+                <thead>
+                  <tr><th>쇼핑몰</th><th>상점 ID</th><th>등록일</th></tr>
+                </thead>
+                <tbody>
+                  {(state.detail?.shops ?? []).length ? state.detail.shops.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.contract_shop_type ?? '-'}</td>
+                      <td>{item.contract_shop_id ?? '-'}</td>
+                      <td>{formatDate(item.reg_date)}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="3">연결 쇼핑몰 정보가 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+            <section className="data-table-wrap">
+              <h2>수수료 조건</h2>
+              <table>
+                <thead>
+                  <tr><th>지급률</th><th>주문한도</th><th>최대잔액</th><th>쇼핑몰별 수수료율</th><th>등록일</th></tr>
+                </thead>
+                <tbody>
+                  {(state.detail?.fees ?? []).length ? state.detail.fees.map((item) => (
+                    <tr key={item.id}>
+                      <td>{formatPercent(item.payment_rate)}</td>
+                      <td>{formatAmount(item.sales_limit_per_order)}</td>
+                      <td>{formatAmount(item.max_outstanding_balance)}</td>
+                      <td>
+                        <div className="fee-rate-list">
+                          {(item.rates ?? []).length ? item.rates.map((rate) => (
+                            <span key={rate.id}>{rate.fee_type ?? '-'} {formatPercent(rate.fee_rate)}</span>
+                          )) : <span>-</span>}
+                        </div>
+                      </td>
+                      <td>{formatDate(item.reg_date)}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="5">수수료 조건 정보가 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+            <section className="data-table-wrap">
+              <h2>제출서류</h2>
+              <table>
+                <thead>
+                  <tr><th>구분</th><th>파일명</th><th>크기</th><th>등록일</th><th>다운로드</th></tr>
+                </thead>
+                <tbody>
+                  {(state.documents?.items ?? []).length ? state.documents.items.map((item) => (
+                    <tr key={item.uuid}>
+                      <td>{item.file_division ?? '-'}</td>
+                      <td>{item.origin_file_name}.{item.file_ext}</td>
+                      <td>{Number(item.file_size ?? 0).toLocaleString('ko-KR')} byte</td>
+                      <td>{formatDate(item.input_date)}</td>
+                      <td><a className="status-link" href={contractDocumentDownloadUrl(mbid, item.uuid, userNo)}>다운로드</a></td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="5">제출된 서류가 없습니다.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </section>
+            <section className="form-panel">
+              <h2>상환 요약</h2>
+              <div className="field-grid">
+                <ReadOnlyField label="총 지급" value={formatAmount(redemption?.latest_cumulative_provision_amount)} />
+                <ReadOnlyField label="총 상환" value={formatAmount(redemption?.latest_cumulative_repayment_amount)} />
+                <ReadOnlyField label="미상환잔액" value={formatAmount(redemption?.latest_outstanding_balance)} />
+                <ReadOnlyField label="최근 이력일" value={formatDate(redemption?.latest_history_date)} />
+              </div>
+            </section>
+            <section className="data-table-wrap">
+              <h2>지급/상환 이력</h2>
+              <table>
+                <thead>
+                  <tr><th>일자</th><th>구분</th><th>처리번호</th><th>금액</th><th>지급누계</th><th>상환누계</th><th>미상환잔액</th><th>상태</th></tr>
+                </thead>
+                <tbody>
+                  {(state.operations?.items ?? []).length ? state.operations.items.map((item) => (
+                    <tr key={item.id}>
+                      <td>{formatDate(item.reg_date)}</td>
+                      <td>{formatRedemptionOperationType(item.operation_type)}</td>
+                      <td>{item.operation_code ?? '-'}</td>
+                      <td>{formatAmount(getRedemptionOperationAmount(item))}</td>
+                      <td>{formatAmount(item.new_cumulative_provision_amount)}</td>
+                      <td>{formatAmount(item.new_cumulative_repayment_amount)}</td>
+                      <td>{formatAmount(item.new_outstanding_balance)}</td>
+                      <td>{formatRedemptionOperationStatus(item)}</td>
+                    </tr>
+                  )) : (
+                    <tr><td colSpan="8">{state.loading ? '조회 중입니다.' : '지급/상환 이력이 없습니다.'}</td></tr>
+                  )}
+                </tbody>
+              </table>
+              {state.operations?.message ? <p className="api-note">이력 API 확인 필요: {state.operations.message}</p> : null}
+            </section>
           </div>
-        </section>
-        <TermsDecisionPanel
-          contract={contract}
-          fees={state.detail?.fees ?? []}
-          onDone={load}
-          onLocalChange={patchContract}
-        />
-        <ElectronicSignaturePanel contract={contract} onDone={load} onLocalChange={patchContract} />
-        <section className="form-panel">
-          <h2>해지신청</h2>
-          <div className="field-grid">
-            <ReadOnlyField label="현재상태" value={formatMoneybankContractStatus(contract?.status)} />
-            <ReadOnlyField label="해지신청일" value={formatDate(contract?.cancel_request_date)} />
-            <ReadOnlyField label="미상환잔액" value={formatAmount(outstandingBalance)} />
-            <ReadOnlyField label="처리기준" value={terminationPending ? '관리자 확인 대기' : terminated ? '해지 처리 완료' : canRequestTermination ? '사용자 해지신청 가능' : '현재 단계에서는 해지신청 불가'} />
-          </div>
-          {outstandingBalance > 0 && canRequestTermination ? (
-            <p className="submit-message">
-              미상환잔액이 남아 있습니다. 해지신청은 접수할 수 있지만 최종 해지와 잔액 처리는 관리자 검토가 필요합니다.
-            </p>
-          ) : null}
-          {terminationPending ? <p className="submit-message success">해지신청이 접수되어 관리자 확인을 기다리고 있습니다.</p> : null}
-          {terminated ? <p className="submit-message success">해지 처리된 계약입니다.</p> : null}
-          {canRequestTermination ? (
-            <button className="secondary-action" disabled={terminationState.submitting} onClick={requestTermination} type="button">
-              {terminationState.submitting ? '해지신청 중' : '해지신청'}
-            </button>
-          ) : null}
-          {terminationState.message ? <p className={terminationState.message.includes('접수') ? 'submit-message success' : 'submit-message'}>{terminationState.message}</p> : null}
-          <p className="api-note">본인해지, 강제해지, 계좌해지는 legacy 상태 기준 표시만 우선 반영했습니다. 최종 처리 정책은 관리자 검토 흐름에서 확정합니다.</p>
-        </section>
-        <section className="data-table-wrap">
-          <h2>연결 쇼핑몰</h2>
-          <table>
-            <thead>
-              <tr><th>쇼핑몰</th><th>상점 ID</th><th>등록일</th></tr>
-            </thead>
-            <tbody>
-              {(state.detail?.shops ?? []).length ? state.detail.shops.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.contract_shop_type ?? '-'}</td>
-                  <td>{item.contract_shop_id ?? '-'}</td>
-                  <td>{formatDate(item.reg_date)}</td>
-                </tr>
-              )) : (
-                <tr><td colSpan="3">연결 쇼핑몰 정보가 없습니다.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-        <section className="data-table-wrap">
-          <h2>수수료 조건</h2>
-          <table>
-            <thead>
-              <tr><th>지급률</th><th>주문한도</th><th>최대잔액</th><th>쇼핑몰별 수수료율</th><th>등록일</th></tr>
-            </thead>
-            <tbody>
-              {(state.detail?.fees ?? []).length ? state.detail.fees.map((item) => (
-                <tr key={item.id}>
-                  <td>{formatPercent(item.payment_rate)}</td>
-                  <td>{formatAmount(item.sales_limit_per_order)}</td>
-                  <td>{formatAmount(item.max_outstanding_balance)}</td>
-                  <td>
-                    <div className="fee-rate-list">
-                      {(item.rates ?? []).length ? item.rates.map((rate) => (
-                        <span key={rate.id}>{rate.fee_type ?? '-'} {formatPercent(rate.fee_rate)}</span>
-                      )) : <span>-</span>}
-                    </div>
-                  </td>
-                  <td>{formatDate(item.reg_date)}</td>
-                </tr>
-              )) : (
-                <tr><td colSpan="5">수수료 조건 정보가 없습니다.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-        <section className="data-table-wrap">
-          <h2>제출서류</h2>
-          <table>
-            <thead>
-              <tr><th>구분</th><th>파일명</th><th>크기</th><th>등록일</th><th>다운로드</th></tr>
-            </thead>
-            <tbody>
-              {(state.documents?.items ?? []).length ? state.documents.items.map((item) => (
-                <tr key={item.uuid}>
-                  <td>{item.file_division ?? '-'}</td>
-                  <td>{item.origin_file_name}.{item.file_ext}</td>
-                  <td>{Number(item.file_size ?? 0).toLocaleString('ko-KR')} byte</td>
-                  <td>{formatDate(item.input_date)}</td>
-                  <td><a className="status-link" href={contractDocumentDownloadUrl(mbid, item.uuid, userNo)}>다운로드</a></td>
-                </tr>
-              )) : (
-                <tr><td colSpan="5">제출된 서류가 없습니다.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </section>
-        <section className="form-panel">
-          <h2>상환 요약</h2>
-          <div className="field-grid">
-            <ReadOnlyField label="총 지급" value={formatAmount(redemption?.latest_cumulative_provision_amount)} />
-            <ReadOnlyField label="총 상환" value={formatAmount(redemption?.latest_cumulative_repayment_amount)} />
-            <ReadOnlyField label="미상환잔액" value={formatAmount(redemption?.latest_outstanding_balance)} />
-            <ReadOnlyField label="최근 이력일" value={formatDate(redemption?.latest_history_date)} />
-          </div>
-        </section>
-        <section className="data-table-wrap">
-          <h2>지급/상환 이력</h2>
-          <table>
-            <thead>
-              <tr><th>일자</th><th>구분</th><th>처리번호</th><th>금액</th><th>지급누계</th><th>상환누계</th><th>미상환잔액</th><th>상태</th></tr>
-            </thead>
-            <tbody>
-              {(state.operations?.items ?? []).length ? state.operations.items.map((item) => (
-                <tr key={item.id}>
-                  <td>{formatDate(item.reg_date)}</td>
-                  <td>{formatRedemptionOperationType(item.operation_type)}</td>
-                  <td>{item.operation_code ?? '-'}</td>
-                  <td>{formatAmount(getRedemptionOperationAmount(item))}</td>
-                  <td>{formatAmount(item.new_cumulative_provision_amount)}</td>
-                  <td>{formatAmount(item.new_cumulative_repayment_amount)}</td>
-                  <td>{formatAmount(item.new_outstanding_balance)}</td>
-                  <td>{formatRedemptionOperationStatus(item)}</td>
-                </tr>
-              )) : (
-                <tr><td colSpan="8">{state.loading ? '조회 중입니다.' : '지급/상환 이력이 없습니다.'}</td></tr>
-              )}
-            </tbody>
-          </table>
-          {state.operations?.message ? <p className="api-note">이력 API 확인 필요: {state.operations.message}</p> : null}
         </section>
       </main>
     </Layout>
@@ -1417,18 +1849,24 @@ function ClauseDetailsPage({ clauseNo }) {
   const detail = legacyMoneybankClauses[Number(clauseNo)] ?? legacyMoneybankClauses[1];
   return (
     <Layout>
-      <main className="sub-page clause-page">
-        <PageTitle title={detail.title} text="legacy 머니뱅크 신청 약관 전문을 React 화면으로 전환한 페이지입니다." />
-        <section className="form-panel legal-clause-panel">
-          <div className="clause-meta">
-            <span>{detail.source}</span>
-            <span>전문 이관본</span>
+      <PageTitle title="머니뱅크 약관" text={detail.title} />
+      <MoneybankSectionNav active="request" />
+      <main className="content-wrap view final-core-page clause-page final-moneybank-page final-moneybank-derived-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">약관 상세</h2>
+          <div className="inner">
+            <section className="form-panel legal-clause-panel final-moneybank-form-panel">
+              <div className="clause-meta">
+                <span>{detail.source}</span>
+                <span>전문 이관본</span>
+              </div>
+              <h2>{detail.title}</h2>
+              {detail.paragraphs.map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))}
+              <a className="secondary-link" href="/moneybank/advcalc/request">신청 화면으로 돌아가기</a>
+            </section>
           </div>
-          <h2>{detail.title}</h2>
-          {detail.paragraphs.map((paragraph) => (
-            <p key={paragraph}>{paragraph}</p>
-          ))}
-          <a className="secondary-link" href="/moneybank/advcalc/request">신청 화면으로 돌아가기</a>
         </section>
       </main>
     </Layout>
@@ -1438,17 +1876,23 @@ function ClauseDetailsPage({ clauseNo }) {
 function DepositTestPage() {
   return (
     <Layout>
-      <main className="sub-page">
-        <PageTitle title="투게더펀딩 입금 테스트" text="legacy depositTest 화면의 사용자 route를 운영 재현 대상으로 분류한 화면입니다." />
-        <section className="form-panel">
-          <h2>운영 분류</h2>
-          <p className="api-note">
-            legacy `depositTest.jsp`는 `/admin/together/operation/insertRepay`, `/admin/together/operation/extendReq`를 호출하는 상환입금/연장 테스트 화면입니다.
-            사용자 일반 신청 화면이 아니라 관리자 상환 운영 기능에 가깝기 때문에, 실제 처리는 관리자 상환/지급 화면과 API E2E로 고정합니다.
-          </p>
-          <div className="field-grid">
-            <ReadOnlyField label="입금 테스트 처리" value="관리자 상환 API로 이관" />
-            <ReadOnlyField label="연장신청 처리" value="후속 정책 확정 필요" />
+      <PageTitle title="머니뱅크" text="상환입금 테스트 화면의 운영 분류를 확인합니다." />
+      <MoneybankSectionNav active="current" />
+      <main className="content-wrap view final-core-page final-moneybank-page final-moneybank-derived-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">입금 테스트</h2>
+          <div className="inner">
+            <section className="form-panel final-moneybank-form-panel">
+              <h2>운영 분류</h2>
+              <p className="api-note">
+                legacy `depositTest.jsp`는 `/admin/together/operation/insertRepay`, `/admin/together/operation/extendReq`를 호출하는 상환입금/연장 테스트 화면입니다.
+                사용자 일반 신청 화면이 아니라 관리자 상환 운영 기능에 가깝기 때문에, 실제 처리는 관리자 상환/지급 화면과 API E2E로 고정합니다.
+              </p>
+              <div className="field-grid">
+                <ReadOnlyField label="입금 테스트 처리" value="관리자 상환 API로 이관" />
+                <ReadOnlyField label="연장신청 처리" value="후속 정책 확정 필요" />
+              </div>
+            </section>
           </div>
         </section>
       </main>
@@ -1460,19 +1904,25 @@ function ContractFormPage({ kind = 'advcalc' }) {
   const label = kind === 'advpay' ? '구매자금 선지급 계약 체결' : '매출 선정산 계약 체결';
   return (
     <Layout>
-      <main className="sub-page">
-        <PageTitle title={label} text="legacy contractForm 화면을 React 계약 확인 흐름으로 전환한 페이지입니다." />
-        <section className="form-panel">
-          <h2>계약 체결 흐름</h2>
-          <p className="api-note">
-            legacy contractForm은 외부 본인확인/계약 callback 이후 계약 체결 단계로 이동하는 중간 화면입니다.
-            신규 React에서는 실제 계약 조건 확인과 이용조건 동의, 관리자 체결 상태를 `/moneybank/current`와 계약 상세 화면에서 처리합니다.
-          </p>
-          <div className="field-grid">
-            <ReadOnlyField label="신청/계약 현황" value="/moneybank/current" />
-            <ReadOnlyField label="이용조건 동의" value="계약 상세 화면에서 처리" />
+      <PageTitle title="머니뱅크" text={label} />
+      <MoneybankSectionNav active="current" />
+      <main className="content-wrap c4p2-2 final-core-page final-moneybank-page final-moneybank-derived-page" id="Main">
+        <section className="section sec-1">
+          <h2 className="hidden">계약 체결 흐름</h2>
+          <div className="inner">
+            <section className="form-panel final-moneybank-form-panel">
+              <h2>계약 체결 흐름</h2>
+              <p className="api-note">
+                legacy contractForm은 외부 본인확인/계약 callback 이후 계약 체결 단계로 이동하는 중간 화면입니다.
+                신규 React에서는 실제 계약 조건 확인과 이용조건 동의, 관리자 체결 상태를 `/moneybank/current`와 계약 상세 화면에서 처리합니다.
+              </p>
+              <div className="field-grid">
+                <ReadOnlyField label="신청/계약 현황" value="/moneybank/current" />
+                <ReadOnlyField label="이용조건 동의" value="계약 상세 화면에서 처리" />
+              </div>
+              <a className="primary-action" href="/moneybank/current">서비스 현황 확인</a>
+            </section>
           </div>
-          <a className="primary-action" href="/moneybank/current">서비스 현황 확인</a>
         </section>
       </main>
     </Layout>

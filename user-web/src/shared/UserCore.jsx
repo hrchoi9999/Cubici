@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const AUTH_STORAGE_KEY = 'cubiciUserAuth';
@@ -44,9 +44,30 @@ const nav = [
       ['서비스 공지', '/board/notice/index'],
       ['Q&A', '/board/qa/index'],
       ['FAQ', '/board/faq/index'],
+      ['블로그', 'https://blog.naver.com/cubici2020', true],
     ],
   },
 ];
+
+function navGroupIndexForPath(path) {
+  const normalizedPath = path.startsWith('/m/') ? path.slice(2) : path;
+  const groupPatterns = [
+    /^\/cubici\/(?:integratedInfo|infoIntegrated)(?:\/|$)/,
+    /^\/cubici\/salesInfo(?:\/|$)/,
+    /^\/cubici\/calculateInfo(?:\/|$)/,
+    /^\/(?:moneybank|cubici\/moneybank)(?:\/|$)/,
+    /^\/(?:board(?:\/|$)|chargeInfo(?:\/|$))/,
+  ];
+  return groupPatterns.findIndex((pattern) => pattern.test(normalizedPath));
+}
+
+function mobileGnbIndexForPath(path) {
+  const normalizedPath = path.startsWith('/m/') ? path.slice(2) : path;
+  if (normalizedPath === '/' || normalizedPath === '/main') return 0;
+
+  const groupIndex = navGroupIndexForPath(normalizedPath);
+  return groupIndex === -1 ? -1 : groupIndex + 1;
+}
 
 const moneybankTabs = [
   ['구매자금 선지급', '/moneybank/intro/advpay'],
@@ -55,12 +76,12 @@ const moneybankTabs = [
 ];
 
 const shopOptions = [
-  ['NAVER', '네이버', '/rudicks/img/partner-color/partner-sq-naver.jpg'],
-  ['COUPANG', '쿠팡', '/rudicks/img/partner-color/partner-sq-coupang.jpg'],
-  ['GMARKET', '지마켓', '/rudicks/img/partner-color/partner-sq-gmarket.jpg'],
-  ['STREET11', '11번가', '/rudicks/img/partner-color/partner-sq-11st.jpg'],
-  ['AUCTION', '옥션', '/rudicks/img/partner-color/partner-sq-auction.jpg'],
-  ['INTERPARK', '인터파크', '/rudicks/img/partner-color/partner-sq-interpark.jpg'],
+  ['NAVER', '네이버', '/final-ui/static/img/logo/naver.png'],
+  ['COUPANG', '쿠팡', '/final-ui/static/img/logo/coupang-s.jpg'],
+  ['GMARKET', '지마켓', '/final-ui/static/img/logo/gmarket.png'],
+  ['STREET11', '11번가', '/final-ui/static/img/logo/11st-s.png'],
+  ['AUCTION', '옥션', '/final-ui/static/img/logo/auction.png'],
+  ['INTERPARK', '인터파크', '/final-ui/static/img/logo/interpark.jpg'],
 ];
 
 function formatAmount(value) {
@@ -582,89 +603,284 @@ function useUserDashboardData({ userNo, shopPairs, enabled = true } = {}) {
   return { ...state, refresh: load };
 }
 
-function Header() {
+function Header({ variant }) {
   const [auth, setAuth] = useState(readAuthSession);
+  const [pcOpen, setPcOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname;
+  const activeGroupIndex = navGroupIndexForPath(currentPath);
+  const [mobileGroupIndex, setMobileGroupIndex] = useState(activeGroupIndex >= 0 ? activeGroupIndex : 0);
+  const userName = auth?.user?.name ?? auth?.user?.biz_name ?? auth?.user?.email ?? '큐빅아이';
+
+  useEffect(() => {
+    document.body.classList.toggle('fixed', mobileOpen);
+    return () => document.body.classList.remove('fixed');
+  }, [mobileOpen]);
+
+  useEffect(() => {
+    function closeMobileMenuOnDesktop() {
+      if (window.innerWidth > 1023) setMobileOpen(false);
+    }
+    window.addEventListener('resize', closeMobileMenuOnDesktop);
+    return () => window.removeEventListener('resize', closeMobileMenuOnDesktop);
+  }, []);
+
   function logout() {
     clearAuthSession();
     setAuth(null);
+    setMobileOpen(false);
+    window.location.assign('/main');
   }
 
-  return (
-    <header id="header" className="react-legacy-header">
-      <div className="topLine">
-        <div className="inner">
-          <div className="logo">
-            <a href="/">
-              <img src="/resources/rudicks/img/logo-w.svg" alt="Cubici" />
-            </a>
-          </div>
-          <div className="userMenu">
-            {auth?.user ? (
-              <>
-                <div className="userInfo">{auth.user.name ?? auth.user.email}님, 안녕하세요!</div>
-                <div className="btns">
-                  <button className="sBtn bsColorN hrBtn" onClick={logout} type="button">로그아웃</button>
-                  <a className="sBtn bsColorN hrBtn" href="/cubici/mypage/companyInfo">마이페이지</a>
-                </div>
-              </>
-            ) : (
-              <div className="btns">
-                <a className="sBtn bsColorN hrBtn" href="/login">로그인</a>
-                <a className="sBtn bsColorN hrBtn signUpBtn" href="/mainSignUp">회원가입</a>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-      <nav className="gnbArea" aria-label="Cubici user navigation">
-        <div className="inner">
-          <ul id="gnb">
-            {nav.map((group) => (
-              <li className="has" key={group.title}>
-                <a href={group.items[0]?.[1] ?? '/'}>{group.title}</a>
-                <ul>
-                  {group.items.map(([label, href]) => (
-                    <li key={href}><a href={href}>{label}</a></li>
-                  ))}
-                </ul>
-              </li>
+  function renderPcNav() {
+    return nav.map((group, index) => (
+      <li className={index === activeGroupIndex ? 'active' : ''} key={group.title}>
+        <a className="dep-01" href="#n" onClick={(event) => event.preventDefault()}>
+          <span>{group.title}</span>
+        </a>
+        <div className="lnb">
+          <ul className="dep-02">
+            {group.items.map(([label, href, external]) => (
+              <li key={href}><a href={href} rel={external ? 'noreferrer' : undefined} target={external ? '_blank' : undefined}><span>{label}</span></a></li>
             ))}
-            {!auth?.user ? <li><a href="/mainSignUp">무료체험</a></li> : null}
           </ul>
         </div>
-      </nav>
-    </header>
+      </li>
+    ));
+  }
+
+  function renderMobileNav() {
+    return nav.map((group, index) => (
+      <li className={mobileGroupIndex === index ? 'active' : ''} key={group.title}>
+        <a
+          className="dep-01"
+          href="#n"
+          onClick={(event) => {
+            event.preventDefault();
+            setMobileGroupIndex(index);
+          }}
+        >
+          <span>{group.title}</span>
+        </a>
+        <div className="lnb">
+          <ul className="dep-02">
+            {group.items.map(([label, href, external]) => (
+              <li key={href}><a href={href} rel={external ? 'noreferrer' : undefined} target={external ? '_blank' : undefined}><span>{label}</span></a></li>
+            ))}
+          </ul>
+        </div>
+      </li>
+    ));
+  }
+
+  const isAuthMain = variant === 'auth-main';
+  const isPublicMain = variant === 'public-main';
+  const isLogin = variant === 'login';
+  const isMain = isAuthMain || isPublicMain;
+
+  return (
+    <div id="Header" className={`header-wrap react-final-header${isMain ? ' main-header' : ''}${isAuthMain ? ' auth-main-header' : ''}${mobileOpen ? ' mo-open' : ''}`}>
+      <div className={`header-bg${pcOpen ? ' active' : ''}`} />
+      <div className="skip-menu">
+        <a href="#Gnb">메뉴 바로가기</a>
+        <a href="#Main">본문 바로가기</a>
+      </div>
+      <header className={`header pc-header${pcOpen ? ' active' : ''}`}>
+        <div className="header-inner">
+          <h1 className="logo">
+            <a href="/"><img src={isMain ? '/final-ui/static/img/common/main-logo.svg' : '/final-ui/static/img/common/sub-logo.svg'} alt="cubici" /></a>
+          </h1>
+          <nav
+            className="nav"
+            aria-label="Cubici user navigation"
+            onMouseEnter={() => setPcOpen(true)}
+            onMouseLeave={() => setPcOpen(false)}
+            onFocus={() => setPcOpen(true)}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) setPcOpen(false);
+            }}
+          >
+            <ul className="gnb" id="Gnb">
+              {renderPcNav()}
+            </ul>
+          </nav>
+          <ul className="login-info">
+            {auth?.user ? (
+              <>
+                <li className="next-el">
+                  <i className="icon"><img src="/final-ui/static/img/icon/header-user.png" alt="user" /></i>
+                  <span className="user-name">{userName}</span>님
+                </li>
+                <li className="next-el">
+                  <button className="btn logout-btn" onClick={logout} type="button">로그아웃</button>
+                </li>
+                <li className="next-el"><a href="/cubici/mypage/companyInfo">마이페이지</a></li>
+              </>
+            ) : isLogin ? (
+              <li className="login-user-icon">
+                <a href="/login" aria-label="로그인">
+                  <i className="icon"><img src="/final-ui/static/img/icon/header-user.png" alt="" /></i>
+                </a>
+              </li>
+            ) : (
+              <>
+                <li className="first-el">
+                  <a className="btn login-btn" href="/login">로그인</a>
+                </li>
+                <li className="next-el">
+                  <a className="btn signup-btn" href="/mainSignUp">회원가입</a>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+      </header>
+      <header className="header mobile-header">
+        <div className="logo-wrap">
+          <h1 className="logo">
+            <a href="/"><img src="/final-ui/static/img/common/sub-logo.svg" alt="cubici" /></a>
+          </h1>
+          <ul className="login-info">
+            <li>
+              <a href={auth?.user ? '/cubici/mypage/companyInfo' : '/login'}>
+                <i className="icon"><img src="/final-ui/static/img/icon/header-user.png" alt="user" /></i>
+              </a>
+            </li>
+          </ul>
+          <button aria-controls="CubiciMobileNav" aria-expanded={mobileOpen} aria-label="전체 메뉴 열기" className="mobile-btn" onClick={() => setMobileOpen(true)} type="button">
+            <i className="icon"><img src="/final-ui/static/img/icon/menu.png" alt="메뉴열" /></i>
+          </button>
+        </div>
+        <div className="m-nav-wrap">
+          <div className="login-info-wrap">
+            <div className="menu-btn">
+              <a href="/">
+                <i className="icon"><img src="/final-ui/static/img/icon/home.svg" alt="메인으로" /></i>
+              </a>
+              <button aria-label="전체 메뉴 닫기" className="nav-close" onClick={() => setMobileOpen(false)} type="button">
+                <i className="icon"><img src="/final-ui/static/img/icon/close.svg" alt="메뉴닫기" /></i>
+              </button>
+            </div>
+            <ul className="m-login-info">
+              <li>
+                <div className="next-el"><b><span className="user-name">{auth?.user ? userName : '큐빅아이'}</span></b>님</div>
+              </li>
+              <li>
+                {auth?.user ? (
+                  <div className="next-el">
+                    <button className="btn logout-btn line-btn1" onClick={logout} type="button">로그아웃</button>
+                  </div>
+                ) : (
+                  <div className="first-el"><a className="btn login-btn line-btn1" href="/login">로그인</a></div>
+                )}
+              </li>
+            </ul>
+          </div>
+          <nav className={`m-nav${mobileOpen ? ' open' : ''}`} id="CubiciMobileNav" aria-label="Cubici mobile navigation">
+            <ul className="gnb">
+              {renderMobileNav()}
+              <li className={currentPath.includes('/mypage') ? 'active' : ''}>
+                <a className="dep-01" href="/cubici/mypage/companyInfo"><span>마이페이지</span></a>
+                <div className="lnb">
+                  <ul className="dep-02">
+                    <li><a href="/cubici/mypage/companyInfo"><span>마이페이지</span></a></li>
+                  </ul>
+                </div>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </header>
+    </div>
   );
 }
 
-function Layout({ children }) {
+function Footer() {
   return (
-    <div id="wrap" className="user-web-wrap">
-      <Header />
-      <div className="container">
-        {children}
-      </div>
-      <nav className="goTop">
-        <a className="goTopBtn" href="#wrap">top</a>
-      </nav>
-      <footer id="footer">
-        <div className="inner">
-          <div className="logo">
-            <a href="/"><img src="/resources/rudicks/img/logo-w.svg" alt="Cubici" /></a>
+    <div id="Footer" className="footer-wrap">
+      <footer className="footer">
+        <div className="footer-inner">
+          <div className="footer-logo">
+            <img src="/final-ui/static/img/common/main-logo.svg" alt="cubici" />
           </div>
-          <div className="txt">
-            <p className="notice">인공지능 쇼핑몰 통합 지원 서비스 큐빅아이</p>
-            <ul className="infoList">
-              <li><b>법인명</b><span>주식회사 큐빅아이</span></li>
-              <li><b>대표전화</b><span>02-6925-6373</span></li>
-              <li><b>이메일</b><span>contact@example.com</span></li>
-              <li><b>사업자 등록번호</b><span>567-88-00419</span></li>
-              <li><b>본사 주소</b><span>서울 영등포구 의사당대로 83 오투타워 서울핀테크랩</span></li>
-            </ul>
-            <p className="copyright">Copyright (c) 2021 by Cubici INC ALL RIGHT RESERVED.</p>
+          <div className="footer-txt">
+            <p className="desc">
+              <span>AI 기반의 공급망 금융 서비스 큐빅아이</span>
+            </p>
+            <address className="address">
+              <ul>
+                <li><b>회사명</b><span>(주)한국공급망데이터</span></li>
+                <li><b>대표전화</b><span>02-6925-6373</span></li>
+                <li><b>이메일</b><span><a href="mailto:admin@koreascf.com">admin@koreascf.com</a></span></li>
+                <li><b>사업자 등록번호</b><span>412-87-03180</span></li>
+                <li><b>본사 주소</b><span>서울시 강동구 올림픽로 752, 5층</span></li>
+              </ul>
+            </address>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function MobileGnb() {
+  const currentPath = typeof window === 'undefined' ? '/' : window.location.pathname;
+  const activeIndex = mobileGnbIndexForPath(currentPath);
+  const items = [
+    ['홈', '/', '/final-ui/static/img/icon/m-home.svg'],
+    ['통합정보', '/cubici/integratedInfo/tab1', '/final-ui/static/img/icon/chart-histogram.svg'],
+    ['매출정보', '/cubici/salesInfo/sales', '/final-ui/static/img/icon/box-alt.svg'],
+    ['정산정보', '/cubici/calculateInfo/calendar', '/final-ui/static/img/icon/calendar.svg'],
+    ['머니뱅크', '/moneybank/intro/advpay', '/final-ui/static/img/icon/bank.svg'],
+    ['고객정보', '/board/notice/index', '/final-ui/static/img/icon/phone-call.svg'],
+  ];
+
+  return (
+    <div id="mobileGnb" className="mobile-gnb-wrap">
+      <nav className="mobile-gnb" aria-label="Cubici mobile quick navigation">
+        <ul>
+          {items.map(([label, href, icon], index) => (
+            <li className={activeIndex === index ? 'active' : ''} key={label}>
+              <a href={href}>
+                <i className="icon">
+                  <img src={icon} alt={label} />
+                </i>
+                <b>{label}</b>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  );
+}
+
+function Layout({ children, variant }) {
+  const shellVariantClass = variant === 'auth-main'
+    ? ' auth-main-shell'
+    : variant === 'public-main'
+      ? ' public-main-shell'
+      : variant === 'login'
+        ? ' login-shell'
+        : variant === 'signup'
+          ? ' signup-shell'
+          : variant === 'integrated'
+            ? ' integrated-shell'
+          : variant === 'commerce'
+            ? ' commerce-shell'
+          : variant === 'moneybank'
+            ? ' moneybank-shell'
+      : '';
+
+  return (
+    <div id="wrap" className={`user-web-wrap final-ui-shell${shellVariantClass}`}>
+      <Header variant={variant} />
+      <div id="Main" className="container">
+        {children}
+      </div>
+      <a className="page-top" href="#wrap" aria-label="맨 위로" />
+      <Footer />
+      <MobileGnb />
     </div>
   );
 }
@@ -715,27 +931,34 @@ function DashboardSummary({ data }) {
 
 function PageTitle({ title, text }) {
   return (
-    <figure className="subVisualArea">
+    <div className="visual-wrap react-final-sub-visual">
       <div className="inner">
-        <div className="subVisual">
-          <div className="txtBox">
-            <h2>{title}</h2>
-            <h3>{text}</h3>
-          </div>
+        <div className="visual">
+          <h2 className="visual-tit">{title}</h2>
+          {text ? <p className="visual-desc">{text}</p> : null}
         </div>
       </div>
-    </figure>
+    </div>
   );
 }
 
-function Tabs({ tabs }) {
+function Tabs({ tabs, activeHref = null, centerActiveOnMobile = true, className = '' }) {
   const path = window.location.pathname;
+  const activePath = activeHref ?? path;
+  const activeTabRef = useRef(null);
+
+  useEffect(() => {
+    if (centerActiveOnMobile && window.matchMedia('(max-width: 1023px)').matches) {
+      activeTabRef.current?.scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }, [activePath, centerActiveOnMobile]);
+
   return (
-    <nav className="s-tab react-legacy-tabs">
-      <ul>
+    <nav className={`sub-nav-wrap react-final-tabs ${className}`.trim()}>
+      <ul className="sub-nav">
         {tabs.map(([label, href]) => (
-          <li className={path === href ? 'active' : ''} key={href}>
-            <a href={href}>{label}</a>
+          <li className={activePath === href ? 'active' : ''} key={href} ref={activePath === href ? activeTabRef : null}>
+            <a href={href}><span>{label}</span></a>
           </li>
         ))}
       </ul>
@@ -816,12 +1039,12 @@ function LegacyBoardList({
 }) {
   const isQa = kind === 'qa';
   return (
-    <section className="m-baordSet react-legacy-board">
+    <section className="m-baordSet react-legacy-board final-support-board-list">
       <div className="boardTop">
         <h3>{title}</h3>
         <span>총 {items.length.toLocaleString('ko-KR')}건</span>
       </div>
-      <div className="boardList">
+      <div className="boardList board-table auto-xy-scroll">
         <table className="list">
           <thead>
             <tr>
@@ -899,10 +1122,10 @@ function DocumentNotice() {
     <section className="document-notice">
       <h2>신청 준비서류</h2>
       {[
-        ['대표자 신분증', '/rudicks/img/sub/moneybank-img02.png'],
-        ['사업자 등록증', '/rudicks/img/sub/moneybank-img03.png'],
-        ['지정은행 통장사본', '/rudicks/img/sub/moneybank-img04.png'],
-        ['주거래 통장사본', '/rudicks/img/sub/moneybank-img05.png'],
+        ['대표자 신분증', '/final-ui/static/img/sub/c4/circle-1.png'],
+        ['사업자 등록증', '/final-ui/static/img/sub/c4/circle-2.png'],
+        ['지정은행 통장사본', '/final-ui/static/img/sub/c4/circle-3.png'],
+        ['주거래 통장사본', '/final-ui/static/img/sub/c4/circle-4.png'],
       ].map(([label, src]) => (
         <div key={label}>
           <img src={src} alt="" />
@@ -1027,8 +1250,23 @@ function ContractStatusStrip({ data, contract, onRefresh }) {
 function NotReadyPage() {
   return (
     <Layout>
-      <main className="sub-page">
-        <PageTitle title="Migration 준비 화면" text="legacy 사용자 화면을 React로 전환 중입니다." />
+      <main className="content-wrap notfound final-core-page final-notfound-page u26-notfound-page" id="Main">
+        <section className="section sec-1">
+          <div className="notfound-box">
+            <h2>PAGE NOT FOUND</h2>
+            <p>죄송합니다. 요청하신 페이지를 찾을 수 없습니다.</p>
+            <p>
+              방문하시려는 페이지의 주소가 잘못 입력되었거나, 페이지의 주소가 변경 혹은 삭제되어 요청하신 페이지를 찾을 수 없습니다.<br />
+              입력하신 주소가 정확한지 다시 한번 확인해 주시기 바랍니다.<br />
+              관련 문의사항은 큐빅아이 고객센터에 알려주시면 친절하게 안내해 드리겠습니다.<br />
+              감사합니다.
+            </p>
+            <div className="btn-box">
+              <a className="big-btn" href="/board/notice/index">고객센터</a>
+              <a className="big-btn" href="/main">메인으로</a>
+            </div>
+          </div>
+        </section>
       </main>
     </Layout>
   );

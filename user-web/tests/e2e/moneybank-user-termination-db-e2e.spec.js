@@ -43,7 +43,6 @@ test('user contract detail shows redemption history and requests termination wit
 
   await page.goto(`/moneybank/current/${encodeURIComponent(fixture.mbid)}`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '해지신청' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '지급/상환 이력' })).toBeVisible();
   await expect(page.getByText('미상환잔액이 남아 있습니다.')).toBeVisible();

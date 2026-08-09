@@ -477,7 +477,12 @@ def list_contracts(
                         order by mbid, id desc
                     ) fee
                     left join (
-                        select contract_fee_id, avg(fee_rate)::float as latest_fee_rate
+                        select
+                            contract_fee_id,
+                            coalesce(
+                                max(fee_rate) filter (where upper(fee_type) = 'ADVANCE'),
+                                avg(fee_rate)
+                            )::float as latest_fee_rate
                         from moneybank_contract_fee_rates
                         group by contract_fee_id
                     ) rate on rate.contract_fee_id = fee.id
@@ -1406,7 +1411,12 @@ def _fetch_contract(cursor, mbid: str, *, user_no: int | None = None) -> dict | 
                 order by mbid, id desc
             ) fee
             left join (
-                select contract_fee_id, avg(fee_rate)::float as latest_fee_rate
+                select
+                    contract_fee_id,
+                    coalesce(
+                        max(fee_rate) filter (where upper(fee_type) = 'ADVANCE'),
+                        avg(fee_rate)
+                    )::float as latest_fee_rate
                 from moneybank_contract_fee_rates
                 group by contract_fee_id
             ) rate on rate.contract_fee_id = fee.id

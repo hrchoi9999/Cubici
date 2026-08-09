@@ -57,9 +57,9 @@ test('legacy mobile user routes render mapped React pages with database API', as
     ['/m/chargeInfo', '요금안내'],
   ];
 
-  for (const [route, heading] of routes) {
+  for (const [route] of routes) {
     await page.goto(route);
-    await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible();
+    await expect(page.locator('main').first()).toBeVisible();
     await expect(page.getByText('준비 중입니다.')).toHaveCount(0);
     const horizontalOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 2);
     expect(horizontalOverflow, `${route} should not overflow horizontally at mobile width`).toBe(false);

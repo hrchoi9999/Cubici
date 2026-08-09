@@ -37,12 +37,11 @@ test('user contract detail accepts presented terms with database API', async ({ 
 
   await page.goto(`/moneybank/current/${encodeURIComponent(fixture.mbid)}`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible();
   await expect(page.locator(`input[value="${fixture.mbid}"]`).first()).toBeVisible();
   await expect(page.locator('input[value="조건제시"]').first()).toBeVisible();
-  await expect(page.getByText('80%')).toBeVisible();
-  await expect(page.getByText('1.35%')).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '머니뱅크 지급율' })).toHaveValue('80%');
+  await expect(page.getByRole('textbox', { name: '이용 수수료율' })).toHaveValue('1.35%');
 
   await expect(page.getByRole('button', { name: '이용조건 동의' })).toBeEnabled();
   await page.getByRole('button', { name: '이용조건 동의' }).click();

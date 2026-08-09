@@ -13,14 +13,15 @@ def test_health_endpoint_payload() -> None:
 
 def test_health_route_registered() -> None:
     app = create_app()
-    paths = set(app.openapi()["paths"])
+    direct_paths = {route.path for route in app.routes if hasattr(route, "path")}
+    schema_paths = set(app.openapi()["paths"])
 
-    assert "/health" in paths
-    assert "/health/db" in paths
-    assert "/v1/health" in paths
-    assert "/v1/health/db" in paths
-    assert "/v1/api/health" in paths
-    assert "/v1/api/health/db" in paths
+    assert "/health" in direct_paths
+    assert "/health/db" in direct_paths
+    assert "/v1/health" in direct_paths
+    assert "/v1/health/db" in direct_paths
+    assert "/v1/api/health" in schema_paths
+    assert "/v1/api/health/db" in schema_paths
 
 
 def test_database_health_endpoint_payload(monkeypatch) -> None:

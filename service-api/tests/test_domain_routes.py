@@ -1395,6 +1395,55 @@ def test_account_me_requires_bearer_token() -> None:
         raise AssertionError("expected bearer token rejection")
 
 
+def test_account_my_dashboard_summary_endpoint_payload(monkeypatch) -> None:
+    from datetime import datetime
+
+    from cubici_service.accounts.repository import (
+        AccountAuthUser,
+        AccountDashboardActivityItem,
+        AccountDashboardSummaryResponse,
+    )
+
+    def fake_authenticated_user(authorization: str | None) -> AccountAuthUser:
+        assert authorization == "Bearer token"
+        return AccountAuthUser(
+            user_no=76,
+            email="seller@example.com",
+            user_type="USER",
+            name="테스트",
+            phone=None,
+            biz_num="1234567890",
+            biz_name="테스트상점",
+        )
+
+    def fake_summary(user_no: int) -> AccountDashboardSummaryResponse:
+        assert user_no == 76
+        return AccountDashboardSummaryResponse(
+            sales_total_amount=1_250_000,
+            settlement_total_amount=980_000,
+            moneybank_available_balance=300_000,
+            total_principal_amount=500_000,
+            total_repayment_amount=200_000,
+            activities=[
+                AccountDashboardActivityItem(
+                    occurred_at=datetime(2026, 8, 8, 9, 30),
+                    operation_type="PROVISION",
+                    amount=500_000,
+                    outstanding_balance=300_000,
+                )
+            ],
+        )
+
+    monkeypatch.setattr(accounts, "_authenticated_user", fake_authenticated_user)
+    monkeypatch.setattr(accounts, "get_dashboard_summary_for_user", fake_summary)
+
+    response = accounts.account_my_dashboard_summary(authorization="Bearer token")
+
+    assert response.sales_total_amount == 1_250_000
+    assert response.moneybank_available_balance == 300_000
+    assert response.activities[0].operation_type == "PROVISION"
+
+
 def test_account_my_shops_endpoint_payload(monkeypatch) -> None:
     from datetime import datetime
 

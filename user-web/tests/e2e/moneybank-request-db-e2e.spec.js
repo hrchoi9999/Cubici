@@ -35,7 +35,7 @@ test('legacy moneybank clause detail routes render migrated full text markers', 
 
   for (const [route, title, marker] of clauses) {
     await page.goto(route);
-    await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 2, name: title })).toBeVisible();
     await expect(page.getByText('전문 이관본')).toBeVisible();
     await expect(page.getByText(marker)).toBeVisible();
     await expect(page.getByText('운영 테스트용 요약본')).toHaveCount(0);
@@ -57,9 +57,8 @@ test('user moneybank request screen creates contract and uploads required docume
 
   await page.goto('/moneybank/request');
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
-  await expect(page.locator(`input[value="${fixture.userNo}"]`)).toBeVisible();
-  await expect(page.locator(`input[value="${fixture.bizName}"]`)).toBeVisible();
+  await expect(page.getByRole('heading', { level: 4, name: '매출 선정산 서비스 신청' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '회사명' })).toHaveValue(fixture.bizName);
   await expect(page.getByLabel('네이버')).toBeChecked();
 
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
@@ -77,7 +76,7 @@ test('user moneybank request screen creates contract and uploads required docume
   await expectUploadedDocumentCount(mbid, 2, fixture.session.access_token);
   await page.goto('/moneybank/processContinue');
   await expect(page).toHaveURL(/\/moneybank\/advcalc\/evaluate$/);
-  await expect(page.getByRole('heading', { name: '매출 선정산 검토 및 심사' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: '심사진행상태' })).toBeVisible();
 });
 
 test('legacy advcalc request route stores account fields and required documents with database API', async ({ page }) => {
@@ -127,13 +126,13 @@ test('legacy advcalc request route stores account fields and required documents 
   await expectUploadedDocumentCount(mbid, 5, fixture.session.access_token);
 
   await page.goto('/moneybank/advcalc/request/clause-details/4');
-  await expect(page.getByRole('heading', { level: 1, name: '선정산 서비스 약관' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 2, name: '선정산 서비스 약관' })).toBeVisible();
   await page.goto('/moneybank/advcalc/contractForm');
-  await expect(page.getByRole('heading', { name: '매출 선정산 계약 체결' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '신청/계약 현황' })).toBeVisible();
   await page.goto('/moneybank/processEnd');
   await expect(page).toHaveURL(/\/moneybank\/current$/);
   await page.goto('/cubici/moneybank/together/depositTest');
-  await expect(page.getByRole('heading', { name: '투게더펀딩 입금 테스트' })).toBeVisible();
+  await expect(page.getByRole('textbox', { name: '입금 테스트 처리' })).toBeVisible();
 });
 
 function createRequestFixture() {

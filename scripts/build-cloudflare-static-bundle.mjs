@@ -72,6 +72,8 @@ function writeCloudflareRoutingFiles(target) {
     [
       '/assets/* /assets/:splat 200',
       '/admin/assets/* /admin/assets/:splat 200',
+      '/admin /admin-spa.html 200',
+      '/admin/* /admin-spa.html 200',
       '/resources/* /resources/:splat 200',
       '/* /index.html 200',
       '',

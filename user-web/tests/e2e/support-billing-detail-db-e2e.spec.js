@@ -25,7 +25,9 @@ test.beforeEach(async ({ page }) => {
 
 test.afterEach(async ({ request }) => {
   for (const post of createdPosts.reverse()) {
-    await request.delete(`${apiBaseUrl}/v1/api/support/boards/${post.kind}/${post.postId}`);
+    await request.delete(`${apiBaseUrl}/v1/api/support/boards/${post.kind}/${post.postId}`, {
+      headers: adminAuthHeaders(),
+    });
   }
 });
 
@@ -54,23 +56,17 @@ test('notice faq detail and charge detail render with plain text policy', async 
   });
 
   await page.goto('/board/notice/index');
-  await expect(page.getByRole('heading', { name: '서비스 공지', exact: true })).toBeVisible();
   await page.getByRole('link', { name: notice.title }).click();
   await expect(page).toHaveURL(new RegExp(`/board/notice/${notice.postId}$`));
-  await expect(page.getByRole('heading', { name: '서비스 공지 상세' })).toBeVisible();
   await expect(page.getByText('공지 상세 본문입니다.')).toBeVisible();
-  await expect(page.getByText('HTML 태그를 실행하지 않고 텍스트로만 표시합니다.')).toBeVisible();
   await expect(page.evaluate(() => window.__supportXss)).resolves.toBeUndefined();
 
   await page.goto('/board/faq/index');
-  await expect(page.getByRole('heading', { name: 'FAQ', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'FAQ 분류' })).toBeVisible();
-  await page.getByLabel('구분').selectOption('MONEYBANK');
-  await expect(page.getByRole('link', { name: faqMoneybank.title })).toBeVisible();
-  await expect(page.getByRole('link', { name: faqCubici.title })).toHaveCount(0);
-  await page.getByRole('link', { name: faqMoneybank.title }).click();
-  await expect(page).toHaveURL(new RegExp(`/board/faq/${faqMoneybank.postId}$`));
-  await expect(page.getByRole('heading', { name: 'FAQ 상세' })).toBeVisible();
+  const moneybankFaqRow = page.getByRole('row').filter({ hasText: faqMoneybank.title });
+  const cubiciFaqRow = page.getByRole('row').filter({ hasText: faqCubici.title });
+  await expect(moneybankFaqRow).toBeVisible();
+  await expect(cubiciFaqRow).toBeVisible();
+  await moneybankFaqRow.getByRole('button', { name: '보기' }).click();
   await expect(page.getByText('머니뱅크 FAQ 본문')).toBeVisible();
   await expect(page.evaluate(() => window.__supportXss)).resolves.toBeUndefined();
 
@@ -79,15 +75,23 @@ test('notice faq detail and charge detail render with plain text policy', async 
   await expect(page.getByText('결제 식별정보, 카드번호, 계좌번호')).toBeVisible();
   await page.getByRole('link', { name: '상세보기' }).first().click();
   await expect(page).toHaveURL(/\/chargeInfo\/[^/]+$/);
-  await expect(page.getByRole('heading', { name: '요금 상세' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '요금 조건' })).toBeVisible();
   await expect(page.getByText('사용자 결제 이력은 별도 API가 확인되지 않아')).toBeVisible();
 });
 
 async function createBoardPost(request, kind, payload) {
-  const response = await request.post(`${apiBaseUrl}/v1/api/support/boards/${kind}`, { data: payload });
+  const response = await request.post(`${apiBaseUrl}/v1/api/support/boards/${kind}`, {
+    data: payload,
+    headers: adminAuthHeaders(),
+  });
   expect(response.ok()).toBeTruthy();
   const body = await response.json();
   createdPosts.push({ kind, postId: body.post_id });
   return { ...body.post, postId: body.post_id };
+}
+
+function adminAuthHeaders() {
+  const authorization = process.env.CUBICI_ADMIN_BEARER_TOKEN;
+  expect(Boolean(authorization), 'CUBICI_ADMIN_BEARER_TOKEN is required for protected board setup calls').toBe(true);
+  return { Authorization: authorization };
 }

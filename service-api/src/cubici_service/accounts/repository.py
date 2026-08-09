@@ -91,6 +91,30 @@ class AccountCompanyUpdateResponse(BaseModel):
     user: AccountAuthUser
 
 
+class AccountDashboardActivityItem(BaseModel):
+    occurred_at: datetime
+    operation_type: str
+    amount: int
+    outstanding_balance: int | None
+
+
+class AccountDashboardSummaryResponse(BaseModel):
+    sales_total_amount: int
+    settlement_total_amount: int
+    current_sales_amount: int = 0
+    current_order_count: int = 0
+    current_settlement_amount: int = 0
+    current_product_count: int = 0
+    previous_sales_amount: int = 0
+    previous_order_count: int = 0
+    previous_settlement_amount: int = 0
+    previous_product_count: int = 0
+    moneybank_available_balance: int
+    total_principal_amount: int
+    total_repayment_amount: int
+    activities: list[AccountDashboardActivityItem]
+
+
 class ShopAccountItem(BaseModel):
     id: int
     user_no: int | None
@@ -428,6 +452,257 @@ def list_shop_accounts_for_user(user_no: int) -> ShopAccountListResponse:
     return ShopAccountListResponse(
         total=len(rows),
         items=[ShopAccountItem(**row) for row in rows],
+    )
+
+
+def get_dashboard_summary_for_user(user_no: int) -> AccountDashboardSummaryResponse:
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                """
+                select
+                    coalesce((
+                        select sum(coalesce(s.sales_amount, 0))
+                        from sale s
+                        where exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as sales_total_amount,
+                    coalesce((
+                        select sum(coalesce(st.settlement_amount, 0))
+                        from settlement st
+                        where exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(st.shop_type)
+                              and sa.shop_id = st.shop_id
+                        )
+                    ), 0)::bigint as settlement_total_amount,
+                    coalesce((
+                        select sum(coalesce(s.payment_amount, 0))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date)::date
+                          and s.paid_date::date <= current_date
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as current_sales_amount,
+                    coalesce((
+                        select count(distinct coalesce(s.order_no, s.sales_id::text))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date)::date
+                          and s.paid_date::date <= current_date
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as current_order_count,
+                    coalesce((
+                        select sum(coalesce(st.settlement_amount, 0))
+                        from settlement st
+                        where st.settlement_date::date >= date_trunc('month', current_date)::date
+                          and st.settlement_date::date <= current_date
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(st.shop_type)
+                              and sa.shop_id = st.shop_id
+                        )
+                    ), 0)::bigint as current_settlement_amount,
+                    coalesce((
+                        select count(distinct coalesce(s.product_no, s.product_name, s.sales_id::text))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date)::date
+                          and s.paid_date::date <= current_date
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as current_product_count,
+                    coalesce((
+                        select sum(coalesce(s.payment_amount, 0))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date - interval '1 month')::date
+                          and s.paid_date::date <= least(
+                            (date_trunc('month', current_date) - interval '1 day')::date,
+                            (date_trunc('month', current_date - interval '1 month') + (extract(day from current_date)::int - 1) * interval '1 day')::date
+                          )
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as previous_sales_amount,
+                    coalesce((
+                        select count(distinct coalesce(s.order_no, s.sales_id::text))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date - interval '1 month')::date
+                          and s.paid_date::date <= least(
+                            (date_trunc('month', current_date) - interval '1 day')::date,
+                            (date_trunc('month', current_date - interval '1 month') + (extract(day from current_date)::int - 1) * interval '1 day')::date
+                          )
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as previous_order_count,
+                    coalesce((
+                        select sum(coalesce(st.settlement_amount, 0))
+                        from settlement st
+                        where st.settlement_date::date >= date_trunc('month', current_date - interval '1 month')::date
+                          and st.settlement_date::date <= least(
+                            (date_trunc('month', current_date) - interval '1 day')::date,
+                            (date_trunc('month', current_date - interval '1 month') + (extract(day from current_date)::int - 1) * interval '1 day')::date
+                          )
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(st.shop_type)
+                              and sa.shop_id = st.shop_id
+                        )
+                    ), 0)::bigint as previous_settlement_amount,
+                    coalesce((
+                        select count(distinct coalesce(s.product_no, s.product_name, s.sales_id::text))
+                        from sale s
+                        where s.paid_date::date >= date_trunc('month', current_date - interval '1 month')::date
+                          and s.paid_date::date <= least(
+                            (date_trunc('month', current_date) - interval '1 day')::date,
+                            (date_trunc('month', current_date - interval '1 month') + (extract(day from current_date)::int - 1) * interval '1 day')::date
+                          )
+                          and exists (
+                            select 1
+                            from shop_accounts sa
+                            where sa.user_no = %s
+                              and coalesce(sa.del_yn, 'N') <> 'Y'
+                              and upper(sa.shop_type) = upper(s.shop_type)
+                              and sa.shop_id = s.shop_id
+                        )
+                    ), 0)::bigint as previous_product_count,
+                    coalesce((
+                        select sum(coalesce(p.total_provision_amount, 0))
+                        from moneybank_redemption_provision p
+                        join moneybank_contract c on c.mbid = p.mbid
+                        where c.user_no = %s
+                    ), 0)::bigint as total_principal_amount,
+                    coalesce((
+                        select sum(coalesce(r.repayment_amount, 0))
+                        from moneybank_redemption_repayment r
+                        join moneybank_contract c on c.mbid = r.mbid
+                        where c.user_no = %s
+                    ), 0)::bigint as total_repayment_amount,
+                    coalesce((
+                        select sum(coalesce(latest.outstanding_balance, 0))
+                        from moneybank_contract c
+                        left join lateral (
+                            select h.outstanding_balance
+                            from moneybank_redemption_history h
+                            where h.mbid = c.mbid
+                            order by h.reg_date desc nulls last, h.id desc
+                            limit 1
+                        ) latest on true
+                        where c.user_no = %s
+                    ), 0)::bigint as moneybank_available_balance
+                """,
+                (
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                    user_no,
+                ),
+            )
+            summary = cursor.fetchone()
+
+            cursor.execute(
+                """
+                with user_contracts as (
+                    select mbid
+                    from moneybank_contract
+                    where user_no = %s
+                ), events as (
+                    select
+                        p.mbid,
+                        coalesce(p.provision_date, p.reg_date) as occurred_at,
+                        p.reg_date as recorded_at,
+                        'PROVISION'::varchar as operation_type,
+                        coalesce(p.total_provision_amount, 0)::bigint as amount
+                    from moneybank_redemption_provision p
+                    join user_contracts c on c.mbid = p.mbid
+                    union all
+                    select
+                        r.mbid,
+                        coalesce(r.balance_provision_date, r.reg_date) as occurred_at,
+                        r.reg_date as recorded_at,
+                        'REPAYMENT'::varchar as operation_type,
+                        coalesce(r.repayment_amount, 0)::bigint as amount
+                    from moneybank_redemption_repayment r
+                    join user_contracts c on c.mbid = r.mbid
+                )
+                select
+                    e.occurred_at,
+                    e.operation_type,
+                    e.amount,
+                    balance.outstanding_balance
+                from events e
+                left join lateral (
+                    select h.outstanding_balance
+                    from moneybank_redemption_history h
+                    where h.mbid = e.mbid
+                    order by
+                        abs(extract(epoch from (h.reg_date - e.recorded_at))) asc,
+                        h.id desc
+                    limit 1
+                ) balance on true
+                where e.occurred_at is not null
+                order by e.occurred_at desc, e.recorded_at desc nulls last
+                limit 5
+                """,
+                (user_no,),
+            )
+            activities = cursor.fetchall()
+
+    return AccountDashboardSummaryResponse(
+        **summary,
+        activities=[AccountDashboardActivityItem(**row) for row in activities],
     )
 
 

@@ -29,63 +29,63 @@ test('user commerce pages filter paginate expand export and render settlement ca
   }, fixture.session);
 
   await page.goto('/cubici/salesInfo/sales');
-  await expect(page.getByRole('heading', { name: '판매현황' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '매출정보', exact: true })).toBeVisible();
   await expect(page.getByText(fixture.firstOrderNo)).toBeVisible();
   await expect(page.getByRole('button', { name: '다음' })).toBeEnabled();
   await page.getByRole('button', { name: '다음' }).click();
   await expect(page.getByText(fixture.lastOrderNo)).toBeVisible();
 
-  await page.getByLabel('검색어').fill(fixture.firstOrderNo);
+  await page.getByLabel('제품명').fill(fixture.firstOrderNo);
+  await page.getByRole('button', { name: '검색' }).click();
   await expect(page.getByText(fixture.firstOrderNo)).toBeVisible();
-  await page.getByRole('button', { name: '보기' }).first().click();
-  await expect(page.getByText('E2E 판매 상품')).toBeVisible();
+  await page.getByRole('button', { name: `${fixture.firstOrderNo} 상세 보기` }).click();
+  await expect(page.getByRole('definition').filter({ hasText: 'E2E 판매 상품' })).toBeVisible();
 
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: 'CSV 다운로드' }).click();
+  await page.getByRole('button', { name: '엑셀 다운로드' }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toBe('cubici-sales.csv');
 
   await page.goto('/cubici/salesInfo/return');
-  await expect(page.getByRole('heading', { name: '반품/교환' })).toBeVisible();
-  await page.getByLabel('검색어').fill(fixture.returnOrderNo);
+  await expect(page.getByRole('heading', { name: '매출정보', exact: true })).toBeVisible();
+  await page.getByLabel('제품명').fill(fixture.returnOrderNo);
+  await page.getByRole('button', { name: '검색' }).click();
   await expect(page.getByText(fixture.returnOrderNo)).toBeVisible();
-  await page.getByRole('button', { name: '보기' }).first().click();
-  await expect(page.getByText(fixture.returnDeliveryNo)).toBeVisible();
+  await page.getByRole('button', { name: `${fixture.returnOrderNo} 상세 보기` }).click();
+  await expect(page.getByRole('definition').filter({ hasText: fixture.returnDeliveryNo })).toBeVisible();
 
   await page.goto('/cubici/calculateInfo/details');
-  await expect(page.getByRole('heading', { name: '정산 상세' })).toBeVisible();
-  await page.getByLabel('검색어').fill(String(fixture.settlementId));
-  const settlementRow = page.getByRole('row').filter({
-    has: page.getByRole('cell', { name: String(fixture.settlementId), exact: true }),
-  });
-  await expect(settlementRow).toBeVisible();
-  await settlementRow.getByRole('button', { name: '보기' }).click();
+  await expect(page.getByRole('heading', { name: '정산정보', exact: true })).toBeVisible();
+  await page.getByLabel('제품명').fill(String(fixture.settlementId));
+  await page.getByRole('button', { name: '검색' }).click();
+  const settlementDetailButton = page.getByRole('button', { name: `${fixture.settlementId} 상세 보기` });
+  await expect(settlementDetailButton).toBeVisible();
+  await settlementDetailButton.click();
   await expect(page.getByText('테스트은행')).toBeVisible();
 
   await page.goto('/cubici/calculateInfo/calendar');
-  await expect(page.getByRole('heading', { name: '정산 캘린더', exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '정산 캘린더 요약' })).toBeVisible();
-  await expect(page.getByText('2026-07-15')).toBeVisible();
-  await expect(page.getByText('111,000원')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '정산정보', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: '이전 달' }).click();
+  await expect(page.getByRole('button', { name: '2026-07-15 정산 상세' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '2026-07-15 정산금액 상세' })).toHaveText('111,000원');
 
   await page.goto('/cubici/integratedInfo/tab1');
   await expect(page.getByRole('heading', { name: '통합정보' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '당월현황' })).toBeVisible();
-  await expect(page.getByRole('textbox', { name: '판매금액' })).toHaveValue('1,440,000원');
-  await expect(page.getByRole('textbox', { name: '판매수량' })).toHaveValue('12개');
+  await expect(page.locator('main.c1p1')).toBeVisible();
+  const previousMonthRow = page.getByRole('row', { name: /전월 동기/ });
+  await expect(previousMonthRow).toContainText('990,000');
+  await expect(previousMonthRow).toContainText('9');
 
   await page.goto('/cubici/integratedInfo/tab2');
-  await expect(page.getByRole('heading', { name: '매출분석' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '판매' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '반품/교환' })).toBeVisible();
+  await expect(page.locator('main.c1p2')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: '쇼핑몰 결제 금액' })).toBeVisible();
 
   await page.goto('/cubici/integratedInfo/tab3');
-  await expect(page.getByRole('heading', { name: '상품분석' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'E2E 판매 상품' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '1,320,000원' })).toBeVisible();
+  await expect(page.locator('main.c1p3')).toBeVisible();
+  await expect(page.getByRole('heading', { level: 3, name: 'TOP 10 매출상품' })).toBeVisible();
 
   await page.goto('/cubici/invento/index');
-  await expect(page.getByRole('heading', { name: '상품/재고현황' })).toBeVisible();
+  await expect(page.locator('main.final-inventory-page')).toBeVisible();
   await page.getByLabel('상품 검색어').fill('E2E 판매 상품');
   await expect(page.getByRole('cell', { name: 'E2E 판매 상품' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '12', exact: true })).toBeVisible();
