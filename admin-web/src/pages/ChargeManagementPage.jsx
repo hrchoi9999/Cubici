@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createCharge,
   deleteCharge,
@@ -7,7 +7,7 @@ import {
   updateCharge,
 } from '../api/preferences.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const emptyForm = {
   chargeCode: 'B0101',
@@ -24,14 +24,6 @@ const emptyForm = {
   chargeDetail: '',
 };
 
-const chargeTypeLabels = {
-  B: '기본요금',
-  A: '부가요금',
-  M: '조건부요금',
-  O: '기타요금',
-  F: '무료요금',
-};
-
 function formatDate(value) {
   return value ? value.slice(0, 10) : '-';
 }
@@ -42,6 +34,13 @@ function formatDateTime(value) {
 
 function formatNumber(value) {
   return Number(value ?? 0).toLocaleString();
+}
+
+function formatLimit(value, unit) {
+  if (value === null || value === undefined || value === '' || Number(value) === 99) {
+    return '무제한';
+  }
+  return `${formatNumber(value)}${unit}`;
 }
 
 function toInputDate(value) {
@@ -86,14 +85,16 @@ export function ChargeManagementPage() {
   const [items, setItems] = useState([]);
   const [counts, setCounts] = useState({ total_count: 0, operating_count: 0, ended_count: 0 });
   const [offset, setOffset] = useState(0);
-  const [filters, setFilters] = useState({ status: 'all', order_by: 'reg_date_desc' });
-  const [formValues, setFormValues] = useState({ status: 'all', chargeCode: '', chargeName: '', orderBy: 'reg_date_desc' });
+  const [filters, setFilters] = useState({ charge_type: 'all', status: 'all', order_by: 'reg_date_desc' });
+  const [formValues, setFormValues] = useState({ chargeType: 'all', status: 'all', chargeName: '', orderBy: 'reg_date_desc' });
   const [selected, setSelected] = useState(null);
   const [chargeForm, setChargeForm] = useState(emptyForm);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -132,6 +133,30 @@ export function ChargeManagementPage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
 
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
+
   async function reloadList(nextOffset = offset) {
     const data = await fetchCharges({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
     setItems(data.items ?? []);
@@ -154,8 +179,8 @@ export function ChargeManagementPage() {
     setSelected(null);
     setIsEditorOpen(false);
     setFilters({
+      charge_type: formValues.chargeType,
       status: formValues.status,
-      charge_code: formValues.chargeCode,
       charge_name: formValues.chargeName,
       order_by: formValues.orderBy,
     });
@@ -176,6 +201,9 @@ export function ChargeManagementPage() {
       setSelected(data);
       setChargeForm(mapChargeToForm(data));
       setIsEditorOpen(true);
+      if (listScrollRef.current) {
+        listScrollRef.current.scrollLeft = 0;
+      }
     } catch (error) {
       setSelected(null);
       setIsEditorOpen(false);
@@ -272,12 +300,36 @@ export function ChargeManagementPage() {
     });
   }
 
+  function changeListScroll(event) {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollLeft = Number(event.target.value);
+    }
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (container) {
+      container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+    }
+  }
+
   return (
-    <>
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+    <section className="chargeLvPage">
+      <form className="m-search searchArea chargeLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
-            <label htmlFor="chargeStatus">운영구분</label>
+            <label htmlFor="chargeTypeFilter">요금제</label>
+            <select id="chargeTypeFilter" name="chargeType" value={formValues.chargeType} onChange={updateSearchValue}>
+              <option value="all">전체</option>
+              <option value="B">기본요금</option>
+              <option value="A">부가요금</option>
+              <option value="M">조건부요금</option>
+              <option value="O">기타요금</option>
+              <option value="F">무료요금</option>
+            </select>
+          </div>
+          <div className="inputBox">
+            <label htmlFor="chargeStatus">운영상태</label>
             <select id="chargeStatus" name="status" value={formValues.status} onChange={updateSearchValue}>
               <option value="all">전체</option>
               <option value="operating">운영</option>
@@ -285,99 +337,98 @@ export function ChargeManagementPage() {
             </select>
           </div>
           <div className="inputBox">
-            <label htmlFor="chargeCode">요금코드</label>
-            <input id="chargeCode" name="chargeCode" type="text" value={formValues.chargeCode} onChange={updateSearchValue} />
-          </div>
-          <div className="inputBox">
             <label htmlFor="chargeName">요금제명</label>
             <input id="chargeName" name="chargeName" type="text" value={formValues.chargeName} onChange={updateSearchValue} />
           </div>
+        </div>
+        <div className="line">
           <div className="inputBox">
-            <label htmlFor="chargeOrder">보기기준</label>
+            <label htmlFor="chargeOrder">보기설정</label>
             <select id="chargeOrder" name="orderBy" value={formValues.orderBy} onChange={updateSearchValue}>
-              <option value="reg_date_desc">최근 등록순</option>
+              <option value="reg_date_desc">최근순</option>
               <option value="reg_date_asc">과거 등록순</option>
               <option value="amount_desc">금액 높은순</option>
               <option value="charge_name_asc">요금제명</option>
               <option value="charge_code_asc">요금코드</option>
             </select>
           </div>
-        </div>
-        <div className="line">
-          <button type="submit" className="searchBtn">검색</button>
-          <button type="button" className="grayBtn" onClick={handleNew}>요금제 추가</button>
+          <button type="submit" className="sBtn sColorLB">검색</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew}>요금제 추가</button>
         </div>
       </form>
 
-      <div className="fixBottom">
-        <div className="tableTotal chargeSummary">
-          <span>전체 {formatNumber(counts.total_count)}건</span>
-          <span>운영 {formatNumber(counts.operating_count)}건</span>
-          <span>종료 {formatNumber(counts.ended_count)}건</span>
-          <span>{currentPage} / {pageCount} page</span>
-        </div>
-      </div>
-
       {message ? <p className="formMessage">{message}</p> : null}
 
-      <div className="legacyListTable table-scroll">
-        <div className="overflowBox">
-          <table className="chargeManagementTable">
+      <div className="chargeLvList">
+        <div className="tableScroll" ref={listScrollRef}>
+          <table className="chargeManagementTable chargeLvTable" aria-label="요금제 목록">
             <caption>요금제 관리</caption>
             <thead>
               <tr>
-                <th>No</th>
-                <th>등록 일자</th>
-                <th>요금코드</th>
-                <th>요금제</th>
-                <th>유형</th>
                 <th>상태</th>
-                <th>시작일</th>
-                <th>종료일</th>
-                <th>기준금액</th>
-                <th>제공 ID</th>
+                <th>등록 일자</th>
+                <th>요금제</th>
+                <th>기준금액(VAT제외)</th>
+                <th>제공 ID수</th>
                 <th>거래 건수</th>
-                <th>상품 수</th>
-                <th>상세보기</th>
+                <th>상세 보기</th>
               </tr>
             </thead>
             <tbody id="fixTbody">
               {isLoading ? (
-                <tr><td colSpan="13">요금제 정보를 불러오는 중입니다.</td></tr>
+                <tr><td colSpan="7">요금제 정보를 불러오는 중입니다.</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan="13">조회된 요금제가 없습니다.</td></tr>
+                <tr><td colSpan="7">조회된 요금제가 없습니다.</td></tr>
               ) : rows.map((row) => (
                 <tr key={row.charge_code}>
-                  <td>{row.row_no}</td>
-                  <td>{formatDate(row.reg_date)}</td>
-                  <td>{row.charge_code}</td>
-                  <td className="subject">{row.charge_name}</td>
-                  <td>{chargeTypeLabels[row.charge_type] ?? row.charge_type}</td>
                   <td>{row.status}</td>
-                  <td>{formatDate(row.start_date)}</td>
-                  <td>{formatDate(row.expire_date)}</td>
+                  <td>{formatDate(row.reg_date)}</td>
+                  <td className="subject">{row.charge_name}</td>
                   <td>{formatNumber(row.amount)}원</td>
-                  <td>{formatNumber(row.sub_id)}</td>
-                  <td>{row.sales_count ?? '-'}</td>
-                  <td>{row.product_count ?? '-'}</td>
-                  <td><button type="button" className="tableBtn" onClick={() => loadDetail(row.charge_code)}>보기</button></td>
+                  <td>{formatLimit(row.sub_id, '개')}</td>
+                  <td>{formatLimit(row.sales_count, '건')}</td>
+                  <td><button type="button" className="tableBtn" onClick={() => loadDetail(row.charge_code)}>상세보기</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
 
-      <div className="pagination pagingControls">
-        <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-        <span>{currentPage} / {pageCount}</span>
-        <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        {listScroll.max > 0 ? <div className="horizontalTableScrollbar chargeHorizontalScrollbar" aria-label="요금제 목록 좌우 스크롤">
+          <button type="button" aria-label="요금제 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="요금제 목록 가로 스크롤"
+            min="0"
+            max={listScroll.max}
+            step="1"
+            value={Math.min(listScroll.left, listScroll.max)}
+            onChange={changeListScroll}
+          />
+          <button type="button" aria-label="요금제 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div> : null}
+
+        <div className="chargeLvTotals" aria-label="요금제 집계">
+          <div><span>전체</span><strong>{formatNumber(counts.total_count)}개</strong></div>
+          <div><span>운영</span><strong>{formatNumber(counts.operating_count)}개</strong></div>
+          <div><span>종료</span><strong>{formatNumber(counts.ended_count)}개</strong></div>
+          <div><span>현재 페이지</span><strong>{currentPage} / {pageCount}</strong></div>
+        </div>
+
+        <div className="pagination pagingControls">
+          <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+          <span>{currentPage} / {pageCount}</span>
+          <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        </div>
       </div>
 
       {isEditorOpen ? <form className="chargeEditorPanel" onSubmit={handleSave}>
         <div className="chargeEditorHeader">
           <h4>{selected ? '요금제 수정' : '요금제 등록'}</h4>
-          <span>{selected ? `최종 수정 ${formatDateTime(selected.update_date)}` : '신규 요금제'}</span>
+          <div>
+            <span>{selected ? `등록·수정 ${formatDateTime(selected.update_date ?? selected.reg_date)}` : '신규 요금제'}</span>
+            <button type="button" onClick={() => setIsEditorOpen(false)}>닫기</button>
+          </div>
         </div>
         <div className="chargeEditorGrid">
           <label>
@@ -439,11 +490,11 @@ export function ChargeManagementPage() {
           </label>
         </div>
         <div className="chargeEditorActions">
-          <button type="submit" className="searchBtn" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
-          <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
-          {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
+          <button type="submit" className="sBtn sColorLB" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew} disabled={isSaving}>초기화</button>
+          {selected ? <button type="button" className="sBtn sColorP" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
       </form> : null}
-    </>
+    </section>
   );
 }

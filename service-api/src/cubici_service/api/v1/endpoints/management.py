@@ -6,6 +6,7 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 
 from cubici_service.management.repository import (
+    CubiciIntegratedResponse,
     ManagementOverviewResponse,
     MemberChargeChangeDivision,
     MemberChargeChangeListResponse,
@@ -20,6 +21,7 @@ from cubici_service.management.repository import (
     MemberStatusDetailResponse,
     MemberUseService,
     MemberSummaryResponse,
+    MemberSummaryOptionsResponse,
     MemberWithdrawalListResponse,
     MemberWithdrawalOrderBy,
     MemberWithdrawalStatus,
@@ -27,7 +29,9 @@ from cubici_service.management.repository import (
     ManagementUsageListResponse,
     OverviewUnit,
     get_management_overview,
+    get_cubici_integrated_info,
     get_member_summary,
+    get_member_summary_options,
     get_management_usage_detail,
     get_member_status_detail,
     get_member_charge_change_refund_detail,
@@ -70,6 +74,28 @@ def member_summary(
         partner_code=partner_code,
         product_code=product_code,
     )
+
+
+@router.get("/cubici-integrated", response_model=CubiciIntegratedResponse)
+def cubici_integrated_info(
+    unit: OverviewUnit = Query(default="day"),
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
+    partner_code: str | None = Query(default=None, max_length=30),
+    product_code: str | None = Query(default=None, max_length=30),
+) -> CubiciIntegratedResponse:
+    return get_cubici_integrated_info(
+        unit=unit,
+        from_date=from_date,
+        to_date=to_date,
+        partner_code=partner_code,
+        product_code=product_code,
+    )
+
+
+@router.get("/member-summary/options", response_model=MemberSummaryOptionsResponse)
+def member_summary_options() -> MemberSummaryOptionsResponse:
+    return get_member_summary_options()
 
 
 @router.get("/member-info", response_model=MemberInfoListResponse)

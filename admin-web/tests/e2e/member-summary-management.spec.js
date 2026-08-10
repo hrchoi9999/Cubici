@@ -53,7 +53,6 @@ test('member summary dashboard renders metrics and trend data', async ({ page })
 
   await expect(page.locator('.m-tab a').filter({ hasText: '회원 종합' })).toBeVisible();
   await expect(page.locator('.memberMetricGrid .colorBox').filter({ hasText: '큐빅아이' })).toBeVisible();
-  await expect(page.getByText('누적 : 42명')).toBeVisible();
-  await expect(page.getByRole('cell', { name: '2026-07-21' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '16.67%' })).toBeVisible();
+  await expect(page.getByText('• 누적 : 42명')).toBeVisible();
+  await expect(page.locator('.memberSummaryChartBox canvas')).toBeVisible();
 });

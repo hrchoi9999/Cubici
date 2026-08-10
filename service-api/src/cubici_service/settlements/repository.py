@@ -1,6 +1,7 @@
 """Read-only settlement queries."""
 
 from datetime import date, datetime
+from typing import Literal
 
 from psycopg.rows import dict_row
 from pydantic import BaseModel, Field
@@ -53,6 +54,9 @@ class SettlementListResponse(BaseModel):
     total: int
     counts: SettlementCheckCounts = Field(default_factory=SettlementCheckCounts)
     items: list[SettlementListItem]
+
+
+SettlementOrderBy = Literal["date_desc", "date_asc", "amount_desc", "amount_asc"]
 
 
 def _build_settlement_filters(
@@ -109,6 +113,7 @@ def list_settlements(
     keyword: str | None = None,
     from_date: date | None = None,
     to_date: date | None = None,
+    order_by: SettlementOrderBy = "date_desc",
 ) -> SettlementListResponse:
     where_clause, filter_params = _build_settlement_filters(
         shop_pairs=shop_pairs,
@@ -119,6 +124,13 @@ def list_settlements(
         from_date=from_date,
         to_date=to_date,
     )
+
+    order_clause = {
+        "date_desc": "settlement_date desc nulls last, settlements_id desc",
+        "date_asc": "settlement_date asc nulls last, settlements_id asc",
+        "amount_desc": "settlement_amount desc nulls last, settlement_date desc nulls last, settlements_id desc",
+        "amount_asc": "settlement_amount asc nulls last, settlement_date desc nulls last, settlements_id desc",
+    }[order_by]
 
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
@@ -170,7 +182,7 @@ def list_settlements(
                     modified_date
                 from settlement
                 {where_clause}
-                order by settlement_date desc nulls last, settlements_id desc
+                order by {order_clause}
                 limit %s offset %s
                 """,
                 (*filter_params, limit, offset),

@@ -7,8 +7,9 @@ import {
   fetchRedemptionOperationHistory,
   fetchRedemptions,
 } from '../api/redemptions.js';
+import { formatContractStatus } from '../utils/contractStatus.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function formatDate(value) {
   if (!value) {
@@ -26,6 +27,15 @@ function formatNumber(value) {
   return Number(value).toLocaleString('ko-KR');
 }
 
+function formatService(value) {
+  return value === 'MP' ? '선정산' : (value ?? '-');
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
 function formatBalanceCheckStatus(value) {
   const labels = {
     OK: '일치',
@@ -39,6 +49,15 @@ function formatBalanceCheckStatus(value) {
 function mapRedemptionToRow(item) {
   return {
     mbid: item.mbid,
+    status: formatContractStatus(item.contract_status),
+    service: formatService(item.product_code),
+    paymentGroup: item.fintech_name ?? '큐빅아이',
+    contractDate: formatDate(item.contract_date),
+    userId: item.user_email ?? '-',
+    firmName: item.firm_name ?? '-',
+    userName: item.user_name ?? '-',
+    maxOutstandingBalance: item.latest_max_outstanding_balance,
+    serviceFee: item.service_fee,
     provisionCount: item.provision_count,
     provisionAmount: item.total_provision_amount,
     latestProvisionDate: item.latest_provision_date,
@@ -144,19 +163,11 @@ function matchesHistoryFilters(item, filters) {
 export function RedemptionManagementPage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
-  const [counts, setCounts] = useState({
-    total_count: 0,
-    ok_count: 0,
-    diff_count: 0,
-    no_history_count: 0,
-    outstanding_count: 0,
-    total_balance_difference: 0,
-    absolute_balance_difference: 0,
-    check_status_label: '미검산',
-  });
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState('');
+  const [exportMessage, setExportMessage] = useState('');
   const [detail, setDetail] = useState(null);
   const [detailMessage, setDetailMessage] = useState('');
   const [operationHistory, setOperationHistory] = useState([]);
@@ -165,10 +176,13 @@ export function RedemptionManagementPage() {
   const [cancelTarget, setCancelTarget] = useState(null);
   const [cancelValues, setCancelValues] = useState(() => makeCancelDefaults());
   const [formValues, setFormValues] = useState({
-    mbid: '',
-    outstandingOnly: false,
+    userName: '',
+    firmName: '',
+    productCode: '',
+    contractStage: '',
     fromDate: '',
     toDate: '',
+    orderBy: 'date_desc',
   });
   const [filters, setFilters] = useState({});
 
@@ -184,22 +198,11 @@ export function RedemptionManagementPage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
-          setCounts(data.counts ?? {});
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
-          setCounts({
-            total_count: 0,
-            ok_count: 0,
-            diff_count: 0,
-            no_history_count: 0,
-            outstanding_count: 0,
-            total_balance_difference: 0,
-            absolute_balance_difference: 0,
-            check_status_label: '조회 실패',
-          });
           setMessage(error.message);
         }
       } finally {
@@ -218,7 +221,6 @@ export function RedemptionManagementPage() {
 
   const rows = useMemo(() => items.map(mapRedemptionToRow), [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function goToPreviousPage() {
     setOffset((value) => Math.max(0, value - PAGE_SIZE));
@@ -232,10 +234,10 @@ export function RedemptionManagementPage() {
   }
 
   function updateFormValue(event) {
-    const { name, type, checked, value } = event.target;
+    const { name, value } = event.target;
     setFormValues((current) => ({
       ...current,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   }
 
@@ -249,11 +251,57 @@ export function RedemptionManagementPage() {
     setOperationMessage('');
     setCancelTarget(null);
     setFilters({
-      mbid: formValues.mbid,
-      outstanding_only: formValues.outstandingOnly,
+      user_name: formValues.userName,
+      firm_name: formValues.firmName,
+      product_code: formValues.productCode,
+      contract_stage: formValues.contractStage,
       from_date: formValues.fromDate,
       to_date: formValues.toDate,
+      order_by: formValues.orderBy,
     });
+  }
+
+  function handleOrderByChange(event) {
+    const { value } = event.target;
+    setFormValues((current) => ({ ...current, orderBy: value }));
+    setFilters((current) => ({ ...current, order_by: value }));
+    setOffset(0);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportMessage('');
+    try {
+      const exportItems = [];
+      let exportOffset = 0;
+      let exportTotal = 0;
+      do {
+        const data = await fetchRedemptions({ limit: 100, offset: exportOffset, ...filters });
+        const pageItems = data.items ?? [];
+        exportTotal = data.total ?? pageItems.length;
+        exportItems.push(...pageItems);
+        exportOffset += pageItems.length;
+        if (pageItems.length === 0) break;
+      } while (exportOffset < exportTotal && exportOffset < 10000);
+
+      const headers = ['상태', 'MBID', '이용서비스', '지급그룹사', '계약일자', '아이디', '회사명', '회원명', '미상환금', '최대 미상환금', '서비스 수수료'];
+      const csvRows = exportItems.map((item) => {
+        const row = mapRedemptionToRow(item);
+        return [row.status, row.mbid, row.service, row.paymentGroup, row.contractDate, row.userId, row.firmName, row.userName, row.outstandingBalance, row.maxOutstandingBalance, row.serviceFee];
+      });
+      const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cubici-redemptions-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      setExportMessage(`${formatNumber(exportItems.length)}건을 내려받았습니다.`);
+    } catch (error) {
+      setExportMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   async function openDetail(mbid) {
@@ -384,116 +432,67 @@ export function RedemptionManagementPage() {
   }
 
   return (
-    <>
-      <div className="m-tab">
+    <section className="redemptionLvPage">
+      <div className="m-tab redemptionLvTabs">
         <ul>
-          <li className="active">
-            <a href="javascript:;">상환 관리</a>
-          </li>
+          <li><a href="/admin/moneybank/approval_tab2">계약 관리</a></li>
+          <li className="active"><a href="/admin/moneybank/redemption">상환 현황</a></li>
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+      <div className="m-options redemptionLvBaseDate">
+        <div className="pRight"><span className="baseDate"><b>기준</b> {new Date().toLocaleDateString('ko-KR')}</span></div>
+      </div>
+
+      <form className="m-search searchArea redemptionLvSearch" onSubmit={handleSearch}>
         <div className="line">
-          <div className="inputBox">
-            <label htmlFor="redemptionMbid">MBID</label>
-            <input id="redemptionMbid" name="mbid" type="text" value={formValues.mbid} onChange={updateFormValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="redemptionFromDate">시작일</label>
-            <input id="redemptionFromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="redemptionToDate">종료일</label>
-            <input id="redemptionToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} />
-          </div>
-          <label className="checkBoxLabel">
-            <input name="outstandingOnly" type="checkbox" checked={formValues.outstandingOnly} onChange={updateFormValue} />
-            미상환잔액 있음
-          </label>
-          <button className="sBtn sColorLB" type="submit">
-            검색
-          </button>
+          <div className="inputBox"><label htmlFor="redemptionUserName">회원명</label><input id="redemptionUserName" name="userName" type="text" value={formValues.userName} onChange={updateFormValue} /></div>
+          <div className="inputBox"><label htmlFor="redemptionFirmName">회사명</label><input id="redemptionFirmName" name="firmName" type="text" value={formValues.firmName} onChange={updateFormValue} /></div>
+          <div className="inputBox"><label htmlFor="redemptionProductCode">이용서비스</label><select id="redemptionProductCode" name="productCode" value={formValues.productCode} onChange={updateFormValue}><option value="">전체</option><option value="MP">선정산</option></select></div>
+        </div>
+        <div className="line">
+          <div className="inputBox"><label htmlFor="redemptionContractStage">신청상태</label><select id="redemptionContractStage" name="contractStage" value={formValues.contractStage} onChange={updateFormValue}><option value="">전체</option><option value="waiting">계좌대기</option><option value="active">계약완료</option><option value="ended">계약만료</option></select></div>
+          <div className="inputBox redemptionLvDateRange"><label htmlFor="redemptionFromDate">신청일자</label><input id="redemptionFromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} /><span>~</span><input id="redemptionToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} /></div>
+          <button className="sBtn sColorLB" type="submit">검색</button>
         </div>
       </form>
 
-      <div className="summaryPills">
-        <span>잔액검산 {counts.check_status_label ?? '-'}</span>
-        <span>일치 {formatNumber(counts.ok_count ?? 0)}건</span>
-        <span>차이 {formatNumber(counts.diff_count ?? 0)}건</span>
-        <span>이력없음 {formatNumber(counts.no_history_count ?? 0)}건</span>
-        <span>미상환 {formatNumber(counts.outstanding_count ?? 0)}건</span>
-        <span>차이합계 {formatNumber(counts.total_balance_difference ?? 0)}</span>
+      <div className="m-options redemptionLvTableOptions">
+        <div className="pRight">
+          <div className="fwBox redemptionLvOrderBox"><label htmlFor="redemptionOrderBy">보기기준</label><select id="redemptionOrderBy" name="orderBy" value={formValues.orderBy} onChange={handleOrderByChange}><option value="date_desc">최근순</option><option value="date_asc">과거순</option><option value="outstanding_desc">미상환금 높은순</option><option value="outstanding_asc">미상환금 낮은순</option><option value="fee_desc">수수료 높은순</option><option value="fee_asc">수수료 낮은순</option></select></div>
+          <button className="redemptionLvDownloadButton" type="button" onClick={handleExport} disabled={isExporting}>{isExporting ? '내려받는 중' : '엑셀 다운로드'}</button>
+        </div>
+        {exportMessage ? <p className="redemptionLvExportMessage" role="status">{exportMessage}</p> : null}
       </div>
 
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div id="fixTable" className="fixTable wide legacyListTable table-scroll">
+      <div id="fixTable" className="fixTable legacyListTable table-scroll redemptionLvTable">
         <div className="overflowBox">
         <table className="m-shadowTable redemptionTable">
           <caption className="caption">상환 관리 목록</caption>
           <thead>
             <tr>
-              <th scope="col">MBID</th>
-              <th scope="col">지급건수</th>
-              <th scope="col">지급금액</th>
-              <th scope="col">최근지급일</th>
-              <th scope="col">상환건수</th>
-              <th scope="col">상환금액</th>
-              <th scope="col">입금건수</th>
-              <th scope="col">입금금액</th>
-              <th scope="col">판매건수</th>
-              <th scope="col">판매결제액</th>
-              <th scope="col">미상환잔액</th>
-              <th scope="col">잔액검산</th>
-              <th scope="col">최근이력일</th>
-              <th scope="col">상세</th>
+              <th scope="col">상태</th><th scope="col">MBID</th><th scope="col">이용서비스</th><th scope="col">지급그룹사</th><th scope="col">계약일자</th><th scope="col">아이디</th><th scope="col">회사명</th><th scope="col">회원명</th><th scope="col">미상환금</th><th scope="col">최대 미상환금</th><th scope="col">서비스 수수료</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="14">상환 목록을 조회 중입니다.</td>
+                <td colSpan="11">상환 목록을 조회 중입니다.</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan="14">조회된 상환 데이터가 없습니다.</td>
+                <td colSpan="11">조회된 상환 데이터가 없습니다.</td>
               </tr>
             ) : rows.map((row) => (
               <tr key={row.mbid}>
-                <td>{row.mbid}</td>
-                <td>{formatNumber(row.provisionCount)}</td>
-                <td>{formatNumber(row.provisionAmount)}</td>
-                <td>{formatDate(row.latestProvisionDate)}</td>
-                <td>{formatNumber(row.repaymentCount)}</td>
-                <td>{formatNumber(row.repaymentAmount)}</td>
-                <td>{formatNumber(row.depositCount)}</td>
-                <td>{formatNumber(row.depositAmount)}</td>
-                <td>{formatNumber(row.salesCount)}</td>
-                <td>{formatNumber(row.salesPaymentAmount)}</td>
-                <td>{formatNumber(row.outstandingBalance)}</td>
-                <td>{formatBalanceCheckStatus(row.balanceCheckStatus)} ({formatNumber(row.balanceDifference)})</td>
-                <td>{formatDate(row.latestHistoryDate)}</td>
-                <td>
-                  <button className="sColorLB refund-btn" type="button" onClick={() => openDetail(row.mbid)}>
-                    보기
-                  </button>
-                </td>
+                <td>{row.status}</td>
+                <td><button className="redemptionLvMbidButton" type="button" onClick={() => openDetail(row.mbid)}>{row.mbid}</button></td>
+                <td>{row.service}</td><td>{row.paymentGroup}</td><td>{row.contractDate}</td><td>{row.userId}</td><td>{row.firmName}</td><td>{row.userName}</td><td>{formatNumber(row.outstandingBalance)} 원</td><td>{formatNumber(row.maxOutstandingBalance)} 원</td><td>{formatNumber(row.serviceFee)} 원</td>
               </tr>
             ))}
           </tbody>
         </table>
-        </div>
-        <div className="fixBottom">
-          <ul className="tableTotal">
-            <li>
-              <span className="txt">총 상환건수</span>
-              <span className="result">{formatNumber(total)} 건</span>
-            </li>
-            <li>
-              <span className="txt">페이지</span>
-              <span className="result">{currentPage} / {pageCount}</span>
-            </li>
-          </ul>
         </div>
       </div>
 
@@ -535,7 +534,7 @@ export function RedemptionManagementPage() {
           onSubmit={handleOperationCancel}
         />
       ) : null}
-    </>
+    </section>
   );
 }
 

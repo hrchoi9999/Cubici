@@ -52,7 +52,7 @@ test('M1-3 submits the login payload and persists the saved login ID', async ({ 
       body: JSON.stringify({
         access_token: 'focused-test-token',
         token_type: 'Bearer',
-        user: { user_no: 7, email: 'member@cubici.test', name: '테스트 회원' },
+        user: { user_no: 7, email: 'member@cubici.test', name: '테스트 회원', user_type: 'USER' },
       }),
       status: 200,
     });

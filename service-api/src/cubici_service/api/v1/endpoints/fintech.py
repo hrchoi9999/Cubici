@@ -6,6 +6,10 @@ from fastapi import APIRouter, HTTPException, Query
 
 from cubici_service.fintech.repository import (
     FintechStatusResponse,
+    FundingOrderBy,
+    FundingProviderWriteRequest,
+    FundingProviderWriteResponse,
+    FundingSummaryResponse,
     FirmRequestBinListResponse,
     MockResultInquiryPersistResponse,
     MockResultInquiryRequest,
@@ -18,7 +22,9 @@ from cubici_service.fintech.repository import (
     TradeRequestBinListResponse,
     TradeResultInquiryListResponse,
     build_mock_transfer_message,
+    create_funding_provider,
     fintech_status,
+    list_funding_summaries,
     get_trade_request_detail,
     list_firm_requests,
     list_trade_requests,
@@ -29,6 +35,23 @@ from cubici_service.fintech.repository import (
 )
 
 router = APIRouter(prefix="/fintech", tags=["fintech"])
+
+
+@router.get("/funding-summary", response_model=FundingSummaryResponse)
+def funding_summary_list(
+    limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    order_by: FundingOrderBy = Query(default="registered_desc"),
+) -> FundingSummaryResponse:
+    return list_funding_summaries(limit=limit, offset=offset, order_by=order_by)
+
+
+@router.post("/funding-providers", response_model=FundingProviderWriteResponse, status_code=201)
+def funding_provider_create(payload: FundingProviderWriteRequest) -> FundingProviderWriteResponse:
+    try:
+        return create_funding_provider(payload)
+    except ValueError as error:
+        raise HTTPException(status_code=409, detail="funding provider already exists") from error
 
 
 @router.get("/status", response_model=FintechStatusResponse)

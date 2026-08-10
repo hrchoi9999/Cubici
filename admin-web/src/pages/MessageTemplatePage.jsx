@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   createMessageTemplate,
   deleteMessageTemplate,
@@ -20,13 +20,6 @@ const emptyForm = {
   regUser: 'admin',
 };
 
-function formatDate(value) {
-  if (!value) {
-    return '-';
-  }
-  return value.slice(0, 10);
-}
-
 function stripHtml(value) {
   if (!value) {
     return '-';
@@ -43,13 +36,11 @@ export function MessageTemplatePage() {
   const [activeKey, setActiveKey] = useState(initialKey);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
-  const [smsCount, setSmsCount] = useState(0);
-  const [emailCount, setEmailCount] = useState(0);
-  const [templatePolicy, setTemplatePolicy] = useState({ send: '실발송 미연동', variable: '변수정책 확인' });
   const [offset, setOffset] = useState(0);
   const [filters, setFilters] = useState({ msg_key: initialKey, order_by: 'menu_asc' });
-  const [formValues, setFormValues] = useState({ keyword: '', orderBy: 'menu_asc' });
+  const [keyword, setKeyword] = useState('');
   const [selected, setSelected] = useState(null);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [templateForm, setTemplateForm] = useState({ ...emptyForm, msgKey: initialKey });
   const [isLoading, setIsLoading] = useState(true);
@@ -68,20 +59,11 @@ export function MessageTemplatePage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
-          setSmsCount(data.sms_count ?? 0);
-          setEmailCount(data.email_count ?? 0);
-          setTemplatePolicy({
-            send: data.external_send_status_label ?? '실발송 미연동',
-            variable: data.variable_policy_status_label ?? '변수정책 확인',
-          });
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
-          setSmsCount(0);
-          setEmailCount(0);
-          setTemplatePolicy({ send: '실발송 미연동', variable: '변수정책 확인' });
           setMessage(error.message);
         }
       } finally {
@@ -98,34 +80,26 @@ export function MessageTemplatePage() {
     };
   }, [offset, filters]);
 
-  const rows = useMemo(() => items, [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   async function reloadList(nextOffset = offset) {
     const data = await fetchMessageTemplates({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);
-    setSmsCount(data.sms_count ?? 0);
-    setEmailCount(data.email_count ?? 0);
-    setTemplatePolicy({
-      send: data.external_send_status_label ?? '실발송 미연동',
-      variable: data.variable_policy_status_label ?? '변수정책 확인',
-    });
   }
 
   function switchKey(nextKey) {
     setActiveKey(nextKey);
     setOffset(0);
     setSelected(null);
+    setPreviewTemplate(null);
     setIsEditorOpen(false);
     setTemplateForm({ ...emptyForm, msgKey: nextKey });
-    setFilters({ msg_key: nextKey, keyword: formValues.keyword, order_by: formValues.orderBy });
-  }
-
-  function updateSearchValue(event) {
-    const { name, value } = event.target;
-    setFormValues((current) => ({ ...current, [name]: value }));
+    setFilters({ msg_key: nextKey, keyword, order_by: 'menu_asc' });
+    const nextPath = nextKey === '01'
+      ? '/admin/cubici/supportMember/manageEmail'
+      : '/admin/cubici/supportMember/manageSms';
+    window.history.replaceState({}, '', nextPath);
   }
 
   function updateTemplateValue(event) {
@@ -140,8 +114,8 @@ export function MessageTemplatePage() {
     setIsEditorOpen(false);
     setFilters({
       msg_key: activeKey,
-      keyword: formValues.keyword,
-      order_by: formValues.orderBy,
+      keyword,
+      order_by: 'menu_asc',
     });
   }
 
@@ -171,6 +145,17 @@ export function MessageTemplatePage() {
     } catch (error) {
       setSelected(null);
       setIsEditorOpen(false);
+      setMessage(error.message);
+    }
+  }
+
+  async function showEmailPreview(messageNo) {
+    setMessage('');
+    try {
+      const data = await fetchMessageTemplate(messageNo);
+      setPreviewTemplate(data);
+    } catch (error) {
+      setPreviewTemplate(null);
       setMessage(error.message);
     }
   }
@@ -211,8 +196,16 @@ export function MessageTemplatePage() {
       const result = selected
         ? await updateMessageTemplate(selected.message_no, payload)
         : await createMessageTemplate(payload);
-      setSelected(result.template);
-      await reloadList();
+      const savedKey = result.template?.msg_key ?? templateForm.msgKey;
+      setActiveKey(savedKey);
+      const nextFilters = { msg_key: savedKey, keyword, order_by: 'menu_asc' };
+      setFilters(nextFilters);
+      setSelected(null);
+      setIsEditorOpen(false);
+      const data = await fetchMessageTemplates({ limit: PAGE_SIZE, offset: 0, ...nextFilters });
+      setItems(data.items ?? []);
+      setTotal(data.total ?? 0);
+      setOffset(0);
       setMessage(result.action === 'created' ? '템플릿을 등록했습니다.' : '템플릿을 수정했습니다.');
     } catch (error) {
       setMessage(error.message);
@@ -257,7 +250,7 @@ export function MessageTemplatePage() {
 
   return (
     <>
-      <div className="m-tab">
+      <div className="m-tab messageTemplateLvTabs">
         <ul>
           <li className={activeKey === '00' ? 'active' : ''}>
             <a href="/admin/cubici/supportMember/manageSms" onClick={(event) => { event.preventDefault(); switchKey('00'); }}>
@@ -272,91 +265,71 @@ export function MessageTemplatePage() {
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
-        <div className="line">
-          <div className="inputBox">
-            <label htmlFor="templateKeyword">검색</label>
-            <input id="templateKeyword" name="keyword" type="text" value={formValues.keyword} onChange={updateSearchValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="templateOrderBy">정렬</label>
-            <select id="templateOrderBy" name="orderBy" value={formValues.orderBy} onChange={updateSearchValue}>
-              <option value="menu_asc">메뉴 순</option>
-              <option value="reg_date_desc">최근 순</option>
-              <option value="reg_date_asc">과거 순</option>
-            </select>
-          </div>
-          <button className="sBtn sColorLB" type="submit">검색</button>
-          <button className="sBtn sColorLG" type="button" onClick={handleNew}>글쓰기</button>
-        </div>
-      </form>
+      <section className="messageTemplateLvPage">
+        {message ? <p className={message.includes('실패') || message.includes('입력') || message.includes('코드') ? 'formMessage error' : 'formMessage'}>{message}</p> : null}
 
-      {message ? <p className={message.includes('실패') || message.includes('입력') || message.includes('코드') ? 'formMessage error' : 'formMessage'}>{message}</p> : null}
-
-      <section className="detailSection">
-        <div className="summaryStrip inquirySummary">
-          <span>전체 {total.toLocaleString('ko-KR')}건</span>
-          <span>문자 {smsCount.toLocaleString('ko-KR')}건</span>
-          <span>이메일 {emailCount.toLocaleString('ko-KR')}건</span>
-          <span>{templatePolicy.send}</span>
-          <span>{templatePolicy.variable}</span>
-        </div>
-        <div className="table-scroll">
-          <table className="m-shadowTable messageTemplateTable">
-            <caption className="caption">문자/이메일 템플릿 목록</caption>
-            <thead>
-              <tr>
-                <th scope="col">메뉴</th>
-                <th scope="col">구분</th>
-                <th scope="col">항목</th>
-                <th scope="col">제목</th>
-                <th scope="col">코드</th>
-                <th scope="col">발송</th>
-                <th scope="col">정책</th>
-                <th scope="col">Workflow</th>
-                <th scope="col">등록일</th>
-                <th scope="col">보기</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr><td colSpan="10">조회 중입니다.</td></tr>
-              ) : null}
-              {!isLoading && rows.length === 0 ? (
-                <tr><td colSpan="10">조회된 결과가 없습니다.</td></tr>
-              ) : null}
-              {!isLoading && rows.map((item) => (
-                <tr key={item.message_no}>
-                  <td>{item.msg_menu_label}</td>
-                  <td>{item.msg_division_label}</td>
-                  <td>{item.msg_item}</td>
-                  <td className="subject">{item.msg_title ?? '-'}</td>
-                  <td>{item.msg_code}</td>
-                  <td>{item.external_send_status_label ?? '실발송 미연동'}</td>
-                  <td>{item.variable_policy_status_label ?? '변수정책 확인'}</td>
-                  <td>{item.workflow_status_label ?? '템플릿 CRUD'}</td>
-                  <td>{formatDate(item.reg_date)}</td>
-                  <td>
-                    <button className="sBtn sColorLB rBtn" type="button" onClick={() => loadDetail(item.message_no)}>보기</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="pagingControls">
-          <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-          <span>{currentPage} / {pageCount}</span>
-          <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
-        </div>
-      </section>
-
-      <section className={`detailSection messageTemplateEditor${isEditorOpen ? ' isOpen' : ''}`}>
-        <h3>{selected ? '템플릿 수정' : '템플릿 등록'}</h3>
+        {!isEditorOpen ? (
+          <>
+            <div className="messageTemplateLvToolbar">
+              <button className="sBtn sColorLB" type="button" onClick={handleNew}>글쓰기</button>
+              <form className="messageTemplateLvSearch" onSubmit={handleSearch}>
+                <input id="templateKeyword" type="search" aria-label="검색어" placeholder="검색" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+                <button className="oiBtn search" type="submit" aria-label="검색">검색</button>
+              </form>
+            </div>
+            <div className="messageTemplateLvList">
+              <div className="table-scroll">
+                <table className="m-shadowTable messageTemplateTable">
+                  <caption className="caption">문자/이메일 템플릿 목록</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">메뉴</th>
+                      <th scope="col">구분</th>
+                      <th scope="col">항목</th>
+                      <th scope="col">{activeKey === '00' ? '요약' : '제목'}</th>
+                      <th scope="col">코드</th>
+                      <th scope="col">보기</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {isLoading ? <tr><td colSpan="6">조회 중입니다.</td></tr> : null}
+                    {!isLoading && items.length === 0 ? <tr><td colSpan="6">조회된 결과가 없습니다.</td></tr> : null}
+                    {!isLoading && items.map((item) => (
+                      <tr key={item.message_no}>
+                        <td>{item.msg_menu_label}</td>
+                        <td>{item.msg_division_label}</td>
+                        <td>{item.msg_item}</td>
+                        <td className="subject">{item.msg_title ?? '-'}</td>
+                        <td>{item.msg_code}</td>
+                        <td className="messageTemplateLvManage">
+                          <button className="sBtn sColorLB rBtn" type="button" onClick={() => loadDetail(item.message_no)}>보기</button>
+                          {activeKey === '01' ? (
+                            <button className="sBtn sColorLB rBtn" type="button" onClick={() => showEmailPreview(item.message_no)}>상세 화면</button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="pagingControls" aria-label={`전체 ${total}건`}>
+                <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+                <span>{currentPage}</span>
+                <button type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <section className="messageTemplateEditor isOpen">
+            <h3>{selected ? '템플릿 수정' : '템플릿 등록'}</h3>
         <form className="messageTemplateForm" onSubmit={handleSave}>
           <label>
+            작성자
+            <input name="regUser" type="text" value={templateForm.regUser} onChange={updateTemplateValue} />
+          </label>
+          <label>
             분류
-            <select name="msgKey" value={templateForm.msgKey} onChange={updateTemplateValue}>
+            <select name="msgKey" value={templateForm.msgKey} onChange={updateTemplateValue} disabled={Boolean(selected)}>
               <option value="00">문자</option>
               <option value="01">이메일</option>
             </select>
@@ -393,25 +366,34 @@ export function MessageTemplatePage() {
             내용
             <textarea name="msgContent" value={templateForm.msgContent} onChange={updateTemplateValue} rows={8} />
           </label>
-          <label>
-            작성자
-            <input name="regUser" type="text" value={templateForm.regUser} onChange={updateTemplateValue} />
-          </label>
           <div className="messageTemplateActions">
             <button className="sBtn sColorLB" type="submit" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
             {selected ? <button className="sBtn sColorR" type="button" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
+            <button className="sBtn sColorLG" type="button" onClick={() => { setIsEditorOpen(false); setSelected(null); }}>목록</button>
           </div>
         </form>
         <div className="messageTemplatePreview">
           <h4>내용 미리보기</h4>
-          <div className="summaryPills">
-            <span>{selected?.external_send_status_label ?? '실발송 미연동'}</span>
-            <span>{selected?.variable_policy_status_label ?? '변수정책 확인'}</span>
-            <span>{selected?.workflow_status_label ?? '템플릿 CRUD'}</span>
-          </div>
           <p>{stripHtml(templateForm.msgContent)}</p>
         </div>
+          </section>
+        )}
       </section>
+
+      {previewTemplate ? (
+        <div className="messageTemplateLvModal" role="dialog" aria-modal="true" aria-labelledby="messageTemplatePreviewTitle">
+          <div className="messageTemplateLvModalPanel">
+            <header>
+              <h3 id="messageTemplatePreviewTitle">상세화면</h3>
+              <button type="button" onClick={() => setPreviewTemplate(null)} aria-label="닫기">×</button>
+            </header>
+            <iframe title="이메일 템플릿 상세화면" sandbox="" srcDoc={previewTemplate.msg_content ?? ''} />
+            <div className="messageTemplateLvModalActions">
+              <button className="sBtn sColorLG" type="button" onClick={() => setPreviewTemplate(null)}>취소</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

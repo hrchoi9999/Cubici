@@ -44,6 +44,26 @@ class SaleListResponse(BaseModel):
     items: list[SaleListItem]
 
 
+class ProductAnalysisShopItem(BaseModel):
+    shop_type: str
+    sales_amount: int
+    payment_amount: int
+    discount_amount: int
+    quantity: int
+    promotion_rate: float
+
+
+class ProductAnalysisTopItem(BaseModel):
+    product_name: str
+    payment_amount: int
+    quantity: int
+
+
+class ProductAnalysisResponse(BaseModel):
+    shop_breakdown: list[ProductAnalysisShopItem]
+    top_products: list[ProductAnalysisTopItem]
+
+
 class SaleReturnListItem(BaseModel):
     returns_id: int
     shop_type: str | None
@@ -237,6 +257,82 @@ def list_sales(
         offset=offset,
         total=total,
         items=[SaleListItem(**row) for row in rows],
+    )
+
+
+def get_product_analysis(
+    *,
+    shop_pairs: str | None = None,
+    shop_type: str | None = None,
+    shop_id: str | None = None,
+    from_date: date | None = None,
+    to_date: date | None = None,
+) -> ProductAnalysisResponse:
+    where_clause, filter_params = _build_sale_filters(
+        shop_pairs=shop_pairs,
+        shop_type=shop_type,
+        shop_id=shop_id,
+        status=None,
+        keyword=None,
+        from_date=from_date,
+        to_date=to_date,
+    )
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                f"""
+                select
+                    upper(shop_type) as shop_type,
+                    coalesce(sum(sales_amount), 0)::bigint as sales_amount,
+                    coalesce(sum(payment_amount), 0)::bigint as payment_amount,
+                    coalesce(sum(discount_amount), 0)::bigint as discount_amount,
+                    coalesce(sum(quantity), 0)::bigint as quantity
+                from sale
+                {where_clause}
+                group by upper(shop_type)
+                order by payment_amount desc, shop_type
+                """,
+                filter_params,
+            )
+            shop_rows = cursor.fetchall()
+
+            cursor.execute(
+                f"""
+                select
+                    coalesce(nullif(product_name, ''), nullif(product_no, ''), '-') as product_name,
+                    coalesce(sum(payment_amount), 0)::bigint as payment_amount,
+                    coalesce(sum(quantity), 0)::bigint as quantity
+                from sale
+                {where_clause}
+                group by coalesce(nullif(product_name, ''), nullif(product_no, ''), '-')
+                order by payment_amount desc, quantity desc, product_name
+                limit 10
+                """,
+                filter_params,
+            )
+            product_rows = cursor.fetchall()
+
+    shop_breakdown = []
+    for row in shop_rows:
+        sales_amount = int(row["sales_amount"] or 0)
+        payment_amount = int(row["payment_amount"] or 0)
+        recorded_discount = int(row["discount_amount"] or 0)
+        discount_amount = recorded_discount or max(sales_amount - payment_amount, 0)
+        promotion_rate = round(discount_amount / sales_amount * 100, 2) if sales_amount > 0 else 0.0
+        shop_breakdown.append(
+            ProductAnalysisShopItem(
+                shop_type=row["shop_type"] or "UNKNOWN",
+                sales_amount=sales_amount,
+                payment_amount=payment_amount,
+                discount_amount=discount_amount,
+                quantity=int(row["quantity"] or 0),
+                promotion_rate=promotion_rate,
+            )
+        )
+
+    return ProductAnalysisResponse(
+        shop_breakdown=shop_breakdown,
+        top_products=[ProductAnalysisTopItem(**row) for row in product_rows],
     )
 
 

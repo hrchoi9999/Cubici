@@ -89,7 +89,8 @@ test('admin account list and approval workflow work with mock data', async ({ pa
 
   await expect(page.getByRole('heading', { name: '환경설정' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '관리자 등록' })).toBeVisible();
-  await expect(page.getByText('전체 1명')).toBeVisible();
+  await expect(page.locator('.adminAccountLvTotals')).toContainText('전체');
+  await expect(page.locator('.adminAccountLvTotals')).toContainText('1명');
   await expect(page.getByRole('cell', { name: '운영관리자' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '대기', exact: true })).toBeVisible();
 

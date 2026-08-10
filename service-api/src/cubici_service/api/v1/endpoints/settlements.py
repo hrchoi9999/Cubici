@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from cubici_service.settlements.repository import (
     SettlementListItem,
     SettlementListResponse,
+    SettlementOrderBy,
     get_settlement_detail,
     list_settlements,
 )
@@ -25,6 +26,7 @@ def settlement_list(
     keyword: str | None = Query(default=None),
     from_date: date | None = Query(default=None),
     to_date: date | None = Query(default=None),
+    order_by: SettlementOrderBy = Query(default="date_desc"),
 ) -> SettlementListResponse:
     return list_settlements(
         limit=limit,
@@ -36,6 +38,7 @@ def settlement_list(
         keyword=keyword,
         from_date=from_date,
         to_date=to_date,
+        order_by=order_by,
     )
 
 

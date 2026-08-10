@@ -115,7 +115,12 @@ async def enforce_user_ownership_for_common_api(request: Request, settings: Sett
     query = request.query_params
 
     try:
-        if path in {"/v1/api/sales/orders", "/v1/api/sales/returns", "/v1/api/settlements"}:
+        if path in {
+            "/v1/api/sales/orders",
+            "/v1/api/sales/product-analysis",
+            "/v1/api/sales/returns",
+            "/v1/api/settlements",
+        }:
             require_master_admin_or_shop_scope(
                 request.headers.get("authorization"),
                 shop_pairs=query.get("shop_pairs"),

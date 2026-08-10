@@ -186,7 +186,7 @@ test.describe('ADM Batch 5 monitoring pages', () => {
     await page.getByRole('row', { name: /MONEY00001/ }).click();
     await detailRequest;
     await expect(page.locator('.fintechParserPanel')).toBeVisible();
-    await page.getByRole('button', { name: 'MOCK 생성' }).click();
+    await page.getByRole('button', { name: '테스트 전문 생성' }).click();
     await expect(page.locator('.fintechMockForm')).toBeVisible();
   });
 });

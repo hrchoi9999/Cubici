@@ -5807,6 +5807,37 @@
   max-width: 100%;
 }
 
+#wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  height: 420px;
+}
+
+#wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart-panel:first-child .u09-live-chart {
+  height: 390px;
+}
+
+#wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart-panel:last-child .u09-live-chart {
+  height: 470px;
+}
+
+#wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  margin: 0;
+  color: #7a8290;
+  font-size: 14px;
+}
+
 #wrap.user-web-wrap.final-ui-shell .react-final-sub-visual {
   margin: 0;
 }
@@ -6764,6 +6795,22 @@
     width: 100%;
     min-width: 0;
     max-width: 100%;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart-panel .u09-live-chart {
+    width: 760px;
+    min-width: 760px;
+    height: 340px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart-panel:first-child .u09-live-chart {
+    width: 100%;
+    min-width: 0;
+    height: 300px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page.c1p3 .u09-live-chart-panel:last-child .u09-live-chart {
+    height: 430px;
   }
 
   #wrap.user-web-wrap.final-ui-shell.integrated-shell .final-integrated-page .chart-con,

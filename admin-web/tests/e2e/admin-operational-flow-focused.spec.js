@@ -48,8 +48,8 @@ test.describe('admin operating-data focused read flows', () => {
     await expect(page.locator('.detailPanel').getByRole('link', { name: '정산 상세' })).toBeVisible();
 
     await page.goto('/admin/moneybank/redemption');
-    await expectReady(page, '머니뱅크 운영', '상환 관리');
-    await clickFirstVisible(page.locator('.redemptionTable button', { hasText: '보기' }), 'redemption');
+    await expectReady(page, '머니뱅크 운영', '계약/상환');
+    await clickFirstVisible(page.locator('.redemptionTable .redemptionLvMbidButton'), 'redemption');
     await expect(page.locator('.detailPanel')).toBeVisible();
     await expect(page.locator('.detailPanel').getByRole('link', { name: '상환 상세' })).toBeVisible();
     await expect(page.locator('.redemptionOperationHistory')).toBeVisible();

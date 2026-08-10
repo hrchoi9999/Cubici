@@ -21,6 +21,7 @@ class ContractListItem(BaseModel):
     user_name: str | None = None
     firm_name: str | None = None
     fintech_id: int | None
+    fintech_name: str | None = None
     product_code: str | None
     status: str | None
     request_date: datetime | None
@@ -56,8 +57,38 @@ class ContractListItem(BaseModel):
     contract_fee_count: int
     latest_payment_rate: int | None = None
     latest_fee_rate: float | None = None
+    latest_sales_limit_per_order: int | None = None
+    latest_max_outstanding_balance: int | None = None
+    latest_outstanding_balance: int | None = None
+    biz_setup_date: str | None = None
+    prizm_score_value: float | None = None
+    fee_adjusted: bool = False
+    use_count: int = 0
     reg_date: datetime | None
     modified_date: datetime | None
+
+
+class ContractRequestSummary(BaseModel):
+    total: int = 0
+    progress: int = 0
+    complete: int = 0
+
+
+class ContractApprovalSummary(BaseModel):
+    total: int = 0
+    wait: int = 0
+    complete: int = 0
+    accept: int = 0
+    adjust: int = 0
+    refuse: int = 0
+    refuse_rate: float = 0
+
+
+class ContractManagementSummary(BaseModel):
+    total: int = 0
+    wait: int = 0
+    contract: int = 0
+    end: int = 0
 
 
 class ContractListResponse(BaseModel):
@@ -65,6 +96,9 @@ class ContractListResponse(BaseModel):
     offset: int
     total: int
     items: list[ContractListItem]
+    request_summary: ContractRequestSummary = Field(default_factory=ContractRequestSummary)
+    approval_summary: ContractApprovalSummary = Field(default_factory=ContractApprovalSummary)
+    contract_summary: ContractManagementSummary = Field(default_factory=ContractManagementSummary)
 
 
 class ContractShopItem(BaseModel):
@@ -143,6 +177,9 @@ class ContractDetailResponse(BaseModel):
 
 
 ContractOrderBy = Literal["request_date_desc", "request_date_asc", "sales_amount_desc", "sales_amount_asc"]
+ContractRequestStage = Literal["progress", "complete"]
+ContractApprovalStage = Literal["wait", "accept", "adjust", "refuse"]
+ContractManagementStage = Literal["wait", "contract", "end"]
 ContractStatusAction = Literal[
     "approve",
     "reject",
@@ -306,6 +343,12 @@ def _build_contract_filters(
     max_sales_amount: int | None,
     from_date: date | None,
     to_date: date | None,
+    request_scope: bool = False,
+    request_stage: ContractRequestStage | None = None,
+    approval_scope: bool = False,
+    approval_stage: ContractApprovalStage | None = None,
+    contract_scope: bool = False,
+    contract_stage: ContractManagementStage | None = None,
 ) -> tuple[str, list[object]]:
     clauses = []
     params: list[object] = []
@@ -325,6 +368,46 @@ def _build_contract_filters(
     if status:
         clauses.append("c.status = %s")
         params.append(status)
+    if request_scope:
+        clauses.append(
+            "upper(c.status) in ('REQUEST', 'PENDING_DOCUMENTS', 'DOCUMENTS_CONFIRMED', "
+            "'PENDING_REVIEW', 'CONDITIONS_ACCEPT', 'USE_AGREE', "
+            "'CONTRACT', 'EXPIRED', '01', '02', '03', '04', '05', '06', '07')"
+        )
+    if request_stage == "progress":
+        clauses.append("upper(c.status) in ('REQUEST', '01')")
+    elif request_stage == "complete":
+        clauses.append(
+            "upper(c.status) in ('PENDING_DOCUMENTS', 'DOCUMENTS_CONFIRMED', 'PENDING_REVIEW', "
+            "'CONDITIONS_ACCEPT', 'USE_AGREE', 'CONTRACT', 'EXPIRED', "
+            "'02', '03', '04', '05', '06', '07')"
+        )
+    if approval_scope:
+        clauses.append(
+            "upper(c.status) in ('PENDING_REVIEW', 'CONDITIONS_ACCEPT', 'USE_AGREE', "
+            "'CONDITIONS_REFUSED', 'REJECTED', '03', '04', '05', '41')"
+        )
+    if approval_stage == "wait":
+        clauses.append("upper(c.status) in ('PENDING_REVIEW', '03')")
+    elif approval_stage in {"accept", "adjust"}:
+        clauses.append("upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', '04', '05')")
+        adjustment_clause = "exists" if approval_stage == "adjust" else "not exists"
+        clauses.append(
+            f"{adjustment_clause} (select 1 from contract_fee_adjustment_history h where h.mbid = c.mbid)"
+        )
+    elif approval_stage == "refuse":
+        clauses.append("upper(c.status) in ('CONDITIONS_REFUSED', 'REJECTED', '41')")
+    if contract_scope:
+        clauses.append(
+            "upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', 'CONTRACT', 'EXPIRED', "
+            "'ACCOUNT_STANDBY', '04', '05', '06', '07', '81')"
+        )
+    if contract_stage == "wait":
+        clauses.append("upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', 'ACCOUNT_STANDBY', '04', '05', '81')")
+    elif contract_stage == "contract":
+        clauses.append("upper(c.status) in ('CONTRACT', '06')")
+    elif contract_stage == "end":
+        clauses.append("upper(c.status) in ('EXPIRED', '07')")
     if product_code:
         clauses.append("c.product_code = %s")
         params.append(product_code)
@@ -372,6 +455,12 @@ def list_contracts(
     from_date: date | None = None,
     to_date: date | None = None,
     order_by: ContractOrderBy = "request_date_desc",
+    request_scope: bool = False,
+    request_stage: ContractRequestStage | None = None,
+    approval_scope: bool = False,
+    approval_stage: ContractApprovalStage | None = None,
+    contract_scope: bool = False,
+    contract_stage: ContractManagementStage | None = None,
 ) -> ContractListResponse:
     where_clause, filter_params = _build_contract_filters(
         user_no=user_no,
@@ -384,6 +473,30 @@ def list_contracts(
         max_sales_amount=max_sales_amount,
         from_date=from_date,
         to_date=to_date,
+        request_scope=request_scope,
+        request_stage=request_stage,
+        approval_scope=approval_scope,
+        approval_stage=approval_stage,
+        contract_scope=contract_scope,
+        contract_stage=contract_stage,
+    )
+    summary_where_clause, summary_filter_params = _build_contract_filters(
+        user_no=user_no,
+        user_id=user_id,
+        user_name=user_name,
+        firm_name=firm_name,
+        status=status,
+        product_code=product_code,
+        min_sales_amount=min_sales_amount,
+        max_sales_amount=max_sales_amount,
+        from_date=from_date,
+        to_date=to_date,
+        request_scope=request_scope,
+        request_stage=None,
+        approval_scope=approval_scope,
+        approval_stage=None,
+        contract_scope=contract_scope,
+        contract_stage=None,
     )
     order_clause = _contract_order_by(order_by)
 
@@ -391,14 +504,52 @@ def list_contracts(
         with connection.cursor(row_factory=dict_row) as cursor:
             cursor.execute(
                 f"""
-                select count(*) as total
+                select
+                    count(*) as total,
+                    count(*) filter (where upper(c.status) in ('REQUEST', '01')) as progress,
+                    count(*) filter (
+                        where upper(c.status) in (
+                            'PENDING_DOCUMENTS', 'DOCUMENTS_CONFIRMED', 'PENDING_REVIEW',
+                            'CONDITIONS_ACCEPT', 'USE_AGREE', 'CONTRACT',
+                            'EXPIRED', '02', '03', '04', '05', '06', '07'
+                        )
+                    ) as complete,
+                    count(*) filter (where upper(c.status) in ('PENDING_REVIEW', '03')) as approval_wait,
+                    count(*) filter (
+                        where upper(c.status) in (
+                            'CONDITIONS_ACCEPT', 'USE_AGREE', 'CONDITIONS_REFUSED', 'REJECTED',
+                            '04', '05', '41'
+                        )
+                    ) as approval_complete,
+                    count(*) filter (
+                        where upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', '04', '05')
+                          and not exists (
+                              select 1 from contract_fee_adjustment_history h where h.mbid = c.mbid
+                          )
+                    ) as approval_accept,
+                    count(*) filter (
+                        where upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', '04', '05')
+                          and exists (
+                              select 1 from contract_fee_adjustment_history h where h.mbid = c.mbid
+                          )
+                    ) as approval_adjust,
+                    count(*) filter (
+                        where upper(c.status) in ('CONDITIONS_REFUSED', 'REJECTED', '41')
+                    ) as approval_refuse,
+                    count(*) filter (
+                        where upper(c.status) in (
+                            'CONDITIONS_ACCEPT', 'USE_AGREE', 'ACCOUNT_STANDBY', '04', '05', '81'
+                        )
+                    ) as contract_wait,
+                    count(*) filter (where upper(c.status) in ('CONTRACT', '06')) as contract_active,
+                    count(*) filter (where upper(c.status) in ('EXPIRED', '07')) as contract_end
                 from moneybank_contract c
                 left join users u on u.user_no = c.user_no
-                {where_clause}
+                {summary_where_clause}
                 """,
-                filter_params,
+                summary_filter_params,
             )
-            total = cursor.fetchone()["total"]
+            summary_row = cursor.fetchone()
 
             cursor.execute(
                 f"""
@@ -408,7 +559,9 @@ def list_contracts(
                     u.email as user_email,
                     u.name as user_name,
                     u.biz_name as firm_name,
+                    u.biz_setup_date,
                     c.fintech_id,
+                    f.fintech_name,
                     c.product_code,
                     c.status,
                     c.request_date,
@@ -446,13 +599,26 @@ def list_contracts(
                     end as sub_complete,
                     coalesce(df.document_file_count, 0)::int as document_file_count,
                     pcs.prizm_grade as prizm_score,
+                    pcs.prizm_score as prizm_score_value,
                     coalesce(cf.contract_fee_count, 0)::int as contract_fee_count,
                     latest_fee.payment_rate as latest_payment_rate,
                     latest_fee.latest_fee_rate,
+                    latest_fee.sales_limit_per_order as latest_sales_limit_per_order,
+                    latest_fee.max_outstanding_balance as latest_max_outstanding_balance,
+                    balance.latest_outstanding_balance,
+                    coalesce(latest_fee.fee_adjusted, false) as fee_adjusted,
+                    coalesce((
+                        select count(*)
+                        from moneybank_contract previous
+                        where previous.user_no = c.user_no
+                          and previous.request_date <= c.request_date
+                          and upper(previous.status) in ('EXPIRED', '07')
+                    ), 0)::int as use_count,
                     c.reg_date,
                     c.modified_date
                 from moneybank_contract c
                 left join users u on u.user_no = c.user_no
+                left join fintech f on f.id = c.fintech_id
                 left join (
                     select mbid, count(*) as contract_shop_count
                     from moneybank_contract_shop
@@ -467,6 +633,9 @@ def list_contracts(
                     select
                         fee.mbid,
                         fee.payment_rate,
+                        exists (
+                            select 1 from contract_fee_adjustment_history h where h.mbid = fee.mbid
+                        ) as fee_adjusted,
                         rate.latest_fee_rate
                     from (
                         select distinct on (mbid)
@@ -497,6 +666,7 @@ def list_contracts(
                     select distinct on (mbid, user_no)
                         mbid,
                         user_no,
+                        prizm_score,
                         prizm_grade
                     from prizm_pcs_result
                     order by mbid, user_no, reg_date desc nulls last, pcs_no desc
@@ -509,11 +679,46 @@ def list_contracts(
             )
             rows = cursor.fetchall()
 
+            cursor.execute(
+                f"""
+                select count(*) as total
+                from moneybank_contract c
+                left join users u on u.user_no = c.user_no
+                {where_clause}
+                """,
+                filter_params,
+            )
+            total = cursor.fetchone()["total"]
+
+    approval_complete = summary_row["approval_complete"] or 0
+    approval_refuse = summary_row["approval_refuse"] or 0
+    approval_refuse_rate = round(approval_refuse / approval_complete * 100, 1) if approval_complete else 0
+
     return ContractListResponse(
         limit=limit,
         offset=offset,
         total=total,
         items=[ContractListItem(**row) for row in rows],
+        request_summary=ContractRequestSummary(
+            total=summary_row["total"],
+            progress=summary_row["progress"],
+            complete=summary_row["complete"],
+        ),
+        approval_summary=ContractApprovalSummary(
+            total=summary_row["total"],
+            wait=summary_row["approval_wait"],
+            complete=approval_complete,
+            accept=summary_row["approval_accept"],
+            adjust=summary_row["approval_adjust"],
+            refuse=approval_refuse,
+            refuse_rate=approval_refuse_rate,
+        ),
+        contract_summary=ContractManagementSummary(
+            total=summary_row["total"],
+            wait=summary_row["contract_wait"],
+            contract=summary_row["contract_active"],
+            end=summary_row["contract_end"],
+        ),
     )
 
 
@@ -1403,10 +1608,12 @@ def _fetch_contract(cursor, mbid: str, *, user_no: int | None = None) -> dict | 
                 fee.payment_rate,
                 rate.latest_fee_rate
             from (
-                select distinct on (mbid)
-                    id,
-                    mbid,
-                    payment_rate
+                        select distinct on (mbid)
+                            id,
+                            mbid,
+                            payment_rate,
+                            sales_limit_per_order,
+                            max_outstanding_balance
                 from moneybank_contract_fee
                 order by mbid, id desc
             ) fee
@@ -1420,7 +1627,14 @@ def _fetch_contract(cursor, mbid: str, *, user_no: int | None = None) -> dict | 
                 from moneybank_contract_fee_rates
                 group by contract_fee_id
             ) rate on rate.contract_fee_id = fee.id
-        ) latest_fee on latest_fee.mbid = c.mbid
+                ) latest_fee on latest_fee.mbid = c.mbid
+                left join lateral (
+                    select outstanding_balance::bigint as latest_outstanding_balance
+                    from moneybank_redemption_history history
+                    where history.mbid = c.mbid
+                    order by history.id desc
+                    limit 1
+                ) balance on true
         left join moneybank_contract_document cd on cd.mbid = c.mbid
         left join (
             select file_division_pk as mbid, count(*) as document_file_count

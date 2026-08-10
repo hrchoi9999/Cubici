@@ -5,15 +5,15 @@ const MASTER_ADMIN_EMAIL = process.env.VITE_CUBICI_MASTER_ADMIN_EMAIL ?? process
 const routes = [
   {
     path: '/admin/cubici/infoIntegrated/cubici_tab1',
-    required: ['.adminPageHeader', '.legacyTabs', '.integratedMetricGrid', '.legacySearchBox', '.integratedPanel'],
+    required: ['.integratedLvTabs', '.integratedLvMetricGrid', '.integratedLvSearch', '.integratedLvPanel'],
   },
   {
     path: '/admin/cubici/infoIntegrated/moneybank_tab1',
-    required: ['.adminPageHeader', '.legacyTabs', '.integratedMetricGrid', '.legacySearchBox', '.integratedPanel'],
+    required: ['.legacyTabs', '.integratedMetricGrid', '.legacySearchBox', '.integratedPanel'],
   },
   {
     path: '/admin/cubici/manageMember/member_tab1',
-    required: ['.memberMetricGrid', '.searchArea', '.memberTrendPanel', '.memberSummaryTable'],
+    required: ['.memberMetricGrid', '.searchArea', '.memberTrendPanel', '.memberSummaryChartBox canvas'],
   },
   {
     path: '/admin/cubici/supportMember/manageInquiry',
@@ -48,6 +48,26 @@ function memberSummaryPayload() {
         moneybank_ratio: 25,
       },
     ],
+  };
+}
+
+function cubiciIntegratedPayload() {
+  const metric = { today: 1, current_month: 2, previous_month: 3, available: true };
+  const unavailable = { today: null, current_month: null, previous_month: null, available: false };
+  return {
+    metrics: {
+      standard_date: '2026-08-06', from_date: '2026-08-01', to_date: '2026-08-06',
+      new_members: metric, withdrawn_members: metric, fee_income: metric, dormant_members: metric,
+      sales_amount: metric, sales_quantity: metric, settlement_amount: metric, sku_count: metric,
+      visitor_count: unavailable, max_concurrent_users: unavailable,
+      average_usage_minutes: unavailable, average_shop_count: metric,
+    },
+    partners: [], products: [], channels: [{ value: 'DIRECT', label: '큐빅아이' }],
+    series: [{
+      bucket: '2026-08-06', new_member_count: 1, withdrawn_member_count: 0,
+      cumulative_member_count: 40, cubici_average_days: 200, moneybank_average_days: 80,
+      channel_counts: { DIRECT: 1 },
+    }],
   };
 }
 
@@ -112,6 +132,7 @@ function apiPayload(url) {
       name: '관리자',
     };
   }
+  if (url.includes('/v1/api/management/cubici-integrated')) return cubiciIntegratedPayload();
   if (url.includes('/v1/api/management/member-summary')) return memberSummaryPayload();
   if (url.includes('/v1/api/management/member-payments')) {
     return { items: [], counts: { paid_count: 3 }, sums: { amount: 450000 } };
@@ -156,7 +177,7 @@ test.describe('batch 11-4 admin info/member/support UI smoke', () => {
 
       const metrics = await page.evaluate(() => ({
         bodyOverflow: document.body.scrollWidth - document.documentElement.clientWidth,
-        cardCount: document.querySelectorAll('.integratedMetricGrid article, .memberMetricGrid article').length,
+        cardCount: document.querySelectorAll('.integratedLvMetricGrid article, .integratedMetricGrid article, .memberMetricGrid article').length,
       }));
 
       expect(metrics.bodyOverflow).toBeLessThanOrEqual(120);

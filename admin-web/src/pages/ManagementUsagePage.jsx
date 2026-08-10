@@ -1,7 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchManagementUsage } from '../api/management.js';
 
 const PAGE_SIZE = 20;
+const OPTIONAL_COLUMNS = [
+  { key: 'feeRate', label: '수수료' },
+  { key: 'paymentRate', label: '지급율' },
+  { key: 'provisionAmount', label: '이용금액' },
+  { key: 'repaymentAmount', label: '누적상환' },
+  { key: 'outstandingBalance', label: '상환잔액' },
+  { key: 'prizmGrade', label: 'PCS' },
+];
 
 function formatDate(value) {
   if (!value) {
@@ -46,6 +54,11 @@ function statusClassName(status) {
   return 'sColorN';
 }
 
+function escapeCsvCell(value) {
+  const text = value === null || value === undefined ? '' : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
 export function ManagementUsagePage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -53,8 +66,13 @@ export function ManagementUsagePage() {
   const [sums, setSums] = useState(null);
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState('');
-  const [selected, setSelected] = useState(null);
+  const [exportMessage, setExportMessage] = useState('');
+  const [isColumnMenuOpen, setIsColumnMenuOpen] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState(() => OPTIONAL_COLUMNS.map(({ key }) => key));
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
   const [formValues, setFormValues] = useState({
     userName: '',
     firmName: '',
@@ -107,6 +125,31 @@ export function ManagementUsagePage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const rows = useMemo(() => items, [items]);
+  const visibleColumnCount = 9 + visibleColumns.length;
+
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows, visibleColumns]);
 
   function goToPreviousPage() {
     setOffset((value) => Math.max(0, value - PAGE_SIZE));
@@ -130,7 +173,6 @@ export function ManagementUsagePage() {
   function handleSearch(event) {
     event.preventDefault();
     setOffset(0);
-    setSelected(null);
     setFilters({
       user_name: formValues.userName,
       firm_name: formValues.firmName,
@@ -143,9 +185,76 @@ export function ManagementUsagePage() {
     });
   }
 
+  function toggleColumn(key) {
+    setVisibleColumns((current) => (
+      current.includes(key)
+        ? current.filter((column) => column !== key)
+        : [...current, key]
+    ));
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (!container) return;
+    container.scrollTo({ left: container.scrollLeft + direction * Math.max(240, container.clientWidth * 0.65), behavior: 'smooth' });
+  }
+
+  function changeListScroll(event) {
+    listScrollRef.current?.scrollTo({ left: Number(event.target.value) });
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportMessage('');
+    try {
+      const exportItems = [];
+      let exportOffset = 0;
+      let exportTotal = 0;
+      do {
+        const data = await fetchManagementUsage({ limit: 100, offset: exportOffset, ...filters });
+        const pageItems = data.items ?? [];
+        exportTotal = data.total ?? pageItems.length;
+        exportItems.push(...pageItems);
+        exportOffset += pageItems.length;
+        if (pageItems.length === 0) break;
+      } while (exportOffset < exportTotal && exportOffset < 10000);
+
+      const headers = ['이용상태', '신청일자', '회원ID', '회사명', '회원명', '이용서비스', '시작일자', '종료일자', '수수료', '지급율', '이용금액', '누적상환', '상환잔액', 'PCS'];
+      const csvRows = exportItems.map((row) => [
+        row.usage_status,
+        formatDate(row.request_date),
+        row.user_email,
+        row.firm_name,
+        row.user_name,
+        row.product_code,
+        formatDate(row.contract_date),
+        formatDate(row.expire_date),
+        formatPercent(row.fee_rate),
+        row.payment_rate === null || row.payment_rate === undefined ? '-' : `${row.payment_rate}%`,
+        row.provision_amount || row.sales_amount,
+        row.repayment_amount,
+        row.outstanding_balance,
+        row.prizm_grade,
+      ]);
+      const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cubici-management-usage-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      setExportMessage(`${formatNumber(exportItems.length)}건을 내려받았습니다.`);
+    } catch (error) {
+      setExportMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   return (
     <>
-      <div className="m-options managementOptions">
+      <div className="managementUsageLvPage">
+      <div className="m-options managementOptions managementUsageLvOptions">
         <div className="pRight">
           <span className="baseDate pRight">
             <b>기준</b>이관 DB 최신 데이터
@@ -153,7 +262,7 @@ export function ManagementUsagePage() {
         </div>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+      <form className="m-search searchArea managementUsageLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="usageUserName">회원명</label>
@@ -214,14 +323,43 @@ export function ManagementUsagePage() {
               </div>
             </div>
             <span className="btns">
-              <a href="javascript:;" className="sBtn sColorLG excel">엑셀 다운로드</a>
+              <button type="button" className="sBtn sColorLG excel" onClick={handleExport} disabled={isExporting || isLoading}>
+                {isExporting ? '다운로드 중' : '엑셀 다운로드'}
+              </button>
             </span>
+            <div className={`managementUsageColumnFilter${isColumnMenuOpen ? ' open' : ''}`}>
+              <button
+                type="button"
+                className="sBtn sColorN setting"
+                aria-expanded={isColumnMenuOpen}
+                onClick={() => setIsColumnMenuOpen((current) => !current)}
+              >
+                항목 선택
+              </button>
+              {isColumnMenuOpen ? (
+                <div className="managementUsageColumnMenu">
+                  <p>고정 항목 8개 외 표시할 항목</p>
+                  {OPTIONAL_COLUMNS.map((column) => (
+                    <label key={column.key}>
+                      <input
+                        type="checkbox"
+                        checked={visibleColumns.includes(column.key)}
+                        onChange={() => toggleColumn(column.key)}
+                      />
+                      <span>{column.label}</span>
+                    </label>
+                  ))}
+                  <button type="button" className="sBtn sColorLB" onClick={() => setIsColumnMenuOpen(false)}>적용</button>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
 
         {message ? <p className="detailMessage">{message}</p> : null}
-        <div id="fixTable" className="fixTable wide legacyListTable table-scroll">
-          <div className="overflowBox">
+        {exportMessage ? <p className="managementUsageExportMessage" role="status">{exportMessage}</p> : null}
+        <div id="fixTable" className="fixTable wide legacyListTable managementUsageLvTableWrap">
+          <div className="overflowBox table-scroll" ref={listScrollRef}>
           <table className="m-shadowTable managementUsageTable">
             <caption className="caption">머니뱅크 이용상세 목록</caption>
             <thead>
@@ -234,23 +372,23 @@ export function ManagementUsagePage() {
                 <th scope="col">이용서비스</th>
                 <th scope="col">시작일자</th>
                 <th scope="col">종료일자</th>
-                <th scope="col">수수료</th>
-                <th scope="col">지급율</th>
-                <th scope="col">이용금액</th>
-                <th scope="col">누적상환</th>
-                <th scope="col">상환잔액</th>
-                <th scope="col">PCS</th>
+                {visibleColumns.includes('feeRate') ? <th scope="col">수수료</th> : null}
+                {visibleColumns.includes('paymentRate') ? <th scope="col">지급율</th> : null}
+                {visibleColumns.includes('provisionAmount') ? <th scope="col">이용금액</th> : null}
+                {visibleColumns.includes('repaymentAmount') ? <th scope="col">누적상환</th> : null}
+                {visibleColumns.includes('outstandingBalance') ? <th scope="col">상환잔액</th> : null}
+                {visibleColumns.includes('prizmGrade') ? <th scope="col">PCS</th> : null}
                 <th scope="col">상세</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="15">이용상세 목록을 조회 중입니다.</td>
+                  <td colSpan={visibleColumnCount}>이용상세 목록을 조회 중입니다.</td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan="15">조회된 이용상세 데이터가 없습니다.</td>
+                  <td colSpan={visibleColumnCount}>조회된 이용상세 데이터가 없습니다.</td>
                 </tr>
               ) : rows.map((row) => (
                 <tr key={row.mbid}>
@@ -266,12 +404,12 @@ export function ManagementUsagePage() {
                   <td>{row.product_code ?? '-'}</td>
                   <td>{formatDate(row.contract_date)}</td>
                   <td>{formatDate(row.expire_date)}</td>
-                  <td>{formatPercent(row.fee_rate)}</td>
-                  <td>{row.payment_rate === null || row.payment_rate === undefined ? '-' : `${row.payment_rate}%`}</td>
-                  <td>{formatNumber(row.provision_amount || row.sales_amount)}</td>
-                  <td>{formatNumber(row.repayment_amount)}</td>
-                  <td>{formatNumber(row.outstanding_balance)}</td>
-                  <td>{row.prizm_grade ?? '-'}</td>
+                  {visibleColumns.includes('feeRate') ? <td>{formatPercent(row.fee_rate)}</td> : null}
+                  {visibleColumns.includes('paymentRate') ? <td>{row.payment_rate === null || row.payment_rate === undefined ? '-' : `${row.payment_rate}%`}</td> : null}
+                  {visibleColumns.includes('provisionAmount') ? <td>{formatNumber(row.provision_amount || row.sales_amount)}</td> : null}
+                  {visibleColumns.includes('repaymentAmount') ? <td>{formatNumber(row.repayment_amount)}</td> : null}
+                  {visibleColumns.includes('outstandingBalance') ? <td>{formatNumber(row.outstanding_balance)}</td> : null}
+                  {visibleColumns.includes('prizmGrade') ? <td>{row.prizm_grade ?? '-'}</td> : null}
                   <td>
                     <button
                       className="sColorLB refund-btn"
@@ -288,6 +426,19 @@ export function ManagementUsagePage() {
             </tbody>
           </table>
           </div>
+          {listScroll.max > 0 ? <div className="horizontalTableScrollbar managementUsageHorizontalScrollbar" aria-label="이용상세 목록 좌우 스크롤">
+            <button type="button" aria-label="이용상세 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+            <input
+              type="range"
+              aria-label="이용상세 목록 가로 스크롤"
+              min="0"
+              max={listScroll.max}
+              step="1"
+              value={Math.min(listScroll.left, listScroll.max)}
+              onChange={changeListScroll}
+            />
+            <button type="button" aria-label="이용상세 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+          </div> : null}
           <UsageSummary counts={counts} sums={sums} total={total} />
         </div>
 
@@ -311,7 +462,7 @@ export function ManagementUsagePage() {
           </ul>
         </div>
       </div>
-      <UsageDetailPanel detail={selected} />
+      </div>
     </>
   );
 }
@@ -330,72 +481,5 @@ function UsageSummary({ counts, sums, total }) {
         <li><span className="txt">상환잔액 :</span><span className="result">{formatNumber(sums?.outstanding_balance ?? 0)}</span></li>
       </ul>
     </div>
-  );
-}
-
-function UsageDetailPanel({ detail }) {
-  if (!detail) {
-    return null;
-  }
-
-  return (
-    <section className="detailPanel">
-      <div className="m-tab">
-        <ul>
-          <li className="active">
-            <a href="javascript:;">이용상세</a>
-          </li>
-        </ul>
-      </div>
-      <div className="detailSection">
-        <table className="detailInfoTable">
-          <caption className="caption">머니뱅크 이용상세</caption>
-          <tbody>
-            <tr>
-              <th scope="row">선정산ID</th>
-              <td>{detail.mbid}</td>
-              <th scope="row">이용상태</th>
-              <td>{detail.usage_status}</td>
-            </tr>
-            <tr>
-              <th scope="row">회원ID</th>
-              <td>{detail.user_email ?? '-'}</td>
-              <th scope="row">회원명</th>
-              <td>{detail.user_name ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">회사명</th>
-              <td>{detail.firm_name ?? '-'}</td>
-              <th scope="row">서비스</th>
-              <td>{detail.product_code ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">신청일자</th>
-              <td>{formatDate(detail.request_date)}</td>
-              <th scope="row">계약기간</th>
-              <td>{formatDate(detail.contract_date)} ~ {formatDate(detail.expire_date)}</td>
-            </tr>
-            <tr>
-              <th scope="row">수수료</th>
-              <td>{formatPercent(detail.fee_rate)}</td>
-              <th scope="row">지급율</th>
-              <td>{detail.payment_rate === null || detail.payment_rate === undefined ? '-' : `${detail.payment_rate}%`}</td>
-            </tr>
-            <tr>
-              <th scope="row">이용금액</th>
-              <td>{formatNumber(detail.provision_amount || detail.sales_amount)}</td>
-              <th scope="row">누적상환</th>
-              <td>{formatNumber(detail.repayment_amount)}</td>
-            </tr>
-            <tr>
-              <th scope="row">상환잔액</th>
-              <td>{formatNumber(detail.outstanding_balance)}</td>
-              <th scope="row">PCS</th>
-              <td>{detail.prizm_grade ?? '-'} / {detail.prizm_score ?? '-'}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   );
 }

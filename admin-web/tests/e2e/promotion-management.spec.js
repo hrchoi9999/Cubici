@@ -110,7 +110,7 @@ test('promotion list, detail, update, and delete work with mock data', async ({ 
 
   await expect(page.getByRole('heading', { name: '환경설정' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '연계코드 관리' })).toBeVisible();
-  await expect(page.getByText('전체 : 1개')).toBeVisible();
+  await expect(page.locator('.promotionLvTotals')).toContainText('전체1개');
   await expect(page.getByRole('cell', { name: '신규 자체 프로모션' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '1개월 기본요금' })).toBeVisible();
 

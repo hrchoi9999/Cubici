@@ -12,6 +12,9 @@ from cubici_service.contracts.repository import (
     ContractDetailResponse,
     ContractListResponse,
     ContractOrderBy,
+    ContractApprovalStage,
+    ContractManagementStage,
+    ContractRequestStage,
     ContractRequestCreateRequest,
     ContractRequestCreateResponse,
     ContractStatusUpdateRequest,
@@ -42,6 +45,12 @@ def contract_list(
     from_date: date | None = Query(default=None),
     to_date: date | None = Query(default=None),
     order_by: ContractOrderBy = Query(default="request_date_desc"),
+    request_scope: bool = Query(default=False),
+    request_stage: ContractRequestStage | None = Query(default=None),
+    approval_scope: bool = Query(default=False),
+    approval_stage: ContractApprovalStage | None = Query(default=None),
+    contract_scope: bool = Query(default=False),
+    contract_stage: ContractManagementStage | None = Query(default=None),
 ) -> ContractListResponse:
     return list_contracts(
         limit=limit,
@@ -57,6 +66,12 @@ def contract_list(
         from_date=from_date,
         to_date=to_date,
         order_by=order_by,
+        request_scope=request_scope,
+        request_stage=request_stage,
+        approval_scope=approval_scope,
+        approval_stage=approval_stage,
+        contract_scope=contract_scope,
+        contract_stage=contract_stage,
     )
 
 

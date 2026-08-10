@@ -12,6 +12,7 @@ body {
 .adminReactWrap,
 .adminReactWrap * {
   box-sizing: border-box;
+  letter-spacing: 0;
 }
 
 .adminReactWrap figure,
@@ -134,7 +135,7 @@ body {
 
 @media (max-width: 1600px) {
   .adminReactWrap .inner {
-    width: calc(100% - 120px);
+    width: calc(100% - 48px);
   }
 }
 
@@ -900,6 +901,147 @@ body {
   background: #7f8794;
 }
 
+#wrap.adminReactWrap .managementLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .managementLvTabs li,
+#wrap.adminReactWrap .managementLvTabs a {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .managementLvOptions {
+  min-height: 30px;
+  margin: 18px 0 12px;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid article {
+  display: flex;
+  width: auto;
+  min-width: 0;
+  min-height: 92px;
+  margin: 0;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid .colorBox {
+  flex: 0 0 70px;
+  width: 70px;
+  min-width: 70px;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid .colorBox img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid .txtBox {
+  min-width: 0;
+  padding: 10px;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid h3 {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid td {
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid.compact {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid.compact article {
+  min-height: 76px;
+}
+
+#wrap.adminReactWrap .managementLvKpiGrid .textIcon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #fff;
+  font-size: 11px;
+  line-height: 1.35;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .managementLvKpiValue {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .managementLvKpiValue strong {
+  margin-top: 8px;
+  color: #002e6e;
+  font-size: 17px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .managementLvSearch {
+  margin: 18px 0;
+}
+
+#wrap.adminReactWrap .managementLvChartPanel {
+  width: 100%;
+  min-width: 0;
+  margin-top: 20px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .managementLvChartPanel > header {
+  min-height: 36px;
+  padding: 0 18px;
+  background: #07377f;
+}
+
+#wrap.adminReactWrap .managementLvChartPanel > header h4 {
+  color: #fff;
+  font-size: 13px;
+  line-height: 36px;
+}
+
+#wrap.adminReactWrap .managementLvChartPanel > .contentArea {
+  padding: 16px 20px 12px;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .managementLvChartBox {
+  position: relative;
+  width: 100%;
+  height: 280px;
+}
+
+#wrap.adminReactWrap .managementLvChartBox canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#wrap.adminReactWrap .managementLvChartState {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #777;
+  font-size: 12px;
+}
+
 .routeStatusTable {
   min-width: 760px;
 }
@@ -1518,32 +1660,777 @@ body {
   white-space: pre-wrap;
 }
 
+/* ADM-LV-13: legacy 문자/이메일 목록과 편집 화면. */
+#wrap.adminReactWrap .contentArea > .messageTemplateLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .contentArea > .messageTemplateLvTabs li,
+#wrap.adminReactWrap .contentArea > .messageTemplateLvTabs a {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .messageTemplateLvPage {
+  margin-top: 18px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  margin-bottom: 10px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvToolbar > .sBtn {
+  min-width: 76px;
+  height: 32px;
+  padding: 0 14px;
+  line-height: 32px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvSearch {
+  display: grid;
+  grid-template-columns: minmax(160px, 210px) 34px;
+  align-items: stretch;
+}
+
+#wrap.adminReactWrap .messageTemplateLvSearch input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  padding: 0 10px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvSearch input:focus {
+  border-color: #8ca9ce;
+  outline: 0;
+}
+
+#wrap.adminReactWrap .messageTemplateLvSearch .oiBtn.search {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  border-left: 0;
+  background-color: #fff;
+  background-image: url('/resources/rudicks/img/icon/btn-serach-gray.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  color: transparent;
+  font-size: 0;
+}
+
+#wrap.adminReactWrap .messageTemplateLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .messageTemplateTable {
+  width: 100%;
+  min-width: 780px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(1) { width: 12%; }
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(2) { width: 16%; }
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(3) { width: 19%; }
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(4) { width: 29%; }
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(5) { width: 8%; }
+#wrap.adminReactWrap .messageTemplateTable th:nth-child(6) { width: 16%; }
+
+#wrap.adminReactWrap .messageTemplateTable thead th {
+  height: 46px;
+  padding: 9px 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: #002e6e;
+  color: #fff;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .messageTemplateTable tbody td {
+  height: 48px;
+  padding: 9px 8px 11px;
+  border-right: 1px solid #e4e7ec;
+  border-bottom: 1px solid #ddd;
+}
+
+#wrap.adminReactWrap .messageTemplateTable th:last-child,
+#wrap.adminReactWrap .messageTemplateTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .messageTemplateLvManage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvManage .rBtn {
+  min-width: 52px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvList .pagingControls {
+  margin-top: 0;
+  padding: 22px 0;
+}
+
+#wrap.adminReactWrap .messageTemplateLvList .pagingControls > button,
+#wrap.adminReactWrap .messageTemplateLvList .pagingControls > span {
+  min-width: 38px;
+  width: auto;
+  height: 34px;
+  line-height: 32px;
+}
+
+#wrap.adminReactWrap .messageTemplateEditor {
+  margin-top: 0;
+  padding: 0;
+}
+
+#wrap.adminReactWrap .messageTemplateEditor h3 {
+  min-height: 44px;
+  margin: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid #ddd;
+  background: #002e6e;
+  color: #fff;
+  font-size: 15px;
+}
+
+#wrap.adminReactWrap .messageTemplateEditor h3::before {
+  display: none;
+}
+
+#wrap.adminReactWrap .messageTemplateForm {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  padding: 18px 20px 20px;
+  border: 0;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .messageTemplateForm label {
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  min-height: 48px;
+  gap: 0;
+  border-bottom: 1px solid #e5e7eb;
+  color: #333;
+}
+
+#wrap.adminReactWrap .messageTemplateForm label:nth-child(odd) {
+  padding-right: 18px;
+}
+
+#wrap.adminReactWrap .messageTemplateForm input,
+#wrap.adminReactWrap .messageTemplateForm select,
+#wrap.adminReactWrap .messageTemplateForm textarea {
+  min-height: 34px;
+  border-color: #ccd1d9;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .messageTemplateForm .messageTemplateContent {
+  grid-column: 1 / -1;
+  grid-template-columns: 104px minmax(0, 1fr);
+  padding: 12px 0;
+}
+
+#wrap.adminReactWrap .messageTemplateForm .messageTemplateContent textarea {
+  min-height: 210px;
+  resize: vertical;
+}
+
+#wrap.adminReactWrap .messageTemplateActions {
+  grid-column: 1 / -1;
+  margin-top: 18px;
+}
+
+#wrap.adminReactWrap .messageTemplateActions .sBtn {
+  min-width: 72px;
+  height: 36px;
+  padding: 0 14px;
+  line-height: 36px;
+}
+
+#wrap.adminReactWrap .messageTemplatePreview {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-top: 2px solid #002e6e;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .messageTemplateLvModal {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 25, 60, 0.55);
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalPanel {
+  width: min(860px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.3);
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalPanel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+  padding: 0 18px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalPanel header h3 {
+  margin: 0;
+  color: inherit;
+  font-size: 16px;
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalPanel header button {
+  width: 34px;
+  height: 34px;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalPanel iframe {
+  display: block;
+  width: 100%;
+  height: min(580px, calc(100vh - 180px));
+  border: 0;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .messageTemplateLvModalActions {
+  padding: 12px 18px 16px;
+  border-top: 1px solid #ddd;
+  text-align: center;
+}
+
+/* ADM-LV-14: legacy 고객 공지와 FAQ 목록. */
+#wrap.adminReactWrap .contentArea > .customerBoardLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .contentArea > .customerBoardLvTabs li,
+#wrap.adminReactWrap .contentArea > .customerBoardLvTabs a {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .customerBoardLvPage {
+  margin-top: 18px;
+}
+
+#wrap.adminReactWrap .customerBoardLvToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 38px;
+  margin-bottom: 10px;
+}
+
+#wrap.adminReactWrap .customerBoardLvToolbar > .sBtn {
+  min-width: 76px;
+  height: 32px;
+  padding: 0 14px;
+  line-height: 32px;
+}
+
+#wrap.adminReactWrap .customerBoardLvSearch {
+  display: grid;
+  grid-template-columns: minmax(160px, 210px) 34px;
+  align-items: stretch;
+}
+
+#wrap.adminReactWrap .customerBoardLvSearch input {
+  width: 100%;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  padding: 0 10px;
+  background: #fff;
+  color: #333;
+  font-size: 13px;
+}
+
+#wrap.adminReactWrap .customerBoardLvSearch input:focus {
+  border-color: #8ca9ce;
+  outline: 0;
+}
+
+#wrap.adminReactWrap .customerBoardLvSearch .oiBtn.search {
+  width: 34px;
+  min-width: 34px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  border-left: 0;
+  background-color: #fff;
+  background-image: url('/resources/rudicks/img/icon/btn-serach-gray.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+  color: transparent;
+  font-size: 0;
+}
+
+#wrap.adminReactWrap .customerBoardLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .customerBoardLvTable {
+  width: 100%;
+  min-width: 720px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .customerBoardLvTable.noticeTable th:nth-child(1) { width: 10%; }
+#wrap.adminReactWrap .customerBoardLvTable.noticeTable th:nth-child(2) { width: 60%; }
+#wrap.adminReactWrap .customerBoardLvTable.noticeTable th:nth-child(3) { width: 15%; }
+#wrap.adminReactWrap .customerBoardLvTable.noticeTable th:nth-child(4) { width: 15%; }
+#wrap.adminReactWrap .customerBoardLvTable.faqTable th:nth-child(1) { width: 10%; }
+#wrap.adminReactWrap .customerBoardLvTable.faqTable th:nth-child(2) { width: 75%; }
+#wrap.adminReactWrap .customerBoardLvTable.faqTable th:nth-child(3) { width: 15%; }
+
+#wrap.adminReactWrap .customerBoardLvTable thead th {
+  height: 46px;
+  padding: 9px 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: #002e6e;
+  color: #fff;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .customerBoardLvTable tbody td {
+  height: 48px;
+  padding: 9px 8px 11px;
+  border-right: 1px solid #e4e7ec;
+  border-bottom: 1px solid #ddd;
+}
+
+#wrap.adminReactWrap .customerBoardLvTable th:last-child,
+#wrap.adminReactWrap .customerBoardLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .customerBoardLvTable .subject {
+  text-align: left;
+}
+
+#wrap.adminReactWrap .customerBoardLvTable .linkButton {
+  display: block;
+  overflow: hidden;
+  max-width: 100%;
+  color: #273248;
+  text-align: left;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .customerBoardLvManage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#wrap.adminReactWrap .customerBoardLvManage .rBtn {
+  min-width: 70px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 28px;
+}
+
+#wrap.adminReactWrap .customerBoardLvList .pagingControls {
+  margin-top: 0;
+  padding: 22px 0;
+}
+
+#wrap.adminReactWrap .customerBoardLvList .pagingControls > button,
+#wrap.adminReactWrap .customerBoardLvList .pagingControls > span {
+  min-width: 38px;
+  width: auto;
+  height: 34px;
+  line-height: 32px;
+}
+
+#wrap.adminReactWrap .customerBoardLvForm label:nth-child(3) {
+  grid-column: 1 / -1;
+  padding-right: 0;
+}
+
+/* ADM-LV-15: legacy Error Log search, fixed list, and detail. */
+#wrap.adminReactWrap .errorLogLvSearch {
+  margin-bottom: 18px;
+  padding: 18px 20px;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .errorLogLvSearchPrimary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) 88px;
+  gap: 10px;
+  align-items: center;
+}
+
+#wrap.adminReactWrap .errorLogLvSearchSecondary {
+  width: calc(25% - 2px);
+  min-width: 220px;
+  margin-top: 10px;
+}
+
+#wrap.adminReactWrap .errorLogLvSearch .inputBox {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  align-items: center;
+  min-width: 0;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .errorLogLvSearch label {
+  padding: 0 10px;
+  border-right: 1px solid #e1e4e9;
+  color: #333;
+  font-size: 12px;
+  line-height: 32px;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .errorLogLvSearch input,
+#wrap.adminReactWrap .errorLogLvSearch select {
+  min-width: 0;
+  width: 100%;
+  height: 32px;
+  border: 0;
+  padding: 0 9px;
+  background: #fff;
+  color: #333;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .errorLogLvSearch input:focus,
+#wrap.adminReactWrap .errorLogLvSearch select:focus {
+  outline: 2px solid #3e83ee;
+  outline-offset: -2px;
+}
+
+#wrap.adminReactWrap .errorLogLvSearchPrimary > .sBtn {
+  min-width: 88px;
+  height: 34px;
+  padding: 0 16px;
+  line-height: 34px;
+}
+
+#wrap.adminReactWrap .errorLogLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .errorLogLvTable {
+  width: 100%;
+  min-width: 1120px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(1) { width: 11%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(2) { width: 15%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(3) { width: 12%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(4) { width: 16%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(5) { width: 12%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(6) { width: 9%; }
+#wrap.adminReactWrap .errorLogLvTable th:nth-child(7) { width: 25%; }
+
+#wrap.adminReactWrap .contentArea .errorLogLvPage .errorLogLvTable thead th {
+  height: 44px;
+  padding: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: #1598ef;
+  color: #fff;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .errorLogLvTable tbody td {
+  height: 70px;
+  padding: 10px 8px 12px;
+  border-right: 1px solid #e4e7ec;
+  border-bottom: 1px solid #e1e4e9;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .errorLogLvTable th:last-child,
+#wrap.adminReactWrap .errorLogLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .errorLogLvTable .rBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 58px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  line-height: 28px;
+}
+
+#wrap.adminReactWrap .errorLogLvSelect {
+  display: -webkit-box;
+  overflow: hidden;
+  width: 100%;
+  max-height: 40px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #333;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: left;
+  cursor: pointer;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#wrap.adminReactWrap .errorLogLvList .pagingControls {
+  margin-top: 0;
+  padding: 22px 0;
+}
+
+#wrap.adminReactWrap .errorLogLvList .pagingControls > button,
+#wrap.adminReactWrap .errorLogLvList .pagingControls > span {
+  min-width: 38px;
+  width: auto;
+  height: 34px;
+  line-height: 32px;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail {
+  margin-top: 18px;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .errorLogLvDetail header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 16px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail h3 {
+  margin: 0;
+  color: inherit;
+  font-size: 15px;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail header button {
+  min-width: 58px;
+  height: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 0;
+  padding: 16px 18px 0;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail dl div {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  min-height: 40px;
+  border-bottom: 1px solid #e4e7ec;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail dt,
+#wrap.adminReactWrap .errorLogLvDetail dd {
+  margin: 0;
+  padding: 10px 8px;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail dt {
+  background: #f0f4ff;
+  color: #29347e;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .errorLogLvDetail pre {
+  min-height: 120px;
+  max-height: 300px;
+  overflow: auto;
+  margin: 16px 18px 18px;
+  border: 1px solid #ccd1d9;
+  padding: 14px;
+  background: #fbfcfe;
+  color: #333;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 720px) {
+  #wrap.adminReactWrap .messageTemplateLvPage {
+    margin-top: 14px;
+  }
+
+  #wrap.adminReactWrap .messageTemplateLvToolbar {
+    gap: 10px;
+  }
+
+  #wrap.adminReactWrap .messageTemplateLvSearch {
+    width: min(250px, calc(100% - 88px));
+    grid-template-columns: minmax(0, 1fr) 34px;
+  }
+
+  #wrap.adminReactWrap .messageTemplateForm {
+    grid-template-columns: 1fr;
+    padding: 12px 14px 16px;
+  }
+
+  #wrap.adminReactWrap .messageTemplateForm label,
+  #wrap.adminReactWrap .messageTemplateForm label:nth-child(odd),
+  #wrap.adminReactWrap .messageTemplateForm .messageTemplateContent {
+    grid-column: 1;
+    grid-template-columns: 82px minmax(0, 1fr);
+    padding-right: 0;
+  }
+
+  #wrap.adminReactWrap .messageTemplateActions {
+    grid-column: 1;
+  }
+
+  #wrap.adminReactWrap .messageTemplateLvModal {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  #wrap.adminReactWrap .messageTemplateLvModalPanel {
+    max-height: calc(100vh - 24px);
+  }
+
+  #wrap.adminReactWrap .customerBoardLvPage {
+    margin-top: 14px;
+  }
+
+  #wrap.adminReactWrap .customerBoardLvToolbar {
+    gap: 10px;
+  }
+
+  #wrap.adminReactWrap .customerBoardLvSearch {
+    width: min(250px, calc(100% - 88px));
+    grid-template-columns: minmax(0, 1fr) 34px;
+  }
+
+  #wrap.adminReactWrap .customerBoardLvForm label:nth-child(3) {
+    grid-column: 1;
+  }
+
+  #wrap.adminReactWrap .errorLogLvSearch {
+    padding: 12px;
+  }
+
+  #wrap.adminReactWrap .errorLogLvSearchPrimary {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .errorLogLvSearchSecondary {
+    width: 100%;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .errorLogLvSearchPrimary > .sBtn {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .errorLogLvDetail dl {
+    grid-template-columns: 1fr;
+    padding: 12px 12px 0;
+  }
+
+  #wrap.adminReactWrap .errorLogLvDetail pre {
+    margin: 12px;
+  }
+}
+
 .errorLogPreview p {
   max-height: 280px;
   font-size: 12px;
 }
 
 .memberMetricGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(170px, 1fr));
-  gap: 12px;
-  margin-bottom: 18px;
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-bottom: 20px;
 }
 
 .memberMetricGrid article {
-  display: grid;
-  grid-template-columns: 96px 1fr;
-  min-height: 84px;
-  border: 1px solid #ddd;
+  display: flex;
+  align-items: stretch;
+  width: 24.5%;
+  min-height: 95px;
+  margin: 5px 0;
+  border: 1px solid #eee;
   background: #fff;
-  box-shadow: 0 5px 10px rgba(0, 0, 0, .04);
+  box-shadow: 0 0 10px rgba(0, 0, 0, .05);
 }
 
 .memberMetricGrid .colorBox {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #38404d;
+  flex: 0 0 85px;
+  width: 85px;
+  min-height: 95px;
+  padding: 10px;
+  background: #179aff;
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -1553,9 +2440,10 @@ body {
 
 .memberMetricGrid .txtBox {
   display: flex;
+  flex: 3;
   align-items: center;
-  padding: 10px 12px;
-  color: #333;
+  padding: 20px 10px;
+  color: #555;
   font-size: 13px;
 }
 
@@ -1564,83 +2452,54 @@ body {
 }
 
 .memberMetricGrid .txtBox td {
-  height: 26px;
-  color: #333;
+  height: 24px;
+  padding: 0 5px;
+  color: #555;
   font-size: 13px;
 }
 
 .memberTrendPanel {
-  margin-top: 12px;
-  margin-bottom: 16px;
-  padding: 16px;
-  border: 1px solid #ddd;
+  margin-top: 30px;
   background: #fff;
-  box-shadow: 0 0 10px rgba(0, 0, 0, .03);
+  box-shadow: 0 0 10px rgba(0, 0, 0, .05);
 }
 
-.memberTrendHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  color: #333;
+.memberTrendPanel > header {
+  padding: 13px 20px;
+  background: #002e6e;
+  color: #fff;
 }
 
-.memberTrendHeader h4 {
+.memberTrendPanel > header h4 {
   margin: 0;
   font-size: 14px;
+  font-weight: 400;
 }
 
-.memberTrendBars {
-  display: grid;
-  gap: 7px;
-  max-height: 260px;
-  overflow: auto;
+.memberTrendPanel > .contentArea {
+  padding: 30px;
 }
 
-.memberTrendRow {
-  display: grid;
-  grid-template-columns: 96px minmax(180px, 1fr) 120px;
-  align-items: center;
-  gap: 10px;
-  font-size: 12px;
-}
-
-.memberTrendTrack {
+.memberSummaryChartBox {
   position: relative;
-  height: 22px;
-  border: 1px solid #e0e0e0;
-  background: #f7f7f7;
+  width: 100%;
+  height: 360px;
+  margin: 0 auto;
 }
 
-.memberTrendTrack i {
+.memberSummaryChartBox canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.memberSummaryChartState {
   position: absolute;
-  left: 0;
-  height: 6px;
-}
-
-.memberTrendTrack .cubici {
-  top: 2px;
-  background: #55616f;
-}
-
-.memberTrendTrack .moneybank {
-  top: 8px;
-  background: #2f8f6b;
-}
-
-.memberTrendTrack .terminated {
-  top: 14px;
-  background: #c64f4f;
-}
-
-.memberSummaryTable {
-  min-width: 980px;
-}
-
-.memberSummaryTable th,
-.memberSummaryTable td {
+  inset: 50% auto auto 50%;
+  margin: 0;
+  color: #777;
+  font-size: 13px;
   text-align: center;
+  transform: translate(-50%, -50%);
 }
 
 .memberInfoTable {
@@ -1684,6 +2543,1213 @@ body {
 
 .paymentSummary {
   flex-wrap: wrap;
+}
+
+.paymentLvPage .paymentLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.paymentLvPage .paymentLvTabs li,
+.paymentLvPage .paymentLvTabs a {
+  width: 100%;
+}
+
+.paymentLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.paymentLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.paymentLvSearch .line {
+  grid-template-columns: repeat(4, minmax(130px, 1fr));
+}
+
+.paymentLvSearch .m-btnPrimary {
+  align-self: end;
+  min-height: 38px;
+  border: 0;
+  border-radius: 2px;
+  background: #0e57bf;
+  color: #fff;
+  font-weight: 600;
+}
+
+.paymentLvTableSet {
+  margin-top: 26px;
+}
+
+.paymentLvTableOptions {
+  min-height: 42px;
+  margin-bottom: 10px;
+}
+
+.paymentLvTableOptions > .pRight {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.paymentOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.paymentOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.paymentOrderBox select {
+  min-width: 150px;
+  height: 34px;
+}
+
+.paymentDownloadButton,
+.paymentColumnButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+}
+
+.paymentColumnButton {
+  background: #0e57bf;
+}
+
+.paymentDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.requestLvPage .m-tab {
+  margin-bottom: 0;
+}
+
+.requestLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.requestLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.requestLvBaseDate .baseDate {
+  padding: 8px 12px;
+  border: 1px solid #d3d5ed;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+}
+
+.requestLvBaseDate .baseDate b {
+  margin-right: 8px;
+  color: #07377f;
+}
+
+.requestLvSearch .line {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.requestLvSearch .requestLvRange span {
+  flex: 0 0 auto;
+  padding: 0 3px;
+  color: #8a9099;
+}
+
+.requestLvSearch .requestLvRange input {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+}
+
+.requestLvTableOptions {
+  min-height: 42px;
+  margin: 2px 0 10px;
+}
+
+.requestLvTableOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.requestLvOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.requestLvOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.requestLvOrderBox select {
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.requestLvDownloadButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.requestLvDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.requestLvExportMessage {
+  margin: 6px 0 0;
+  color: #56616f;
+  font-size: 12px;
+  text-align: right;
+}
+
+.requestLvTable .requestTable {
+  min-width: 960px;
+}
+
+.approvalLvPage .m-tab {
+  margin-bottom: 0;
+}
+
+.approvalLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.approvalLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.approvalLvBaseDate .baseDate {
+  padding: 8px 12px;
+  border: 1px solid #d3d5ed;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+}
+
+.approvalLvBaseDate .baseDate b {
+  margin-right: 8px;
+  color: #07377f;
+}
+
+.approvalLvSearch .line {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.approvalLvSearch .approvalLvDateRange {
+  grid-column: span 2;
+}
+
+.approvalLvSearch .approvalLvDateRange span {
+  flex: 0 0 auto;
+  padding: 0 3px;
+  color: #8a9099;
+}
+
+.approvalLvSearch .approvalLvDateRange input {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+}
+
+.approvalLvTableOptions {
+  min-height: 42px;
+  margin: 2px 0 10px;
+}
+
+.approvalLvTableOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.approvalLvOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.approvalLvOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.approvalLvOrderBox select {
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.approvalLvDownloadButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.approvalLvDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.approvalLvExportMessage {
+  margin: 6px 0 0;
+  color: #56616f;
+  font-size: 12px;
+  text-align: right;
+}
+
+.approvalLvTable .approvalTable {
+  min-width: 1180px;
+}
+
+.approvalLvTable .approvalTable thead tr + tr th {
+  border-top: 1px solid #d9ddec;
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
+
+.contractLvPage .m-tab {
+  margin-bottom: 0;
+}
+
+.contractLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.contractLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.contractLvBaseDate .baseDate {
+  padding: 8px 12px;
+  border: 1px solid #d3d5ed;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+}
+
+.contractLvBaseDate .baseDate b {
+  margin-right: 8px;
+  color: #07377f;
+}
+
+.contractLvSearch .line {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.contractLvSearch .contractLvDateRange {
+  grid-column: span 2;
+}
+
+.contractLvSearch .contractLvDateRange span {
+  flex: 0 0 auto;
+  padding: 0 3px;
+  color: #8a9099;
+}
+
+.contractLvSearch .contractLvDateRange input {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+}
+
+.contractLvTableOptions {
+  min-height: 42px;
+  margin: 2px 0 10px;
+}
+
+.contractLvTableOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.contractLvOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contractLvOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.contractLvOrderBox select {
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.contractLvDownloadButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.contractLvDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.contractLvExportMessage {
+  margin: 6px 0 0;
+  color: #56616f;
+  font-size: 12px;
+  text-align: right;
+}
+
+.contractLvTable .contractManagementTable {
+  min-width: 1160px;
+}
+
+.contractLvMbidButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #263a58;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.redemptionLvPage .m-tab {
+  margin-bottom: 0;
+}
+
+.redemptionLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.redemptionLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.redemptionLvBaseDate .baseDate {
+  padding: 8px 12px;
+  border: 1px solid #d3d5ed;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+}
+
+.redemptionLvBaseDate .baseDate b {
+  margin-right: 8px;
+  color: #07377f;
+}
+
+.redemptionLvSearch .line {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.redemptionLvSearch .redemptionLvDateRange {
+  grid-column: span 2;
+}
+
+.redemptionLvSearch .redemptionLvDateRange span {
+  flex: 0 0 auto;
+  padding: 0 3px;
+  color: #8a9099;
+}
+
+.redemptionLvSearch .redemptionLvDateRange input {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+}
+
+.redemptionLvTableOptions {
+  min-height: 42px;
+  margin: 2px 0 10px;
+}
+
+.redemptionLvTableOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.redemptionLvOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.redemptionLvOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.redemptionLvOrderBox select {
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.redemptionLvDownloadButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.redemptionLvDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.redemptionLvExportMessage {
+  margin: 6px 0 0;
+  color: #56616f;
+  font-size: 12px;
+  text-align: right;
+}
+
+.redemptionLvTable .redemptionTable {
+  min-width: 1160px;
+}
+
+.redemptionLvMbidButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #263a58;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.settlementLvPage .m-tab {
+  margin-bottom: 0;
+}
+
+.fundingLvActions {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 34px;
+  margin: 0 0 10px;
+}
+
+.fundingLvActions .sBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  height: 34px;
+  padding: 0 15px;
+  border: 0;
+  border-radius: 2px;
+  background: #164f9a;
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.fundingLvRegisterPanel {
+  margin: 0 0 18px;
+  padding: 18px;
+  border: 1px solid #d7dce5;
+  border-top: 3px solid #164f9a;
+  background: #fff;
+}
+
+.fundingLvRegisterTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.fundingLvRegisterTitle h4 {
+  margin: 0;
+  color: #002e6e;
+  font-size: 15px;
+}
+
+.fundingLvRegisterTitle button {
+  border: 0;
+  background: transparent;
+  color: #555;
+  cursor: pointer;
+}
+
+.fundingLvRegisterFields {
+  display: grid;
+  grid-template-columns: minmax(180px, 1.5fr) minmax(140px, 1fr) minmax(140px, 1fr) 80px;
+  gap: 10px;
+  align-items: end;
+}
+
+.fundingLvRegisterFields label {
+  display: grid;
+  gap: 6px;
+  color: #555;
+  font-size: 12px;
+}
+
+.fundingLvRegisterFields input {
+  width: 100%;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.fundingLvRegisterSubmit {
+  height: 36px;
+  border: 0;
+  background: #164f9a;
+  color: #fff;
+}
+
+.fundingLvRegisterPanel > p {
+  margin: 10px 0 0;
+  color: #777;
+  font-size: 11px;
+}
+
+.fundingLvTable .fundingTable {
+  min-width: 920px;
+}
+
+.fundingLvNameButton {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #263a58;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fundingLvPaging {
+  margin-top: 18px;
+}
+
+.fundingLvPaging .num {
+  border: 0;
+}
+
+.fundingLvDetailPanel {
+  margin-top: 24px;
+}
+
+.fundingLvDetailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.fundingLvDetailHeader h4 {
+  margin: 0;
+  color: #002e6e;
+  font-size: 15px;
+}
+
+.fundingLvDetailHeader button {
+  height: 30px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+  color: #444;
+}
+
+@media (max-width: 767px) {
+  .fundingLvRegisterFields {
+    grid-template-columns: 1fr;
+  }
+
+  .fundingLvRegisterSubmit {
+    width: 100%;
+  }
+}
+
+/* ADM-LV-12: legacy customer inquiry list/detail */
+#wrap.adminReactWrap .customerInquiryLvPage {
+  width: 100%;
+  color: #172138;
+  letter-spacing: 0;
+}
+
+#wrap.adminReactWrap .customerInquiryLvMeta {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+#wrap.adminReactWrap .customerInquiryLvToolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 18px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvSearch {
+  display: flex;
+  width: 210px;
+  height: 34px;
+  border: 1px solid #c8d0da;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .customerInquiryLvSearch input {
+  flex: 1 1 auto;
+  width: 0;
+  height: 32px;
+  padding: 0 10px;
+  border: 0;
+  color: #253247;
+  font-size: 13px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvSearch input:focus {
+  outline: 2px solid #3e83ee;
+  outline-offset: -2px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvSearch .oiBtn.search {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 32px;
+  border: 0;
+  border-left: 1px solid #e0e4ea;
+  background-color: #fff;
+  background-image: url('/resources/rudicks/img/icon/btn-serach-gray.svg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvList {
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(11, 42, 82, 0.06);
+}
+
+#wrap.adminReactWrap .inquiryLvTable {
+  width: 100%;
+  min-width: 920px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .inquiryLvTable th,
+#wrap.adminReactWrap .inquiryLvTable td {
+  height: 50px;
+  padding: 10px 12px;
+  border-bottom: 1px solid #d7dce3;
+  vertical-align: middle;
+}
+
+#wrap.adminReactWrap .inquiryLvTable thead th {
+  height: 46px;
+  background: #063a80;
+  color: #fff;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(1),
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(2),
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(3) {
+  width: 9%;
+}
+
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(4) {
+  width: 11%;
+}
+
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(5) {
+  width: 28%;
+}
+
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(6),
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(7),
+#wrap.adminReactWrap .inquiryLvTable th:nth-child(8) {
+  width: 11%;
+}
+
+#wrap.adminReactWrap .inquiryLvTable .subject {
+  text-align: left;
+}
+
+#wrap.adminReactWrap .inquiryLvTable .linkButton {
+  max-width: 100%;
+  overflow: hidden;
+  color: #172138;
+  font-size: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .inquiryLvTable .linkButton:hover,
+#wrap.adminReactWrap .inquiryLvTable .linkButton:focus-visible {
+  color: #116ed0;
+  text-decoration: underline;
+}
+
+#wrap.adminReactWrap .inquiryLvTable .rBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 14px;
+  font-size: 12px;
+  line-height: 28px;
+}
+
+#wrap.adminReactWrap .lvBoardPager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 82px;
+  padding: 20px;
+}
+
+#wrap.adminReactWrap .lvBoardPager button {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 0;
+  background: #9fb2cf;
+  color: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .lvBoardPager button.active {
+  background: #002e6e;
+}
+
+#wrap.adminReactWrap .lvBoardPager button:disabled {
+  opacity: 0.45;
+}
+
+#wrap.adminReactWrap .customerInquiryLvLoading {
+  padding: 40px 0;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetail {
+  border-top: 1px solid #2c3543;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 64px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #cfd5dc;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle h3 {
+  flex: 1 1 auto;
+  min-width: 180px;
+  margin: 0;
+  color: #172138;
+  font-size: 17px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle dl,
+#wrap.adminReactWrap .customerInquiryLvWorkflow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px 14px;
+  margin: 0;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle dl div,
+#wrap.adminReactWrap .customerInquiryLvWorkflow div {
+  display: flex;
+  gap: 5px;
+  color: #5a6676;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle dt,
+#wrap.adminReactWrap .customerInquiryLvWorkflow dt {
+  font-weight: 700;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetailTitle dd,
+#wrap.adminReactWrap .customerInquiryLvWorkflow dd {
+  margin: 0;
+}
+
+#wrap.adminReactWrap .customerInquiryLvArticle {
+  min-height: 170px;
+  padding: 28px 20px;
+  border-bottom: 1px solid #d8dde4;
+}
+
+#wrap.adminReactWrap .customerInquiryLvArticle h4 {
+  margin: 0 0 16px;
+  color: #063a80;
+  font-size: 14px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvArticle p {
+  margin: 0;
+  color: #303c4d;
+  font-size: 14px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+#wrap.adminReactWrap .customerInquiryLvReply {
+  min-height: 130px;
+  background: #f0f3f6;
+}
+
+#wrap.adminReactWrap .customerInquiryLvWorkflow {
+  justify-content: flex-start;
+  padding: 12px 20px;
+  border-bottom: 1px solid #d8dde4;
+  background: #f7f9fb;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetail .inquiryReplyForm {
+  padding: 22px 20px 0;
+  border: 0;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .customerInquiryLvDetail .inquiryReplyForm textarea {
+  min-height: 130px;
+  resize: vertical;
+}
+
+#wrap.adminReactWrap .customerInquiryLvActions {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 24px;
+}
+
+#wrap.adminReactWrap .customerInquiryLvActions button {
+  min-width: 90px;
+  height: 38px;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+}
+
+@media (max-width: 767px) {
+  #wrap.adminReactWrap .customerInquiryLvToolbar {
+    margin-bottom: 12px;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvSearch {
+    width: min(210px, 100%);
+  }
+
+  #wrap.adminReactWrap .inquiryLvTable {
+    font-size: 12px;
+  }
+
+  #wrap.adminReactWrap .lvBoardPager {
+    min-height: 68px;
+    padding: 16px 8px;
+  }
+
+  #wrap.adminReactWrap .lvBoardPager button {
+    min-width: 32px;
+    height: 32px;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvDetailTitle {
+    display: block;
+    padding: 16px 12px;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvDetailTitle h3 {
+    min-width: 0;
+    margin-bottom: 14px;
+    font-size: 16px;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvDetailTitle dl {
+    justify-content: flex-start;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvArticle {
+    min-height: 140px;
+    padding: 22px 14px;
+  }
+
+  #wrap.adminReactWrap .customerInquiryLvWorkflow,
+  #wrap.adminReactWrap .customerInquiryLvDetail .inquiryReplyForm {
+    padding-right: 14px;
+    padding-left: 14px;
+  }
+}
+
+.settlementLvBaseDate {
+  min-height: 34px;
+  margin: 24px 0 10px;
+}
+
+.settlementLvBaseDate .pRight {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.settlementLvBaseDate .baseDate {
+  padding: 8px 12px;
+  border: 1px solid #d3d5ed;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+}
+
+.settlementLvBaseDate .baseDate b {
+  margin-right: 8px;
+  color: #07377f;
+}
+
+.settlementLvSearch .line {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.settlementLvSearch .settlementLvDateRange {
+  grid-column: span 3;
+}
+
+.settlementLvSearch .settlementLvDateRange span {
+  flex: 0 0 auto;
+  padding: 0 3px;
+  color: #8a9099;
+}
+
+.settlementLvSearch .settlementLvDateRange input {
+  min-width: 0;
+  border-left: 1px solid #ddd;
+}
+
+.settlementLvTableOptions {
+  min-height: 42px;
+  margin: 2px 0 8px;
+}
+
+.settlementLvTableOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.settlementLvOrderBox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settlementLvOrderBox label {
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.settlementLvOrderBox select {
+  min-width: 150px;
+  height: 34px;
+  border: 1px solid #ccd1d9;
+  background: #fff;
+}
+
+.settlementLvDownloadButton {
+  min-width: 98px;
+  height: 34px;
+  border: 0;
+  border-radius: 2px;
+  background: #9fb2cf;
+  color: #fff;
+  cursor: pointer;
+}
+
+.settlementLvDownloadButton:disabled {
+  opacity: 0.55;
+}
+
+.settlementLvExportMessage {
+  margin: 6px 0 0;
+  color: #56616f;
+  font-size: 12px;
+  text-align: right;
+}
+
+.settlementLvSummary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  margin-bottom: 10px;
+  border-top: 2px solid #0e57bf;
+  border-bottom: 1px solid #d9ddec;
+  background: #fff;
+}
+
+.settlementLvSummary span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 38px;
+  padding: 6px 8px;
+  color: #4b5563;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.settlementLvSummary span + span {
+  border-left: 1px solid #e1e5ee;
+}
+
+.settlementLvSummary b {
+  color: #07377f;
+  font-weight: 700;
+}
+
+.settlementLvTable .settlementTable {
+  min-width: 1180px;
+}
+
+.paymentColumnPicker {
+  position: relative;
+}
+
+.paymentColumnMenu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 8px 12px;
+  width: 340px;
+  padding: 16px;
+  border: 1px solid #d6dbe5;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(0, 34, 82, 0.16);
+}
+
+.paymentColumnMenu label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: #555;
+  font-size: 12px;
+}
+
+.paymentColumnMenu .m-btnPrimary {
+  grid-column: 1 / -1;
+  min-height: 34px;
+}
+
+.paymentLvTableFrame {
+  overflow: hidden;
+  border-top: 2px solid #0e57bf;
+  background: #fff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.04);
+}
+
+.paymentLvTableFrame .overflowBox {
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.paymentLvPage .memberPaymentTable {
+  min-width: 1680px;
+  border-top: 0;
+}
+
+.paymentLvPage .memberPaymentTable th,
+.paymentLvPage .memberPaymentTable td {
+  white-space: nowrap;
+}
+
+.paymentLvTotals .tableTotal {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.paymentLvTotals .tableTotal li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  padding: 8px 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.26);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.paymentLvTotals .tableTotal li:first-child {
+  border-left: 0;
+}
+
+.paymentLvTotals .result {
+  font-weight: 700;
+}
+
+.paymentLvPaging > span {
+  width: 38px;
+  min-width: 38px;
 }
 
 .memberChargeChangeTable {
@@ -1888,6 +3954,401 @@ body {
   margin-top: 12px;
 }
 
+/* ADM-LV-18: legacy administrator list and approval editor. */
+#wrap.adminReactWrap .adminAccountLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .adminAccountLvTabs li,
+#wrap.adminReactWrap .adminAccountLvTabs a {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .adminAccountLvSearch {
+  margin-bottom: 16px;
+}
+
+#wrap.adminReactWrap .adminAccountLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .adminAccountLvList .tableScroll {
+  overflow-x: scroll;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .adminAccountLvList .tableScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .adminAccountLvTable {
+  width: 100%;
+  min-width: 1080px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(1) { width: 5%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(2) { width: 9%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(3) { width: 9%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(4) { width: 9%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(5) { width: 12%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(6) { width: 16%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(7) { width: 9%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(8) { width: 9%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(9) { width: 8%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(10) { width: 8%; }
+#wrap.adminReactWrap .adminAccountLvTable th:nth-child(11) { width: 6%; }
+
+#wrap.adminReactWrap .contentArea .adminAccountLvTable thead th {
+  height: 44px;
+  padding: 8px 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1598ef;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .adminAccountLvTable tbody td {
+  height: 48px;
+  padding: 8px 6px;
+  border-right: 1px solid #e3e7ec;
+  border-bottom: 1px solid #d9dee5;
+  background: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .adminAccountLvTable th:last-child,
+#wrap.adminReactWrap .adminAccountLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .adminAccountLvTable .tableBtn {
+  min-width: 48px;
+  height: 26px;
+  border: 0;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .adminAccountLvTotals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 46px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .adminAccountLvTotals > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+#wrap.adminReactWrap .adminAccountLvTotals > div:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .adminAccountLvTotals span,
+#wrap.adminReactWrap .adminAccountLvTotals strong {
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .adminAccountLvTotals strong {
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .adminAccountLvList .pagingControls {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .adminAccountLvList .pagingControls > button,
+#wrap.adminReactWrap .adminAccountLvList .pagingControls > span {
+  min-width: 50px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  line-height: 38px;
+}
+
+#wrap.adminReactWrap .adminAccountPanel {
+  margin-top: 18px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .adminAccountHeader {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .adminAccountHeader h4,
+#wrap.adminReactWrap .adminAccountHeader span {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .adminAccountHeader h4 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .adminAccountHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#wrap.adminReactWrap .adminAccountHeader button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 14px 14px 0;
+  border: 1px solid #d9dee5;
+  background: #f7f9fb;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary > div {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  min-height: 34px;
+  border-left: 1px solid #d9dee5;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary > div:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary span,
+#wrap.adminReactWrap .adminAccountAuditSummary strong {
+  display: flex;
+  align-items: center;
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary span {
+  color: #555;
+}
+
+#wrap.adminReactWrap .adminAccountAuditSummary strong {
+  border-left: 1px solid #d9dee5;
+  color: #002e6e;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .adminAccountPanel .adminAccountGrid {
+  padding: 14px;
+}
+
+#wrap.adminReactWrap .adminAccountPanel > .formMessage {
+  margin: 0 14px 12px;
+}
+
+#wrap.adminReactWrap .adminAccountPanel .adminAccountActions {
+  margin: 0;
+  padding: 0 14px 14px;
+}
+
+/* ADM-LV-19: legacy charge list and charge detail editor. */
+#wrap.adminReactWrap .chargeLvSearch {
+  margin-bottom: 16px;
+}
+
+#wrap.adminReactWrap .chargeLvSearch .line:first-child {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .chargeLvSearch .line:last-child {
+  grid-template-columns: minmax(0, 1fr) 140px 140px;
+}
+
+#wrap.adminReactWrap .chargeLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .chargeLvList .tableScroll {
+  overflow-x: scroll;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .chargeLvList .tableScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .chargeLvTable {
+  width: 100%;
+  min-width: 880px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .chargeLvTable th:nth-child(1) { width: 9%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(2) { width: 14%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(3) { width: 23%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(4) { width: 17%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(5) { width: 12%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(6) { width: 13%; }
+#wrap.adminReactWrap .chargeLvTable th:nth-child(7) { width: 12%; }
+
+#wrap.adminReactWrap .contentArea .chargeLvTable thead th {
+  height: 44px;
+  padding: 8px 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1598ef;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .chargeLvTable tbody td {
+  height: 48px;
+  padding: 8px 6px;
+  border-right: 1px solid #e3e7ec;
+  border-bottom: 1px solid #d9dee5;
+  background: #fff;
+  font-size: 12px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .chargeLvTable tbody td.subject {
+  text-align: center;
+}
+
+#wrap.adminReactWrap .chargeLvTable th:last-child,
+#wrap.adminReactWrap .chargeLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .chargeLvTable .tableBtn {
+  min-width: 58px;
+  height: 26px;
+  border: 0;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .chargeLvTotals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 46px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .chargeLvTotals > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+#wrap.adminReactWrap .chargeLvTotals > div:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .chargeLvTotals span,
+#wrap.adminReactWrap .chargeLvTotals strong {
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .chargeLvTotals strong {
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .chargeLvList .pagingControls {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .chargeLvList .pagingControls > button,
+#wrap.adminReactWrap .chargeLvList .pagingControls > span {
+  min-width: 50px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  line-height: 38px;
+}
+
+#wrap.adminReactWrap .chargeEditorPanel {
+  margin-top: 18px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .chargeEditorHeader {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .chargeEditorHeader h4,
+#wrap.adminReactWrap .chargeEditorHeader span {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .chargeEditorHeader h4 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .chargeEditorHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#wrap.adminReactWrap .chargeEditorHeader button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid {
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  padding: 14px;
+}
+
+#wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid label.wide {
+  grid-column: span 3;
+}
+
+#wrap.adminReactWrap .chargeEditorPanel .chargeEditorActions {
+  margin: 0;
+  padding: 0 14px 14px;
+}
+
+#wrap.adminReactWrap .chargeEditorPanel .chargeEditorActions .sBtn {
+  flex: 0 0 88px;
+  width: 88px;
+  min-width: 88px;
+}
+
 .promotionSummary {
   flex-wrap: wrap;
 }
@@ -2018,6 +4479,201 @@ body {
   margin-top: 12px;
 }
 
+/* ADM-LV-20: legacy promotion list with grouped benefit columns. */
+#wrap.adminReactWrap .promotionLvSearch {
+  margin-bottom: 16px;
+}
+
+#wrap.adminReactWrap .promotionLvSearch .line:first-child {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .promotionLvSearch .line:last-child {
+  grid-template-columns: minmax(0, 1fr) 150px;
+}
+
+#wrap.adminReactWrap .promotionLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .promotionLvList .tableScroll {
+  overflow-x: scroll;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .promotionLvList .tableScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .promotionLvTable {
+  width: 100%;
+  min-width: 1580px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .promotionLvTable .statusCol { width: 76px; }
+#wrap.adminReactWrap .promotionLvTable .dateCol { width: 108px; }
+#wrap.adminReactWrap .promotionLvTable .partnerCol { width: 120px; }
+#wrap.adminReactWrap .promotionLvTable .nameCol { width: 160px; }
+#wrap.adminReactWrap .promotionLvTable .codeCol { width: 110px; }
+#wrap.adminReactWrap .promotionLvTable .targetCol { width: 96px; }
+#wrap.adminReactWrap .promotionLvTable .chargeCol { width: 190px; }
+#wrap.adminReactWrap .promotionLvTable .rateCol { width: 82px; }
+#wrap.adminReactWrap .promotionLvTable .amountCol { width: 104px; }
+#wrap.adminReactWrap .promotionLvTable .periodCol { width: 76px; }
+#wrap.adminReactWrap .promotionLvTable .unitCol { width: 76px; }
+#wrap.adminReactWrap .promotionLvTable .subIdCol { width: 92px; }
+#wrap.adminReactWrap .promotionLvTable .detailCol { width: 100px; }
+
+#wrap.adminReactWrap .contentArea .promotionLvTable thead th {
+  height: 28px;
+  padding: 6px 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1598ef;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .promotionLvTable thead tr:first-child th[rowspan='2'] {
+  height: 56px;
+}
+
+#wrap.adminReactWrap .promotionLvTable tbody td {
+  height: 48px;
+  padding: 8px 6px;
+  border-right: 1px solid #e3e7ec;
+  border-bottom: 1px solid #d9dee5;
+  background: #fff;
+  font-size: 11px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .promotionLvTable tbody td.subject {
+  text-align: center;
+}
+
+#wrap.adminReactWrap .promotionLvTable th:last-child,
+#wrap.adminReactWrap .promotionLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .promotionLvTable .tableBtn {
+  min-width: 58px;
+  height: 26px;
+  border: 0;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .promotionLvTotals {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-height: 46px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .promotionLvTotals > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+#wrap.adminReactWrap .promotionLvTotals > div:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .promotionLvTotals span,
+#wrap.adminReactWrap .promotionLvTotals strong {
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .promotionLvTotals strong {
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .promotionLvList .pagingControls {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .promotionLvList .pagingControls > button,
+#wrap.adminReactWrap .promotionLvList .pagingControls > span {
+  min-width: 50px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  line-height: 38px;
+}
+
+#wrap.adminReactWrap .promotionEditorPanel {
+  margin-top: 18px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .promotionEditorHeader {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .promotionEditorHeader h4,
+#wrap.adminReactWrap .promotionEditorHeader span {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .promotionEditorHeader h4 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .promotionEditorHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#wrap.adminReactWrap .promotionEditorHeader button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid {
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  padding: 14px;
+}
+
+#wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid label.wide,
+#wrap.adminReactWrap .promotionEditorPanel .promotionChargeBox {
+  grid-column: span 3;
+}
+
+#wrap.adminReactWrap .promotionEditorPanel .promotionEditorActions {
+  margin: 0;
+  padding: 0 14px 14px;
+}
+
+#wrap.adminReactWrap .promotionEditorPanel .promotionEditorActions .sBtn {
+  flex: 0 0 88px;
+  width: 88px;
+  min-width: 88px;
+}
+
 .partnerSummary {
   flex-wrap: wrap;
 }
@@ -2118,6 +4774,219 @@ body {
 .partnerEditorActions {
   justify-content: flex-end;
   margin-top: 12px;
+}
+
+/* ADM-LV-21: legacy partner list and three-section detail editor. */
+#wrap.adminReactWrap .partnerLvSearch {
+  margin-bottom: 16px;
+}
+
+#wrap.adminReactWrap .partnerLvSearch .line:first-child {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .partnerLvSearch .line:last-child {
+  grid-template-columns: minmax(0, 1fr) 150px 150px;
+}
+
+#wrap.adminReactWrap .partnerLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .partnerLvList .tableScroll {
+  overflow-x: scroll;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .partnerLvList .tableScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .partnerLvTable {
+  width: 100%;
+  min-width: 1180px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .partnerLvTable .statusCol { width: 72px; }
+#wrap.adminReactWrap .partnerLvTable .dateCol { width: 106px; }
+#wrap.adminReactWrap .partnerLvTable .typeCol { width: 96px; }
+#wrap.adminReactWrap .partnerLvTable .nameCol { width: 150px; }
+#wrap.adminReactWrap .partnerLvTable .codeCol { width: 104px; }
+#wrap.adminReactWrap .partnerLvTable .repCol { width: 96px; }
+#wrap.adminReactWrap .partnerLvTable .businessCol { width: 114px; }
+#wrap.adminReactWrap .partnerLvTable .managerCol { width: 94px; }
+#wrap.adminReactWrap .partnerLvTable .phoneCol { width: 122px; }
+#wrap.adminReactWrap .partnerLvTable .detailCol { width: 102px; }
+
+#wrap.adminReactWrap .contentArea .partnerLvTable thead th {
+  height: 28px;
+  padding: 6px 5px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1598ef;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .partnerLvTable thead tr:first-child th[rowspan='2'] {
+  height: 56px;
+}
+
+#wrap.adminReactWrap .partnerLvTable tbody td {
+  height: 48px;
+  padding: 8px 6px;
+  border-right: 1px solid #e3e7ec;
+  border-bottom: 1px solid #d9dee5;
+  background: #fff;
+  font-size: 11px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .partnerLvTable tbody td.subject {
+  text-align: center;
+}
+
+#wrap.adminReactWrap .partnerLvTable th:last-child,
+#wrap.adminReactWrap .partnerLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .partnerLvTable .tableBtn {
+  min-width: 58px;
+  height: 26px;
+  border: 0;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .partnerLvTotals {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  min-height: 46px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .partnerLvTotals > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 6px;
+  border-left: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+#wrap.adminReactWrap .partnerLvTotals > div:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .partnerLvTotals span,
+#wrap.adminReactWrap .partnerLvTotals strong {
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .partnerLvTotals strong {
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .partnerLvList .pagingControls {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .partnerLvList .pagingControls > button,
+#wrap.adminReactWrap .partnerLvList .pagingControls > span {
+  min-width: 50px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  line-height: 38px;
+}
+
+#wrap.adminReactWrap .partnerEditorPanel {
+  margin-top: 18px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .partnerEditorHeader {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 14px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .partnerEditorHeader h4,
+#wrap.adminReactWrap .partnerEditorHeader span {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .partnerEditorHeader h4 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .partnerEditorHeader > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#wrap.adminReactWrap .partnerEditorHeader button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .partnerEditorSection {
+  margin: 14px;
+}
+
+#wrap.adminReactWrap .partnerEditorSection + .partnerEditorSection {
+  margin-top: 18px;
+}
+
+#wrap.adminReactWrap .partnerEditorSection h5 {
+  min-height: 36px;
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  background: #eef4f8;
+  color: #002e6e;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid {
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+}
+
+#wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid label.wide {
+  grid-column: span 3;
+}
+
+#wrap.adminReactWrap .partnerInlineAction {
+  align-self: stretch;
+  min-height: 34px;
+}
+
+#wrap.adminReactWrap .partnerEditorPanel .partnerEditorActions {
+  margin: 0;
+  padding: 0 14px 14px;
+}
+
+#wrap.adminReactWrap .partnerEditorPanel .partnerEditorActions .sBtn {
+  flex: 0 0 88px;
+  width: 88px;
+  min-width: 88px;
 }
 
 .moneybankProductTable {
@@ -2338,11 +5207,327 @@ body {
   margin-bottom: 10px;
 }
 
+/* ADM-LV-22: legacy three-stage Prism configuration workspace. */
+#wrap.adminReactWrap .prizmLvTabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 14px;
+  border: 1px solid #d6dce5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .prizmLvTabs button,
+#wrap.adminReactWrap .prizmLvTabs a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 0;
+  border-left: 1px solid #d6dce5;
+  background: #fff;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .prizmLvTabs > :first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .prizmLvTabs .active {
+  background: #002e6e;
+  color: #fff;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .prizmLvTopline {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) minmax(440px, 1.2fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+#wrap.adminReactWrap .prizmLvSummary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  min-height: 50px;
+  background: #002e6e;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .prizmLvSummary span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 5px;
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .prizmLvSummary span:first-child {
+  border-left: 0;
+}
+
+#wrap.adminReactWrap .prizmLvSearch {
+  margin: 0;
+  padding: 10px;
+}
+
+#wrap.adminReactWrap .prizmLvSearch .line {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) 100px;
+  margin: 0;
+}
+
+#wrap.adminReactWrap .prizmLvSelector {
+  display: grid;
+  grid-template-columns: minmax(210px, 0.75fr) minmax(260px, 0.9fr) minmax(430px, 1.5fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+#wrap.adminReactWrap .prizmLvSelectPanel,
+#wrap.adminReactWrap .prizmLvDetailPanel {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .prizmLvSelectPanel > header,
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigHeader {
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  margin: 0;
+  padding: 0 12px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .prizmLvSelectPanel h3,
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigHeader h4,
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigHeader span {
+  margin: 0;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .prizmLvSelectPanel h3,
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigHeader h4 {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigHeader span {
+  display: block;
+  margin-top: 2px;
+  font-size: 10px;
+}
+
+#wrap.adminReactWrap .prizmLvSelectHead,
+#wrap.adminReactWrap .prizmLvSelectPanel footer,
+#wrap.adminReactWrap .prizmLvChoiceList button {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 58px;
+  align-items: center;
+}
+
+#wrap.adminReactWrap .prizmLvSelectHead {
+  min-height: 34px;
+  padding: 0 10px;
+  border-bottom: 1px solid #d9dee5;
+  background: #eef4f8;
+  color: #002e6e;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .prizmLvSelectHead span:last-child,
+#wrap.adminReactWrap .prizmLvChoiceList strong,
+#wrap.adminReactWrap .prizmLvSelectPanel footer strong {
+  text-align: center;
+}
+
+#wrap.adminReactWrap .prizmLvChoiceList {
+  min-height: 250px;
+  max-height: 310px;
+  overflow-y: auto;
+}
+
+#wrap.adminReactWrap .prizmLvChoiceList button {
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 10px;
+  border: 0;
+  border-bottom: 1px solid #e2e6eb;
+  background: #fff;
+  color: #333;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .prizmLvChoiceList button.active {
+  background: #edf6fc;
+  color: #002e6e;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .prizmLvChoiceList strong {
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .prizmLvSelectPanel footer {
+  min-height: 38px;
+  padding: 0 10px;
+  border-top: 1px solid #d9dee5;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 7px;
+  padding: 10px;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigGrid label.wide,
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmStandardRow {
+  grid-column: span 1;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .definitionField {
+  grid-template-columns: 84px 1fr;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel textarea {
+  min-width: 0;
+  min-height: 54px;
+  border: 0;
+  border-left: 1px solid #ddd;
+  padding: 7px 8px;
+  resize: vertical;
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmStandardRow {
+  grid-template-columns: 34px repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmStandardRow > strong {
+  justify-content: center;
+  padding: 0;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigActions {
+  margin: 0;
+  padding: 0 10px 10px;
+}
+
+#wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigActions .sBtn {
+  min-width: 88px;
+}
+
+#wrap.adminReactWrap .prizmLvOverview,
+#wrap.adminReactWrap .prizmRecordPanel {
+  margin-top: 16px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .prizmLvOverview > header,
+#wrap.adminReactWrap .prizmRecordPanel > h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 40px;
+  margin: 0;
+  padding: 0 12px;
+  background: #eef4f8;
+  color: #002e6e;
+}
+
+#wrap.adminReactWrap .prizmLvOverview h3,
+#wrap.adminReactWrap .prizmRecordPanel > h4 {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .prizmLvOverview header span {
+  font-size: 10px;
+}
+
+#wrap.adminReactWrap .prizmLvOverview .tableScroll,
+#wrap.adminReactWrap .prizmRecordScroll {
+  overflow-x: scroll;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .prizmLvOverview .tableScroll::-webkit-scrollbar,
+#wrap.adminReactWrap .prizmRecordScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .prizmLvTable {
+  width: 100%;
+  min-width: 1580px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .contentArea .prizmLvTable thead th,
+#wrap.adminReactWrap .contentArea .prizmRecordTable thead th {
+  height: 38px;
+  padding: 6px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1598ef;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 500;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .prizmLvTable tbody td,
+#wrap.adminReactWrap .prizmRecordTable tbody td {
+  height: 42px;
+  padding: 7px 6px;
+  border-right: 1px solid #e3e7ec;
+  border-bottom: 1px solid #d9dee5;
+  background: #fff;
+  font-size: 10px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .prizmLvTable .leftText,
+#wrap.adminReactWrap .prizmRecordTable .leftText {
+  text-align: left;
+}
+
+#wrap.adminReactWrap .prizmLvTable .tableBtn {
+  min-width: 50px;
+  height: 26px;
+  border: 0;
+  background: #002e6e;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .prizmRecordTable {
+  width: 100%;
+  min-width: 680px;
+  table-layout: fixed;
+}
+
 .serverStatusGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
-  gap: 12px;
-  margin-top: 14px;
+  gap: 10px;
+  margin-top: 12px;
 }
 
 .monitoringFilterBar .line {
@@ -2357,8 +5542,9 @@ body {
 }
 
 .serverStatusCard {
-  min-height: 150px;
-  padding: 14px;
+  min-height: 228px;
+  padding: 0 15px 14px;
+  border-top: 4px solid #1b9bd7;
 }
 
 .serverStatusCardHeader {
@@ -2366,6 +5552,8 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-height: 45px;
+  border-bottom: 1px solid #e5e8ec;
 }
 
 .serverStatusCardHeader h4,
@@ -2377,17 +5565,33 @@ body {
 
 .serverStatusCard strong {
   display: block;
-  margin-top: 16px;
-  color: #222;
-  font-size: 22px;
+  margin-top: 14px;
+  color: #002e6e;
+  font-size: 21px;
 }
 
-.serverStatusCard p {
-  min-height: 34px;
-  margin: 8px 0;
+.serverStatusCard dl {
+  margin: 12px 0 10px;
+}
+
+.serverStatusCard dl > div {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 6px;
+  padding: 5px 0;
+  border-top: 1px solid #edf0f3;
+}
+
+.serverStatusCard dt,
+.serverStatusCard dd {
+  margin: 0;
   color: #555;
   font-size: 12px;
   line-height: 1.45;
+}
+
+.serverStatusCard dt {
+  color: #777;
 }
 
 .serverStatusCard small {
@@ -2405,16 +5609,94 @@ body {
 
 .serverStatusPanel {
   margin-top: 14px;
-  padding: 14px;
+  padding: 0;
+  border: 0;
 }
 
-.serverStatusPanel h4 {
-  margin-bottom: 10px;
+.serverStatusPanel .monitoringSectionTitle {
+  margin: 0;
+  padding: 9px 14px;
+  background: #1b9bd7;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.serverStatusTable th {
-  width: 160px;
-  background: #f7f7f7;
+.serverStatusTable th,
+.serverStatusTable td {
+  height: 38px;
+  padding: 7px 10px;
+  border-color: #dfe3e8;
+  font-size: 12px;
+}
+
+.serverStatusTable thead th {
+  background: #eef4f8;
+  color: #333;
+  text-align: center;
+}
+
+.serverStatusTable tbody td:first-child {
+  width: 150px;
+  color: #002e6e;
+  font-weight: 600;
+  text-align: center;
+}
+
+.serverMonitorSummary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid #d9dee5;
+  border-top: 3px solid #002e6e;
+  background: #fff;
+}
+
+.serverMonitorSummary > div {
+  min-width: 0;
+  padding: 12px 14px;
+  border-left: 1px solid #e3e7eb;
+}
+
+.serverMonitorSummary > div:first-child {
+  border-left: 0;
+}
+
+.serverMonitorSummary span,
+.serverMonitorSummary strong {
+  display: block;
+}
+
+.serverMonitorSummary span {
+  margin-bottom: 6px;
+  color: #777;
+  font-size: 11px;
+}
+
+.serverMonitorSummary strong {
+  overflow-wrap: anywhere;
+  color: #222;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.serverMonitorSummary strong.sColorLS,
+.serverMonitorSummary strong.sColorY,
+.serverMonitorSummary strong.sColorR {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.serverMonitorSummary strong.sColorLS {
+  color: #008b74;
+}
+
+.serverMonitorSummary strong.sColorY {
+  color: #d38400;
+}
+
+.serverMonitorSummary strong.sColorR {
+  color: #d83232;
 }
 
 .rawDataLayout {
@@ -2914,7 +6196,308 @@ body {
   min-width: 720px;
 }
 
+/* ADM-LV-17: monitoring trade list and parsed message detail. */
+#wrap.adminReactWrap .fintechLvSearch {
+  margin-bottom: 12px;
+}
+
+#wrap.adminReactWrap .fintechLvToolbar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 54px;
+  margin-bottom: 12px;
+  border: 1px solid #d9dee5;
+  border-top: 3px solid #002e6e;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .fintechLvCount,
+#wrap.adminReactWrap .fintechLvActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+}
+
+#wrap.adminReactWrap .fintechLvCount span,
+#wrap.adminReactWrap .fintechLvCount small {
+  color: #777;
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .fintechLvCount strong {
+  color: #002e6e;
+  font-size: 16px;
+}
+
+#wrap.adminReactWrap .fintechLvActions > span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 4px 9px;
+  border: 1px solid #d8dee7;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .fintechLvActions .fintechLiveReady {
+  border-color: #a9d9cf;
+  background: #effaf7;
+  color: #087966;
+}
+
+#wrap.adminReactWrap .fintechLvActions .fintechLivePending {
+  border-color: #e5d3a5;
+  background: #fff9eb;
+  color: #9b6c00;
+}
+
+#wrap.adminReactWrap .fintechLvActions .fintechMockToggle {
+  min-width: 112px;
+  height: 30px;
+  padding: 0 12px;
+  line-height: 30px;
+}
+
+#wrap.adminReactWrap .fintechLvList {
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .fintechLvList .tableScroll {
+  overflow-x: scroll;
+  padding-bottom: 0;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .fintechLvList .tableScroll::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 4px 8px;
+  border-top: 1px solid #d5dce5;
+  border-bottom: 1px solid #d5dce5;
+  background: #e8edf3;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar button {
+  width: 36px;
+  height: 26px;
+  border: 1px solid #9aa9bd;
+  background: #fff;
+  color: #002e6e;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar button:disabled {
+  color: #aeb7c3;
+  cursor: default;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar input[type='range'] {
+  width: 100%;
+  height: 20px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  appearance: none;
+  cursor: ew-resize;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar input[type='range']::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 1px solid #c6d0dc;
+  background: #f8fafc;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar input[type='range']::-webkit-slider-thumb {
+  width: 56px;
+  height: 16px;
+  margin-top: -5px;
+  border: 2px solid #e8edf3;
+  background: #657d9d;
+  appearance: none;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar input[type='range']::-moz-range-track {
+  height: 8px;
+  border: 1px solid #c6d0dc;
+  background: #f8fafc;
+}
+
+#wrap.adminReactWrap .horizontalTableScrollbar input[type='range']::-moz-range-thumb {
+  width: 56px;
+  height: 16px;
+  border: 2px solid #e8edf3;
+  border-radius: 0;
+  background: #657d9d;
+}
+
+#wrap.adminReactWrap .fintechLvSectionTitle,
+#wrap.adminReactWrap .fintechLvDetailHeader {
+  min-height: 40px;
+  margin: 0;
+  padding: 0 14px;
+  background: #1b9bd7;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .fintechLvSectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 40px;
+}
+
+#wrap.adminReactWrap .fintechLvTable {
+  width: 100%;
+  min-width: 1380px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .contentArea .fintechLvTable thead th {
+  height: 44px;
+  padding: 8px 7px;
+  border-right: 1px solid rgba(255, 255, 255, 0.22);
+  background: #1b9bd7;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .fintechLvTable tbody td {
+  height: 48px;
+  padding: 8px 7px;
+  border-right: 1px solid #e4e7ec;
+  border-bottom: 1px solid #ddd;
+  background: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .fintechLvTable th:last-child,
+#wrap.adminReactWrap .fintechLvTable td:last-child {
+  border-right: 0;
+}
+
+#wrap.adminReactWrap .fintechLvTable tbody tr.active td {
+  background: #edf6fc;
+}
+
+#wrap.adminReactWrap .fintechLvList .pagingControls {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .fintechLvList .pagingControls > button,
+#wrap.adminReactWrap .fintechLvList .pagingControls > span {
+  min-width: 50px;
+  height: 38px;
+  min-height: 38px;
+  padding: 0 12px;
+  line-height: 38px;
+}
+
+#wrap.adminReactWrap .fintechMockForm {
+  margin: 0 0 14px;
+  padding-top: 0;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .fintechMockHeader {
+  min-height: 40px;
+  margin: -16px -16px 14px;
+  padding: 0 14px;
+  background: #eef4f8;
+  border-bottom: 1px solid #d8dee7;
+}
+
+#wrap.adminReactWrap .fintechMockHeader h3 {
+  color: #002e6e;
+  font-size: 13px;
+}
+
+#wrap.adminReactWrap .fintechLvDetail {
+  margin-top: 18px;
+  padding: 0;
+  border: 1px solid #d9dee5;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .fintechLvDetailHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#wrap.adminReactWrap .fintechLvDetailHeader h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .fintechLvDetailHeader button {
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .fintechLvDetail > .detailSection,
+#wrap.adminReactWrap .fintechLvDetail > .fintechParserSummary,
+#wrap.adminReactWrap .fintechLvDetail > .detailMessage {
+  margin-right: 14px;
+  margin-left: 14px;
+}
+
+#wrap.adminReactWrap .fintechLvDetail .fintechParserSummary h4,
+#wrap.adminReactWrap .fintechLvDetail .detailSection > h3 {
+  background: #eef4f8;
+  color: #002e6e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .fintechLvDetail .fintechParserTable thead th {
+  background: #eef4f8;
+  color: #002e6e;
+}
+
 @media (max-width: 900px) {
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid label.wide {
+    grid-column: span 2;
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid label.wide,
+  #wrap.adminReactWrap .promotionEditorPanel .promotionChargeBox {
+    grid-column: span 2;
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid label.wide {
+    grid-column: span 2;
+  }
+
   .contractFeeGrid,
   .redemptionOperationGrid,
   .documentCheckGrid,
@@ -3007,14 +6590,56 @@ body {
     grid-template-columns: 1fr;
   }
 
+  #wrap.adminReactWrap .fintechLvToolbar {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  #wrap.adminReactWrap .fintechLvCount,
+  #wrap.adminReactWrap .fintechLvActions {
+    justify-content: space-between;
+  }
+
+  #wrap.adminReactWrap .fintechLvActions {
+    border-top: 1px solid #e3e7eb;
+  }
+
+  #wrap.adminReactWrap .fintechLvMetaTable,
+  #wrap.adminReactWrap .fintechLvMetaTable tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .fintechLvMetaTable tr {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .fintechLvMetaTable th,
+  #wrap.adminReactWrap .fintechLvMetaTable td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 38px;
+    padding: 9px 8px;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .fintechLvMetaTable td[colspan] {
+    grid-column: 2;
+  }
+
   .fintechMockForm .line:last-of-type {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-/* LV visual language for the shared admin shell. */
+/* LV shared admin shell. Keep the legacy Rudicks proportions on desktop. */
 #wrap.adminReactWrap {
-  background: #f8f9fc;
+  background: #fafafa;
   color: #333;
 }
 
@@ -3023,16 +6648,18 @@ body {
 }
 
 #wrap.adminReactWrap #header .topLine {
-  background: linear-gradient(105deg, #0e57bf 0%, #29347e 100%);
-  box-shadow: 0 8px 24px rgba(41, 52, 126, 0.2);
+  background: #002e6e;
+  box-shadow: 0 0 30px rgba(24, 66, 129, 0.85);
 }
 
 #wrap.adminReactWrap #header .topLine .inner {
-  min-height: 74px;
+  height: 65px;
+  min-height: 65px;
 }
 
 #wrap.adminReactWrap #header .logo img {
-  width: 142px;
+  width: auto;
+  height: 30px;
 }
 
 #wrap.adminReactWrap #header .userMenu,
@@ -3046,16 +6673,21 @@ body {
   justify-content: center;
   padding: 0 16px;
   border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 4px;
+  border-radius: 5px;
   border-color: rgba(255, 255, 255, 0.72);
-  background: rgba(255, 255, 255, 0.08);
+  background: transparent;
   color: #fff;
   font-size: 13px;
   text-decoration: none;
 }
 
 #wrap.adminReactWrap .subVisualArea {
-  background: linear-gradient(105deg, #5a9aff 0%, #3d47c5 58%, #29347e 100%);
+  height: 168px;
+  background-color: #3f6fd1;
+  background-image: url('/resources/rudicks/img/sub-common/sub-visual02.png');
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 #wrap.adminReactWrap .subVisual .txtBox h2,
@@ -3064,24 +6696,34 @@ body {
 }
 
 #wrap.adminReactWrap .subVisual .txtBox h2 {
-  border-color: rgba(255, 255, 255, 0.72);
-  background: rgba(255, 255, 255, 0.08);
+  height: 30px;
+  min-width: 100px;
+  margin-bottom: 10px;
+  padding: 0 14px;
+  border-color: #fff;
+  background: transparent;
+  font-size: 13px;
+  line-height: 28px;
+}
+
+#wrap.adminReactWrap .subVisual .txtBox h3 {
+  font-size: 32px;
 }
 
 #wrap.adminReactWrap .subContainer {
-  background: #f8f9fc;
+  padding-top: 48px;
+  background: #fafafa;
 }
 
 #wrap.adminReactWrap #snb {
-  overflow: hidden;
   width: 170px;
   margin: 0;
   padding: 0;
   line-height: 1;
   list-style: none;
-  border: 1px solid #e2e4ea;
+  border: 0;
   background: #fff;
-  box-shadow: 0 10px 24px rgba(41, 52, 126, 0.06);
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
 }
 
 #wrap.adminReactWrap #snb li {
@@ -3095,21 +6737,21 @@ body {
 }
 
 #wrap.adminReactWrap #snb > li > .snbCategoryButton {
-  min-height: 52px;
-  border-bottom-color: #e2e4ea;
-  background: #fff;
-  color: #333;
-  font-size: 15px;
-  font-weight: 600;
+  min-height: 47px;
+  border-bottom-color: #ddd;
+  background: #bec1c7;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 400;
 }
 
 #wrap.adminReactWrap #snb > li > .snbCategoryButton:hover {
-  background: #f0f4ff;
-  color: #0d37a4;
+  background: #999;
+  color: #fff;
 }
 
 #wrap.adminReactWrap #snb > li.active > .snbCategoryButton {
-  background: #0e57bf;
+  background: #002e6e;
   color: #fff;
 }
 
@@ -3117,7 +6759,7 @@ body {
   display: none;
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid #e2e4ea;
+  border-bottom: 1px solid #ddd;
   background: #fff;
 }
 
@@ -3128,14 +6770,14 @@ body {
 #wrap.adminReactWrap #snb > li > ul a {
   display: block;
   padding: 15px;
-  border-bottom: 1px solid #e2e4ea;
-  color: #666;
+  border-bottom: 1px solid #ddd;
+  color: #aaa;
 }
 
 #wrap.adminReactWrap #snb > li > ul li.active a {
-  color: #0d37a4;
-  background: #f0f4ff;
-  font-weight: 600;
+  color: #002e6e;
+  background: #eef2f7;
+  font-weight: 400;
 }
 
 #wrap.adminReactWrap .subContents {
@@ -3159,9 +6801,9 @@ body {
 #wrap.adminReactWrap .contentArea > .fixTable,
 #wrap.adminReactWrap .contentArea > .prizmConfigPanel,
 #wrap.adminReactWrap .contentArea > .prizmConfigHistory {
-  border-color: #e2e4ea;
+  border-color: #ddd;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(41, 52, 126, 0.05);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
 }
 
 #wrap.adminReactWrap .contentArea .m-tab {
@@ -3226,6 +6868,150 @@ body {
 
 #wrap.adminReactWrap .contentArea table tbody tr:hover td {
   background: #f8f9fc;
+}
+
+#wrap.adminReactWrap .integratedLvPage .integratedLvTabs ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .integratedLvPage .integratedLvTabs li,
+#wrap.adminReactWrap .integratedLvPage .integratedLvTabs a {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .integratedLvOptions {
+  min-height: 38px;
+  margin: 28px 0 14px;
+}
+
+#wrap.adminReactWrap .integratedLvOptions > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#wrap.adminReactWrap .integratedLvOptions .infoBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 30px;
+  border-radius: 3px;
+  background: #002e6e;
+  color: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid {
+  gap: 0.65%;
+  justify-content: flex-start;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid article {
+  width: 24.5%;
+  min-width: 0;
+  min-height: 132px;
+  margin: 5px 0;
+  border-color: #e4e7ef;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid .colorBox2 {
+  flex: 0 0 104px;
+  width: 104px;
+  min-height: 130px;
+  padding: 12px;
+  border-color: #a0bafe;
+  background: #edf2ff;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid .colorBox2 img {
+  width: 58px;
+  max-width: 100%;
+  height: auto;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid .txtBox {
+  min-width: 0;
+  padding: 14px 8px;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid .txtBox h3 {
+  margin-bottom: 7px;
+  color: #0e57bf;
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+#wrap.adminReactWrap .integratedLvMetricGrid .txtBox td {
+  padding: 1px 3px;
+  color: #555;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .integratedLvSearch .line {
+  grid-template-columns: repeat(5, minmax(120px, 1fr)) auto auto;
+}
+
+#wrap.adminReactWrap .integratedLvPanel {
+  margin-top: 30px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+}
+
+#wrap.adminReactWrap .integratedLvPanel + .integratedLvPanel {
+  margin-top: 38px;
+}
+
+#wrap.adminReactWrap .integratedLvPanel > .contentArea {
+  padding: 24px 28px 30px;
+}
+
+#wrap.adminReactWrap .integratedLvChartBox {
+  position: relative;
+  height: 320px;
+  margin: 0 auto;
+}
+
+#wrap.adminReactWrap .integratedLvChartBox > p {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: #888;
+}
+
+/* ADM-LV-23: legacy moneybank integrated overview and operations tabs */
+#wrap.adminReactWrap .moneybankLvTabs ul {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .moneybankLvMetricGrid .colorBox {
+  flex: 0 0 84px;
+  width: 84px;
+  min-height: 130px;
+  background: #179aff;
+}
+
+#wrap.adminReactWrap .moneybankLvMetricGrid .colorBox img {
+  width: 40px;
+  max-height: 44px;
+}
+
+#wrap.adminReactWrap .moneybankLvMetricGrid .txtBox h3 {
+  color: #222;
+}
+
+#wrap.adminReactWrap .moneybankLvSearch .line {
+  grid-template-columns: minmax(130px, .8fr) repeat(2, minmax(180px, 1fr)) auto auto;
+}
+
+#wrap.adminReactWrap .moneybankLvChartBox {
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
@@ -3357,6 +7143,18 @@ body {
     font-size: 13px;
   }
 
+  #wrap.adminReactWrap .integratedLvMetricGrid article {
+    width: 49.5%;
+  }
+
+  #wrap.adminReactWrap .integratedLvSearch .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .moneybankLvSearch .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   #wrap.adminReactWrap .summaryPills {
     display: flex;
     flex-wrap: wrap;
@@ -3368,6 +7166,18 @@ body {
     gap: 8px;
   }
 
+  #wrap.adminReactWrap .paymentLvSearch .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .requestLvSearch .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .approvalLvSearch .line {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   #wrap.adminReactWrap .table-scroll,
   #wrap.adminReactWrap .overflowBox {
     max-width: 100%;
@@ -3376,8 +7186,78 @@ body {
 }
 
 @media (max-width: 680px) {
+  #wrap.adminReactWrap .managementLvOptions {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid,
+  #wrap.adminReactWrap .managementLvKpiGrid.compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid article {
+    width: auto;
+    min-height: 82px;
+    overflow: hidden;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid .colorBox {
+    flex-basis: 58px;
+    width: 58px;
+    min-width: 58px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid .colorBox img {
+    width: 28px;
+    height: 28px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid .txtBox {
+    max-width: calc(100% - 58px);
+    overflow: hidden;
+    padding: 7px 6px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid h3,
+  #wrap.adminReactWrap .managementLvKpiValue strong {
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid td,
+  #wrap.adminReactWrap .managementLvKpiGrid .textIcon {
+    font-size: 10px;
+  }
+
+  #wrap.adminReactWrap .managementLvKpiGrid h3,
+  #wrap.adminReactWrap .managementLvKpiGrid td,
+  #wrap.adminReactWrap .managementLvKpiValue strong {
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .managementLvChartPanel > .contentArea {
+    padding: 12px 8px 8px;
+  }
+
+  #wrap.adminReactWrap .managementLvChartBox {
+    height: 250px;
+  }
+
   #wrap.adminReactWrap .serverStatusGrid {
     grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .serverMonitorSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .serverMonitorSummary > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .serverMonitorSummary > div:nth-child(n + 3) {
+    border-top: 1px solid #e3e7eb;
   }
 
   #wrap.adminReactWrap .serverStatusEmpty {
@@ -3385,7 +7265,7 @@ body {
   }
 
   #wrap.adminReactWrap .serverStatusPanel {
-    padding: 12px;
+    padding: 0;
   }
 
   #wrap.adminReactWrap .serverStatusTable {
@@ -3564,6 +7444,235 @@ body {
     grid-template-columns: 1fr;
   }
 
+  #wrap.adminReactWrap .requestLvBaseDate {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .requestLvBaseDate .baseDate {
+    width: 100%;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .requestLvSearch .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .requestLvTableOptions > .pRight {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  #wrap.adminReactWrap .requestLvOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .requestLvOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .requestLvDownloadButton {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .approvalLvBaseDate {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .approvalLvBaseDate .baseDate {
+    width: 100%;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .approvalLvSearch .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .approvalLvSearch .approvalLvDateRange {
+    grid-column: auto;
+  }
+
+  #wrap.adminReactWrap .approvalLvTableOptions > .pRight {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  #wrap.adminReactWrap .approvalLvOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .approvalLvOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .approvalLvDownloadButton {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .contractLvBaseDate {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .contractLvBaseDate .baseDate {
+    width: 100%;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .contractLvSearch .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .contractLvSearch .contractLvDateRange {
+    grid-column: auto;
+  }
+
+  #wrap.adminReactWrap .contractLvTableOptions > .pRight {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  #wrap.adminReactWrap .contractLvOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .contractLvOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .contractLvDownloadButton {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .redemptionLvBaseDate {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .redemptionLvBaseDate .baseDate {
+    width: 100%;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .redemptionLvSearch .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .redemptionLvSearch .redemptionLvDateRange {
+    grid-column: auto;
+  }
+
+  #wrap.adminReactWrap .redemptionLvTableOptions > .pRight {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  #wrap.adminReactWrap .redemptionLvOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .redemptionLvOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .redemptionLvDownloadButton {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .settlementLvBaseDate {
+    margin-top: 12px;
+  }
+
+  #wrap.adminReactWrap .settlementLvBaseDate .baseDate {
+    width: 100%;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .settlementLvSearch .line {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .settlementLvSearch .settlementLvDateRange {
+    grid-column: auto;
+  }
+
+  #wrap.adminReactWrap .settlementLvTableOptions > .pRight {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  #wrap.adminReactWrap .settlementLvOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .settlementLvOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .settlementLvDownloadButton {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .settlementLvSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .settlementLvSummary span {
+    justify-content: flex-start;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .paymentLvTableOptions > .pRight {
+    flex-wrap: wrap;
+    align-items: stretch;
+  }
+
+  #wrap.adminReactWrap .paymentOrderBox {
+    flex: 1 1 100%;
+  }
+
+  #wrap.adminReactWrap .paymentOrderBox select {
+    flex: 1;
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .paymentDownloadButton,
+  #wrap.adminReactWrap .paymentColumnPicker,
+  #wrap.adminReactWrap .paymentColumnButton {
+    flex: 1 1 0;
+  }
+
+  #wrap.adminReactWrap .paymentColumnButton {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .paymentColumnMenu {
+    position: fixed;
+    z-index: 10000;
+    top: 50%;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 72vh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+  }
+
+  #wrap.adminReactWrap .paymentLvTotals .tableTotal {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .paymentLvTotals .tableTotal li {
+    min-height: 42px;
+    justify-content: space-between;
+  }
+
+  #wrap.adminReactWrap .paymentLvTotals .tableTotal li:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+
   #wrap.adminReactWrap .legacySearchBox {
     grid-template-columns: 1fr;
     padding: 16px;
@@ -3581,6 +7690,65 @@ body {
 
   #wrap.adminReactWrap .integratedMetricGrid strong {
     font-size: 22px;
+  }
+
+  #wrap.adminReactWrap .integratedLvPage .integratedLvTabs ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .integratedLvOptions {
+    margin-top: 24px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid {
+    gap: 8px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid article {
+    width: calc(50% - 4px);
+    min-height: 118px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid .colorBox2 {
+    flex-basis: 68px;
+    width: 68px;
+    min-height: 116px;
+    padding: 9px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid .colorBox2 img {
+    width: 44px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid .txtBox {
+    padding: 9px 5px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid .txtBox h3 {
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .integratedLvMetricGrid .txtBox td {
+    font-size: 10px;
+  }
+
+  #wrap.adminReactWrap .integratedLvPanel > .contentArea {
+    padding: 16px 8px 20px;
+  }
+
+  #wrap.adminReactWrap .integratedLvChartBox {
+    height: 300px;
+  }
+
+  #wrap.adminReactWrap .moneybankLvMetricGrid .colorBox {
+    flex-basis: 62px;
+    width: 62px;
+    min-height: 116px;
+    padding: 8px;
+  }
+
+  #wrap.adminReactWrap .moneybankLvMetricGrid .colorBox img {
+    width: 34px;
   }
 
   #wrap.adminReactWrap .managementWarningArea {
@@ -3631,7 +7799,12 @@ body {
   }
 
   #wrap.adminReactWrap .memberMetricGrid article {
-    grid-template-columns: 76px minmax(0, 1fr);
+    width: calc(50% - 6px);
+  }
+
+  #wrap.adminReactWrap .memberMetricGrid .colorBox {
+    flex-basis: 76px;
+    width: 76px;
   }
 
   #wrap.adminReactWrap .memberMetricGrid .txtBox {
@@ -3644,14 +7817,12 @@ body {
     white-space: nowrap;
   }
 
-  #wrap.adminReactWrap .memberTrendRow {
-    grid-template-columns: 80px minmax(0, 1fr) 88px;
-    gap: 6px;
-    font-size: 11px;
+  #wrap.adminReactWrap .memberTrendPanel > .contentArea {
+    padding: 16px 10px;
   }
 
-  #wrap.adminReactWrap .memberTrendRow strong {
-    white-space: nowrap;
+  #wrap.adminReactWrap .memberSummaryChartBox {
+    height: 300px;
   }
 
   #wrap.adminReactWrap .fixTable .fixBottom .tableTotal {
@@ -3713,6 +7884,818 @@ body {
   }
 }
 
+/* ADM-LV-24: legacy moneybank usage list and detail */
+#wrap.adminReactWrap .managementUsageLvPage,
+#wrap.adminReactWrap .managementUsageLvDetail {
+  width: 100%;
+  color: #253247;
+  letter-spacing: 0;
+}
+
+#wrap.adminReactWrap .managementUsageLvOptions {
+  margin-bottom: 12px;
+}
+
+#wrap.adminReactWrap .managementUsageLvSearch {
+  margin-bottom: 28px;
+}
+
+#wrap.adminReactWrap .managementUsageLvPage .tableSet > .m-options > .pRight {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+#wrap.adminReactWrap .managementUsageLvPage .tableSet > .m-options > .pRight > * + * {
+  margin-left: 0;
+}
+
+#wrap.adminReactWrap .managementUsageLvPage .excel:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+#wrap.adminReactWrap .managementUsageColumnFilter {
+  position: relative;
+}
+
+#wrap.adminReactWrap .managementUsageColumnFilter > .setting {
+  min-width: 88px;
+}
+
+#wrap.adminReactWrap .managementUsageColumnMenu {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 220px;
+  padding: 14px;
+  border: 1px solid #aebbd0;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(8, 40, 84, .15);
+}
+
+#wrap.adminReactWrap .managementUsageColumnMenu p {
+  margin: 0 0 10px;
+  color: #38506f;
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .managementUsageColumnMenu label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  color: #263852;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .managementUsageColumnMenu input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #1359b8;
+}
+
+#wrap.adminReactWrap .managementUsageColumnMenu > button {
+  width: 100%;
+  margin-top: 10px;
+}
+
+#wrap.adminReactWrap .managementUsageExportMessage {
+  min-height: 24px;
+  margin: -4px 0 8px;
+  color: #31547f;
+  font-size: 12px;
+  text-align: right;
+}
+
+#wrap.adminReactWrap .managementUsageLvTableWrap {
+  overflow: visible;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .managementUsageLvTableWrap > .overflowBox {
+  min-width: 0;
+  height: auto !important;
+  min-height: 0;
+  overflow-x: scroll;
+  padding-bottom: 0;
+  border-top: 2px solid #1598e7;
+  scrollbar-width: none;
+}
+
+#wrap.adminReactWrap .managementUsageLvTableWrap > .overflowBox::-webkit-scrollbar {
+  display: none;
+}
+
+#wrap.adminReactWrap .managementUsageTable {
+  width: 100%;
+  min-width: 1460px;
+  table-layout: fixed;
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .managementUsageTable thead th {
+  height: 48px;
+  background: #eef3ff;
+  color: #0c3d89;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .managementUsageTable tbody td {
+  height: 58px;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .managementUsageTable .refund-btn {
+  min-width: 52px;
+  height: 28px;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+}
+
+#wrap.adminReactWrap .managementUsageHorizontalScrollbar {
+  border-top: 0;
+}
+
+#wrap.adminReactWrap .managementUsageLvTableWrap .fixBottom {
+  margin-top: 0;
+}
+
+#wrap.adminReactWrap .managementUsageLvDetailTitle,
+#wrap.adminReactWrap .managementUsageLvDetailTabs {
+  margin-bottom: 24px;
+}
+
+#wrap.adminReactWrap .managementUsageLvDetailTabs ul {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .managementUsageLvDetailTabs li,
+#wrap.adminReactWrap .managementUsageLvDetailTabs button {
+  width: 100%;
+}
+
+#wrap.adminReactWrap .managementUsageLvPanel,
+#wrap.adminReactWrap .managementUsageLvSection {
+  overflow: hidden;
+  margin: 0 0 24px;
+  border: 1px solid #d7deea;
+  background: #fff;
+  box-shadow: 0 5px 12px rgba(0, 36, 86, .05);
+}
+
+#wrap.adminReactWrap .managementUsageLvPanel > header,
+#wrap.adminReactWrap .managementUsageLvSection > h3 {
+  min-height: 42px;
+  margin: 0;
+  padding: 0 16px;
+  background: #073d82;
+  color: #fff;
+}
+
+#wrap.adminReactWrap .managementUsageLvPanel > header {
+  display: flex;
+  align-items: center;
+}
+
+#wrap.adminReactWrap .managementUsageLvPanel > header h3 {
+  margin: 0;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .managementUsageLvSection > h3 {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 42px;
+}
+
+#wrap.adminReactWrap .managementUsageLvSection > h3::before {
+  width: 14px;
+  height: 14px;
+  background-image: url('/resources/rudicks/img/icon/bullet-icon01-white.svg');
+}
+
+#wrap.adminReactWrap .managementUsageLvPanel .detailInfoTable,
+#wrap.adminReactWrap .managementUsageLvSection .detailInfoTable,
+#wrap.adminReactWrap .managementUsageLvSection .managementUsageHistoryTable {
+  border-top: 0;
+  box-shadow: none;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  border-top: 1px solid #dce3ed;
+  border-left: 1px solid #dce3ed;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid > div {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  min-height: 44px;
+  border-right: 1px solid #dce3ed;
+  border-bottom: 1px solid #dce3ed;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid > div.wide {
+  grid-column: auto;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid dt,
+#wrap.adminReactWrap .managementUsageLvMemberGrid dd {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid dt {
+  border-right: 1px solid #dce3ed;
+  background: #f1f5f9;
+  color: #172b49;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#wrap.adminReactWrap .managementUsageLvMemberGrid dd {
+  background: #fff;
+  color: #384b65;
+  overflow-wrap: anywhere;
+}
+
+#wrap.adminReactWrap .managementUsageLvDetail .caption {
+  display: none !important;
+}
+
+#wrap.adminReactWrap .managementUsageLvStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 64px;
+  height: 26px;
+  padding: 0 12px;
+  border-radius: 14px;
+  background: #76adf2;
+  color: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .managementUsageLvDetailActions .button-box {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+#wrap.adminReactWrap .managementUsageLvDetailActions .listBtn {
+  min-width: 88px;
+  height: 36px;
+  line-height: 34px;
+  text-align: center;
+}
+
+@media (max-width: 680px) {
+  #wrap.adminReactWrap .managementUsageLvPage .tableSet > .m-options > .pRight {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvPage .tableSet > .m-options .fwBox {
+    min-width: 0;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvPage .tableSet > .m-options .fwBox select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvPage .excel,
+  #wrap.adminReactWrap .managementUsageColumnFilter > .setting {
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .managementUsageColumnMenu {
+    position: fixed;
+    z-index: 10000;
+    top: 50%;
+    right: 12px;
+    left: 12px;
+    width: auto;
+    max-height: 72vh;
+    overflow-y: auto;
+    transform: translateY(-50%);
+  }
+
+  #wrap.adminReactWrap .managementUsageLvTableWrap .fixBottom .tableTotal li:nth-child(7),
+  #wrap.adminReactWrap .managementUsageLvTableWrap .fixBottom .tableTotal li:nth-child(8) {
+    grid-column: auto;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvDetailTabs ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .managementUsageLvMemberGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvMemberGrid > div,
+  #wrap.adminReactWrap .managementUsageLvMemberGrid > div.wide {
+    grid-column: auto;
+    grid-template-columns: 104px minmax(0, 1fr);
+  }
+
+  #wrap.adminReactWrap .managementUsageLvMemberGrid dt,
+  #wrap.adminReactWrap .managementUsageLvMemberGrid dd {
+    padding: 8px 10px;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable,
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable tbody {
+    display: block;
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable tr {
+    display: grid;
+    grid-template-columns: 104px minmax(0, 1fr);
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable th,
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable td {
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 42px;
+    white-space: normal;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvDetail .detailInfoTable td {
+    display: flex;
+    align-items: center;
+  }
+
+  #wrap.adminReactWrap .managementUsageLvPanel,
+  #wrap.adminReactWrap .managementUsageLvSection {
+    margin-bottom: 18px;
+  }
+}
+
 .modal-container {
   display: none;
+}
+
+/* ADM-LV-11: legacy credit indicator matrix */
+#wrap.adminReactWrap .creditIndicatorPage {
+  width: 100%;
+  color: #151b2d;
+  letter-spacing: 0;
+}
+
+#wrap.adminReactWrap .creditIndicatorTab {
+  width: 100%;
+  height: 42px;
+  margin-bottom: 28px;
+  background: #063a80;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 42px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .creditIndicatorContent {
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+#wrap.adminReactWrap .creditIndicatorSection h3 {
+  margin: 0 0 10px;
+  color: #063a80;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#wrap.adminReactWrap .creditIndicatorTableScroll {
+  width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid #aeb8c7;
+  scrollbar-color: #9aa9bd #eef1f5;
+}
+
+#wrap.adminReactWrap .creditIndicatorTable {
+  width: 100%;
+  min-width: 1040px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .creditIndicatorTable th,
+#wrap.adminReactWrap .creditIndicatorTable td {
+  height: 38px;
+  padding: 4px;
+  border: 1px solid #c8d0dc;
+  color: #10182a;
+  line-height: 1.3;
+  text-align: center;
+  vertical-align: middle;
+}
+
+#wrap.adminReactWrap .creditIndicatorTable thead th {
+  background: #f8fafc;
+  color: #172138;
+  font-weight: 700;
+}
+
+#wrap.adminReactWrap .creditIndicatorMetricTable th:nth-child(1) {
+  width: 94px;
+}
+
+#wrap.adminReactWrap .creditIndicatorMetricTable th:nth-child(2) {
+  width: 148px;
+}
+
+#wrap.adminReactWrap .creditIndicatorMetricTable th:nth-child(3) {
+  width: 70px;
+}
+
+#wrap.adminReactWrap .creditIndicatorDimension {
+  background: #dbe8f6 !important;
+  color: #0b376d !important;
+  font-weight: 700 !important;
+}
+
+#wrap.adminReactWrap .creditIndicatorItemName {
+  background: #edf4fb;
+  color: #142e52;
+  font-weight: 500;
+}
+
+#wrap.adminReactWrap .creditIndicatorTable td {
+  background: #f7fbff;
+}
+
+#wrap.adminReactWrap .creditIndicatorTable td:has(.creditIndicatorInput) {
+  padding: 2px 3px;
+}
+
+#wrap.adminReactWrap .creditIndicatorInput {
+  width: 100%;
+  min-width: 0;
+  height: 28px;
+  padding: 2px 3px;
+  border: 0;
+  background: transparent;
+  color: #10182a;
+  font: inherit;
+  line-height: 24px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .creditIndicatorInput:focus {
+  outline: 2px solid #4388ee;
+  outline-offset: -2px;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .creditIndicatorRange {
+  width: 16px;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+#wrap.adminReactWrap .creditIndicatorBoolean {
+  color: #16487e;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .creditIndicatorGradeTable th:first-child {
+  width: 94px;
+}
+
+#wrap.adminReactWrap .creditIndicatorGradeSection {
+  margin-top: -4px;
+}
+
+#wrap.adminReactWrap .creditIndicatorActions {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 34px;
+}
+
+#wrap.adminReactWrap .creditIndicatorActions button {
+  min-width: 86px;
+  height: 38px;
+  border: 0;
+  border-radius: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+#wrap.adminReactWrap .creditIndicatorReset {
+  background: #9cadc1;
+}
+
+#wrap.adminReactWrap .creditIndicatorSave {
+  background: #3d83ee;
+}
+
+#wrap.adminReactWrap .creditIndicatorActions button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+#wrap.adminReactWrap .creditIndicatorStatus,
+#wrap.adminReactWrap .creditIndicatorMessage {
+  margin: 18px 0;
+  color: #4b5b70;
+  font-size: 13px;
+  text-align: center;
+}
+
+#wrap.adminReactWrap .creditIndicatorMessage {
+  min-height: 20px;
+  color: #164f91;
+}
+
+@media (max-width: 767px) {
+  #wrap.adminReactWrap .creditIndicatorTab {
+    height: 38px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    line-height: 38px;
+  }
+
+  #wrap.adminReactWrap .creditIndicatorContent {
+    gap: 26px;
+  }
+
+  #wrap.adminReactWrap .creditIndicatorSection h3 {
+    font-size: 13px;
+  }
+
+  #wrap.adminReactWrap .creditIndicatorTableScroll {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #wrap.adminReactWrap .creditIndicatorTable {
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .creditIndicatorActions {
+    margin-top: 26px;
+  }
+}
+
+@media (max-width: 680px) {
+  #wrap.adminReactWrap .chargeLvSearch .line:first-child,
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .chargeLvSearch .line:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .chargeLvSearch .line:last-child .inputBox {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .chargeLvTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .chargeLvTotals > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .chargeLvTotals > div:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorGrid label.wide {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorActions .sColorP {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .chargeEditorPanel .chargeEditorActions .sBtn {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .promotionLvSearch .line:first-child,
+  #wrap.adminReactWrap .promotionLvSearch .line:last-child,
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .promotionLvTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .promotionLvTotals > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .promotionLvTotals > div:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorGrid label.wide,
+  #wrap.adminReactWrap .promotionEditorPanel .promotionChargeBox {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorActions .sColorP {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .promotionEditorPanel .promotionEditorActions .sBtn {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .partnerLvSearch .line:first-child,
+  #wrap.adminReactWrap .partnerLvSearch .line:last-child,
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .partnerLvTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .partnerLvTotals > div:nth-child(odd) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .partnerLvTotals > div:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  #wrap.adminReactWrap .partnerLvTotals > div:last-child {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorGrid label.wide {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorActions .sColorP {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .partnerEditorPanel .partnerEditorActions .sBtn {
+    width: 100%;
+  }
+
+  #wrap.adminReactWrap .adminAccountLvSearch .line,
+  #wrap.adminReactWrap .adminAccountPanel .adminAccountGrid,
+  #wrap.adminReactWrap .adminAccountAuditSummary {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .adminAccountLvSearch .line:last-child {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .adminAccountLvSearch .line:last-child .inputBox {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .adminAccountLvTotals {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .adminAccountLvTotals > div:nth-child(3) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .adminAccountLvTotals > div:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.32);
+  }
+
+  #wrap.adminReactWrap .adminAccountAuditSummary > div {
+    border-top: 1px solid #d9dee5;
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .adminAccountAuditSummary > div:first-child {
+    border-top: 0;
+  }
+
+  #wrap.adminReactWrap .adminAccountPanel .adminAccountGrid {
+    gap: 8px;
+  }
+
+  #wrap.adminReactWrap .adminAccountPanel .adminAccountActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  #wrap.adminReactWrap .prizmLvTopline {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .prizmLvSelector {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  #wrap.adminReactWrap .prizmLvTabs button,
+  #wrap.adminReactWrap .prizmLvTabs a {
+    min-height: 38px;
+    padding: 4px;
+    font-size: 11px;
+  }
+
+  #wrap.adminReactWrap .prizmLvSummary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  #wrap.adminReactWrap .prizmLvSummary span:nth-child(odd) {
+    border-left: 0;
+  }
+
+  #wrap.adminReactWrap .prizmLvSummary span:nth-child(n + 3) {
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  #wrap.adminReactWrap .prizmLvSummary span:last-child {
+    grid-column: 1 / -1;
+  }
+
+  #wrap.adminReactWrap .prizmLvSearch .line,
+  #wrap.adminReactWrap .prizmLvSelector {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .prizmLvChoiceList {
+    min-height: 0;
+    max-height: 210px;
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel .prizmStandardRow {
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel .prizmStandardRow > label:last-child {
+    grid-column: 2;
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel .definitionField,
+  #wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigGrid label {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  #wrap.adminReactWrap .prizmLvDetailPanel .prizmConfigActions .sBtn {
+    width: 100%;
+  }
 }

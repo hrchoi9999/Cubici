@@ -20,7 +20,7 @@ import {
   formatContractStatus,
 } from '../utils/contractStatus.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function formatDate(value) {
   if (!value) {
@@ -78,15 +78,20 @@ function mapContractToRow(contract) {
   return {
     id: contract.mbid,
     status: formatContractStatus(contract.status),
-    count: contract.contract_fee_count > 0 ? `${contract.contract_fee_count}회` : '신규',
+    count: contract.use_count > 0 ? `${contract.use_count}회` : '신규',
     requestedAt: formatDate(contract.request_date),
     userId: contract.user_email ?? contract.user_no ?? '-',
     userName: contract.user_name ?? '-',
-    amount: formatNumber(contract.sales_amount),
+    amount: formatNumber(Math.round(Number(contract.sales_amount ?? 0) / 1000)),
     shop: contract.request_shop ?? contract.contract_shop_count ?? 0,
     documents: `${contract.sub_complete ?? 'N'} (${contract.document_file_count ?? 0}건)`,
     score: contract.prizm_score ?? '계산',
   };
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 export function AdminDashboardPage() {
@@ -104,11 +109,14 @@ export function AdminDashboardPage() {
   const [feeMessage, setFeeMessage] = useState('');
   const [fileMessage, setFileMessage] = useState('');
   const [reviewMessage, setReviewMessage] = useState('');
+  const [requestSummary, setRequestSummary] = useState({ total: 0, progress: 0, complete: 0 });
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
   const [formValues, setFormValues] = useState({
     userId: '',
     userName: '',
     firmName: '',
-    status: '',
+    requestStage: '',
     productCode: '',
     minSalesAmount: '',
     maxSalesAmount: '',
@@ -126,16 +134,22 @@ export function AdminDashboardPage() {
       setErrorMessage('');
 
       try {
-        const data = await fetchContracts({ limit: PAGE_SIZE, offset, ...filters });
+        const data = await fetchContracts({ limit: PAGE_SIZE, offset, request_scope: true, ...filters });
         if (!ignore) {
           setContracts(data.items ?? []);
           setTotal(data.total ?? 0);
+          setRequestSummary(data.request_summary ?? {
+            total: data.total ?? 0,
+            progress: 0,
+            complete: 0,
+          });
         }
       } catch (error) {
         if (!ignore) {
           setErrorMessage(error.message);
           setContracts([]);
           setTotal(0);
+          setRequestSummary({ total: 0, progress: 0, complete: 0 });
         }
       } finally {
         if (!ignore) {
@@ -155,9 +169,9 @@ export function AdminDashboardPage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const summary = [
-    { label: '전체 신청', value: `${formatNumber(total)} 건` },
-    { label: '현재 페이지', value: `${formatNumber(rows.length)} 건` },
-    { label: '페이지', value: `${currentPage} / ${pageCount}` },
+    { label: '총 신청 접수', value: `${formatNumber(requestSummary.total)} 건` },
+    { label: '신청 진행', value: `${formatNumber(requestSummary.progress)} 건` },
+    { label: '신청 완료', value: `${formatNumber(requestSummary.complete)} 건` },
   ];
 
   function goToPreviousPage() {
@@ -183,7 +197,7 @@ export function AdminDashboardPage() {
     event.preventDefault();
     setOffset(0);
     setFilters({
-      status: formValues.status,
+      request_stage: formValues.requestStage,
       user_id: formValues.userId,
       user_name: formValues.userName,
       firm_name: formValues.firmName,
@@ -194,6 +208,56 @@ export function AdminDashboardPage() {
       to_date: formValues.toDate,
       order_by: formValues.orderBy,
     });
+  }
+
+  function handleOrderByChange(event) {
+    const { value } = event.target;
+    setFormValues((current) => ({ ...current, orderBy: value }));
+    setFilters((current) => ({ ...current, order_by: value }));
+    setOffset(0);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportMessage('');
+
+    try {
+      const items = [];
+      let exportOffset = 0;
+      let exportTotal = 0;
+
+      do {
+        const data = await fetchContracts({
+          limit: 100,
+          offset: exportOffset,
+          request_scope: true,
+          ...filters,
+        });
+        const pageItems = data.items ?? [];
+        exportTotal = data.total ?? pageItems.length;
+        items.push(...pageItems);
+        exportOffset += pageItems.length;
+        if (pageItems.length === 0) break;
+      } while (exportOffset < exportTotal && exportOffset < 10000);
+
+      const headers = ['상태', '재이용', '신청일자', '회원ID', '회원명', '월결제액(천원)', '등록쇼핑몰', '제출서류 확인', '프리즘 점수'];
+      const csvRows = items.map((contract) => {
+        const row = mapContractToRow(contract);
+        return [row.status, row.count, row.requestedAt, row.userId, row.userName, row.amount, row.shop, row.documents, row.score];
+      });
+      const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cubici-moneybank-requests-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      setExportMessage(`${formatNumber(items.length)}건을 내려받았습니다.`);
+    } catch (error) {
+      setExportMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   async function openDetail(mbid, mode = 'status') {
@@ -347,18 +411,24 @@ export function AdminDashboardPage() {
   }
 
   return (
-    <>
+    <section className="requestLvPage">
       <div className="m-tab">
         <ul>
           <li className="active">
-            <a href="javascript:;">신청 접수</a>
+            <a href="javascript:;">신청 현황</a>
           </li>
         </ul>
       </div>
 
+      <div className="m-options requestLvBaseDate">
+        <div className="pRight">
+          <span className="baseDate"><b>기준</b> {new Date().toLocaleDateString('ko-KR')}</span>
+        </div>
+      </div>
+
       <div className="contentGrid">
-        <form className="m-search searchArea" onSubmit={handleSearch}>
-          <div className="line">
+        <form className="m-search searchArea requestLvSearch" onSubmit={handleSearch}>
+          <div className="line requestLvSearchGrid">
             <div className="inputBox">
               <label htmlFor="userName">회원명</label>
               <input id="userName" name="userName" type="text" value={formValues.userName} onChange={updateFormValue} />
@@ -371,42 +441,34 @@ export function AdminDashboardPage() {
               <label htmlFor="userId">회원ID</label>
               <input id="userId" name="userId" type="text" value={formValues.userId} onChange={updateFormValue} />
             </div>
-          </div>
-          <div className="line">
             <div className="inputBox">
               <label htmlFor="productCode">서비스 구분</label>
-              <input id="productCode" name="productCode" type="text" value={formValues.productCode} onChange={updateFormValue} />
-            </div>
-            <div className="inputBox">
-              <label htmlFor="selectStatus">신청상태</label>
-              <input id="selectStatus" name="status" type="text" value={formValues.status} onChange={updateFormValue} />
-            </div>
-            <div className="inputBox">
-              <label htmlFor="minSalesAmount">최소 신청금액</label>
-              <input id="minSalesAmount" name="minSalesAmount" type="number" value={formValues.minSalesAmount} onChange={updateFormValue} />
-            </div>
-            <div className="inputBox">
-              <label htmlFor="maxSalesAmount">최대 신청금액</label>
-              <input id="maxSalesAmount" name="maxSalesAmount" type="number" value={formValues.maxSalesAmount} onChange={updateFormValue} />
+              <select id="productCode" name="productCode" value={formValues.productCode} onChange={updateFormValue}>
+                <option value="">전체</option>
+                <option value="MP">머니뱅크</option>
+              </select>
             </div>
           </div>
-          <div className="line">
+          <div className="line requestLvSearchGrid">
             <div className="inputBox">
-              <label htmlFor="fromDate">시작일</label>
-              <input id="fromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} />
-            </div>
-            <div className="inputBox">
-              <label htmlFor="toDate">종료일</label>
-              <input id="toDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} />
-            </div>
-            <div className="inputBox">
-              <label htmlFor="orderBy">정렬</label>
-              <select id="orderBy" name="orderBy" value={formValues.orderBy} onChange={updateFormValue}>
-                <option value="request_date_desc">신청일 최신순</option>
-                <option value="request_date_asc">신청일 오래된순</option>
-                <option value="sales_amount_desc">신청금액 높은순</option>
-                <option value="sales_amount_asc">신청금액 낮은순</option>
+              <label htmlFor="selectStatus">신청상태</label>
+              <select id="selectStatus" name="requestStage" value={formValues.requestStage} onChange={updateFormValue}>
+                <option value="">전체</option>
+                <option value="progress">신청</option>
+                <option value="complete">완료</option>
               </select>
+            </div>
+            <div className="inputBox requestLvRange">
+              <label htmlFor="minSalesAmount">월결제액</label>
+              <input id="minSalesAmount" name="minSalesAmount" type="number" value={formValues.minSalesAmount} onChange={updateFormValue} />
+              <span>~</span>
+              <input id="maxSalesAmount" name="maxSalesAmount" type="number" value={formValues.maxSalesAmount} onChange={updateFormValue} />
+            </div>
+            <div className="inputBox requestLvRange">
+              <label htmlFor="fromDate">신청일자</label>
+              <input id="fromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} />
+              <span>~</span>
+              <input id="toDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} />
             </div>
             <button className="sBtn sColorLB" type="submit">
               검색
@@ -414,21 +476,39 @@ export function AdminDashboardPage() {
           </div>
         </form>
 
-        <div id="fixTable" className="fixTable legacyListTable table-scroll">
+        <div className="m-options requestLvTableOptions">
+          <div className="pRight">
+            <div className="fwBox requestLvOrderBox">
+              <label htmlFor="orderBy">보기기준</label>
+              <select id="orderBy" name="orderBy" value={formValues.orderBy} onChange={handleOrderByChange}>
+                <option value="request_date_desc">신청일 최신순</option>
+                <option value="request_date_asc">신청일 오래된순</option>
+                <option value="sales_amount_desc">월결제액 높은순</option>
+                <option value="sales_amount_asc">월결제액 낮은순</option>
+              </select>
+            </div>
+            <button className="requestLvDownloadButton" type="button" onClick={handleExport} disabled={isExporting}>
+              {isExporting ? '내려받는 중' : '엑셀 다운로드'}
+            </button>
+          </div>
+          {exportMessage ? <p className="requestLvExportMessage" role="status">{exportMessage}</p> : null}
+        </div>
+
+        <div id="fixTable" className="fixTable legacyListTable table-scroll requestLvTable">
           <div className="overflowBox">
           <table className="m-shadowTable requestTable">
             <caption className="caption">신청 접수 목록</caption>
             <thead>
               <tr>
-                <th scope="col">신청상태</th>
-                <th scope="col">이용횟수</th>
-                <th scope="col">신청일</th>
+                <th scope="col">상태</th>
+                <th scope="col">재이용</th>
+                <th scope="col">신청일자</th>
                 <th scope="col">회원ID</th>
                 <th scope="col">회원명</th>
-                <th scope="col">매출금액</th>
+                <th scope="col">월결제액(천원)</th>
                 <th scope="col">등록쇼핑몰</th>
-                <th scope="col">서류</th>
-                <th scope="col">Prism Score</th>
+                <th scope="col">제출서류 확인</th>
+                <th scope="col">프리즘 점수</th>
               </tr>
             </thead>
             <tbody id="fixTbody">
@@ -523,7 +603,7 @@ export function AdminDashboardPage() {
           onReviewNoteCreate={handleReviewNoteCreate}
         />
       </div>
-    </>
+    </section>
   );
 }
 

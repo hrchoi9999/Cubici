@@ -1,6 +1,6 @@
 """Moneybank management overview queries."""
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Literal
 
 from psycopg.rows import dict_row
@@ -21,6 +21,9 @@ class ManagementOverviewSummary(BaseModel):
     shop_grouping_status_label: str = "shop grouping 대조 필요"
     contract_total_count: int
     contract_today_count: int
+    review_today_count: int = 0
+    approved_today_count: int = 0
+    terminated_today_count: int = 0
     active_contract_count: int
     terminated_contract_count: int
     provision_today_amount: int
@@ -29,6 +32,7 @@ class ManagementOverviewSummary(BaseModel):
     repayment_today_amount: int
     repayment_total_amount: int
     repayment_total_count: int
+    repayment_fee_total_amount: int = 0
     outstanding_balance_amount: int
     outstanding_balance_count: int
     balance_reconcile_amount: int = 0
@@ -41,8 +45,16 @@ class ManagementOverviewSummary(BaseModel):
 class ManagementOverviewSeriesItem(BaseModel):
     bucket: date
     contract_count: int
+    review_count: int = 0
+    approved_count: int = 0
+    terminated_count: int = 0
+    request_amount: int = 0
+    review_amount: int = 0
+    approved_amount: int = 0
     provision_amount: int
+    provision_count: int = 0
     repayment_amount: int
+    repayment_fee: int = 0
     settlement_amount: int
     outstanding_balance: int
 
@@ -102,6 +114,62 @@ class MemberSummaryResponse(BaseModel):
     product_code: str | None
     metrics: MemberSummaryMetrics
     series: list[MemberSummarySeriesItem]
+
+
+class MemberSummaryOption(BaseModel):
+    value: str
+    label: str
+
+
+class MemberSummaryOptionsResponse(BaseModel):
+    partners: list[MemberSummaryOption]
+    products: list[MemberSummaryOption]
+
+
+class IntegratedPeriodMetric(BaseModel):
+    today: int | float | None
+    current_month: int | float | None
+    previous_month: int | float | None
+    available: bool = True
+
+
+class CubiciIntegratedMetrics(BaseModel):
+    standard_date: date | None
+    from_date: date | None
+    to_date: date | None
+    new_members: IntegratedPeriodMetric
+    withdrawn_members: IntegratedPeriodMetric
+    fee_income: IntegratedPeriodMetric
+    dormant_members: IntegratedPeriodMetric
+    sales_amount: IntegratedPeriodMetric
+    sales_quantity: IntegratedPeriodMetric
+    settlement_amount: IntegratedPeriodMetric
+    sku_count: IntegratedPeriodMetric
+    visitor_count: IntegratedPeriodMetric
+    max_concurrent_users: IntegratedPeriodMetric
+    average_usage_minutes: IntegratedPeriodMetric
+    average_shop_count: IntegratedPeriodMetric
+
+
+class CubiciIntegratedSeriesItem(BaseModel):
+    bucket: date
+    new_member_count: int
+    withdrawn_member_count: int
+    cumulative_member_count: int
+    cubici_average_days: float
+    moneybank_average_days: float
+    channel_counts: dict[str, int]
+
+
+class CubiciIntegratedResponse(BaseModel):
+    unit: OverviewUnit
+    partner_code: str | None
+    product_code: str | None
+    metrics: CubiciIntegratedMetrics
+    partners: list[MemberSummaryOption]
+    products: list[MemberSummaryOption]
+    channels: list[MemberSummaryOption]
+    series: list[CubiciIntegratedSeriesItem]
 
 
 MemberInfoOrderBy = Literal["reg_date_desc", "reg_date_asc", "name_asc", "firm_name_asc", "shop_count_desc"]
@@ -546,6 +614,90 @@ def get_member_summary(
         product_code=product_code,
         metrics=MemberSummaryMetrics(**metrics),
         series=[MemberSummarySeriesItem(**row) for row in series],
+    )
+
+
+def get_member_summary_options() -> MemberSummaryOptionsResponse:
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            return _fetch_member_summary_options(cursor)
+
+
+def get_cubici_integrated_info(
+    *,
+    unit: OverviewUnit = "day",
+    from_date: date | None = None,
+    to_date: date | None = None,
+    partner_code: str | None = None,
+    product_code: str | None = None,
+) -> CubiciIntegratedResponse:
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            resolved_dates = _resolve_integrated_date_range(
+                cursor,
+                from_date=from_date,
+                to_date=to_date,
+            )
+            period_rows = _fetch_integrated_period_metrics(
+                cursor,
+                **resolved_dates,
+                partner_code=partner_code,
+                product_code=product_code,
+            )
+            visitor_metric = _fetch_integrated_visitor_metric(
+                cursor,
+                to_date=resolved_dates["to_date"],
+            )
+            series = _fetch_integrated_series(
+                cursor,
+                unit=unit,
+                **resolved_dates,
+                partner_code=partner_code,
+                product_code=product_code,
+            )
+            channels = _fetch_integrated_channels(
+                cursor,
+                series=series,
+                partner_code=partner_code,
+            )
+            options = _fetch_member_summary_options(cursor)
+
+    period_map = {row["period_key"]: row for row in period_rows}
+
+    def metric(field: str, *, available: bool = True) -> IntegratedPeriodMetric:
+        return IntegratedPeriodMetric(
+            today=period_map["today"][field] if available else None,
+            current_month=period_map["current_month"][field] if available else None,
+            previous_month=period_map["previous_month"][field] if available else None,
+            available=available,
+        )
+
+    metrics = CubiciIntegratedMetrics(
+        standard_date=resolved_dates["to_date"],
+        from_date=resolved_dates["from_date"],
+        to_date=resolved_dates["to_date"],
+        new_members=metric("new_members"),
+        withdrawn_members=metric("withdrawn_members"),
+        fee_income=metric("fee_income"),
+        dormant_members=metric("dormant_members"),
+        sales_amount=metric("sales_amount"),
+        sales_quantity=metric("sales_quantity"),
+        settlement_amount=metric("settlement_amount"),
+        sku_count=metric("sku_count"),
+        visitor_count=visitor_metric,
+        max_concurrent_users=metric("max_concurrent_users", available=False),
+        average_usage_minutes=metric("average_usage_minutes", available=False),
+        average_shop_count=metric("average_shop_count"),
+    )
+    return CubiciIntegratedResponse(
+        unit=unit,
+        partner_code=partner_code,
+        product_code=product_code,
+        metrics=metrics,
+        partners=options.partners,
+        products=options.products,
+        channels=channels,
+        series=[CubiciIntegratedSeriesItem(**row) for row in series],
     )
 
 
@@ -1986,6 +2138,367 @@ def _build_member_info_filters(
     return "where " + " and ".join(clauses), tuple(params)
 
 
+def _fetch_member_summary_options(cursor) -> MemberSummaryOptionsResponse:
+    cursor.execute(
+        """
+        select
+            partner_code as value,
+            coalesce(nullif(partner_name, ''), partner_code) as label
+        from partner
+        where nullif(partner_code, '') is not null
+        order by label, value
+        """
+    )
+    partners = cursor.fetchall()
+    cursor.execute(
+        """
+        select product_code as value, product_code as label
+        from moneybank_contract
+        where nullif(product_code, '') is not null
+        group by product_code
+        order by product_code
+        """
+    )
+    products = cursor.fetchall()
+    return MemberSummaryOptionsResponse(
+        partners=[MemberSummaryOption(**row) for row in partners],
+        products=[MemberSummaryOption(**row) for row in products],
+    )
+
+
+def _resolve_integrated_date_range(
+    cursor,
+    *,
+    from_date: date | None,
+    to_date: date | None,
+) -> dict[str, date]:
+    cursor.execute(
+        """
+        select nullif(
+            greatest(
+                coalesce((select max(reg_date)::date from users where user_type = 'USER'), date '1900-01-01'),
+                coalesce((select max(paid_date)::date from sale), date '1900-01-01'),
+                coalesce((select max(settlement_date)::date from settlement), date '1900-01-01'),
+                coalesce((select max(reg_date)::date from shop_accounts), date '1900-01-01'),
+                coalesce((select max(payment_date)::date from billing_payment_detail), date '1900-01-01')
+            ),
+            date '1900-01-01'
+        ) as max_date
+        """
+    )
+    max_date = cursor.fetchone()["max_date"] or date.today()
+    end_date = to_date or max_date
+    start_date = from_date or (end_date - timedelta(days=30))
+    return {"from_date": start_date, "to_date": end_date}
+
+
+def _integrated_eligibility_ctes(
+    *,
+    partner_code: str | None,
+    product_code: str | None,
+) -> tuple[str, tuple[object, ...]]:
+    user_clauses = ["u.user_type = 'USER'"]
+    user_params: list[object] = []
+    if partner_code:
+        user_clauses.append("nullif(u.partner_code, '') = %s")
+        user_params.append(partner_code)
+    if product_code:
+        user_clauses.append(
+            "exists (select 1 from moneybank_contract filter_contract "
+            "where filter_contract.user_no = u.user_no and filter_contract.product_code = %s)"
+        )
+        user_params.append(product_code)
+
+    contract_filter = ""
+    contract_params: list[object] = []
+    if product_code:
+        contract_filter = "where c.product_code = %s"
+        contract_params.append(product_code)
+
+    ctes = f"""
+        eligible_users as (
+            select u.*
+            from users u
+            where {' and '.join(user_clauses)}
+        ),
+        eligible_contracts as (
+            select c.*
+            from moneybank_contract c
+            join eligible_users u on u.user_no = c.user_no
+            {contract_filter}
+        ),
+        eligible_sales as (
+            select distinct s.*
+            from sale s
+            join shop_accounts sa
+              on upper(sa.shop_type) = upper(s.shop_type)
+             and sa.shop_id = s.shop_id
+             and coalesce(sa.del_yn, 'N') <> 'Y'
+            join eligible_users u on u.user_no = sa.user_no
+        ),
+        eligible_settlements as (
+            select distinct st.*
+            from settlement st
+            join shop_accounts sa
+              on upper(sa.shop_type) = upper(st.shop_type)
+             and sa.shop_id = st.shop_id
+             and coalesce(sa.del_yn, 'N') <> 'Y'
+            join eligible_users u on u.user_no = sa.user_no
+        )
+    """
+    return ctes, (*user_params, *contract_params)
+
+
+def _fetch_integrated_period_metrics(
+    cursor,
+    *,
+    from_date: date,
+    to_date: date,
+    partner_code: str | None,
+    product_code: str | None,
+) -> list[dict]:
+    current_month_start = to_date.replace(day=1)
+    previous_month_end = current_month_start - timedelta(days=1)
+    previous_month_start = previous_month_end.replace(day=1)
+    eligibility_ctes, eligibility_params = _integrated_eligibility_ctes(
+        partner_code=partner_code,
+        product_code=product_code,
+    )
+    cursor.execute(
+        f"""
+        with periods(period_key, start_date, end_date) as (
+            values
+                ('today', %s::date, %s::date),
+                ('current_month', %s::date, %s::date),
+                ('previous_month', %s::date, %s::date)
+        ),
+        {eligibility_ctes}
+        select
+            p.period_key,
+            (select count(*) from eligible_users u
+             where u.reg_date::date between p.start_date and p.end_date)::int as new_members,
+            (select count(*) from eligible_contracts c
+             where c.status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
+               and coalesce(c.cancel_request_date, c.modified_date, c.request_date)::date between p.start_date and p.end_date
+            )::int as withdrawn_members,
+            coalesce((select sum(coalesce(bp.amount, 0)) from billing_payment_detail bp
+             join eligible_users u on u.user_no = bp.user_no
+             where bp.pg_id is not null
+               and (bp.status in ('P', 'Y', 'PAID') or bp.status is null)
+               and bp.payment_date::date between p.start_date and p.end_date), 0)::bigint as fee_income,
+            (select count(*) from eligible_users u
+             where (coalesce(u.last_login_date, u.reg_date) + interval '365 days')::date
+                   between p.start_date and p.end_date)::int as dormant_members,
+            coalesce((select sum(coalesce(s.payment_amount, s.sales_amount, 0)) from eligible_sales s
+             where s.paid_date::date between p.start_date and p.end_date), 0)::bigint as sales_amount,
+            coalesce((select sum(coalesce(s.quantity, 0)) from eligible_sales s
+             where s.paid_date::date between p.start_date and p.end_date), 0)::bigint as sales_quantity,
+            coalesce((select sum(coalesce(st.settlement_amount, 0)) from eligible_settlements st
+             where st.settlement_date::date between p.start_date and p.end_date), 0)::bigint as settlement_amount,
+            (select count(distinct concat_ws('|', s.shop_type, s.shop_id, coalesce(s.product_no, s.product_name)))
+             from eligible_sales s
+             where s.paid_date::date between p.start_date and p.end_date)::int as sku_count,
+            null::bigint as visitor_count,
+            null::bigint as max_concurrent_users,
+            null::numeric as average_usage_minutes,
+            coalesce((
+                select round(avg(shop_count), 2)
+                from (
+                    select u.user_no, count(sa.id)::numeric as shop_count
+                    from eligible_users u
+                    left join shop_accounts sa
+                      on sa.user_no = u.user_no
+                     and coalesce(sa.del_yn, 'N') <> 'Y'
+                     and sa.reg_date::date <= p.end_date
+                    where u.reg_date::date <= p.end_date
+                    group by u.user_no
+                ) shop_totals
+            ), 0)::float as average_shop_count
+        from periods p
+        order by case p.period_key when 'today' then 1 when 'current_month' then 2 else 3 end
+        """,
+        (
+            to_date,
+            to_date,
+            current_month_start,
+            to_date,
+            previous_month_start,
+            previous_month_end,
+            *eligibility_params,
+        ),
+    )
+    return cursor.fetchall()
+
+
+def _fetch_integrated_visitor_metric(cursor, *, to_date: date) -> IntegratedPeriodMetric:
+    cursor.execute(
+        """
+        select
+            today_visitor as today,
+            current_month_visitor as current_month,
+            previous_month_visitor as previous_month
+        from site_visitor
+        where date <= %s::date
+        order by date desc, no desc
+        limit 1
+        """,
+        (to_date,),
+    )
+    row = cursor.fetchone()
+    if row is None:
+        return IntegratedPeriodMetric(
+            today=None,
+            current_month=None,
+            previous_month=None,
+            available=False,
+        )
+    return IntegratedPeriodMetric(**row, available=True)
+
+
+def _fetch_integrated_series(
+    cursor,
+    *,
+    unit: OverviewUnit,
+    from_date: date,
+    to_date: date,
+    partner_code: str | None,
+    product_code: str | None,
+) -> list[dict]:
+    eligibility_ctes, eligibility_params = _integrated_eligibility_ctes(
+        partner_code=partner_code,
+        product_code=product_code,
+    )
+    user_bucket = _bucket_expr(unit, "reg_date")
+    withdrawn_bucket = _bucket_expr(unit, "coalesce(cancel_request_date, modified_date, request_date)")
+    cursor.execute(
+        f"""
+        with {eligibility_ctes},
+        buckets as (
+            select generate_series(
+                date_trunc(%s, %s::date)::date,
+                date_trunc(%s, %s::date)::date,
+                case when %s = 'month' then interval '1 month'
+                     when %s = 'week' then interval '1 week'
+                     else interval '1 day' end
+            )::date as bucket
+        ),
+        new_before as (
+            select count(*)::int as count from eligible_users where reg_date::date < %s::date
+        ),
+        withdrawn_before as (
+            select count(*)::int as count from eligible_contracts
+            where status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
+              and coalesce(cancel_request_date, modified_date, request_date)::date < %s::date
+        ),
+        new_members as (
+            select {user_bucket} as bucket, count(*)::int as count
+            from eligible_users
+            where reg_date::date between %s and %s
+            group by 1
+        ),
+        withdrawn_members as (
+            select {withdrawn_bucket} as bucket, count(*)::int as count
+            from eligible_contracts
+            where status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
+              and coalesce(cancel_request_date, modified_date, request_date)::date between %s and %s
+            group by 1
+        )
+        select
+            b.bucket,
+            coalesce(n.count, 0)::int as new_member_count,
+            coalesce(w.count, 0)::int as withdrawn_member_count,
+            ((select count from new_before) - (select count from withdrawn_before)
+              + sum(coalesce(n.count, 0) - coalesce(w.count, 0)) over (order by b.bucket))::int
+                as cumulative_member_count,
+            coalesce((select round(avg((b.bucket - u.reg_date::date)::numeric), 2)
+                      from eligible_users u where u.reg_date::date <= b.bucket), 0)::float
+                as cubici_average_days,
+            coalesce((select round(avg((b.bucket - c.request_date::date)::numeric), 2)
+                      from eligible_contracts c where c.request_date::date <= b.bucket), 0)::float
+                as moneybank_average_days
+        from buckets b
+        left join new_members n on n.bucket = b.bucket
+        left join withdrawn_members w on w.bucket = b.bucket
+        order by b.bucket
+        """,
+        (
+            *eligibility_params,
+            unit,
+            from_date,
+            unit,
+            to_date,
+            unit,
+            unit,
+            from_date,
+            from_date,
+            from_date,
+            to_date,
+            from_date,
+            to_date,
+        ),
+    )
+    series = cursor.fetchall()
+
+    eligibility_ctes, eligibility_params = _integrated_eligibility_ctes(
+        partner_code=partner_code,
+        product_code=product_code,
+    )
+    channel_bucket = _bucket_expr(unit, "reg_date")
+    cursor.execute(
+        f"""
+        with {eligibility_ctes}
+        select
+            {channel_bucket} as bucket,
+            coalesce(nullif(partner_code, ''), 'DIRECT') as channel_key,
+            count(*)::int as count
+        from eligible_users
+        where reg_date::date between %s and %s
+        group by 1, 2
+        order by 1, 2
+        """,
+        (*eligibility_params, from_date, to_date),
+    )
+    channel_by_bucket: dict[date, dict[str, int]] = {}
+    for row in cursor.fetchall():
+        channel_by_bucket.setdefault(row["bucket"], {})[row["channel_key"]] = row["count"]
+    for row in series:
+        row["channel_counts"] = channel_by_bucket.get(row["bucket"], {})
+    return series
+
+
+def _fetch_integrated_channels(
+    cursor,
+    *,
+    series: list[dict],
+    partner_code: str | None,
+) -> list[MemberSummaryOption]:
+    cursor.execute(
+        """
+        select partner_code as value, coalesce(nullif(partner_name, ''), partner_code) as label
+        from partner
+        where nullif(partner_code, '') is not null
+        order by label, value
+        """
+    )
+    partner_rows = cursor.fetchall()
+    labels = {row["value"]: row["label"] for row in partner_rows}
+    keys = {key for row in series for key in row.get("channel_counts", {})}
+    if not partner_code:
+        keys.update(labels)
+        keys.add("DIRECT")
+    else:
+        keys.add(partner_code)
+    ordered_keys = ["DIRECT"] if "DIRECT" in keys else []
+    ordered_keys.extend(sorted(keys - {"DIRECT"}, key=lambda key: labels.get(key, key)))
+    return [
+        MemberSummaryOption(
+            value=key,
+            label="큐빅아이" if key == "DIRECT" else labels.get(key, key),
+        )
+        for key in ordered_keys
+    ]
+
+
 def _resolve_member_date_range(cursor, *, from_date: date | None, to_date: date | None) -> dict[str, date | None]:
     if from_date is not None and to_date is not None:
         return {"from_date": from_date, "to_date": to_date}
@@ -2160,6 +2673,9 @@ def _fetch_member_summary_series(
     )
     user_bucket = _bucket_expr(unit, "reg_date")
     contract_bucket = _bucket_expr(unit, "request_date")
+    review_bucket = _bucket_expr(unit, "request_date")
+    approval_bucket = _bucket_expr(unit, "approval_date")
+    termination_bucket = _bucket_expr(unit, "coalesce(cancel_request_date, expire_date, modified_date)")
     terminated_bucket = _bucket_expr(unit, "coalesce(c.cancel_request_date, c.modified_date, c.request_date)")
 
     cursor.execute(
@@ -2304,6 +2820,25 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
             (
                 select count(*)::int
                 from moneybank_contract
+                where %s::date is not null
+                  and request_date::date = %s::date
+                  and approval_date is not null
+            ) as review_today_count,
+            (
+                select count(*)::int
+                from moneybank_contract
+                where %s::date is not null and approval_date::date = %s::date
+            ) as approved_today_count,
+            (
+                select count(*)::int
+                from moneybank_contract
+                where status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
+                  and %s::date is not null
+                  and coalesce(cancel_request_date, expire_date, modified_date)::date = %s::date
+            ) as terminated_today_count,
+            (
+                select count(*)::int
+                from moneybank_contract
                 where status = 'CONTRACT'
             ) as active_contract_count,
             (
@@ -2341,6 +2876,11 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
                 from moneybank_redemption_repayment
                 where %s::date is null or coalesce(balance_provision_date, reg_date, modified_date)::date <= %s::date
             ) as repayment_total_count,
+            (
+                select coalesce(sum(repayment_usage_fee), 0)::bigint
+                from moneybank_redemption_repayment
+                where %s::date is null or coalesce(balance_provision_date, reg_date, modified_date)::date <= %s::date
+            ) as repayment_fee_total_amount,
             coalesce((select sum(outstanding_balance) from latest_history), 0)::bigint as outstanding_balance_amount,
             coalesce((select count(*) from latest_history where outstanding_balance > 0), 0)::int as outstanding_balance_count,
             (
@@ -2355,29 +2895,21 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
             ) as settlement_total_count
         """,
         (
-            to_date,
-            to_date,
-            to_date,
-            from_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
-            to_date,
+            to_date, to_date,
+            to_date, from_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
+            to_date, to_date,
         ),
     )
     summary = cursor.fetchone()
@@ -2405,6 +2937,9 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
         return []
 
     contract_bucket = _bucket_expr(unit, "request_date")
+    review_bucket = _bucket_expr(unit, "request_date")
+    approval_bucket = _bucket_expr(unit, "approval_date")
+    termination_bucket = _bucket_expr(unit, "coalesce(cancel_request_date, expire_date, modified_date)")
     provision_bucket = _bucket_expr(unit, "provision_date")
     repayment_bucket = _bucket_expr(unit, "coalesce(balance_provision_date, reg_date, modified_date)")
     settlement_bucket = _bucket_expr(unit, "settlement_date")
@@ -2424,19 +2959,54 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
             )::date as bucket
         ),
         contracts as (
-            select {contract_bucket} as bucket, count(*)::int as contract_count
+            select
+                {contract_bucket} as bucket,
+                count(*)::int as contract_count,
+                coalesce(sum(sales_amount), 0)::bigint as request_amount
             from moneybank_contract
             where request_date::date between %s and %s
             group by 1
         ),
+        reviews as (
+            select
+                {review_bucket} as bucket,
+                count(*)::int as review_count,
+                coalesce(sum(sales_amount), 0)::bigint as review_amount
+            from moneybank_contract
+            where request_date::date between %s and %s
+              and approval_date is not null
+            group by 1
+        ),
+        approvals as (
+            select
+                {approval_bucket} as bucket,
+                count(*)::int as approved_count,
+                coalesce(sum(sales_amount), 0)::bigint as approved_amount
+            from moneybank_contract
+            where approval_date::date between %s and %s
+            group by 1
+        ),
+        terminations as (
+            select {termination_bucket} as bucket, count(*)::int as terminated_count
+            from moneybank_contract
+            where status in ('SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', 'TERMINATION', 'EXPIRED', '72', '73', '82')
+              and coalesce(cancel_request_date, expire_date, modified_date)::date between %s and %s
+            group by 1
+        ),
         provisions as (
-            select {provision_bucket} as bucket, coalesce(sum(total_provision_amount), 0)::bigint as provision_amount
+            select
+                {provision_bucket} as bucket,
+                coalesce(sum(total_provision_amount), 0)::bigint as provision_amount,
+                count(*)::int as provision_count
             from moneybank_redemption_provision
             where provision_date::date between %s and %s
             group by 1
         ),
         repayments as (
-            select {repayment_bucket} as bucket, coalesce(sum(repayment_amount), 0)::bigint as repayment_amount
+            select
+                {repayment_bucket} as bucket,
+                coalesce(sum(repayment_amount), 0)::bigint as repayment_amount,
+                coalesce(sum(repayment_usage_fee), 0)::bigint as repayment_fee
             from moneybank_redemption_repayment
             where coalesce(balance_provision_date, reg_date, modified_date)::date between %s and %s
             group by 1
@@ -2464,12 +3034,23 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
         select
             b.bucket,
             coalesce(c.contract_count, 0)::int as contract_count,
+            coalesce(rv.review_count, 0)::int as review_count,
+            coalesce(a.approved_count, 0)::int as approved_count,
+            coalesce(t.terminated_count, 0)::int as terminated_count,
+            coalesce(c.request_amount, 0)::bigint as request_amount,
+            coalesce(rv.review_amount, 0)::bigint as review_amount,
+            coalesce(a.approved_amount, 0)::bigint as approved_amount,
             coalesce(p.provision_amount, 0)::bigint as provision_amount,
+            coalesce(p.provision_count, 0)::int as provision_count,
             coalesce(r.repayment_amount, 0)::bigint as repayment_amount,
+            coalesce(r.repayment_fee, 0)::bigint as repayment_fee,
             coalesce(s.settlement_amount, 0)::bigint as settlement_amount,
             coalesce(o.outstanding_balance, 0)::bigint as outstanding_balance
         from buckets b
         left join contracts c on c.bucket = b.bucket
+        left join reviews rv on rv.bucket = b.bucket
+        left join approvals a on a.bucket = b.bucket
+        left join terminations t on t.bucket = b.bucket
         left join provisions p on p.bucket = b.bucket
         left join repayments r on r.bucket = b.bucket
         left join settlements s on s.bucket = b.bucket
@@ -2483,6 +3064,12 @@ def _fetch_series(cursor, *, unit: OverviewUnit, from_date: date | None, to_date
             to_date,
             unit,
             unit,
+            from_date,
+            to_date,
+            from_date,
+            to_date,
+            from_date,
+            to_date,
             from_date,
             to_date,
             from_date,

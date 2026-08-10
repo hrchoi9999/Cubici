@@ -14,11 +14,13 @@ import { AdminLoginPage } from './pages/AdminLoginPage.jsx';
 import { ApprovalManagementPage } from './pages/ApprovalManagementPage.jsx';
 import { ChargeManagementPage } from './pages/ChargeManagementPage.jsx';
 import { ContractManagementPage } from './pages/ContractManagementPage.jsx';
+import { CreditIndicatorManagementPage } from './pages/CreditIndicatorManagementPage.jsx';
 import { CustomerBoardPage } from './pages/CustomerBoardPage.jsx';
 import { CustomerInquiryPage } from './pages/CustomerInquiryPage.jsx';
 import { CubiciIntegratedInfoPage } from './pages/CubiciIntegratedInfoPage.jsx';
 import { ErrorLogPage } from './pages/ErrorLogPage.jsx';
 import { FintechTradeRequestPage } from './pages/FintechTradeRequestPage.jsx';
+import { FundingManagementPage } from './pages/FundingManagementPage.jsx';
 import { ManagementOverviewPage } from './pages/ManagementOverviewPage.jsx';
 import { ManagementUsageDetailPage } from './pages/ManagementUsageDetailPage.jsx';
 import { ManagementUsagePage } from './pages/ManagementUsagePage.jsx';
@@ -44,6 +46,16 @@ import { ServerMonitorPage } from './pages/ServerMonitorPage.jsx';
 function findRoute(path) {
   const routeAliases = [
     {
+      match: '/admin/cubici/infoIntegrated/moneybank_tab2',
+      categoryId: 'moneybankOperation',
+      pageId: 'service',
+    },
+    {
+      match: '/admin/moneybank/cubici/management/info_tab2',
+      categoryId: 'moneybankOperation',
+      pageId: 'integrated',
+    },
+    {
       match: '/admin/cubici/manageMember/member_tab2',
       categoryId: 'memberInfo',
       pageId: 'member',
@@ -60,7 +72,7 @@ function findRoute(path) {
     },
     {
       match: '/admin/cubici/manageMember/payment_tab2',
-      categoryId: 'memberInfo',
+      categoryId: 'shoppingIntegrated',
       pageId: 'payment',
     },
     {
@@ -83,8 +95,8 @@ function findRoute(path) {
   }
 
   if (path.includes('/admin/cubici/adminPreference/manageMoneybank_tab2')) {
-    const category = adminMenu.find((item) => item.id === 'preferInfo');
-    const page = category.pages.find((item) => item.id === 'moneybank');
+    const category = adminMenu.find((item) => item.id === 'moneybankOperation');
+    const page = category.pages.find((item) => item.id === 'funding');
     return { category, page };
   }
 
@@ -95,12 +107,18 @@ function findRoute(path) {
   }
 
   if (path.includes('/admin/moneybank/management/usageDetail')) {
-    const category = adminMenu.find((item) => item.id === 'moneybankManagement');
+    const category = adminMenu.find((item) => item.id === 'moneybankOperation');
     const page = category.pages.find((item) => item.id === 'usage');
     return { category, page };
   }
 
   if (path === '/admin/moneybank/manage') {
+    const category = adminMenu.find((item) => item.id === 'moneybankOperation');
+    const page = category.pages.find((item) => item.id === 'manage');
+    return { category, page };
+  }
+
+  if (path === '/admin/moneybank/risk-results') {
     const category = adminMenu.find((item) => item.id === 'moneybankOperation');
     const page = category.pages.find((item) => item.id === 'manage');
     return { category, page };
@@ -132,6 +150,8 @@ export default function App() {
     ? '/admin/cubici/adminPreference/prizmConfig'
     : requestedView === 'prism-management'
       ? '/admin/moneybank/manage'
+      : requestedView === 'prism-results'
+        ? '/admin/moneybank/risk-results'
       : requestedView === 'prism'
         ? '/admin/cubici/adminPreference/prizmConfig'
         : window.location.pathname;
@@ -204,8 +224,8 @@ export default function App() {
   const isSettlementPage = path.includes('/admin/moneybank/settlement');
   const isRedemptionPage = path.includes('/admin/moneybank/redemption');
   const isCubiciIntegratedInfoPage = path.includes('/admin/cubici/infoIntegrated/cubici_tab1');
-  const isMoneybankIntegratedInfoPage = path.includes('/admin/cubici/infoIntegrated/moneybank_tab1');
-  const isManagementOverviewPage = path.includes('/admin/moneybank/cubici/management/info_tab1');
+  const isMoneybankIntegratedInfoPage = path.includes('/admin/cubici/infoIntegrated/moneybank_tab1') || path.includes('/admin/cubici/infoIntegrated/moneybank_tab2');
+  const isManagementOverviewPage = path.includes('/admin/moneybank/cubici/management/info_tab');
   const isManagementUsageDetailPage = path.includes('/admin/moneybank/management/usageDetail');
   const isManagementUsagePage = path.includes('/admin/moneybank/management/usageList');
   const isMemberSummaryPage = path.includes('/admin/cubici/manageMember/member_tab1');
@@ -217,7 +237,8 @@ export default function App() {
   const isRequestPage = path.includes('/admin/moneybank/request');
   const isApprovalPage = path.includes('/admin/moneybank/approval_tab1');
   const isContractManagementPage = path.includes('/admin/moneybank/approval_tab2');
-  const isPrizmManagementPage = path === '/admin/moneybank/manage';
+  const isCreditIndicatorManagementPage = path === '/admin/moneybank/manage';
+  const isPrizmManagementPage = path === '/admin/moneybank/risk-results';
   const isCustomerInquiryPage = path.includes('/admin/cubici/supportMember/manageInquiry');
   const isMessageTemplatePage = path.includes('/admin/cubici/supportMember/manageSms') || path.includes('/admin/cubici/supportMember/manageEmail');
   const isCustomerBoardPage = path.includes('/admin/cubici/supportMember/manageBoard_tab1') || path.includes('/admin/cubici/supportMember/manageBoard_tab2');
@@ -228,6 +249,7 @@ export default function App() {
   const isChargeManagementPage = path.includes('/admin/cubici/adminPreference/manageCharge');
   const isPromotionManagementPage = path.includes('/admin/cubici/adminPreference/managePromotion');
   const isPartnerManagementPage = path.includes('/admin/cubici/adminPreference/managePartner');
+  const isFundingManagementPage = path === '/admin/moneybank/funding';
   const isMoneybankProductPreferencePage = path.includes('/admin/cubici/adminPreference/manageMoneybank_tab1') || path.includes('/admin/cubici/adminPreference/manageMoneybank_tab2');
   const isPrizmConfigPage = path.includes('/admin/cubici/adminPreference/prizmConfig');
   const isRawDataConfigPage = path.includes('/admin/cubici/adminPreference/prizmRawData');
@@ -249,6 +271,7 @@ export default function App() {
       {isRequestPage ? <AdminDashboardPage /> : null}
       {isApprovalPage ? <ApprovalManagementPage /> : null}
       {isContractManagementPage ? <ContractManagementPage /> : null}
+      {isCreditIndicatorManagementPage ? <CreditIndicatorManagementPage /> : null}
       {isPrizmManagementPage ? <PrizmManagementPage /> : null}
       {isSettlementPage ? <SettlementManagementPage /> : null}
       {isRedemptionPage ? <RedemptionManagementPage /> : null}
@@ -262,10 +285,11 @@ export default function App() {
       {isChargeManagementPage ? <ChargeManagementPage /> : null}
       {isPromotionManagementPage ? <PromotionManagementPage /> : null}
       {isPartnerManagementPage ? <PartnerManagementPage /> : null}
+      {isFundingManagementPage ? <FundingManagementPage /> : null}
       {isMoneybankProductPreferencePage ? <MoneybankProductPreferencePage /> : null}
       {isPrizmConfigPage ? <PrizmConfigPage /> : null}
       {isRawDataConfigPage ? <RawDataConfigPage /> : null}
-      {!isManagementOverviewPage && !isCubiciIntegratedInfoPage && !isMoneybankIntegratedInfoPage && !isManagementUsageDetailPage && !isManagementUsagePage && !isMemberSummaryPage && !isMemberInfoPage && !isMemberWithdrawalPage && !isMemberPaymentPage && !isMemberChargeChangePage && !isMemberStatusPage && !isRequestPage && !isApprovalPage && !isContractManagementPage && !isPrizmManagementPage && !isSettlementPage && !isRedemptionPage && !isCustomerInquiryPage && !isMessageTemplatePage && !isCustomerBoardPage && !isErrorLogPage && !isServerMonitorPage && !isFintechTradeRequestPage && !isAdminAccountPage && !isChargeManagementPage && !isPromotionManagementPage && !isPartnerManagementPage && !isMoneybankProductPreferencePage && !isPrizmConfigPage && !isRawDataConfigPage ? (
+      {!isManagementOverviewPage && !isCubiciIntegratedInfoPage && !isMoneybankIntegratedInfoPage && !isManagementUsageDetailPage && !isManagementUsagePage && !isMemberSummaryPage && !isMemberInfoPage && !isMemberWithdrawalPage && !isMemberPaymentPage && !isMemberChargeChangePage && !isMemberStatusPage && !isRequestPage && !isApprovalPage && !isContractManagementPage && !isCreditIndicatorManagementPage && !isPrizmManagementPage && !isSettlementPage && !isRedemptionPage && !isCustomerInquiryPage && !isMessageTemplatePage && !isCustomerBoardPage && !isErrorLogPage && !isServerMonitorPage && !isFintechTradeRequestPage && !isAdminAccountPage && !isChargeManagementPage && !isPromotionManagementPage && !isPartnerManagementPage && !isFundingManagementPage && !isMoneybankProductPreferencePage && !isPrizmConfigPage && !isRawDataConfigPage ? (
         <MigrationRouteStatusPage
           categoryTitle={category.title}
           currentPath={path}

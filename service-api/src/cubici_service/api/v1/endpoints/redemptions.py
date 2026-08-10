@@ -7,6 +7,8 @@ from fastapi import APIRouter, HTTPException, Query
 from cubici_service.redemptions.repository import (
     RedemptionListItem,
     RedemptionListResponse,
+    RedemptionContractStage,
+    RedemptionOrderBy,
     RedemptionOperationCancelRequest,
     RedemptionOperationHistoryResponse,
     RedemptionOperationResponse,
@@ -29,18 +31,28 @@ def redemption_list(
     offset: int = Query(default=0, ge=0),
     user_no: int | None = Query(default=None, ge=1),
     mbid: str | None = Query(default=None),
+    user_name: str | None = Query(default=None),
+    firm_name: str | None = Query(default=None),
+    product_code: str | None = Query(default=None),
+    contract_stage: RedemptionContractStage | None = Query(default=None),
     outstanding_only: bool = Query(default=False),
     from_date: date | None = Query(default=None),
     to_date: date | None = Query(default=None),
+    order_by: RedemptionOrderBy = Query(default="date_desc"),
 ) -> RedemptionListResponse:
     return list_redemptions(
         limit=limit,
         offset=offset,
         user_no=user_no,
         mbid=mbid,
+        user_name=user_name,
+        firm_name=firm_name,
+        product_code=product_code,
+        contract_stage=contract_stage,
         outstanding_only=outstanding_only,
         from_date=from_date,
         to_date=to_date,
+        order_by=order_by,
     )
 
 

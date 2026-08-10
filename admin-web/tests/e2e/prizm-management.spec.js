@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test';
 
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
 const riskRow = {
   mbid: 'MPG2626001',
   user_no: 72,
@@ -38,6 +40,7 @@ const riskRow = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/risk-results?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -61,9 +64,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('prizm management risk result list, source status, and detail work with mock data', async ({ page }) => {
-  await page.goto('/admin/moneybank/manage');
+  await page.goto('/admin/moneybank/risk-results');
 
-  await expect(page.getByRole('heading', { name: '프리즘 지표 관리' })).toBeVisible();
+  await expect(page.getByText('프리즘 지표 관리', { exact: true })).toBeVisible();
   await expect(page.getByText('전체 1건')).toBeVisible();
   await expect(page.getByText('PCS 1건')).toBeVisible();
   await expect(page.getByText('PMS 1건')).toBeVisible();

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchMemberSummary } from '../api/management.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { fetchMemberSummary, fetchMemberSummaryOptions } from '../api/management.js';
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -19,12 +19,115 @@ function formatDate(value) {
   return value ? value.slice(0, 10) : '-';
 }
 
-function maxSeriesValue(series) {
-  return Math.max(1, ...series.flatMap((row) => [
-    row.cubici_cumulative ?? 0,
-    row.moneybank_cumulative ?? 0,
-    row.terminated_cumulative ?? 0,
-  ]));
+function MemberSummaryChart({ isLoading, series }) {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    if (!canvasRef.current || series.length === 0 || !window.Chart) return undefined;
+
+    const chart = new window.Chart(canvasRef.current.getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: series.map((row) => formatDate(row.bucket)),
+        datasets: [
+          {
+            label: '누적 큐빅아이',
+            data: series.map((row) => row.cubici_cumulative ?? 0),
+            yAxisID: 'member-count',
+            backgroundColor: '#0049ad',
+            borderColor: '#0049ad',
+            barThickness: 10,
+          },
+          {
+            type: 'line',
+            label: '누적 머니뱅크',
+            data: series.map((row) => row.moneybank_cumulative ?? 0),
+            yAxisID: 'member-count',
+            borderColor: '#f9a268',
+            backgroundColor: '#f9a268',
+            borderWidth: 2,
+            fill: false,
+            lineTension: 0,
+            pointRadius: 2,
+          },
+          {
+            type: 'line',
+            label: '누적 가입해지',
+            data: series.map((row) => -(row.terminated_cumulative ?? 0)),
+            yAxisID: 'member-count',
+            borderColor: '#f95d7e',
+            backgroundColor: '#f95d7e',
+            borderWidth: 2,
+            fill: false,
+            lineTension: 0,
+            pointRadius: 2,
+          },
+          {
+            type: 'line',
+            label: '머니뱅크 %',
+            data: series.map((row) => row.moneybank_ratio ?? 0),
+            yAxisID: 'moneybank-ratio',
+            borderColor: '#26a94b',
+            backgroundColor: '#26a94b',
+            borderWidth: 2,
+            fill: false,
+            lineTension: 0,
+            pointRadius: 2,
+          },
+        ],
+      },
+      options: {
+        animation: { duration: 0 },
+        maintainAspectRatio: false,
+        responsive: true,
+        legend: {
+          display: true,
+          labels: { boxWidth: 13, fontSize: 12 },
+        },
+        scales: {
+          xAxes: [{
+            categoryPercentage: 0.8,
+            barPercentage: 1,
+            ticks: { maxRotation: 90, minRotation: 45 },
+          }],
+          yAxes: [
+            {
+              id: 'member-count',
+              position: 'left',
+              ticks: { beginAtZero: true },
+            },
+            {
+              id: 'moneybank-ratio',
+              position: 'right',
+              gridLines: { drawOnChartArea: false },
+              ticks: {
+                beginAtZero: true,
+                callback: (value) => `${value}%`,
+              },
+            },
+          ],
+        },
+      },
+    });
+
+    return () => chart.destroy();
+  }, [series]);
+
+  return (
+    <div className="memberSummaryChartBox">
+      <canvas
+        aria-label="큐빅아이, 머니뱅크, 가입해지 누적 및 머니뱅크 비율 그래프"
+        ref={canvasRef}
+        role="img"
+      />
+      {isLoading ? <p className="memberSummaryChartState">그래프를 조회 중입니다.</p> : null}
+      {!isLoading && series.length === 0 ? <p className="memberSummaryChartState">조회된 그래프 데이터가 없습니다.</p> : null}
+    </div>
+  );
+}
+
+function csvCell(value) {
+  return `"${String(value ?? '').replaceAll('"', '""')}"`;
 }
 
 export function MemberSummaryPage() {
@@ -43,6 +146,25 @@ export function MemberSummaryPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const [optionMessage, setOptionMessage] = useState('');
+  const [partnerOptions, setPartnerOptions] = useState([]);
+  const [productOptions, setProductOptions] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    fetchMemberSummaryOptions().then((options) => {
+      if (ignore) return;
+      setPartnerOptions(options.partners ?? []);
+      setProductOptions(options.products ?? []);
+    }).catch((error) => {
+      if (!ignore) setOptionMessage(error.message);
+    });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
     let ignore = false;
@@ -76,7 +198,6 @@ export function MemberSummaryPage() {
 
   const metrics = data?.metrics;
   const series = useMemo(() => data?.series ?? [], [data]);
-  const maxValue = maxSeriesValue(series);
 
   function updateSearchValue(event) {
     const { name, value } = event.target;
@@ -92,6 +213,31 @@ export function MemberSummaryPage() {
       partner_code: formValues.partnerCode,
       product_code: formValues.productCode,
     });
+  }
+
+  function handleDownload() {
+    if (series.length === 0) return;
+
+    const rows = [
+      ['구간', '큐빅아이 증가', '머니뱅크 증가', '해지 증가', '큐빅아이 누적', '머니뱅크 누적', '해지 누적', '머니뱅크 비율'],
+      ...series.map((row) => [
+        formatDate(row.bucket),
+        row.cubici_count,
+        row.moneybank_count,
+        row.terminated_count,
+        row.cubici_cumulative,
+        row.moneybank_cumulative,
+        row.terminated_cumulative,
+        row.moneybank_ratio == null ? '' : `${row.moneybank_ratio.toFixed(2)}%`,
+      ]),
+    ];
+    const csv = `\ufeff${rows.map((row) => row.map(csvCell).join(',')).join('\r\n')}`;
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `cubici-member-summary-${filters.from_date}-${filters.to_date}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -110,14 +256,14 @@ export function MemberSummaryPage() {
         </div>
       </div>
 
-      <div className="memberMetricGrid">
+      <div className="colorTxtBoxArea memberMetricGrid">
         <article>
           <div className="colorBox">큐빅아이</div>
           <div className="txtBox">
             <table>
               <tbody>
-                <tr><td>전일 : {formatNumber(metrics?.cubici_yesterday_count)}명</td></tr>
-                <tr><td>누적 : {formatNumber(metrics?.cubici_total_count)}명</td></tr>
+                <tr><td>• 전일 : {formatNumber(metrics?.cubici_yesterday_count)}명</td></tr>
+                <tr><td>• 누적 : {formatNumber(metrics?.cubici_total_count)}명</td></tr>
               </tbody>
             </table>
           </div>
@@ -127,8 +273,8 @@ export function MemberSummaryPage() {
           <div className="txtBox">
             <table>
               <tbody>
-                <tr><td>전일 : {formatNumber(metrics?.moneybank_yesterday_count)}명</td></tr>
-                <tr><td>누적 : {formatNumber(metrics?.moneybank_total_count)}명</td></tr>
+                <tr><td>• 전일 : {formatNumber(metrics?.moneybank_yesterday_count)}명</td></tr>
+                <tr><td>• 누적 : {formatNumber(metrics?.moneybank_total_count)}명</td></tr>
               </tbody>
             </table>
           </div>
@@ -138,8 +284,8 @@ export function MemberSummaryPage() {
           <div className="txtBox">
             <table>
               <tbody>
-                <tr><td>전일 : {formatNumber(metrics?.terminated_yesterday_count)}명</td></tr>
-                <tr><td>누적 : {formatNumber(metrics?.terminated_total_count)}명</td></tr>
+                <tr><td>• 전일 : {formatNumber(metrics?.terminated_yesterday_count)}명</td></tr>
+                <tr><td>• 누적 : {formatNumber(metrics?.terminated_total_count)}명</td></tr>
               </tbody>
             </table>
           </div>
@@ -149,8 +295,8 @@ export function MemberSummaryPage() {
           <div className="txtBox">
             <table>
               <tbody>
-                <tr><td>전일 : {formatNumber(metrics?.partner_yesterday_count)}개</td></tr>
-                <tr><td>누적 : {formatNumber(metrics?.partner_total_count)}개</td></tr>
+                <tr><td>• 전일 : {formatNumber(metrics?.partner_yesterday_count)}개</td></tr>
+                <tr><td>• 누적 : {formatNumber(metrics?.partner_total_count)}개</td></tr>
               </tbody>
             </table>
           </div>
@@ -161,11 +307,23 @@ export function MemberSummaryPage() {
         <div className="line">
           <div className="inputBox">
             <label htmlFor="memberPartnerCode">협력사</label>
-            <input id="memberPartnerCode" name="partnerCode" type="text" value={formValues.partnerCode} onChange={updateSearchValue} />
+            <select id="memberPartnerCode" name="partnerCode" value={formValues.partnerCode} onChange={updateSearchValue}>
+              <option value="">전체</option>
+              {partnerOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
           </div>
           <div className="inputBox">
             <label htmlFor="memberProductCode">서비스 구분</label>
-            <input id="memberProductCode" name="productCode" type="text" value={formValues.productCode} onChange={updateSearchValue} />
+            <select id="memberProductCode" name="productCode" value={formValues.productCode} onChange={updateSearchValue}>
+              <option value="">전체</option>
+              {productOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            </select>
+          </div>
+          <div className="inputBox">
+            <label htmlFor="memberStatusDivision">구분</label>
+            <select id="memberStatusDivision" defaultValue="all">
+              <option value="all">전체</option>
+            </select>
           </div>
           <div className="inputBox">
             <label htmlFor="memberUnit">분석단위</label>
@@ -183,67 +341,22 @@ export function MemberSummaryPage() {
             <label htmlFor="memberToDate">종료일</label>
             <input id="memberToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateSearchValue} />
           </div>
-          <button className="m-btn m-btnPrimary" type="submit">검색</button>
+          <button className="sBtn sColorLB search" type="submit">검색</button>
+          <button className="sBtn sColorLG excel" disabled={series.length === 0} onClick={handleDownload} type="button">엑셀 다운로드</button>
         </div>
       </form>
 
       {message ? <div className="m-alert">{message}</div> : null}
+      {optionMessage ? <div className="m-alert">{optionMessage}</div> : null}
 
-      <section className="memberTrendPanel">
-        <div className="memberTrendHeader">
-          <h4>회원현황 추이</h4>
-          <span>{isLoading ? '조회 중' : `${series.length.toLocaleString()}개 구간`}</span>
+      <article className="subBox memberTrendPanel">
+        <header>
+          <h4>회원 현황</h4>
+        </header>
+        <div className="contentArea">
+          <MemberSummaryChart isLoading={isLoading} series={series} />
         </div>
-        <div className="memberTrendBars">
-          {series.map((row) => (
-            <div className="memberTrendRow" key={row.bucket}>
-              <span>{formatDate(row.bucket)}</span>
-              <div className="memberTrendTrack">
-                <i className="cubici" style={{ width: `${Math.max(2, (row.cubici_cumulative / maxValue) * 100)}%` }} />
-                <i className="moneybank" style={{ width: `${Math.max(2, (row.moneybank_cumulative / maxValue) * 100)}%` }} />
-                <i className="terminated" style={{ width: `${Math.max(2, (row.terminated_cumulative / maxValue) * 100)}%` }} />
-              </div>
-              <strong>{formatNumber(row.cubici_cumulative)} / {formatNumber(row.moneybank_cumulative)}</strong>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="tableScroll">
-        <table className="m-table memberSummaryTable">
-          <thead>
-            <tr>
-              <th>구간</th>
-              <th>큐빅아이 증가</th>
-              <th>머니뱅크 증가</th>
-              <th>해지 증가</th>
-              <th>큐빅아이 누적</th>
-              <th>머니뱅크 누적</th>
-              <th>해지 누적</th>
-              <th>머니뱅크 비율</th>
-            </tr>
-          </thead>
-          <tbody>
-            {series.map((row) => (
-              <tr key={row.bucket}>
-                <td>{formatDate(row.bucket)}</td>
-                <td>{formatNumber(row.cubici_count)}</td>
-                <td>{formatNumber(row.moneybank_count)}</td>
-                <td>{formatNumber(row.terminated_count)}</td>
-                <td>{formatNumber(row.cubici_cumulative)}</td>
-                <td>{formatNumber(row.moneybank_cumulative)}</td>
-                <td>{formatNumber(row.terminated_cumulative)}</td>
-                <td>{row.moneybank_ratio == null ? '-' : `${row.moneybank_ratio.toFixed(2)}%`}</td>
-              </tr>
-            ))}
-            {!isLoading && series.length === 0 ? (
-              <tr>
-                <td colSpan="8">조회된 데이터가 없습니다.</td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
+      </article>
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createPromotion,
   deletePromotion,
@@ -8,7 +8,7 @@ import {
   updatePromotion,
 } from '../api/preferences.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const emptyForm = {
   promoCode: '',
@@ -84,6 +84,8 @@ export function PromotionManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -149,6 +151,30 @@ export function PromotionManagementPage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
 
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
+
   async function reloadList(nextOffset = offset) {
     const data = await fetchPromotions({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
     setItems(data.items ?? []);
@@ -212,7 +238,17 @@ export function PromotionManagementPage() {
       const data = await fetchPromotion(promoCode);
       setSelected(data);
       setPromotionForm(mapPromotionToForm(data));
+      setOptions((current) => {
+        const existingCodes = new Set((current.charges ?? []).map((option) => option.value));
+        const legacyCharges = (data.charge_codes ?? [])
+          .map((code, index) => ({ value: code, label: data.charge_names?.[index] ?? code }))
+          .filter((option) => !existingCodes.has(option.value));
+        return { ...current, charges: [...(current.charges ?? []), ...legacyCharges] };
+      });
       setIsEditorOpen(true);
+      if (listScrollRef.current) {
+        listScrollRef.current.scrollLeft = 0;
+      }
     } catch (error) {
       setSelected(null);
       setIsEditorOpen(false);
@@ -331,9 +367,22 @@ export function PromotionManagementPage() {
     });
   }
 
+  function changeListScroll(event) {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollLeft = Number(event.target.value);
+    }
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (container) {
+      container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+    }
+  }
+
   return (
-    <>
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+    <section className="promotionLvPage">
+      <form className="m-search searchArea promotionLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="promoCodeSearch">연계코드</label>
@@ -351,6 +400,9 @@ export function PromotionManagementPage() {
             <label htmlFor="promoPartnerSearch">협력사</label>
             <input id="promoPartnerSearch" name="partnerName" type="text" value={formValues.partnerName} onChange={updateSearchValue} />
           </div>
+          <button type="submit" className="sBtn sColorLB">검색</button>
+        </div>
+        <div className="line">
           <div className="inputBox">
             <label htmlFor="promoOrder">보기기준</label>
             <select id="promoOrder" name="orderBy" value={formValues.orderBy} onChange={updateSearchValue}>
@@ -360,43 +412,50 @@ export function PromotionManagementPage() {
               <option value="promo_name_asc">연계이름</option>
             </select>
           </div>
-        </div>
-        <div className="line">
-          <button type="submit" className="searchBtn">검색</button>
-          <button type="button" className="grayBtn" onClick={handleNew}>연계코드 추가</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew}>연계코드 추가</button>
         </div>
       </form>
 
-      <div className="fixBottom">
-        <div className="tableTotal promotionSummary">
-          <span>전체 : {formatNumber(counts.total_count)}개</span>
-          <span>운영 : {formatNumber(counts.operating_count)}개</span>
-          <span>종료 : {formatNumber(counts.ended_count)}개</span>
-          <span>{currentPage} / {pageCount} page</span>
-        </div>
-      </div>
-
       {message ? <p className="formMessage">{message}</p> : null}
 
-      <div className="legacyListTable table-scroll">
-        <div className="overflowBox">
-          <table className="promotionManagementTable">
+      <div className="promotionLvList">
+        <div className="tableScroll" ref={listScrollRef}>
+          <table className="promotionManagementTable promotionLvTable" aria-label="연계코드 목록">
             <caption>연계코드 관리</caption>
+            <colgroup>
+              <col className="statusCol" />
+              <col className="dateCol" />
+              <col className="partnerCol" />
+              <col className="nameCol" />
+              <col className="codeCol" />
+              <col className="targetCol" />
+              <col className="chargeCol" />
+              <col className="rateCol" />
+              <col className="amountCol" />
+              <col className="periodCol" />
+              <col className="unitCol" />
+              <col className="subIdCol" />
+              <col className="detailCol" />
+            </colgroup>
             <thead>
               <tr>
-                <th>상태</th>
-                <th>시작 일자</th>
-                <th>협력사명</th>
-                <th>연계이름</th>
-                <th>연계코드</th>
-                <th>주요대상</th>
-                <th>연계요금제</th>
+                <th rowSpan="2">상태</th>
+                <th rowSpan="2">시작 일자</th>
+                <th rowSpan="2">협력사명</th>
+                <th rowSpan="2">연계이름</th>
+                <th rowSpan="2">연계코드</th>
+                <th rowSpan="2">주요대상</th>
+                <th rowSpan="2">연계요금제</th>
+                <th colSpan="2">혜택조건</th>
+                <th colSpan="2">무료기간</th>
+                <th rowSpan="2">제공ID수</th>
+                <th rowSpan="2">상세 보기</th>
+              </tr>
+              <tr>
                 <th>% 할인</th>
                 <th>금액할인</th>
-                <th>무료기간</th>
+                <th>기간</th>
                 <th>단위</th>
-                <th>제공ID수</th>
-                <th>상세 보기</th>
               </tr>
             </thead>
             <tbody id="fixTbody">
@@ -424,18 +483,42 @@ export function PromotionManagementPage() {
             </tbody>
           </table>
         </div>
-      </div>
 
-      <div className="pagination pagingControls">
-        <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-        <span>{currentPage} / {pageCount}</span>
-        <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        {listScroll.max > 0 ? <div className="horizontalTableScrollbar promotionHorizontalScrollbar" aria-label="연계코드 목록 좌우 스크롤">
+          <button type="button" aria-label="연계코드 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="연계코드 목록 가로 스크롤"
+            min="0"
+            max={listScroll.max}
+            step="1"
+            value={Math.min(listScroll.left, listScroll.max)}
+            onChange={changeListScroll}
+          />
+          <button type="button" aria-label="연계코드 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div> : null}
+
+        <div className="promotionLvTotals" aria-label="연계코드 집계">
+          <div><span>전체</span><strong>{formatNumber(counts.total_count)}개</strong></div>
+          <div><span>운영</span><strong>{formatNumber(counts.operating_count)}개</strong></div>
+          <div><span>종료</span><strong>{formatNumber(counts.ended_count)}개</strong></div>
+          <div><span>현재 페이지</span><strong>{currentPage} / {pageCount}</strong></div>
+        </div>
+
+        <div className="pagination pagingControls">
+          <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+          <span>{currentPage} / {pageCount}</span>
+          <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        </div>
       </div>
 
       {isEditorOpen ? <form className="promotionEditorPanel" onSubmit={handleSave}>
         <div className="promotionEditorHeader">
           <h4>{selected ? '연계코드 상세' : '연계코드 등록'}</h4>
-          <span>{selected ? selected.status_label : '신규 연계코드'}</span>
+          <div>
+            <span>{selected ? selected.status_label : '신규 연계코드'}</span>
+            <button type="button" onClick={() => setIsEditorOpen(false)}>닫기</button>
+          </div>
         </div>
         <div className="promotionEditorGrid">
           <label>
@@ -524,11 +607,11 @@ export function PromotionManagementPage() {
           </label>
         </div>
         <div className="promotionEditorActions">
-          <button type="submit" className="searchBtn" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
-          <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
-          {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
+          <button type="submit" className="sBtn sColorLB" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew} disabled={isSaving}>초기화</button>
+          {selected ? <button type="button" className="sBtn sColorP" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
       </form> : null}
-    </>
+    </section>
   );
 }

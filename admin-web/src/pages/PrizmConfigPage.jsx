@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   fetchPrizmConfigItem,
   fetchPrizmConfigItems,
@@ -6,7 +6,7 @@ import {
   updatePrizmConfigItem,
 } from '../api/preferences.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 100;
 
 const emptyForm = {
   itemDefinition: '',
@@ -79,6 +79,10 @@ function updateRecordLabel(record) {
   return `${record.division === 1 ? 'Prizm' : 'CRA'} / 주제 ${record.subject_no} / ${itemName}`;
 }
 
+function sumWeights(items) {
+  return items.reduce((sum, item) => sum + (Number.parseFloat(item.item_weight) || 0), 0);
+}
+
 export function PrizmConfigPage() {
   const [items, setItems] = useState([]);
   const [counts, setCounts] = useState({ total_count: 0, prizm_count: 0, cra_count: 0 });
@@ -92,6 +96,9 @@ export function PrizmConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedSubjectNo, setSelectedSubjectNo] = useState(null);
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -151,8 +158,79 @@ export function PrizmConfigPage() {
   }, [filters.division]);
 
   const rows = useMemo(() => items, [items]);
-  const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
+  const activeDivision = searchForm.division === '2' ? 2 : 1;
+  const activeRows = useMemo(
+    () => rows.filter((item) => item.division === activeDivision),
+    [rows, activeDivision],
+  );
+  const dimensionGroups = useMemo(() => {
+    const groups = new Map();
+    activeRows.forEach((item) => {
+      if (!groups.has(item.subject_no)) {
+        groups.set(item.subject_no, {
+          subjectNo: item.subject_no,
+          subjectName: item.subject_name,
+          items: [],
+        });
+      }
+      groups.get(item.subject_no).items.push(item);
+    });
+    return [...groups.values()];
+  }, [activeRows]);
+  const effectiveSubjectNo = selectedSubjectNo ?? dimensionGroups[0]?.subjectNo ?? null;
+  const subjectItems = useMemo(
+    () => activeRows.filter((item) => item.subject_no === effectiveSubjectNo),
+    [activeRows, effectiveSubjectNo],
+  );
+  useEffect(() => {
+    const firstItem = activeRows[0];
+    if (!firstItem) {
+      setSelected(null);
+      setConfigForm(emptyForm);
+      return;
+    }
+
+    if (!activeRows.some((item) => item.subject_no === selectedSubjectNo)) {
+      setSelectedSubjectNo(firstItem.subject_no);
+    }
+
+    setSelected((current) => {
+      const stillAvailable = current && activeRows.some((item) => (
+        item.division === current.division
+        && item.subject_no === current.subject_no
+        && item.item_no === current.item_no
+      ));
+      if (stillAvailable) {
+        return current;
+      }
+      setConfigForm(mapItemToForm(firstItem));
+      return firstItem;
+    });
+  }, [activeRows, selectedSubjectNo]);
+
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
 
   async function reloadList(nextOffset = offset) {
     const data = await fetchPrizmConfigItems({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
@@ -178,10 +256,28 @@ export function PrizmConfigPage() {
     setOffset(0);
     setSelected(null);
     setFilters({
-      division: searchForm.division,
+      division: 'all',
       subject_no: searchForm.subjectNo,
       item_name: searchForm.itemName,
     });
+  }
+
+  function selectDivision(division) {
+    const value = String(division);
+    setOffset(0);
+    setSelected(null);
+    setSelectedSubjectNo(null);
+    setSearchForm((current) => ({ ...current, division: value, subjectNo: '', itemName: '' }));
+    setFilters({ division: 'all', subject_no: '', item_name: '' });
+  }
+
+  function selectSubject(subjectNo) {
+    setSelectedSubjectNo(subjectNo);
+    const firstItem = activeRows.find((item) => item.subject_no === subjectNo);
+    if (firstItem) {
+      setSelected(firstItem);
+      setConfigForm(mapItemToForm(firstItem));
+    }
   }
 
   async function loadDetail(row) {
@@ -241,185 +337,205 @@ export function PrizmConfigPage() {
     }
   }
 
-  function goToPreviousPage() {
-    setOffset((value) => Math.max(0, value - PAGE_SIZE));
+  function changeListScroll(event) {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollLeft = Number(event.target.value);
+    }
   }
 
-  function goToNextPage() {
-    setOffset((value) => (currentPage >= pageCount ? value : value + PAGE_SIZE));
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (container) {
+      container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+    }
   }
 
   return (
-    <section className="adminPage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>환경설정</h2>
-          <p>Prism/CRA 평가 항목과 기준값을 관리합니다.</p>
-        </div>
-        <div className="summaryPills">
-          <span>전체 {formatNumber(counts.total_count ?? 0)}개</span>
-          <span>Prizm {formatNumber(counts.prizm_count ?? 0)}개</span>
-          <span>CRA {formatNumber(counts.cra_count ?? 0)}개</span>
-          <span>미완성 {formatNumber(counts.incomplete_count ?? 0)}개</span>
-          <span>변경이력 {formatNumber(recordTotal)}건</span>
-        </div>
-      </div>
-
-      <div className="legacyTabs">
-        <a className="active" href="/admin/cubici/adminPreference/prizmConfig">Prizm</a>
+    <section className="adminPage prizmLvPage">
+      <div className="legacyTabs prizmLvTabs" aria-label="Prism System 설정 구분">
+        <button type="button" className={activeDivision === 1 ? 'active' : ''} onClick={() => selectDivision(1)}>Prizm</button>
+        <button type="button" className={activeDivision === 2 ? 'active' : ''} onClick={() => selectDivision(2)}>CRA Index</button>
         <a href="/admin/cubici/adminPreference/prizmRawData">RawData</a>
       </div>
 
-      <form className="legacySearchBox" onSubmit={handleSearch}>
-        <label>
-          <span>구분</span>
-          <select name="division" value={searchForm.division} onChange={updateSearchValue}>
-            <option value="all">전체</option>
-            <option value="1">Prizm</option>
-            <option value="2">CRA</option>
-          </select>
-        </label>
-        <label>
-          <span>주제번호</span>
-          <input name="subjectNo" type="number" min="1" value={searchForm.subjectNo} onChange={updateSearchValue} />
-        </label>
-        <label>
-          <span>항목명</span>
-          <input name="itemName" value={searchForm.itemName} onChange={updateSearchValue} />
-        </label>
-        <button type="submit" className="primaryButton">검색</button>
-      </form>
-
-      <div className="legacyTableWrap">
-        <table className="legacyTable prizmConfigTable">
-          <thead>
-            <tr>
-              <th>번호</th>
-              <th>구분</th>
-              <th>주제</th>
-              <th>항목</th>
-              <th>설정상태</th>
-              <th>지표정의</th>
-              <th>가중치</th>
-              <th>1구간</th>
-              <th>2구간</th>
-              <th>3구간</th>
-              <th>4구간</th>
-              <th>5구간</th>
-              <th>수정</th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr><td colSpan="13">Prism 설정을 조회 중입니다.</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan="13">조회 결과가 없습니다.</td></tr>
-            ) : rows.map((row) => (
-              <tr key={`${row.division}-${row.subject_no}-${row.item_no}`}>
-                <td>{row.row_no}</td>
-                <td>{row.division_label}</td>
-                <td>{row.subject_name}</td>
-                <td>{row.item_nm || `항목 ${row.item_no}`}</td>
-                <td>{row.config_status_label ?? '-'}</td>
-                <td className="leftText">{row.item_definition || '-'}</td>
-                <td>{row.item_weight || '-'}</td>
-                <td>{row.item_standard_low1 || '-'} ~ {row.item_standard_high1 || '-'}</td>
-                <td>{row.item_standard_low2 || '-'} ~ {row.item_standard_high2 || '-'}</td>
-                <td>{row.item_standard_low3 || '-'} ~ {row.item_standard_high3 || '-'}</td>
-                <td>{row.item_standard_low4 || '-'} ~ {row.item_standard_high4 || '-'}</td>
-                <td>{row.item_standard_low5 || '-'} ~ {row.item_standard_high5 || '-'}</td>
-                <td><button type="button" className="lineButton" onClick={() => loadDetail(row)}>선택</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <div className="paginationBar pagingControls">
-        <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-        <span>{currentPage} / {pageCount}</span>
-        <button type="button" onClick={goToNextPage} disabled={currentPage >= pageCount}>다음</button>
-      </div>
-
-      {selected ? <form className="prizmConfigPanel" onSubmit={handleSave}>
-        <div className="prizmConfigHeader">
-          <div>
-            <h4>{selected ? '평가항목 수정' : '평가항목 선택'}</h4>
-            <span>{selected ? `${selected.division_label} · ${selected.subject_name} · ${selected.item_nm || `항목 ${selected.item_no}`}` : '목록에서 수정할 항목을 선택합니다.'}</span>
+      <div className="prizmLvTopline">
+        <div className="prizmLvSummary" aria-label="Prism 설정 집계">
+          <span>전체 <strong>{formatNumber(counts.total_count ?? 0)}</strong></span>
+          <span>Prizm <strong>{formatNumber(counts.prizm_count ?? 0)}</strong></span>
+          <span>CRA <strong>{formatNumber(counts.cra_count ?? 0)}</strong></span>
+          <span>미완성 <strong>{formatNumber(counts.incomplete_count ?? 0)}</strong></span>
+          <span>변경이력 <strong>{formatNumber(recordTotal)}</strong></span>
+        </div>
+        <form className="m-search prizmLvSearch" onSubmit={handleSearch}>
+          <div className="line">
+            <div className="inputBox">
+              <label htmlFor="prizmSubjectSearch">주제번호</label>
+              <input id="prizmSubjectSearch" name="subjectNo" type="number" min="1" value={searchForm.subjectNo} onChange={updateSearchValue} />
+            </div>
+            <div className="inputBox">
+              <label htmlFor="prizmItemSearch">항목명</label>
+              <input id="prizmItemSearch" name="itemName" value={searchForm.itemName} onChange={updateSearchValue} />
+            </div>
+            <button type="submit" className="sBtn sColorLB">검색</button>
           </div>
-        </div>
+        </form>
+      </div>
 
-        <div className="prizmConfigGrid">
-          <label className="wide">
-            <span>지표정의</span>
-            <input name="itemDefinition" value={configForm.itemDefinition} onChange={updateConfigValue} disabled={!selected} />
-          </label>
-          <label>
-            <span>가중치</span>
-            <input name="itemWeight" value={configForm.itemWeight} onChange={updateConfigValue} disabled={!selected} />
-          </label>
-          <label className="wide">
-            <span>변경메모</span>
-            <input name="updateMemo" value={configForm.updateMemo} onChange={updateConfigValue} disabled={!selected} />
-          </label>
-          {Array.from({ length: 5 }, (_, index) => {
-            const number = index + 1;
-            return (
-              <div className="prizmStandardRow" key={number}>
-                <strong>{number}구간</strong>
-                <label>
-                  <span>하한</span>
-                  <input
-                    name={`itemStandardLow${number}`}
-                    value={configForm[`itemStandardLow${number}`]}
-                    onChange={updateConfigValue}
-                    disabled={!selected}
-                  />
-                </label>
-                <label>
-                  <span>상한</span>
-                  <input
-                    name={`itemStandardHigh${number}`}
-                    value={configForm[`itemStandardHigh${number}`]}
-                    onChange={updateConfigValue}
-                    disabled={!selected}
-                  />
-                </label>
-              </div>
-            );
-          })}
-        </div>
+      {message ? <p className="formMessage">{message}</p> : null}
 
-        {message ? <p className="statusMessage">{message}</p> : null}
-        <div className="prizmConfigActions">
-          <button type="submit" className="primaryButton" disabled={!selected || isSaving}>수정</button>
+      <div className="prizmLvSelector">
+        <article className="prizmLvSelectPanel">
+          <header><h3>차원 List</h3></header>
+          <div className="prizmLvSelectHead"><span>List</span><span>비중</span></div>
+          <div className="prizmLvChoiceList">
+            {dimensionGroups.map((group) => (
+              <button
+                type="button"
+                key={group.subjectNo}
+                className={effectiveSubjectNo === group.subjectNo ? 'active' : ''}
+                onClick={() => selectSubject(group.subjectNo)}
+              >
+                <span>{group.subjectName}</span>
+                <strong>{sumWeights(group.items).toLocaleString()}</strong>
+              </button>
+            ))}
+          </div>
+          <footer><span>{dimensionGroups.length}차원</span><strong>{sumWeights(activeRows).toLocaleString()}</strong></footer>
+        </article>
+
+        <article className="prizmLvSelectPanel">
+          <header><h3>평가지표</h3></header>
+          <div className="prizmLvSelectHead"><span>List</span><span>비중</span></div>
+          <div className="prizmLvChoiceList">
+            {subjectItems.map((item) => (
+              <button
+                type="button"
+                key={`${item.division}-${item.subject_no}-${item.item_no}`}
+                className={selected?.item_no === item.item_no && selected?.subject_no === item.subject_no ? 'active' : ''}
+                onClick={() => loadDetail(item)}
+              >
+                <span>{item.item_nm || `항목 ${item.item_no}`}</span>
+                <strong>{item.item_weight || '-'}</strong>
+              </button>
+            ))}
+          </div>
+          <footer><span>{subjectItems.length}항목</span><strong>{sumWeights(subjectItems).toLocaleString()}</strong></footer>
+        </article>
+
+        <form className="prizmConfigPanel prizmLvDetailPanel" onSubmit={handleSave}>
+          <div className="prizmConfigHeader">
+            <div>
+              <h4>세부지표 설정</h4>
+              <span>{selected ? `${selected.division_label} · ${selected.subject_name} · ${selected.item_nm || `항목 ${selected.item_no}`}` : '평가지표를 선택하세요.'}</span>
+            </div>
+          </div>
+          <div className="prizmConfigGrid">
+            <label className="wide definitionField">
+              <span>지표 정의</span>
+              <textarea name="itemDefinition" value={configForm.itemDefinition} onChange={updateConfigValue} disabled={!selected} />
+            </label>
+            <label>
+              <span>가중치</span>
+              <input name="itemWeight" value={configForm.itemWeight} onChange={updateConfigValue} disabled={!selected} />
+            </label>
+            {Array.from({ length: 5 }, (_, index) => {
+              const number = index + 1;
+              return (
+                <div className="prizmStandardRow" key={number}>
+                  <strong>{number}</strong>
+                  <label>
+                    <span>하한</span>
+                    <input name={`itemStandardLow${number}`} value={configForm[`itemStandardLow${number}`]} onChange={updateConfigValue} disabled={!selected} />
+                  </label>
+                  <label>
+                    <span>상한</span>
+                    <input name={`itemStandardHigh${number}`} value={configForm[`itemStandardHigh${number}`]} onChange={updateConfigValue} disabled={!selected} />
+                  </label>
+                </div>
+              );
+            })}
+            <label className="wide">
+              <span>변경메모</span>
+              <input name="updateMemo" value={configForm.updateMemo} onChange={updateConfigValue} disabled={!selected} />
+            </label>
+          </div>
+          <div className="prizmConfigActions">
+            <button type="submit" className="sBtn sColorLB" disabled={!selected || isSaving}>수정</button>
+          </div>
+        </form>
+      </div>
+
+      <section className="prizmLvOverview">
+        <header>
+          <h3>종합 지표 현황</h3>
+          <span>{activeDivision === 1 ? 'Prizm' : 'CRA Index'} · {activeRows.length}개 지표</span>
+        </header>
+        <div className="tableScroll" ref={listScrollRef}>
+          <table className="prizmConfigTable prizmLvTable" aria-label="종합 지표 현황">
+            <thead>
+              <tr>
+                <th>구분</th>
+                <th>차원</th>
+                <th>평가지표</th>
+                <th>설정상태</th>
+                <th>지표정의</th>
+                <th>가중치</th>
+                <th>1구간</th>
+                <th>2구간</th>
+                <th>3구간</th>
+                <th>4구간</th>
+                <th>5구간</th>
+                <th>선택</th>
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr><td colSpan="12">Prism 설정을 조회 중입니다.</td></tr>
+              ) : activeRows.length === 0 ? (
+                <tr><td colSpan="12">조회 결과가 없습니다.</td></tr>
+              ) : activeRows.map((row) => (
+                <tr key={`${row.division}-${row.subject_no}-${row.item_no}`}>
+                  <td>{row.division_label}</td>
+                  <td>{row.subject_name}</td>
+                  <td>{row.item_nm || `항목 ${row.item_no}`}</td>
+                  <td>{row.config_status_label ?? '-'}</td>
+                  <td className="leftText">{row.item_definition || '-'}</td>
+                  <td>{row.item_weight || '-'}</td>
+                  <td>{row.item_standard_low1 || '-'} ~ {row.item_standard_high1 || '-'}</td>
+                  <td>{row.item_standard_low2 || '-'} ~ {row.item_standard_high2 || '-'}</td>
+                  <td>{row.item_standard_low3 || '-'} ~ {row.item_standard_high3 || '-'}</td>
+                  <td>{row.item_standard_low4 || '-'} ~ {row.item_standard_high4 || '-'}</td>
+                  <td>{row.item_standard_low5 || '-'} ~ {row.item_standard_high5 || '-'}</td>
+                  <td><button type="button" className="tableBtn" onClick={() => loadDetail(row)}>선택</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </form> : null}
+        {listScroll.max > 0 ? <div className="horizontalTableScrollbar prizmHorizontalScrollbar" aria-label="종합 지표 현황 좌우 스크롤">
+          <button type="button" aria-label="종합 지표 현황 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input type="range" aria-label="종합 지표 현황 가로 스크롤" min="0" max={listScroll.max} step="1" value={Math.min(listScroll.left, listScroll.max)} onChange={changeListScroll} />
+          <button type="button" aria-label="종합 지표 현황 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div> : null}
+      </section>
 
       <div className="prizmRecordPanel">
-        <h4>최근 변경이력</h4>
-        <table className="legacyTable prizmRecordTable">
-          <thead>
-            <tr>
-              <th>일시</th>
-              <th>항목</th>
-              <th>관리자</th>
-              <th>메모</th>
-            </tr>
-          </thead>
-          <tbody>
-            {records.length === 0 ? (
-              <tr><td colSpan="4">변경이력이 없습니다.</td></tr>
-            ) : records.map((record) => (
-              <tr key={record.record_id}>
-                <td>{formatDateTime(record.reg_date)}</td>
-                <td>{updateRecordLabel(record)}</td>
-                <td>{record.admin_id || '-'}</td>
-                <td className="leftText">{record.update_memo || '-'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h4>지표 변경 이력관리</h4>
+        <div className="prizmRecordScroll">
+          <table className="prizmRecordTable">
+            <thead><tr><th>일시</th><th>항목</th><th>관리자</th><th>메모</th></tr></thead>
+            <tbody>
+              {records.length === 0 ? <tr><td colSpan="4">변경이력이 없습니다.</td></tr> : records.map((record) => (
+                <tr key={record.record_id}>
+                  <td>{formatDateTime(record.reg_date)}</td>
+                  <td>{updateRecordLabel(record)}</td>
+                  <td>{record.admin_id || '-'}</td>
+                  <td className="leftText">{record.update_memo || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

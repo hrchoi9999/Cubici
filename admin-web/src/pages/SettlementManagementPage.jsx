@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchSettlementDetail, fetchSettlements } from '../api/settlements.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function formatDate(value) {
   if (!value) {
@@ -27,6 +27,28 @@ function formatSettlementCheckStatus(value) {
     NOT_CHECKED: '미검산',
   };
   return labels[value] ?? value ?? '-';
+}
+
+function formatShopType(value) {
+  const labels = {
+    NAVER: '스마트스토어',
+    COUPANG: '쿠팡',
+    STREET11: '11번가',
+    GMARKET: 'G마켓',
+    AUCTION: '옥션',
+    INTERPARK: '인터파크',
+  };
+  return labels[String(value ?? '').toUpperCase()] ?? value ?? '-';
+}
+
+function formatSettlementStatus(value) {
+  const labels = { READY: '대기', PAID: '지급완료', DONE: '완료', HOLD: '보류' };
+  return labels[String(value ?? '').toUpperCase()] ?? value ?? '-';
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  return `"${text.replaceAll('"', '""')}"`;
 }
 
 function mapSettlementToRow(item) {
@@ -65,15 +87,19 @@ export function SettlementManagementPage() {
   });
   const [offset, setOffset] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const [message, setMessage] = useState('');
+  const [exportMessage, setExportMessage] = useState('');
   const [detail, setDetail] = useState(null);
   const [detailMessage, setDetailMessage] = useState('');
   const [formValues, setFormValues] = useState({
     shopType: '',
     shopId: '',
     status: '',
+    keyword: '',
     fromDate: '',
     toDate: '',
+    orderBy: 'date_desc',
   });
   const [filters, setFilters] = useState({});
 
@@ -153,9 +179,54 @@ export function SettlementManagementPage() {
       shop_type: formValues.shopType,
       shop_id: formValues.shopId,
       status: formValues.status,
+      keyword: formValues.keyword,
       from_date: formValues.fromDate,
       to_date: formValues.toDate,
+      order_by: formValues.orderBy,
     });
+  }
+
+  function handleOrderByChange(event) {
+    const { value } = event.target;
+    setFormValues((current) => ({ ...current, orderBy: value }));
+    setFilters((current) => ({ ...current, order_by: value }));
+    setOffset(0);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportMessage('');
+    try {
+      const exportItems = [];
+      let exportOffset = 0;
+      let exportTotal = 0;
+      do {
+        const data = await fetchSettlements({ limit: 100, offset: exportOffset, ...filters });
+        const pageItems = data.items ?? [];
+        exportTotal = data.total ?? pageItems.length;
+        exportItems.push(...pageItems);
+        exportOffset += pageItems.length;
+        if (pageItems.length === 0) break;
+      } while (exportOffset < exportTotal && exportOffset < 10000);
+
+      const headers = ['정산ID', '쇼핑몰', '상점ID', '정산구분', '정산일', '총매출', '서비스수수료', '정산대상액', '정산액', '보류해제액', '은행', '검산', '상태'];
+      const csvRows = exportItems.map((item) => {
+        const row = mapSettlementToRow(item);
+        return [row.id, formatShopType(row.shopType), row.shopId, row.type, formatDate(row.date), row.totalSale, row.serviceFee, row.targetAmount, row.settlementAmount, row.pendingReleasedAmount, row.bankName, `${formatSettlementCheckStatus(row.checkStatus)} (${formatNumber(row.checkDifference)})`, formatSettlementStatus(row.status)];
+      });
+      const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cubici-settlements-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      setExportMessage(`${formatNumber(exportItems.length)}건을 내려받았습니다.`);
+    } catch (error) {
+      setExportMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   async function openDetail(settlementsId) {
@@ -171,8 +242,8 @@ export function SettlementManagementPage() {
   }
 
   return (
-    <>
-      <div className="m-tab">
+    <section className="settlementLvPage">
+      <div className="m-tab settlementLvTabs">
         <ul>
           <li className="active">
             <a href="javascript:;">정산 관리</a>
@@ -180,11 +251,17 @@ export function SettlementManagementPage() {
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+      <div className="m-options settlementLvBaseDate">
+        <div className="pRight"><span className="baseDate"><b>기준</b> {new Date().toLocaleDateString('ko-KR')}</span></div>
+      </div>
+
+      <form className="m-search searchArea settlementLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="settlementShopType">쇼핑몰</label>
-            <input id="settlementShopType" name="shopType" type="text" value={formValues.shopType} onChange={updateFormValue} />
+            <select id="settlementShopType" name="shopType" value={formValues.shopType} onChange={updateFormValue}>
+              <option value="">전체</option><option value="NAVER">스마트스토어</option><option value="COUPANG">쿠팡</option><option value="STREET11">11번가</option><option value="GMARKET">G마켓</option><option value="AUCTION">옥션</option>
+            </select>
           </div>
           <div className="inputBox">
             <label htmlFor="settlementShopId">상점ID</label>
@@ -192,16 +269,20 @@ export function SettlementManagementPage() {
           </div>
           <div className="inputBox">
             <label htmlFor="settlementStatus">상태</label>
-            <input id="settlementStatus" name="status" type="text" value={formValues.status} onChange={updateFormValue} />
+            <select id="settlementStatus" name="status" value={formValues.status} onChange={updateFormValue}>
+              <option value="">전체</option><option value="READY">대기</option><option value="PAID">지급완료</option><option value="DONE">완료</option><option value="HOLD">보류</option>
+            </select>
+          </div>
+          <div className="inputBox">
+            <label htmlFor="settlementKeyword">통합검색</label>
+            <input id="settlementKeyword" name="keyword" type="text" value={formValues.keyword} onChange={updateFormValue} placeholder="정산ID·정산구분·은행" />
           </div>
         </div>
         <div className="line">
-          <div className="inputBox">
-            <label htmlFor="settlementFromDate">시작일</label>
+          <div className="inputBox settlementLvDateRange">
+            <label htmlFor="settlementFromDate">정산일자</label>
             <input id="settlementFromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="settlementToDate">종료일</label>
+            <span>~</span>
             <input id="settlementToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} />
           </div>
           <button className="sBtn sColorLB" type="submit">
@@ -210,17 +291,25 @@ export function SettlementManagementPage() {
         </div>
       </form>
 
-      <div className="summaryPills">
-        <span>검산 {counts.check_status_label ?? '-'}</span>
-        <span>일치 {formatNumber(counts.ok_count ?? 0)}건</span>
-        <span>차이 {formatNumber(counts.diff_count ?? 0)}건</span>
-        <span>원본산출 {formatNumber(counts.legacy_batch_value_count ?? 0)}건</span>
-        <span>차이합계 {formatNumber(counts.total_difference ?? 0)}</span>
-        <span>절대차이 {formatNumber(counts.absolute_difference ?? 0)}</span>
+      <div className="m-options settlementLvTableOptions">
+        <div className="pRight">
+          <div className="fwBox settlementLvOrderBox"><label htmlFor="settlementOrderBy">보기기준</label><select id="settlementOrderBy" name="orderBy" value={formValues.orderBy} onChange={handleOrderByChange}><option value="date_desc">최근순</option><option value="date_asc">과거순</option><option value="amount_desc">정산액 높은순</option><option value="amount_asc">정산액 낮은순</option></select></div>
+          <button className="settlementLvDownloadButton" type="button" onClick={handleExport} disabled={isExporting}>{isExporting ? '내려받는 중' : '엑셀 다운로드'}</button>
+        </div>
+        {exportMessage ? <p className="settlementLvExportMessage" role="status">{exportMessage}</p> : null}
+      </div>
+
+      <div className="settlementLvSummary" aria-label="정산 검산 요약">
+        <span><b>검산</b>{counts.check_status_label ?? '-'}</span>
+        <span><b>전체</b>{formatNumber(counts.total_count ?? 0)}건</span>
+        <span><b>일치</b>{formatNumber(counts.ok_count ?? 0)}건</span>
+        <span><b>차이</b>{formatNumber(counts.diff_count ?? 0)}건</span>
+        <span><b>원본산출</b>{formatNumber(counts.legacy_batch_value_count ?? 0)}건</span>
+        <span><b>절대차이</b>{formatNumber(counts.absolute_difference ?? 0)}원</span>
       </div>
 
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div id="fixTable" className="fixTable legacyListTable table-scroll">
+      <div id="fixTable" className="fixTable legacyListTable table-scroll settlementLvTable">
         <div className="overflowBox">
         <table className="m-shadowTable settlementTable">
           <caption className="caption">정산 관리 목록</caption>
@@ -236,9 +325,6 @@ export function SettlementManagementPage() {
               <th scope="col">정산대상액</th>
               <th scope="col">정산액</th>
               <th scope="col">보류해제액</th>
-              <th scope="col">은행</th>
-              <th scope="col">예금주</th>
-              <th scope="col">계좌번호</th>
               <th scope="col">검산</th>
               <th scope="col">상태</th>
               <th scope="col">상세</th>
@@ -247,16 +333,16 @@ export function SettlementManagementPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan="16">정산 목록을 조회 중입니다.</td>
+                <td colSpan="13">정산 목록을 조회 중입니다.</td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td colSpan="16">조회된 정산 데이터가 없습니다.</td>
+                <td colSpan="13">조회된 정산 데이터가 없습니다.</td>
               </tr>
             ) : rows.map((row) => (
               <tr key={row.id}>
                 <td>{row.id}</td>
-                <td>{row.shopType ?? '-'}</td>
+                <td>{formatShopType(row.shopType)}</td>
                 <td>{row.shopId ?? '-'}</td>
                 <td>{row.type ?? '-'}</td>
                 <td>{formatDate(row.date)}</td>
@@ -265,11 +351,8 @@ export function SettlementManagementPage() {
                 <td>{formatNumber(row.targetAmount)}</td>
                 <td>{formatNumber(row.settlementAmount)}</td>
                 <td>{formatNumber(row.pendingReleasedAmount)}</td>
-                <td>{row.bankName ?? '-'}</td>
-                <td>{row.bankAccountHolder ?? '-'}</td>
-                <td>{row.bankAccount ?? '-'}</td>
                 <td>{formatSettlementCheckStatus(row.checkStatus)} ({formatNumber(row.checkDifference)})</td>
-                <td>{row.status ?? '-'}</td>
+                <td>{formatSettlementStatus(row.status)}</td>
                 <td>
                   <button className="sColorLB refund-btn" type="button" onClick={() => openDetail(row.id)}>
                     보기
@@ -314,7 +397,7 @@ export function SettlementManagementPage() {
         </ul>
       </div>
       <SettlementDetailPanel detail={detail} message={detailMessage} />
-    </>
+    </section>
   );
 }
 

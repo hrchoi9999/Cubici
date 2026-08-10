@@ -6,6 +6,9 @@ function formatDateTime(value) {
 }
 
 function statusClass(status) {
+  if (!status) {
+    return '';
+  }
   if (status === '정상') {
     return 'sColorLS';
   }
@@ -54,18 +57,6 @@ export function ServerMonitorPage() {
 
   return (
     <section className="adminPage monitoringPage serverMonitorPage">
-      <div className="m-options managementOptions monitoringOptions">
-        <div className="pRight summaryPills">
-          <span>상태 {status?.overall_status ?? (isLoading ? '조회 중' : '-')}</span>
-          <span>{status?.metric_source_label ?? 'FastAPI/DB/배치 로그 기반'}</span>
-          <span>{status?.metric_source_status_label ?? '외부 서버 metric 미연동'}</span>
-          <span>{status?.follow_up_action_label ?? '-'}</span>
-          <span>성공 {status?.recent_success_count?.toLocaleString() ?? 0}건</span>
-          <span>실패 {status?.recent_fail_count?.toLocaleString() ?? 0}건</span>
-          <span>확인 {formatDateTime(status?.checked_at)}</span>
-        </div>
-      </div>
-
       <form className="m-search searchArea monitoringFilterBar" onSubmit={(event) => event.preventDefault()}>
         <div className="line">
           <div className="inputBox">
@@ -84,6 +75,27 @@ export function ServerMonitorPage() {
 
       {message ? <div className="m-alert">{message}</div> : null}
 
+      <div className="serverMonitorSummary" aria-label="서버 운영 요약">
+        <div>
+          <span>종합 상태</span>
+          <strong className={statusClass(status?.overall_status)}>
+            {status?.overall_status ?? (isLoading ? '조회 중' : '-')}
+          </strong>
+        </div>
+        <div>
+          <span>정상 처리</span>
+          <strong>{status?.recent_success_count?.toLocaleString() ?? 0}건</strong>
+        </div>
+        <div>
+          <span>실패 발생</span>
+          <strong>{status?.recent_fail_count?.toLocaleString() ?? 0}건</strong>
+        </div>
+        <div>
+          <span>최종 확인</span>
+          <strong>{formatDateTime(status?.checked_at)}</strong>
+        </div>
+      </div>
+
       <div className="serverStatusGrid">
         {(status?.metrics ?? []).map((metric) => (
           <div className="serverStatusCard" key={metric.name}>
@@ -92,10 +104,17 @@ export function ServerMonitorPage() {
               <span className={`sBtn ${statusClass(metric.status)} rBtn`}>{metric.status}</span>
             </div>
             <strong>{metric.value}</strong>
-            <p>{metric.note ?? '-'}</p>
-            <p>{metric.source_label ?? '-'}</p>
-            <p>{metric.action_label ?? '-'}</p>
-            <small>{formatDateTime(metric.checked_at)}</small>
+            <dl>
+              <div>
+                <dt>점검 기준</dt>
+                <dd>{metric.note ?? '-'}</dd>
+              </div>
+              <div>
+                <dt>조치 안내</dt>
+                <dd>{metric.action_label ?? '-'}</dd>
+              </div>
+            </dl>
+            <small>확인 {formatDateTime(metric.checked_at)}</small>
           </div>
         ))}
         {isLoading ? <div className="serverStatusEmpty">서버 상태를 조회 중입니다.</div> : null}
@@ -103,30 +122,36 @@ export function ServerMonitorPage() {
       </div>
 
       <div className="serverStatusPanel">
-        <h4>점검 기준</h4>
+        <h4 className="monitoringSectionTitle" id="serverMonitorCriteriaTitle">점검 기준</h4>
         <div className="tableScroll">
-          <table className="legacyTable serverStatusTable">
-            <caption className="caption">서버 점검 기준</caption>
+          <table className="legacyTable serverStatusTable" aria-labelledby="serverMonitorCriteriaTitle">
+            <thead>
+              <tr>
+                <th>점검 항목</th>
+                <th>확인 기준</th>
+                <th>데이터 원본</th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <th>Metric Source</th>
-                <td>현재는 FastAPI self-check, PostgreSQL 연결, `cbci_scheduled_report`, `cbci_err_report` 기준이다. 외부 서버 metric은 2차 연동 범위다.</td>
+                <td>API 서버</td>
+                <td>관리자 모니터링 API 응답 여부</td>
+                <td>FastAPI 자체 점검</td>
               </tr>
               <tr>
-                <th>API 서버</th>
-                <td>FastAPI `/v1/api/monitoring/server-status` 응답 기준</td>
+                <td>PostgreSQL</td>
+                <td>DB 연결 및 현재 시각 조회 여부</td>
+                <td>PostgreSQL 연결</td>
               </tr>
               <tr>
-                <th>PostgreSQL</th>
-                <td>DB 연결 후 `select now()` 실행 기준</td>
+                <td>배치 성공</td>
+                <td>선택 조회범위 내 정상 실행 건수</td>
+                <td>배치 실행 이력</td>
               </tr>
               <tr>
-                <th>배치 성공</th>
-                <td>`cbci_scheduled_report`의 최근 실행 건수 기준</td>
-              </tr>
-              <tr>
-                <th>배치 실패</th>
-                <td>`cbci_err_report`의 최근 실패 건수 기준</td>
+                <td>배치 실패</td>
+                <td>선택 조회범위 내 오류 발생 건수</td>
+                <td>Error Log</td>
               </tr>
             </tbody>
           </table>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   approveAdminAccount,
   checkAdminId,
@@ -82,6 +82,8 @@ export function AdminAccountManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -119,6 +121,30 @@ export function AdminAccountManagementPage() {
   const rows = useMemo(() => items, [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
+
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
 
   async function reloadList(nextOffset = offset) {
     const data = await fetchAdminAccounts({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
@@ -173,6 +199,7 @@ export function AdminAccountManagementPage() {
       setAccountForm(mapAccountToForm(data));
       setMode(isPending(data) ? 'approval' : 'update');
       setIsEditorOpen(true);
+      window.requestAnimationFrame(() => listScrollRef.current?.scrollTo({ left: 0 }));
     } catch (error) {
       setSelected(null);
       setMode('request');
@@ -302,16 +329,29 @@ export function AdminAccountManagementPage() {
     });
   }
 
+  function changeListScroll(event) {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollLeft = Number(event.target.value);
+    }
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (container) {
+      container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+    }
+  }
+
   return (
-    <>
-      <div className="m-tab">
+    <section className="adminAccountLvPage">
+      <div className="m-tab adminAccountLvTabs">
         <ul>
           <li className="active"><a href="/admin/cubici/adminPreference/adminRegister_tab1">등록 관리자</a></li>
           <li><a href="/admin/cubici/adminPreference/adminRegister_tab2">접근권한</a></li>
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+      <form className="m-search searchArea adminAccountLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="adminType">회사명</label>
@@ -354,26 +394,16 @@ export function AdminAccountManagementPage() {
               <option value="admin_id_asc">아이디순</option>
             </select>
           </div>
-          <button type="submit" className="searchBtn">검색</button>
-          <button type="button" className="grayBtn" onClick={handleNew}>신청 등록</button>
+          <button type="submit" className="sBtn sColorLB">검색</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew}>신청 등록</button>
         </div>
       </form>
 
-      <div className="fixBottom">
-        <div className="tableTotal adminAccountSummary">
-          <span>전체 {formatNumber(counts.total_count)}명</span>
-          <span>대기 {formatNumber(counts.pending_count)}명</span>
-          <span>승인완료 {formatNumber(counts.approved_count)}명</span>
-          <span>{currentPage} / {pageCount} page</span>
-        </div>
-      </div>
-
       {message ? <p className="formMessage">{message}</p> : null}
 
-      <div className="legacyListTable table-scroll">
-        <div className="overflowBox">
-          <table className="adminAccountTable">
-            <caption>등록 관리자</caption>
+      <div className="adminAccountLvList">
+        <div className="tableScroll" ref={listScrollRef}>
+          <table className="adminAccountTable adminAccountLvTable" aria-label="등록 관리자 목록">
             <thead>
               <tr>
                 <th>#</th>
@@ -385,17 +415,15 @@ export function AdminAccountManagementPage() {
                 <th>신청일자</th>
                 <th>승인일자</th>
                 <th>접근권한</th>
-                <th>권한범위</th>
                 <th>상태</th>
-                <th>Audit</th>
                 <th>수정</th>
               </tr>
             </thead>
             <tbody id="fixTbody">
               {isLoading ? (
-                <tr><td colSpan="13">관리자 목록을 불러오는 중입니다.</td></tr>
+                <tr><td colSpan="11">관리자 목록을 불러오는 중입니다.</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan="13">검색결과가 없습니다.</td></tr>
+                <tr><td colSpan="11">검색결과가 없습니다.</td></tr>
               ) : rows.map((row) => (
                 <tr key={row.admin_id}>
                   <td>{row.row_no}</td>
@@ -407,28 +435,54 @@ export function AdminAccountManagementPage() {
                   <td>{formatDate(row.admin_reg_date)}</td>
                   <td>{formatDate(row.admin_approval_date)}</td>
                   <td>{row.admin_grade_label}</td>
-                  <td>{row.permission_scope_label ?? '-'}</td>
                   <td>{row.approval_status}</td>
-                  <td>{row.audit_status_label ?? '-'}</td>
                   <td><button type="button" className="tableBtn" onClick={() => loadDetail(row.admin_id)}>보기</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
 
-      <div className="pagination pagingControls">
+        {listScroll.max > 0 ? <div className="horizontalTableScrollbar adminAccountHorizontalScrollbar" aria-label="등록 관리자 목록 좌우 스크롤">
+          <button type="button" aria-label="관리자 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="관리자 목록 가로 스크롤"
+            min="0"
+            max={listScroll.max}
+            step="1"
+            value={Math.min(listScroll.left, listScroll.max)}
+            onChange={changeListScroll}
+          />
+          <button type="button" aria-label="관리자 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div> : null}
+
+        <div className="adminAccountLvTotals" aria-label="관리자 등록 집계">
+          <div><span>전체</span><strong>{formatNumber(counts.total_count)}명</strong></div>
+          <div><span>승인 대기</span><strong>{formatNumber(counts.pending_count)}명</strong></div>
+          <div><span>승인 완료</span><strong>{formatNumber(counts.approved_count)}명</strong></div>
+          <div><span>현재 페이지</span><strong>{currentPage} / {pageCount}</strong></div>
+        </div>
+
+        <div className="pagination pagingControls">
         <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        </div>
       </div>
 
       {isEditorOpen ? <form className="adminAccountPanel" onSubmit={handleSave}>
         <div className="adminAccountHeader">
           <h4>{mode === 'approval' ? '관리자 등록 승인' : mode === 'update' ? '관리자 정보 수정' : '관리자 신청 등록'}</h4>
-          <span>{selected ? selected.approval_status : '신규 신청'}</span>
+          <div>
+            <span>{selected ? selected.approval_status : '신규 신청'}</span>
+            <button type="button" onClick={() => setIsEditorOpen(false)}>닫기</button>
+          </div>
         </div>
+        {selected ? <div className="adminAccountAuditSummary">
+          <div><span>권한범위</span><strong>{selected.permission_scope_label ?? '-'}</strong></div>
+          <div><span>Audit</span><strong>{selected.audit_status_label ?? '-'}</strong></div>
+        </div> : null}
         <div className="adminAccountGrid">
           {mode !== 'request' ? (
             <label>
@@ -437,7 +491,7 @@ export function AdminAccountManagementPage() {
             </label>
           ) : null}
           {mode === 'approval' ? (
-            <button type="button" className="grayBtn idCheckButton" onClick={handleIdCheck}>중복확인</button>
+            <button type="button" className="sBtn sColorLB idCheckButton" onClick={handleIdCheck}>중복확인</button>
           ) : null}
           <label>
             <span>관리자 비밀번호</span>
@@ -477,13 +531,13 @@ export function AdminAccountManagementPage() {
         </div>
         {idCheckResult ? <p className="formMessage">{idCheckResult}</p> : null}
         <div className="adminAccountActions">
-          <button type="submit" className="searchBtn" disabled={isSaving}>
+          <button type="submit" className="sBtn sColorLB" disabled={isSaving}>
             {mode === 'approval' ? '등록 승인' : mode === 'update' ? '정보 수정' : '신청 등록'}
           </button>
-          <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
-          {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>등록 해지</button> : null}
+          <button type="button" className="sBtn sColorN" onClick={handleNew} disabled={isSaving}>초기화</button>
+          {selected ? <button type="button" className="sBtn sColorP" onClick={handleDelete} disabled={isSaving}>등록 해지</button> : null}
         </div>
       </form> : null}
-    </>
+    </section>
   );
 }

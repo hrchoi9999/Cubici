@@ -3,6 +3,15 @@ import { expect, test } from '@playwright/test';
 const mbid = 'TESTMBID01';
 const redemptionSummary = {
   mbid,
+  contract_status: 'CONTRACT',
+  product_code: 'MP',
+  fintech_name: '큐빅아이',
+  contract_date: '2026-07-19T10:00:00',
+  user_email: 'sample@example.test',
+  firm_name: '테스트상사',
+  user_name: '홍길동',
+  latest_max_outstanding_balance: 500000,
+  service_fee: 2000,
   provision_count: 2,
   total_payment_amount: 120000,
   total_usage_fee: 2000,
@@ -158,12 +167,11 @@ test.beforeEach(async ({ page }) => {
 test('redemption history filters, payload detail, and cancel modal work with mock data', async ({ page }) => {
   await page.goto('/admin/moneybank/redemption');
 
-  await expect(page.getByRole('heading', { name: '상환 관리' })).toBeVisible();
-  await expect(page.getByText('잔액검산 검산일치')).toBeVisible();
-  await expect(page.getByText('미상환 1건')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '계약/상환' })).toBeVisible();
+  await expect(page.locator('.redemptionLvTabs li.active')).toContainText('상환 현황');
   await expect(page.getByText(mbid)).toBeVisible();
 
-  await page.getByRole('button', { name: '보기' }).first().click();
+  await page.getByRole('button', { name: mbid }).click();
   await expect(page.getByText('최근 작업 이력')).toBeVisible();
   await expect(page.getByText('RPTEST001')).toBeVisible();
 
@@ -174,7 +182,7 @@ test('redemption history filters, payload detail, and cancel modal work with moc
   await page.getByRole('button', { name: '초기화' }).click();
   await expect(page.getByText('RPTEST001')).toBeVisible();
 
-  await page.getByRole('button', { name: '보기' }).nth(1).click();
+  await page.getByRole('button', { name: '보기' }).first().click();
   await expect(page.getByRole('heading', { name: '작업 상세' })).toBeVisible();
   await expect(page.getByText('"repayment_code": "RPTEST001"')).toBeVisible();
   await page.getByRole('button', { name: '닫기' }).click();

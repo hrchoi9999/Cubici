@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '../admin-web/node_modules/@playwright/test/index.mjs';
 
+const executablePath = process.env.PLAYWRIGHT_EXECUTABLE_PATH;
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 45_000,
@@ -15,7 +17,7 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+      use: { ...devices['Desktop Chrome'], ...(executablePath ? { executablePath } : {}) },
     },
   ],
 });

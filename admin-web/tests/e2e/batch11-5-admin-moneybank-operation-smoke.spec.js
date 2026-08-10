@@ -7,8 +7,8 @@ const routes = [
   ['/admin/moneybank/approval_tab1', ['.searchArea', '.approvalTable', '.tableTotal']],
   ['/admin/moneybank/approval_tab2', ['.searchArea', '.contractManagementTable', '.tableTotal']],
   ['/admin/moneybank/settlement', ['.searchArea', '.summaryPills', '.settlementTable', '.tableTotal']],
-  ['/admin/moneybank/redemption', ['.searchArea', '.summaryPills', '.redemptionTable', '.tableTotal']],
-  ['/admin/moneybank/manage', ['.searchArea', '.summaryPills', '.prizmTable', '.tableTotal']],
+  ['/admin/moneybank/redemption', ['.searchArea', '.redemptionLvTableOptions', '.redemptionTable', '.paging']],
+  ['/admin/moneybank/manage', ['.creditIndicatorTab', '.creditIndicatorMetricTable', '.creditIndicatorGradeTable', '.creditIndicatorActions']],
 ];
 
 function contractPayload() {
@@ -106,6 +106,57 @@ function riskPayload() {
   };
 }
 
+function indicatorPayload() {
+  return {
+    items: [
+      {
+        row_no: 1,
+        division: 1,
+        division_label: 'Prizm',
+        subject_no: 1,
+        subject_name: '주제 1',
+        item_no: 1,
+        item_nm: '사업기간',
+        item_definition: '사업자등록 기간',
+        item_weight: '21.2',
+        item_standard_low1: null,
+        item_standard_high1: '24',
+        item_standard_low2: '24',
+        item_standard_high2: '36',
+        item_standard_low3: '36',
+        item_standard_high3: '48',
+        item_standard_low4: '48',
+        item_standard_high4: '60',
+        item_standard_low5: '60',
+        item_standard_high5: null,
+      },
+      {
+        row_no: 2,
+        division: 1,
+        division_label: 'Prizm',
+        subject_no: 6,
+        subject_name: '주제 6',
+        item_no: 1,
+        item_nm: '평가등급',
+        item_definition: 'PCS 평가등급',
+        item_weight: null,
+        item_standard_low1: '320',
+        item_standard_high1: null,
+        item_standard_low2: '321',
+        item_standard_high2: '500',
+        item_standard_low3: '501',
+        item_standard_high3: '700',
+        item_standard_low4: '701',
+        item_standard_high4: '879',
+        item_standard_low5: '880',
+        item_standard_high5: '1000',
+      },
+    ],
+    total: 2,
+    counts: { total_count: 2, prizm_count: 2, cra_count: 0 },
+  };
+}
+
 function apiPayload(url) {
   if (url.includes('/v1/api/accounts/admin-me')) {
     return { user_no: 1, email: MASTER_ADMIN_EMAIL, user_type: 'ADMIN_USER', name: '관리자' };
@@ -114,6 +165,7 @@ function apiPayload(url) {
   if (url.includes('/v1/api/settlements')) return settlementPayload();
   if (url.includes('/v1/api/redemptions')) return redemptionPayload();
   if (url.includes('/v1/api/risk-results')) return riskPayload();
+  if (url.includes('/v1/api/preferences/prizm-config/items')) return indicatorPayload();
   return { items: [], total: 0, counts: {} };
 }
 

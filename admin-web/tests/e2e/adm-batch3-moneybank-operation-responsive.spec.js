@@ -97,7 +97,7 @@ const routeConfigs = [
     ready: '.redemptionTable tbody tr', input: '#redemptionMbid', query: 'mbid', value: 'MB-20260809-01',
   },
   {
-    code: 'ADM-04F-PRIZM', path: '/admin/moneybank/manage', endpoint: '/risk-results',
+    code: 'ADM-04F-PRIZM', path: '/admin/moneybank/risk-results', endpoint: '/risk-results',
     ready: '.prizmTable tbody tr', input: '#prizmMbid', query: 'mbid', value: 'MB-20260809-01',
   },
 ];

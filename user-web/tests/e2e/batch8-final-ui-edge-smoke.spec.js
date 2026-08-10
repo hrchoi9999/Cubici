@@ -10,7 +10,7 @@ const session = {
     email: `batch8-${longText.toLowerCase()}@example.com`,
     name: 'Batch8 Edge',
     phone: '010-1234-5678',
-    user_type: 'GENERAL',
+    user_type: 'USER',
     biz_name: `스모크상사 ${longText}`,
     biz_num: '000-00-00000',
     partner_code: `EDGE-${longText}`,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   createBoardPost,
   deleteBoardPost,
@@ -28,22 +28,14 @@ function formatDate(value) {
   return value.slice(0, 10);
 }
 
-function stripHtml(value) {
-  if (!value) {
-    return '-';
-  }
-  return value.replace(/<[^>]*>/g, '').trim() || '-';
-}
-
 export function CustomerBoardPage() {
   const initialKind = initialKindFromPath();
   const [activeKind, setActiveKind] = useState(initialKind);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
-  const [boardPolicy, setBoardPolicy] = useState({ attachment: '첨부 미연동', exposure: '노출정책 확인' });
   const [offset, setOffset] = useState(0);
   const [filters, setFilters] = useState({ order_by: 'reg_date_desc' });
-  const [formValues, setFormValues] = useState({ keyword: '', postType: '', orderBy: 'reg_date_desc' });
+  const [keyword, setKeyword] = useState('');
   const [postForm, setPostForm] = useState(emptyForm);
   const [selected, setSelected] = useState(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -62,16 +54,11 @@ export function CustomerBoardPage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
-          setBoardPolicy({
-            attachment: data.attachment_status_label ?? '첨부 미연동',
-            exposure: data.exposure_policy_status_label ?? '노출정책 확인',
-          });
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
-          setBoardPolicy({ attachment: '첨부 미연동', exposure: '노출정책 확인' });
           setMessage(error.message);
         }
       } finally {
@@ -88,18 +75,12 @@ export function CustomerBoardPage() {
     };
   }, [activeKind, offset, filters]);
 
-  const rows = useMemo(() => items, [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   async function reloadList(nextOffset = offset) {
     const data = await fetchBoardPosts(activeKind, { limit: PAGE_SIZE, offset: nextOffset, ...filters });
     setItems(data.items ?? []);
     setTotal(data.total ?? 0);
-    setBoardPolicy({
-      attachment: data.attachment_status_label ?? '첨부 미연동',
-      exposure: data.exposure_policy_status_label ?? '노출정책 확인',
-    });
   }
 
   function switchKind(nextKind) {
@@ -108,12 +89,11 @@ export function CustomerBoardPage() {
     setSelected(null);
     setIsEditorOpen(false);
     setPostForm(emptyForm);
-    setFilters({ keyword: formValues.keyword, post_type: formValues.postType, order_by: formValues.orderBy });
-  }
-
-  function updateSearchValue(event) {
-    const { name, value } = event.target;
-    setFormValues((current) => ({ ...current, [name]: value }));
+    setFilters({ keyword, order_by: 'reg_date_desc' });
+    const nextPath = nextKind === 'faq'
+      ? '/admin/cubici/supportMember/manageBoard_tab2'
+      : '/admin/cubici/supportMember/manageBoard_tab1';
+    window.history.replaceState({}, '', nextPath);
   }
 
   function updatePostValue(event) {
@@ -127,9 +107,8 @@ export function CustomerBoardPage() {
     setSelected(null);
     setIsEditorOpen(false);
     setFilters({
-      keyword: formValues.keyword,
-      post_type: formValues.postType,
-      order_by: formValues.orderBy,
+      keyword,
+      order_by: 'reg_date_desc',
     });
   }
 
@@ -192,8 +171,12 @@ export function CustomerBoardPage() {
       const result = selected
         ? await updateBoardPost(activeKind, selected.post_id, payload)
         : await createBoardPost(activeKind, payload);
-      setSelected(result.post);
-      await reloadList();
+      setSelected(null);
+      setIsEditorOpen(false);
+      const data = await fetchBoardPosts(activeKind, { limit: PAGE_SIZE, offset: 0, ...filters });
+      setItems(data.items ?? []);
+      setTotal(data.total ?? 0);
+      setOffset(0);
       setMessage(result.action === 'created' ? '게시글을 등록했습니다.' : '게시글을 수정했습니다.');
     } catch (error) {
       setMessage(error.message);
@@ -237,7 +220,7 @@ export function CustomerBoardPage() {
 
   return (
     <>
-      <div className="m-tab">
+      <div className="m-tab customerBoardLvTabs">
         <ul>
           <li className={activeKind === 'notice' ? 'active' : ''}>
             <a href="/admin/cubici/supportMember/manageBoard_tab1" onClick={(event) => { event.preventDefault(); switchKind('notice'); }}>
@@ -252,94 +235,63 @@ export function CustomerBoardPage() {
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
-        <div className="line">
-          <div className="inputBox">
-            <label htmlFor="boardKeyword">검색</label>
-            <input id="boardKeyword" name="keyword" type="text" value={formValues.keyword} onChange={updateSearchValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="boardPostType">구분</label>
-            <select id="boardPostType" name="postType" value={formValues.postType} onChange={updateSearchValue}>
-              <option value="">전체</option>
-              <option value="CUBICI">큐빅아이</option>
-              <option value="MONEY_BANK">머니뱅크</option>
-              <option value="SERVICE_USE">서비스 이용</option>
-              <option value="OTHER">기타</option>
-            </select>
-          </div>
-          <div className="inputBox">
-            <label htmlFor="boardOrderBy">정렬</label>
-            <select id="boardOrderBy" name="orderBy" value={formValues.orderBy} onChange={updateSearchValue}>
-              <option value="reg_date_desc">최근 순</option>
-              <option value="reg_date_asc">과거 순</option>
-            </select>
-          </div>
-          <button className="sBtn sColorLB" type="submit">검색</button>
-          <button className="sBtn sColorLG" type="button" onClick={handleNew}>글쓰기</button>
-        </div>
-      </form>
+      <section className="customerBoardLvPage">
+        {message ? <p className={message.includes('실패') || message.includes('입력') ? 'formMessage error' : 'formMessage'}>{message}</p> : null}
 
-      {message ? <p className={message.includes('실패') || message.includes('입력') ? 'formMessage error' : 'formMessage'}>{message}</p> : null}
-
-      <section className="detailSection">
-        <div className="summaryStrip inquirySummary">
-          <span>{activeKind === 'notice' ? '서비스 공지' : 'FAQ'} {total.toLocaleString('ko-KR')}건</span>
-          <span>{boardPolicy.attachment}</span>
-          <span>{boardPolicy.exposure}</span>
-        </div>
-        <div className="table-scroll">
-          <table className="m-shadowTable customerBoardTable">
-            <caption className="caption">고객 공지 관리 목록</caption>
-            <thead>
-              <tr>
-                <th scope="col">No</th>
-                <th scope="col">구분</th>
-                <th scope="col">제목</th>
-                <th scope="col">노출</th>
-                <th scope="col">첨부</th>
-                <th scope="col">등록일</th>
-                <th scope="col">보기</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? <tr><td colSpan="7">조회 중입니다.</td></tr> : null}
-              {!isLoading && rows.length === 0 ? <tr><td colSpan="7">조회된 결과가 없습니다.</td></tr> : null}
-              {!isLoading && rows.map((item, index) => (
-                <tr key={item.post_id}>
-                  <td>{offset + index + 1}</td>
-                  <td>{item.type_label}</td>
-                  <td className="subject">
-                    <button className="linkButton" type="button" onClick={() => loadDetail(item.post_id)}>
-                      {item.title}
-                    </button>
-                  </td>
-                  <td>{item.exposure_status_label ?? '상시노출'}</td>
-                  <td>{item.attachment_status_label ?? '첨부 미연동'}</td>
-                  <td>{formatDate(item.reg_date)}</td>
-                  <td>
-                    <button className="sBtn sColorLB rBtn" type="button" onClick={() => loadDetail(item.post_id)}>
-                      {activeKind === 'notice' ? '공지보기' : '상세보기'}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="pagingControls">
-          <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-          <span>{currentPage} / {pageCount}</span>
-          <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
-        </div>
-      </section>
-
-      <section className={`detailSection customerBoardEditor${isEditorOpen ? ' isOpen' : ''}`}>
-        <h3>{selected ? '게시글 수정' : '게시글 등록'}</h3>
-        <form className="messageTemplateForm" onSubmit={handleSave}>
+        {!isEditorOpen ? (
+          <>
+            <div className="customerBoardLvToolbar">
+              <button className="sBtn sColorLB" type="button" onClick={handleNew}>글쓰기</button>
+              <form className="customerBoardLvSearch" onSubmit={handleSearch}>
+                <input id="boardKeyword" type="search" aria-label="검색어" placeholder="검색" value={keyword} onChange={(event) => setKeyword(event.target.value)} />
+                <button className="oiBtn search" type="submit" aria-label="검색">검색</button>
+              </form>
+            </div>
+            <div className="customerBoardLvList">
+              <div className="table-scroll">
+                <table className={`m-shadowTable customerBoardLvTable ${activeKind === 'notice' ? 'noticeTable' : 'faqTable'}`}>
+                  <caption className="caption">{activeKind === 'notice' ? '서비스공지 목록' : 'FAQ 목록'}</caption>
+                  <thead>
+                    {activeKind === 'notice' ? (
+                      <tr><th scope="col">No</th><th scope="col">제목</th><th scope="col">등록일</th><th scope="col">공지사항</th></tr>
+                    ) : (
+                      <tr><th scope="col">No</th><th scope="col">제목</th><th scope="col">답변</th></tr>
+                    )}
+                  </thead>
+                  <tbody>
+                    {isLoading ? <tr><td colSpan={activeKind === 'notice' ? 4 : 3}>조회 중입니다.</td></tr> : null}
+                    {!isLoading && items.length === 0 ? <tr><td colSpan={activeKind === 'notice' ? 4 : 3}>조회된 결과가 없습니다.</td></tr> : null}
+                    {!isLoading && items.map((item, index) => (
+                      <tr key={item.post_id}>
+                        <td>{Math.max(total - offset - index, 1)}</td>
+                        <td className="subject">
+                          <button className="linkButton" type="button" onClick={() => loadDetail(item.post_id)}>{item.title}</button>
+                        </td>
+                        {activeKind === 'notice' ? <td>{formatDate(item.reg_date)}</td> : null}
+                        <td className="customerBoardLvManage">
+                          <button className="sBtn sColorLB rBtn" type="button" onClick={() => loadDetail(item.post_id)}>
+                            {activeKind === 'notice' ? '공지보기' : '상세보기'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="pagingControls" aria-label={`전체 ${total}건`}>
+                <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+                <span>{currentPage}</span>
+                <button type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <section className="customerBoardEditor isOpen messageTemplateEditor">
+            <h3>{activeKind === 'notice' ? '서비스 공지' : 'FAQ'} {selected ? '수정' : '등록'}</h3>
+            <form className="messageTemplateForm customerBoardLvForm" onSubmit={handleSave}>
           <label>
             작성자
-            <input name="operatedBy" type="text" value={postForm.operatedBy} onChange={updatePostValue} />
+            <input name="operatedBy" type="text" value={postForm.operatedBy} readOnly />
           </label>
           <label>
             구분
@@ -361,17 +313,11 @@ export function CustomerBoardPage() {
           <div className="messageTemplateActions">
             <button className="sBtn sColorLB" type="submit" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
             {selected ? <button className="sBtn sColorR" type="button" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
+            <button className="sBtn sColorLG" type="button" onClick={() => { setIsEditorOpen(false); setSelected(null); }}>목록</button>
           </div>
         </form>
-        <div className="messageTemplatePreview">
-          <h4>내용 미리보기</h4>
-          <div className="summaryPills">
-            <span>{selected?.exposure_status_label ?? '상시노출'}</span>
-            <span>{selected?.attachment_status_label ?? '첨부 미연동'}</span>
-            <span>{selected?.policy_status_label ?? '노출정책 확인'}</span>
-          </div>
-          <p>{stripHtml(postForm.content)}</p>
-        </div>
+          </section>
+        )}
       </section>
     </>
   );

@@ -27,6 +27,12 @@ const settlementDetail = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await page.route('**/v1/api/accounts/admin-me', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ user_no: 1, email: 'admin@cubici.co.kr', user_type: 'ADMIN_USER', name: '관리자' }),
+    });
+  });
   await page.route('**/v1/api/settlements?**', async (route) => {
     const requestUrl = new URL(route.request().url());
     const shopType = requestUrl.searchParams.get('shop_type');
@@ -63,6 +69,12 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify(settlementDetail),
     });
   });
+  await page.addInitScript(() => {
+    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify({
+      token_type: 'Bearer', access_token: 'settlement-focused-token',
+      user: { email: 'admin@cubici.co.kr', user_type: 'ADMIN_USER' },
+    }));
+  });
 });
 
 test('settlement list filters and detail panel work with mock data', async ({ page }) => {
@@ -70,21 +82,21 @@ test('settlement list filters and detail panel work with mock data', async ({ pa
 
   await expect(page.getByRole('heading', { name: '정산 관리' })).toBeVisible();
   await expect(page.getByText('정산 관리 목록')).toBeVisible();
-  await expect(page.getByText('검산 검산차이')).toBeVisible();
-  await expect(page.getByText('차이 1건')).toBeVisible();
-  await expect(page.getByText('차이합계 43,000')).toBeVisible();
+  await expect(page.locator('.settlementLvSummary')).toContainText('검산차이');
+  await expect(page.locator('.settlementLvSummary')).toContainText('차이1건');
+  await expect(page.locator('.settlementLvSummary')).toContainText('절대차이43,000원');
   await expect(page.getByText(String(settlementId))).toBeVisible();
   await expect(page.getByText('SHOP-SETTLE-01')).toBeVisible();
   await expect(page.getByText('343,000')).toBeVisible();
 
-  await page.getByLabel('쇼핑몰').fill('COUPANG');
+  await page.getByLabel('쇼핑몰').selectOption('COUPANG');
   await page.getByLabel('상점ID').fill('SHOP-SETTLE-01');
-  await page.getByLabel('상태').fill('READY');
-  await page.getByLabel('시작일').fill('2026-07-01');
-  await page.getByLabel('종료일').fill('2026-07-31');
+  await page.getByLabel('상태').selectOption('READY');
+  await page.locator('#settlementFromDate').fill('2026-07-01');
+  await page.locator('#settlementToDate').fill('2026-07-31');
   await page.getByRole('button', { name: '검색' }).click();
 
-  await expect(page.getByText('COUPANG')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '쿠팡' })).toBeVisible();
   await expect(page.getByText('SHOP-SETTLE-01')).toBeVisible();
 
   await page.getByRole('button', { name: '보기' }).first().click();

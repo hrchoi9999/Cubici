@@ -69,7 +69,8 @@ test('M1-19 restores the LV empty Q&A list on PC', async ({ page }) => {
 
   await page.locator('.u19-write-button').click();
   await expect(page).toHaveURL(/\/board\/qa\/write$/);
-  await expect(page.getByRole('heading', { name: '문의 등록' })).toBeVisible();
+  await expect(page.locator('.u21-qa-write-form')).toBeVisible();
+  await expect(page.locator('.u21-qa-write-form .input-tit')).toHaveCount(4);
 });
 
 test('M1-19 filters, paginates and links Q&A data', async ({ page }) => {

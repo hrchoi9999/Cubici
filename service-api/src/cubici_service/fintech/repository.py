@@ -10,6 +10,7 @@ from cubici_service.db.connection import get_connection
 
 
 TransferDirection = Literal["transfer", "result-inquiry", "balance-inquiry", "account-inquiry"]
+FundingOrderBy = Literal["registered_desc", "registered_asc", "name_asc", "funding_desc"]
 
 
 _HYPHEN_BANK_CODE_LABELS = {
@@ -27,6 +28,51 @@ class FintechStatusResponse(BaseModel):
     source_tables: list[str]
     supported_operations: list[str]
     next_action: str
+
+
+class FundingSummaryCounts(BaseModel):
+    total_count: int
+    funding_amount: int
+    repayment_amount: int
+    outstanding_amount: int
+    repayment_excess_amount: int
+
+
+class FundingSummaryItem(BaseModel):
+    row_no: int
+    fintech_id: int
+    fintech_name: str | None
+    registered_date: datetime | None
+    repayment_period: int | None
+    interest_rate: float | None
+    funding_amount: int
+    repayment_amount: int
+    outstanding_amount: int
+    request_count: int
+    linked_request_count: int = 0
+    raw_repayment_amount: int = 0
+    repayment_excess_amount: int = 0
+    calculation_status: Literal["MATCHED", "LEGACY_SCOPE_MISMATCH", "NO_FUNDING"] = "MATCHED"
+    configuration_status: Literal["READY", "BASIC_REGISTERED"] = "READY"
+
+
+class FundingSummaryResponse(BaseModel):
+    limit: int
+    offset: int
+    counts: FundingSummaryCounts
+    items: list[FundingSummaryItem]
+
+
+class FundingProviderWriteRequest(BaseModel):
+    fintech_name: str = Field(min_length=1, max_length=25)
+    repayment_period: int = Field(ge=1, le=3650)
+    interest_rate: float = Field(ge=0, le=99.99)
+
+
+class FundingProviderWriteResponse(BaseModel):
+    action: Literal["created"]
+    fintech_id: int
+    provider: FundingSummaryItem
 
 
 class TradeRequestBinItem(BaseModel):
@@ -239,6 +285,160 @@ class MockResultInquiryPersistResponse(BaseModel):
     original_processing_result: str
     processing_status: str
     warning: str
+
+
+def list_funding_summaries(
+    *,
+    limit: int = 20,
+    offset: int = 0,
+    order_by: FundingOrderBy = "registered_desc",
+) -> FundingSummaryResponse:
+    order_clause = {
+        "registered_desc": "registered_date desc nulls last, fintech_id desc",
+        "registered_asc": "registered_date asc nulls last, fintech_id asc",
+        "name_asc": "fintech_name asc nulls last, fintech_id asc",
+        "funding_desc": "funding_amount desc, fintech_id asc",
+    }[order_by]
+
+    base_query = """
+        with funding as (
+            select
+                fintech_id,
+                count(*)::int as request_count,
+                min(coalesce(approval_date, request_date, reg_date)) as registered_date,
+                coalesce(sum(request_amount), 0)::bigint as funding_amount,
+                avg(interest_rate) as average_interest_rate
+            from fintech_request
+            where fintech_id is not null
+            group by fintech_id
+        ),
+        request_links as (
+            select
+                request_data.fintech_id,
+                count(distinct provision.request_code)::int as linked_request_count
+            from fintech_request request_data
+            join moneybank_redemption_provision provision
+              on provision.request_code = request_data.request_code
+            group by request_data.fintech_id
+        ),
+        linked_mbids as (
+            select distinct request_data.fintech_id, provision.mbid
+            from fintech_request request_data
+            join moneybank_redemption_provision provision
+              on provision.request_code = request_data.request_code
+        ),
+        repayment as (
+            select
+                linked_mbids.fintech_id,
+                coalesce(sum(repayment.repayment_amount), 0)::bigint as raw_repayment_amount
+            from linked_mbids
+            join moneybank_redemption_repayment repayment on repayment.mbid = linked_mbids.mbid
+            group by linked_mbids.fintech_id
+        )
+        select
+            f.id as fintech_id,
+            f.fintech_name,
+            coalesce(funding.registered_date, f.reg_date) as registered_date,
+            f.fintech_repayment_date::int as repayment_period,
+            coalesce(f.fintech_interest_rate, funding.average_interest_rate)::double precision as interest_rate,
+            coalesce(funding.funding_amount, 0)::bigint as funding_amount,
+            least(coalesce(funding.funding_amount, 0), coalesce(repayment.raw_repayment_amount, 0))::bigint as repayment_amount,
+            greatest(coalesce(funding.funding_amount, 0) - coalesce(repayment.raw_repayment_amount, 0), 0)::bigint as outstanding_amount,
+            coalesce(repayment.raw_repayment_amount, 0)::bigint as raw_repayment_amount,
+            greatest(coalesce(repayment.raw_repayment_amount, 0) - coalesce(funding.funding_amount, 0), 0)::bigint as repayment_excess_amount,
+            coalesce(funding.request_count, 0)::int as request_count,
+            coalesce(request_links.linked_request_count, 0)::int as linked_request_count,
+            case
+                when coalesce(funding.request_count, 0) = 0 then 'NO_FUNDING'
+                when coalesce(repayment.raw_repayment_amount, 0) > coalesce(funding.funding_amount, 0)
+                  or coalesce(request_links.linked_request_count, 0) < coalesce(funding.request_count, 0)
+                    then 'LEGACY_SCOPE_MISMATCH'
+                else 'MATCHED'
+            end as calculation_status,
+            case
+                when nullif(f.fintech_bank_code, '') is not null
+                 and nullif(f.fintech_account_number, '') is not null then 'READY'
+                else 'BASIC_REGISTERED'
+            end as configuration_status
+        from fintech f
+        left join funding on funding.fintech_id = f.id
+        left join request_links on request_links.fintech_id = f.id
+        left join repayment on repayment.fintech_id = f.id
+    """
+
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                f"""
+                select
+                    count(*)::int as total_count,
+                    coalesce(sum(funding_amount), 0)::bigint as funding_amount,
+                    coalesce(sum(repayment_amount), 0)::bigint as repayment_amount,
+                    coalesce(sum(outstanding_amount), 0)::bigint as outstanding_amount,
+                    coalesce(sum(repayment_excess_amount), 0)::bigint as repayment_excess_amount
+                from ({base_query}) funding_summary
+                """
+            )
+            counts = FundingSummaryCounts.model_validate(cursor.fetchone())
+
+            cursor.execute(
+                f"""
+                select *
+                from ({base_query}) funding_summary
+                order by {order_clause}
+                limit %s offset %s
+                """,
+                (limit, offset),
+            )
+            items = [
+                FundingSummaryItem(row_no=offset + index, **row)
+                for index, row in enumerate(cursor.fetchall(), start=1)
+            ]
+
+    return FundingSummaryResponse(limit=limit, offset=offset, counts=counts, items=items)
+
+
+def create_funding_provider(payload: FundingProviderWriteRequest) -> FundingProviderWriteResponse:
+    normalized_name = payload.fintech_name.strip()
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(
+                """
+                with lock_row as (
+                    select pg_advisory_xact_lock(hashtext('cubici-fintech-provider'))
+                ),
+                next_id as (
+                    select coalesce(max(id), 0) + 1 as id
+                    from fintech, lock_row
+                )
+                insert into fintech (
+                    id,
+                    fintech_name,
+                    fintech_interest_rate,
+                    fintech_repayment_date,
+                    process_type,
+                    reg_date
+                )
+                select next_id.id, %s, %s, %s, 'BASIC_REGISTERED', now()
+                from next_id
+                where not exists (
+                    select 1 from fintech where lower(trim(fintech_name)) = lower(%s)
+                )
+                returning id
+                """,
+                (normalized_name, payload.interest_rate, payload.repayment_period, normalized_name),
+            )
+            row = cursor.fetchone()
+
+    if row is None:
+        raise ValueError("funding provider name already exists")
+
+    provider = next(
+        item
+        for item in list_funding_summaries(limit=100, order_by="registered_desc").items
+        if item.fintech_id == row["id"]
+    )
+    return FundingProviderWriteResponse(action="created", fintech_id=row["id"], provider=provider)
 
 
 def fintech_status() -> FintechStatusResponse:

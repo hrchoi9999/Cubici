@@ -38,6 +38,35 @@ export async function fetchMemberSummary(options = {}) {
   return response.json();
 }
 
+export async function fetchMemberSummaryOptions() {
+  const response = await fetch(`${API_BASE_URL}/v1/api/management/member-summary/options`);
+
+  if (!response.ok) {
+    throw new Error(`회원현황 조회 조건 조회 실패: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function fetchCubiciIntegratedInfo(options = {}) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of Object.entries(options)) {
+    if (value !== undefined && value !== null && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+
+  const query = params.toString();
+  const response = await fetch(`${API_BASE_URL}/v1/api/management/cubici-integrated${query ? `?${query}` : ''}`);
+
+  if (!response.ok) {
+    throw new Error(`큐빅아이 통합 현황 조회 실패: ${response.status}`);
+  }
+
+  return response.json();
+}
+
 export async function fetchMemberInfo(options = {}) {
   const params = new URLSearchParams();
 

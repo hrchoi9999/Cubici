@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   checkPartnerCode,
   checkPartnerId,
@@ -9,7 +9,16 @@ import {
   updatePartner,
 } from '../api/preferences.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
+const PARTNER_TYPES = [
+  { value: 'BA', label: '은행' },
+  { value: 'BB', label: 'B2B도매' },
+  { value: 'CO', label: '마케팅' },
+  { value: 'FI', label: '금융' },
+  { value: 'MN', label: '제조' },
+  { value: 'TH', label: '기타' },
+  { value: 'CB', label: '큐빅아이' },
+];
 
 const emptyForm = {
   partnerId: '',
@@ -54,6 +63,17 @@ function formatPhone(value) {
     return `${raw.slice(0, 3)}-${raw.slice(3, 6)}-${raw.slice(6)}`;
   }
   return value || '-';
+}
+
+function isValidBusinessNumber(value) {
+  const digits = String(value ?? '').replace(/[^0-9]/g, '').split('').map(Number);
+  if (digits.length !== 10) {
+    return false;
+  }
+  const weights = [1, 3, 7, 1, 3, 7, 1, 3, 5];
+  const weightedSum = digits.slice(0, 9).reduce((sum, digit, index) => sum + digit * weights[index], 0);
+  const checkDigit = (10 - ((weightedSum + Math.floor((digits[8] * 5) / 10)) % 10)) % 10;
+  return checkDigit === digits[9];
 }
 
 function buildPartnerCode(form) {
@@ -138,6 +158,8 @@ export function PartnerManagementPage() {
   const [bizCheckMessage, setBizCheckMessage] = useState('');
   const [codeCheckMessage, setCodeCheckMessage] = useState('');
   const [message, setMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -173,6 +195,30 @@ export function PartnerManagementPage() {
   const rows = useMemo(() => items, [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
+
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
 
   async function reloadList(nextOffset = offset) {
     const data = await fetchPartners({ limit: PAGE_SIZE, offset: nextOffset, ...filters });
@@ -232,6 +278,9 @@ export function PartnerManagementPage() {
       setSelected(data);
       setPartnerForm(mapPartnerToForm(data));
       setIsEditorOpen(true);
+      if (listScrollRef.current) {
+        listScrollRef.current.scrollLeft = 0;
+      }
     } catch (error) {
       setSelected(null);
       setIsEditorOpen(false);
@@ -239,9 +288,38 @@ export function PartnerManagementPage() {
     }
   }
 
+  function changeListScroll(event) {
+    if (listScrollRef.current) {
+      listScrollRef.current.scrollLeft = Number(event.target.value);
+    }
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (container) {
+      container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+    }
+  }
+
+  function goToPreviousPage() {
+    setOffset((value) => Math.max(0, value - PAGE_SIZE));
+    setSelected(null);
+    setIsEditorOpen(false);
+  }
+
+  function goToNextPage() {
+    setOffset((value) => (value + PAGE_SIZE >= counts.total_count ? value : value + PAGE_SIZE));
+    setSelected(null);
+    setIsEditorOpen(false);
+  }
+
   async function handleBizCheck() {
     if (!partnerForm.partnerId.trim()) {
       setBizCheckMessage('사업자번호를 입력해주세요.');
+      return;
+    }
+    if (!isValidBusinessNumber(partnerForm.partnerId)) {
+      setBizCheckMessage('사업자 등록번호 형식이 올바르지 않습니다.');
       return;
     }
     try {
@@ -272,6 +350,9 @@ export function PartnerManagementPage() {
     }
     if (!partnerForm.partnerId.trim()) {
       return '사업자번호를 입력하세요.';
+    }
+    if (!selected && !isValidBusinessNumber(partnerForm.partnerId)) {
+      return '사업자 등록번호 형식이 올바르지 않습니다.';
     }
     if (!partnerForm.repName.trim()) {
       return '대표이사명을 입력하세요.';
@@ -353,8 +434,8 @@ export function PartnerManagementPage() {
   }
 
   return (
-    <>
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+    <section className="partnerLvPage">
+      <form className="m-search searchArea partnerLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="partnerNameSearch">회사명</label>
@@ -387,50 +468,51 @@ export function PartnerManagementPage() {
               <option value="rep_name_asc">대표자</option>
             </select>
           </div>
-          <button type="submit" className="searchBtn">검색</button>
-          <button type="button" className="grayBtn" onClick={handleNew}>협력사 추가</button>
+          <button type="submit" className="sBtn sColorLB">검색</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew}>기업 추가</button>
         </div>
       </form>
 
-      <div className="fixBottom">
-        <div className="tableTotal partnerSummary">
-          <span>전체 {formatNumber(counts.total_count)}개</span>
-          <span>BA {formatNumber(counts.type_ba_count)}개</span>
-          <span>BB {formatNumber(counts.type_bb_count)}개</span>
-          <span>CO {formatNumber(counts.type_co_count)}개</span>
-          <span>FI {formatNumber(counts.type_fi_count)}개</span>
-          <span>MN {formatNumber(counts.type_mn_count)}개</span>
-          <span>TH {formatNumber(counts.type_th_count)}개</span>
-          <span>담당미지정 {formatNumber(counts.missing_manager_count ?? 0)}개</span>
-        </div>
-      </div>
-
       {message ? <p className="formMessage">{message}</p> : null}
 
-      <div className="legacyListTable table-scroll">
-        <div className="overflowBox">
-          <table className="partnerManagementTable">
+      <div className="partnerLvList">
+        <div className="tableScroll" ref={listScrollRef}>
+          <table className="partnerManagementTable partnerLvTable" aria-label="협력사 목록">
             <caption>협력사 관리</caption>
+            <colgroup>
+              <col className="statusCol" />
+              <col className="dateCol" />
+              <col className="typeCol" />
+              <col className="nameCol" />
+              <col className="codeCol" />
+              <col className="repCol" />
+              <col className="businessCol" />
+              <col className="managerCol" />
+              <col className="phoneCol" />
+              <col className="detailCol" />
+            </colgroup>
             <thead>
               <tr>
-                <th>상태</th>
-                <th>등록 일자</th>
-                <th>업종</th>
-                <th>회사명</th>
-                <th>협력사 코드</th>
-                <th>대표이사</th>
-                <th>사업자 번호</th>
-                <th>담당자</th>
-                <th>담당자 전화</th>
-                <th>담당상태</th>
-                <th>상세 보기</th>
+                <th rowSpan="2">상태</th>
+                <th rowSpan="2">등록 일자</th>
+                <th rowSpan="2">구분</th>
+                <th rowSpan="2">회사명</th>
+                <th rowSpan="2">협력사 코드</th>
+                <th rowSpan="2">대표자</th>
+                <th rowSpan="2">사업자번호</th>
+                <th colSpan="2">담당자</th>
+                <th rowSpan="2">상세 보기</th>
+              </tr>
+              <tr>
+                <th>이름</th>
+                <th>전화</th>
               </tr>
             </thead>
             <tbody id="fixTbody">
               {isLoading ? (
-                <tr><td colSpan="11">협력사 정보를 불러오는 중입니다.</td></tr>
+                <tr><td colSpan="10">협력사 정보를 불러오는 중입니다.</td></tr>
               ) : rows.length === 0 ? (
-                <tr><td colSpan="11">조회된 결과가 없습니다.</td></tr>
+                <tr><td colSpan="10">조회된 결과가 없습니다.</td></tr>
               ) : rows.map((row) => (
                 <tr key={row.partner_id}>
                   <td>{row.partner_status_label}</td>
@@ -442,31 +524,64 @@ export function PartnerManagementPage() {
                   <td>{row.partner_id}</td>
                   <td>{row.manager_name ?? '-'}</td>
                   <td>{formatPhone(row.manager_phone)}</td>
-                  <td>{row.manager_status_label ?? '-'}</td>
                   <td><button type="button" className="tableBtn" onClick={() => loadDetail(row.partner_id)}>상세보기</button></td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+        {listScroll.max > 0 ? <div className="horizontalTableScrollbar partnerHorizontalScrollbar" aria-label="협력사 목록 좌우 스크롤">
+          <button type="button" aria-label="협력사 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="협력사 목록 가로 스크롤"
+            min="0"
+            max={listScroll.max}
+            step="1"
+            value={Math.min(listScroll.left, listScroll.max)}
+            onChange={changeListScroll}
+          />
+          <button type="button" aria-label="협력사 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div> : null}
 
-      <div className="pagination pagingControls">
-        <button type="button" className="grayBtn" onClick={() => setOffset((value) => Math.max(0, value - PAGE_SIZE))} disabled={offset === 0}>이전</button>
-        <span>{currentPage} / {pageCount}</span>
-        <button type="button" className="grayBtn" onClick={() => setOffset((value) => (value + PAGE_SIZE >= counts.total_count ? value : value + PAGE_SIZE))} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        <div className="partnerLvTotals" aria-label="협력사 유형 집계">
+          <div><span>전체</span><strong>{formatNumber(counts.total_count)}개</strong></div>
+          <div><span>은행</span><strong>{formatNumber(counts.type_ba_count)}개</strong></div>
+          <div><span>B2B도매</span><strong>{formatNumber(counts.type_bb_count)}개</strong></div>
+          <div><span>마케팅</span><strong>{formatNumber(counts.type_co_count)}개</strong></div>
+          <div><span>금융</span><strong>{formatNumber(counts.type_fi_count)}개</strong></div>
+          <div><span>제조</span><strong>{formatNumber(counts.type_mn_count)}개</strong></div>
+          <div><span>기타</span><strong>{formatNumber(counts.type_th_count)}개</strong></div>
+        </div>
+
+        <div className="pagination pagingControls">
+          <button type="button" className="grayBtn" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+          <span>{currentPage} / {pageCount}</span>
+          <button type="button" className="grayBtn" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= counts.total_count}>다음</button>
+        </div>
       </div>
 
       {isEditorOpen ? <form className="partnerEditorPanel" onSubmit={handleSave}>
         <div className="partnerEditorHeader">
           <h4>{selected ? '협력사 상세' : '협력사 등록'}</h4>
-          <span>{selected ? selected.partner.partner_status_label : '신규 협력사'}</span>
+          <div>
+            <span>{selected ? selected.partner.partner_status_label : '신규 협력사'}</span>
+            <button type="button" onClick={() => setIsEditorOpen(false)}>닫기</button>
+          </div>
         </div>
-        <div className="partnerEditorGrid">
+        <section className="partnerEditorSection">
+          <h5>기본정보</h5>
+          <div className="partnerEditorGrid">
           {selected ? (
             <label>
               <span>협력사코드</span>
               <input name="partnerCode" value={partnerForm.partnerCode} readOnly />
+            </label>
+          ) : null}
+          {selected ? (
+            <label>
+              <span>등록일자</span>
+              <input value={formatDate(selected.partner.reg_date)} readOnly />
             </label>
           ) : null}
           <label>
@@ -477,7 +592,7 @@ export function PartnerManagementPage() {
             <span>사업자 번호</span>
             <input name="partnerId" value={partnerForm.partnerId} onChange={updatePartnerValue} readOnly={Boolean(selected)} />
           </label>
-          {!selected ? <button type="button" className="grayBtn" onClick={handleBizCheck}>확인</button> : null}
+          {!selected ? <button type="button" className="sBtn sColorN partnerInlineAction" onClick={handleBizCheck}>확인</button> : null}
           <label>
             <span>대표이사</span>
             <input name="repName" value={partnerForm.repName} onChange={updatePartnerValue} />
@@ -500,7 +615,7 @@ export function PartnerManagementPage() {
           <label>
             <span>업종</span>
             <select name="partnerType" value={partnerForm.partnerType} onChange={updatePartnerValue} disabled={Boolean(selected)}>
-              {['BA', 'BB', 'CO', 'FI', 'MN', 'TH'].map((value) => <option key={value} value={value}>{value}</option>)}
+              {PARTNER_TYPES.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
             </select>
           </label>
           {!selected ? (
@@ -509,13 +624,18 @@ export function PartnerManagementPage() {
                 <span>구분코드</span>
                 <input name="divisionCode" value={partnerForm.divisionCode} onChange={updatePartnerValue} maxLength="2" />
               </label>
-              <button type="button" className="grayBtn" onClick={handleCodeCheck}>중복확인</button>
+              <button type="button" className="sBtn sColorN partnerInlineAction" onClick={handleCodeCheck}>중복확인</button>
             </>
           ) : null}
-          <label>
-            <span>책임자명</span>
-            <input name="supervisorName" value={partnerForm.supervisorName} onChange={updatePartnerValue} />
-          </label>
+          </div>
+        </section>
+        <section className="partnerEditorSection">
+          <h5>연락처 정보</h5>
+          <div className="partnerEditorGrid">
+            <label>
+              <span>책임자명</span>
+              <input name="supervisorName" value={partnerForm.supervisorName} onChange={updatePartnerValue} />
+            </label>
           <label>
             <span>책임자 직급</span>
             <input name="supervisorRank" value={partnerForm.supervisorRank} onChange={updatePartnerValue} />
@@ -544,19 +664,25 @@ export function PartnerManagementPage() {
             <span>담당자 전화</span>
             <input name="managerPhone" value={partnerForm.managerPhone} onChange={updatePartnerValue} />
           </label>
-          <label className="wide">
-            <span>상세정보</span>
-            <textarea name="memo" value={partnerForm.memo} onChange={updatePartnerValue} />
-          </label>
-        </div>
+          </div>
+        </section>
+        <section className="partnerEditorSection">
+          <h5>연계내역</h5>
+          <div className="partnerEditorGrid">
+            <label className="wide">
+              <span>상세정보</span>
+              <textarea name="memo" value={partnerForm.memo} onChange={updatePartnerValue} />
+            </label>
+          </div>
+        </section>
         {bizCheckMessage ? <p className="formMessage">{bizCheckMessage}</p> : null}
         {codeCheckMessage ? <p className="formMessage">{codeCheckMessage}</p> : null}
         <div className="partnerEditorActions">
-          <button type="submit" className="searchBtn" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
-          <button type="button" className="grayBtn" onClick={handleNew} disabled={isSaving}>초기화</button>
-          {selected ? <button type="button" className="grayBtn" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
+          <button type="submit" className="sBtn sColorLB" disabled={isSaving}>{selected ? '수정' : '등록'}</button>
+          <button type="button" className="sBtn sColorN" onClick={handleNew} disabled={isSaving}>초기화</button>
+          {selected ? <button type="button" className="sBtn sColorP" onClick={handleDelete} disabled={isSaving}>삭제</button> : null}
         </div>
       </form> : null}
-    </>
+    </section>
   );
 }

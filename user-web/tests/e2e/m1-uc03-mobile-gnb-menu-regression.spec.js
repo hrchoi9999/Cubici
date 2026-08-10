@@ -8,7 +8,7 @@ const session = {
     user_no: 103,
     email: 'mobile-gnb@cubici.test',
     name: '홍길동',
-    user_type: 'GENERAL',
+    user_type: 'USER',
   },
 };
 

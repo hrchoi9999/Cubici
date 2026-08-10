@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createFintechMockTransferRequest,
   fetchFintechStatus,
@@ -100,6 +100,8 @@ export function FintechTradeRequestPage() {
   const [message, setMessage] = useState('');
   const [detailMessage, setDetailMessage] = useState('');
   const [mockMessage, setMockMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -211,6 +213,30 @@ export function FintechTradeRequestPage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
+
   function updateSearchValue(event) {
     const { name, value } = event.target;
     setFormValues((current) => ({ ...current, [name]: value }));
@@ -249,6 +275,22 @@ export function FintechTradeRequestPage() {
     });
   }
 
+  function changeListScroll(event) {
+    const container = listScrollRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollLeft = Number(event.target.value);
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (!container) {
+      return;
+    }
+    container.scrollBy({ left: direction * Math.max(220, container.clientWidth * 0.7), behavior: 'smooth' });
+  }
+
   async function handleMockSubmit(event) {
     event.preventDefault();
     setIsMockSaving(true);
@@ -270,7 +312,7 @@ export function FintechTradeRequestPage() {
       const result = await createFintechMockTransferRequest(payload);
       setMockMessage(
         result.created
-          ? `MOCK 송금요청 저장 완료: ${result.req_date} ${result.bank_code}/${result.comp_code}/${result.seq_no}`
+          ? `테스트 송금요청 저장 완료: ${result.req_date} ${result.bank_code}/${result.comp_code}/${result.seq_no}`
           : `동일 전문이 이미 존재합니다: ${result.req_date} ${result.bank_code}/${result.comp_code}/${result.seq_no}`,
       );
       const nextFilters = {
@@ -294,24 +336,8 @@ export function FintechTradeRequestPage() {
   }
 
   return (
-    <section className="adminPage monitoringPage fintechTradePage">
-      <div className="m-options managementOptions monitoringOptions">
-        <div className="pRight summaryPills">
-          <span>전체 {total.toLocaleString()}건</span>
-          <span>실송금 {status?.live_transfer_enabled ? '활성' : '비활성'}</span>
-          <span>{isLoading ? '조회 중' : `페이지 ${currentPage} / ${pageCount}`}</span>
-          <button
-            className="sBtn sColorN fintechMockToggle"
-            type="button"
-            aria-expanded={isMockFormOpen}
-            onClick={() => setIsMockFormOpen((value) => !value)}
-          >
-            MOCK 생성
-          </button>
-        </div>
-      </div>
-
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+    <section className="adminPage monitoringPage fintechTradePage fintechLvPage">
+      <form className="m-search searchArea fintechLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="fintechMbid">MBID</label>
@@ -371,10 +397,31 @@ export function FintechTradeRequestPage() {
         </div>
       </form>
 
+      <div className="fintechLvToolbar">
+        <div className="fintechLvCount">
+          <span>조회 결과</span>
+          <strong>{isLoading ? '-' : total.toLocaleString()}건</strong>
+          <small>{isLoading ? '조회 중' : `${currentPage} / ${pageCount} 페이지`}</small>
+        </div>
+        <div className="fintechLvActions">
+          <span className={status?.live_transfer_enabled ? 'fintechLiveReady' : 'fintechLivePending'}>
+            {status ? (status.live_transfer_enabled ? '실송금 연동' : '실송금 연동 준비') : '연동 상태 확인 중'}
+          </span>
+          <button
+            className="sBtn sColorN fintechMockToggle"
+            type="button"
+            aria-expanded={isMockFormOpen}
+            onClick={() => setIsMockFormOpen((value) => !value)}
+          >
+            {isMockFormOpen ? '테스트 전문 닫기' : '테스트 전문 생성'}
+          </button>
+        </div>
+      </div>
+
       {isMockFormOpen ? <form className="m-search searchArea fintechMockForm" onSubmit={handleMockSubmit}>
         <div className="fintechMockHeader">
-          <h3>MOCK 송금요청 생성</h3>
-          <span>외부 송금 비활성</span>
+          <h3>테스트 전문 생성</h3>
+          <span>실송금 없이 개발 DB에 저장합니다.</span>
         </div>
         <div className="line">
           <div className="inputBox">
@@ -422,7 +469,7 @@ export function FintechTradeRequestPage() {
             <input id="mockWithdrawalSummary" name="withdrawal_summary" type="text" maxLength="20" value={mockForm.withdrawal_summary} onChange={updateMockValue} />
           </div>
           <button className="sBtn sColorLB" type="submit" disabled={isMockSaving}>
-            {isMockSaving ? '저장 중' : 'MOCK 저장'}
+            {isMockSaving ? '저장 중' : '테스트 저장'}
           </button>
           <button
             className="sBtn sColorN"
@@ -438,9 +485,10 @@ export function FintechTradeRequestPage() {
 
       {message ? <div className="m-alert">{message}</div> : null}
 
-      <div className="tableScroll">
-        <table className="m-shadowTable fintechTradeTable">
-          <caption className="caption">펌뱅킹 전문 목록</caption>
+      <div className="fintechLvList">
+        <h3 className="fintechLvSectionTitle" id="fintechTradeListTitle">펌뱅킹 전문 목록</h3>
+        <div className="tableScroll" ref={listScrollRef}>
+        <table className="m-shadowTable fintechTradeTable fintechLvTable" aria-labelledby="fintechTradeListTitle">
           <thead>
             <tr>
               <th>요청일시</th>
@@ -487,22 +535,49 @@ export function FintechTradeRequestPage() {
         </table>
       </div>
 
+      {listScroll.max > 0 ? (
+        <div className="horizontalTableScrollbar fintechHorizontalScrollbar" aria-label="펌뱅킹 전문 목록 좌우 스크롤">
+          <button type="button" aria-label="왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="전문 목록 가로 스크롤"
+            min="0"
+            max={listScroll.max}
+            step="1"
+            value={Math.min(listScroll.left, listScroll.max)}
+            onChange={changeListScroll}
+          />
+          <button type="button" aria-label="오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+        </div>
+      ) : null}
+
       <div className="pagingControls">
         <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
         <span>{currentPage} / {pageCount}</span>
         <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
       </div>
+      </div>
 
-      {selected ? <TradeRequestDetailPanel detail={detail} message={detailMessage} isLoading={isDetailLoading} /> : null}
+      {selected ? (
+        <TradeRequestDetailPanel
+          detail={detail}
+          message={detailMessage}
+          isLoading={isDetailLoading}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </section>
   );
 }
 
-function TradeRequestDetailPanel({ detail, message, isLoading }) {
+function TradeRequestDetailPanel({ detail, message, isLoading, onClose }) {
   if (!detail && !message && !isLoading) {
     return (
-      <section className="detailPanel fintechParserPanel">
-        <h3>전문 상세</h3>
+      <section className="detailPanel fintechParserPanel fintechLvDetail">
+        <header className="fintechLvDetailHeader">
+          <h3>전문 상세</h3>
+          <button type="button" onClick={onClose}>닫기</button>
+        </header>
         <p className="detailMessage">목록에서 전문을 선택해 주세요.</p>
       </section>
     );
@@ -512,14 +587,17 @@ function TradeRequestDetailPanel({ detail, message, isLoading }) {
   const recvFields = fieldMap(detail?.parsed_recv_msg);
 
   return (
-    <section className="detailPanel fintechParserPanel">
-      <h3>전문 상세</h3>
+    <section className="detailPanel fintechParserPanel fintechLvDetail">
+      <header className="fintechLvDetailHeader">
+        <h3>전문 상세</h3>
+        <button type="button" onClick={onClose}>닫기</button>
+      </header>
       {isLoading ? <p className="detailMessage">전문 상세를 조회 중입니다.</p> : null}
       {message ? <p className="detailMessage">{message}</p> : null}
       {detail ? (
         <>
           <div className="detailSection">
-            <table className="detailInfoTable">
+            <table className="detailInfoTable fintechLvMetaTable">
               <tbody>
                 <tr>
                   <th>요청일시</th>
@@ -555,7 +633,7 @@ function TradeRequestDetailPanel({ detail, message, isLoading }) {
 
           <div className="fintechParserSummary">
             <div>
-              <h4>SEND 요약</h4>
+              <h4>송신 전문 요약</h4>
               <dl>
                 <dt>업체코드</dt>
                 <dd>{fieldValue(sendFields, '업체코드')}</dd>
@@ -568,7 +646,7 @@ function TradeRequestDetailPanel({ detail, message, isLoading }) {
               </dl>
             </div>
             <div>
-              <h4>RECV 요약</h4>
+              <h4>수신 전문 요약</h4>
               <dl>
                 <dt>응답코드</dt>
                 <dd>{fieldValue(recvFields, '응답코드')}</dd>
@@ -582,8 +660,8 @@ function TradeRequestDetailPanel({ detail, message, isLoading }) {
             </div>
           </div>
 
-          <ParsedMessageTable title="SEND_MSG parser" parsed={detail.parsed_send_msg} />
-          <ParsedMessageTable title="RECV_MSG parser" parsed={detail.parsed_recv_msg} />
+          <ParsedMessageTable title="송신 전문 필드" parsed={detail.parsed_send_msg} />
+          <ParsedMessageTable title="수신 전문 필드" parsed={detail.parsed_recv_msg} />
         </>
       ) : null}
     </section>
@@ -599,9 +677,9 @@ function ParsedMessageTable({ title, parsed }) {
           <thead>
             <tr>
               <th>항목</th>
-              <th>offset</th>
-              <th>length</th>
-              <th>type</th>
+              <th>위치</th>
+              <th>길이</th>
+              <th>형식</th>
               <th>값</th>
             </tr>
           </thead>

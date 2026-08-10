@@ -6,7 +6,7 @@ import {
   hasContractStatus,
 } from '../utils/contractStatus.js';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function formatDate(value) {
   if (!value) {
@@ -32,24 +32,44 @@ function toNullableInt(value) {
   return value === '' || value === null || value === undefined ? null : Number(value);
 }
 
-function isReviewWaiting(status) {
-  return hasContractStatus(status, ['JOIN', 'REQUEST', 'PENDING_REVIEW', 'PENDING_DOCUMENTS', '01', '02', '03']);
+function formatBusinessPeriod(value) {
+  const digits = String(value ?? '').replaceAll(/\D/g, '');
+  if (digits.length !== 8) return '-';
+  const setupDate = new Date(`${digits.slice(0, 4)}-${digits.slice(4, 6)}-${digits.slice(6, 8)}T00:00:00`);
+  if (Number.isNaN(setupDate.getTime())) return '-';
+  const today = new Date();
+  const months = Math.max(0, (today.getFullYear() - setupDate.getFullYear()) * 12 + today.getMonth() - setupDate.getMonth());
+  return `${Math.floor(months / 12)}년 ${months % 12}개월`;
+}
+
+function approvalStatusLabel(contract) {
+  if (hasContractStatus(contract.status, ['PENDING_REVIEW', '03'])) return '심사대기';
+  if (hasContractStatus(contract.status, ['CONDITIONS_REFUSED', 'REJECTED', '41'])) return '거부';
+  if (contract.fee_adjusted) return '조정';
+  if (hasContractStatus(contract.status, ['CONDITIONS_ACCEPT', 'USE_AGREE', '04', '05'])) return '승인';
+  return formatContractStatus(contract.status);
+}
+
+function escapeCsvCell(value) {
+  const text = String(value ?? '');
+  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
 function mapContractToApprovalRow(contract) {
+  const scoreValue = contract.prizm_score_value ?? (typeof contract.prizm_score === 'number' ? contract.prizm_score : null);
   return {
     id: contract.mbid,
-    status: formatContractStatus(contract.status),
+    status: approvalStatusLabel(contract),
     requestedAt: formatDate(contract.request_date),
     userName: contract.user_name ?? '-',
     firmName: contract.firm_name ?? '-',
-    service: contract.product_code ?? '-',
-    businessPeriod: '-',
-    salesAmount: formatNumber(contract.sales_amount),
-    prizmScore: contract.prizm_score ?? '계산',
-    recommendationApproved: contract.prizm_score ? '가능' : '-',
-    recommendationFee: '-',
-    recommendationPaymentRate: '-',
+    service: contract.product_code === 'MP' ? '머니플러스' : (contract.product_code ?? '-'),
+    businessPeriod: formatBusinessPeriod(contract.biz_setup_date),
+    salesAmount: formatNumber(Math.round(Number(contract.sales_amount ?? 0) / 1000)),
+    prizmScore: scoreValue == null ? (contract.prizm_score ?? '-') : formatNumber(scoreValue),
+    recommendationApproved: scoreValue == null ? '-' : (scoreValue > 500 ? '승인' : '거부'),
+    recommendationFee: contract.latest_fee_rate == null ? '-' : `${formatNumber(contract.latest_fee_rate)}%`,
+    recommendationPaymentRate: contract.latest_payment_rate == null ? '-' : `${formatNumber(contract.latest_payment_rate)}%`,
     rawStatus: contract.status,
   };
 }
@@ -63,6 +83,11 @@ export function ApprovalManagementPage() {
   const [detail, setDetail] = useState(null);
   const [detailMessage, setDetailMessage] = useState('');
   const [feeMessage, setFeeMessage] = useState('');
+  const [approvalSummary, setApprovalSummary] = useState({
+    total: 0, wait: 0, complete: 0, accept: 0, adjust: 0, refuse: 0, refuse_rate: 0,
+  });
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportMessage, setExportMessage] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
   const [formValues, setFormValues] = useState({
     userName: '',
@@ -84,15 +109,19 @@ export function ApprovalManagementPage() {
       setMessage('');
 
       try {
-        const data = await fetchContracts({ limit: PAGE_SIZE, offset, ...filters });
+        const data = await fetchContracts({ limit: PAGE_SIZE, offset, approval_scope: true, ...filters });
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
+          setApprovalSummary(data.approval_summary ?? {
+            total: data.total ?? 0, wait: 0, complete: 0, accept: 0, adjust: 0, refuse: 0, refuse_rate: 0,
+          });
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
+          setApprovalSummary({ total: 0, wait: 0, complete: 0, accept: 0, adjust: 0, refuse: 0, refuse_rate: 0 });
           setMessage(error.message);
         }
       } finally {
@@ -112,10 +141,15 @@ export function ApprovalManagementPage() {
   const rows = useMemo(() => items.map(mapContractToApprovalRow), [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const waitCount = rows.filter((row) => isReviewWaiting(row.rawStatus)).length;
-  const approvedCount = rows.filter((row) => hasContractStatus(row.rawStatus, ['CONDITIONS_ACCEPT', 'USE_AGREE', 'ACCOUNT_STANDBY', 'CONTRACT', '04', '05', '06', '81'])).length;
-  const completeCount = rows.filter((row) => !isReviewWaiting(row.rawStatus)).length;
-  const rejectedCount = rows.filter((row) => hasContractStatus(row.rawStatus, ['CONDITIONS_REFUSED', 'TERMS_REFUSED', 'REJECTED', 'SELF_TERMINATION', '41', '51', '72'])).length;
+  const summary = [
+    { label: '총', value: `${formatNumber(approvalSummary.total)} 건` },
+    { label: '심사대기', value: `${formatNumber(approvalSummary.wait)} 건` },
+    { label: '심사완료', value: `${formatNumber(approvalSummary.complete)} 건` },
+    { label: '승인', value: `${formatNumber(approvalSummary.accept)} 건` },
+    { label: '조정', value: `${formatNumber(approvalSummary.adjust)} 건` },
+    { label: '거부', value: `${formatNumber(approvalSummary.refuse)} 건` },
+    { label: '거부율', value: `${formatNumber(approvalSummary.refuse_rate)}%` },
+  ];
 
   function updateFormValue(event) {
     const { name, value } = event.target;
@@ -123,22 +157,6 @@ export function ApprovalManagementPage() {
       ...current,
       [name]: value,
     }));
-  }
-
-  function mapApprovalStatus(value) {
-    if (value === 'wait') {
-      return 'PENDING_REVIEW';
-    }
-    if (value === 'accept') {
-      return 'CONDITIONS_ACCEPT';
-    }
-    if (value === 'adjust') {
-      return 'USE_AGREE';
-    }
-    if (value === 'refuse') {
-      return 'TERMS_REFUSED';
-    }
-    return '';
   }
 
   function handleSearch(event) {
@@ -152,11 +170,59 @@ export function ApprovalManagementPage() {
       firm_name: formValues.firmName,
       user_id: formValues.userId,
       product_code: formValues.productCode,
-      status: mapApprovalStatus(formValues.approvalStatus),
+      approval_stage: formValues.approvalStatus,
       from_date: formValues.fromDate,
       to_date: formValues.toDate,
       order_by: formValues.orderBy,
     });
+  }
+
+  function handleOrderByChange(event) {
+    const { value } = event.target;
+    setFormValues((current) => ({ ...current, orderBy: value }));
+    setFilters((current) => ({ ...current, order_by: value }));
+    setOffset(0);
+  }
+
+  async function handleExport() {
+    setIsExporting(true);
+    setExportMessage('');
+    try {
+      const exportItems = [];
+      let exportOffset = 0;
+      let exportTotal = 0;
+      do {
+        const data = await fetchContracts({
+          limit: 100,
+          offset: exportOffset,
+          approval_scope: true,
+          ...filters,
+        });
+        const pageItems = data.items ?? [];
+        exportTotal = data.total ?? pageItems.length;
+        exportItems.push(...pageItems);
+        exportOffset += pageItems.length;
+        if (pageItems.length === 0) break;
+      } while (exportOffset < exportTotal && exportOffset < 10000);
+
+      const headers = ['승인상태', '신청일자', '회원명', '회사명', '신청서비스', '사업기간', '월결제액(천원)', '프리즘 점수', '추천승인', '추천수수료', '추천지급율'];
+      const csvRows = exportItems.map((contract) => {
+        const row = mapContractToApprovalRow(contract);
+        return [row.status, row.requestedAt, row.userName, row.firmName, row.service, row.businessPeriod, row.salesAmount, row.prizmScore, row.recommendationApproved, row.recommendationFee, row.recommendationPaymentRate];
+      });
+      const csv = [headers, ...csvRows].map((row) => row.map(escapeCsvCell).join(',')).join('\n');
+      const blobUrl = URL.createObjectURL(new Blob([`\ufeff${csv}`], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `cubici-moneybank-approvals-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.click();
+      URL.revokeObjectURL(blobUrl);
+      setExportMessage(`${formatNumber(exportItems.length)}건을 내려받았습니다.`);
+    } catch (error) {
+      setExportMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
   }
 
   function goToPreviousPage() {
@@ -230,8 +296,8 @@ export function ApprovalManagementPage() {
   }
 
   return (
-    <>
-      <div className="m-tab">
+    <section className="approvalLvPage">
+      <div className="m-tab approvalLvTabs">
         <ul>
           <li className="active">
             <a href="/admin/moneybank/approval_tab1">심사 승인</a>
@@ -242,7 +308,13 @@ export function ApprovalManagementPage() {
         </ul>
       </div>
 
-      <form className="m-search searchArea" onSubmit={handleSearch}>
+      <div className="m-options approvalLvBaseDate">
+        <div className="pRight">
+          <span className="baseDate"><b>기준</b> {new Date().toLocaleDateString('ko-KR')}</span>
+        </div>
+      </div>
+
+      <form className="m-search searchArea approvalLvSearch" onSubmit={handleSearch}>
         <div className="line">
           <div className="inputBox">
             <label htmlFor="approvalUserName">회원명</label>
@@ -258,7 +330,10 @@ export function ApprovalManagementPage() {
           </div>
           <div className="inputBox">
             <label htmlFor="approvalProductCode">서비스</label>
-            <input id="approvalProductCode" name="productCode" type="text" value={formValues.productCode} onChange={updateFormValue} />
+            <select id="approvalProductCode" name="productCode" value={formValues.productCode} onChange={updateFormValue}>
+              <option value="">전체</option>
+              <option value="MP">머니플러스</option>
+            </select>
           </div>
         </div>
         <div className="line">
@@ -269,15 +344,13 @@ export function ApprovalManagementPage() {
               <option value="wait">대기</option>
               <option value="accept">승인</option>
               <option value="adjust">조정</option>
-              <option value="refuse">거부/종료</option>
+              <option value="refuse">거부</option>
             </select>
           </div>
-          <div className="inputBox">
+          <div className="inputBox approvalLvDateRange">
             <label htmlFor="approvalFromDate">신청일자</label>
             <input id="approvalFromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateFormValue} />
-          </div>
-          <div className="inputBox">
-            <label htmlFor="approvalToDate">종료일</label>
+            <span>~</span>
             <input id="approvalToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateFormValue} />
           </div>
           <button className="sBtn sColorLB" type="submit">
@@ -286,25 +359,46 @@ export function ApprovalManagementPage() {
         </div>
       </form>
 
+      <div className="m-options approvalLvTableOptions">
+        <div className="pRight">
+          <div className="fwBox approvalLvOrderBox">
+            <label htmlFor="approvalOrderBy">보기기준</label>
+            <select id="approvalOrderBy" name="orderBy" value={formValues.orderBy} onChange={handleOrderByChange}>
+              <option value="request_date_desc">최근순</option>
+              <option value="request_date_asc">과거순</option>
+              <option value="sales_amount_desc">월결제액 높은순</option>
+              <option value="sales_amount_asc">월결제액 낮은순</option>
+            </select>
+          </div>
+          <button className="approvalLvDownloadButton" type="button" onClick={handleExport} disabled={isExporting}>
+            {isExporting ? '내려받는 중' : '엑셀 다운로드'}
+          </button>
+        </div>
+        {exportMessage ? <p className="approvalLvExportMessage" role="status">{exportMessage}</p> : null}
+      </div>
+
       {message ? <p className="detailMessage">{message}</p> : null}
-      <div id="fixTable" className="fixTable legacyListTable table-scroll">
+      <div id="fixTable" className="fixTable legacyListTable table-scroll approvalLvTable">
         <div className="overflowBox">
           <table className="m-shadowTable approvalTable">
             <caption className="caption">심사 승인 목록</caption>
             <thead>
               <tr>
-                <th scope="col">승인상태</th>
-                <th scope="col">신청일자</th>
-                <th scope="col">회원명</th>
-                <th scope="col">회사명</th>
-                <th scope="col">신청서비스</th>
-                <th scope="col">사업기간</th>
-                <th scope="col">월결제액</th>
-                <th scope="col">프리즘 점수</th>
-                <th scope="col">추천승인</th>
-                <th scope="col">추천수수료</th>
-                <th scope="col">추천지급율</th>
-                <th scope="col">조건심사</th>
+                <th rowSpan="2" scope="col">승인상태</th>
+                <th rowSpan="2" scope="col">신청일자</th>
+                <th rowSpan="2" scope="col">회원명</th>
+                <th rowSpan="2" scope="col">회사명</th>
+                <th rowSpan="2" scope="col">신청서비스</th>
+                <th rowSpan="2" scope="col">사업기간</th>
+                <th rowSpan="2" scope="col">월결제액(천원)</th>
+                <th rowSpan="2" scope="col">프리즘 점수</th>
+                <th colSpan="3" scope="colgroup">프리즘 추천</th>
+                <th rowSpan="2" scope="col">조건심사</th>
+              </tr>
+              <tr>
+                <th scope="col">승인</th>
+                <th scope="col">수수료</th>
+                <th scope="col">지급율</th>
               </tr>
             </thead>
             <tbody>
@@ -341,11 +435,9 @@ export function ApprovalManagementPage() {
         </div>
         <div className="fixBottom">
           <ul className="tableTotal">
-            <li><span className="txt">총 :</span><span className="result">{formatNumber(total)} 건</span></li>
-            <li><span className="txt">심사대기 :</span><span className="result">{formatNumber(waitCount)} 건</span></li>
-            <li><span className="txt">심사완료 :</span><span className="result">{formatNumber(completeCount)} 건</span></li>
-            <li><span className="txt">승인 :</span><span className="result">{formatNumber(approvedCount)} 건</span></li>
-            <li><span className="txt">거부 :</span><span className="result">{formatNumber(rejectedCount)} 건</span></li>
+            {summary.map((item) => (
+              <li key={item.label}><span className="txt">{item.label} :</span><span className="result">{item.value}</span></li>
+            ))}
           </ul>
         </div>
       </div>
@@ -377,7 +469,7 @@ export function ApprovalManagementPage() {
         onFeeAdjust={handleFeeAdjust}
         onStatusAction={handleStatusAction}
       />
-    </>
+    </section>
   );
 }
 

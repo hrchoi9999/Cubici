@@ -25,6 +25,34 @@ def test_sales_shop_scope_requires_bearer_token() -> None:
     assert response.json()["detail"] == "bearer token required"
 
 
+def test_product_analysis_shop_scope_requires_bearer_token() -> None:
+    response = TestClient(create_app()).get("/v1/api/sales/product-analysis?shop_pairs=NAVER:seller01")
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "bearer token required"
+
+
+def test_product_analysis_accepts_owned_shop_pair(monkeypatch) -> None:
+    from cubici_service.api.v1.endpoints import sales
+    from cubici_service.sales.repository import ProductAnalysisResponse
+
+    monkeypatch.setattr("cubici_service.core.access_control.get_authenticated_user", lambda token: _user())
+    monkeypatch.setattr("cubici_service.core.access_control._fetch_user_shop_pairs", lambda user_no: {("NAVER", "seller01")})
+    monkeypatch.setattr(
+        sales,
+        "get_product_analysis",
+        lambda **kwargs: ProductAnalysisResponse(shop_breakdown=[], top_products=[]),
+    )
+
+    response = TestClient(create_app()).get(
+        "/v1/api/sales/product-analysis?shop_pairs=NAVER:seller01",
+        headers={"Authorization": "Bearer user-token"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"shop_breakdown": [], "top_products": []}
+
+
 def test_sales_shop_scope_accepts_owned_shop_pair(monkeypatch) -> None:
     from cubici_service.api.v1.endpoints import sales
     from cubici_service.sales.repository import SaleListResponse

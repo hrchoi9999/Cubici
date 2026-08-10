@@ -2,39 +2,34 @@ import { useEffect, useState } from 'react';
 
 export const adminMenu = [
   {
-    id: 'cubiciInfo',
-    title: '통합정보',
-    pages: [
-      { id: 'cubici', title: '큐빅아이', href: '/admin/cubici/infoIntegrated/cubici_tab1' },
-      { id: 'moneybank', title: '머니뱅크', href: '/admin/cubici/infoIntegrated/moneybank_tab1' },
-    ],
-  },
-  {
     id: 'memberInfo',
     title: '회원관리',
     pages: [
-      { id: 'member', title: '회원현황', href: '/admin/cubici/manageMember/member_tab1' },
-      { id: 'payment', title: '결제관리', href: '/admin/cubici/manageMember/payment_tab1' },
+      { id: 'member', title: '회원 현황', href: '/admin/cubici/manageMember/member_tab1' },
     ],
   },
   {
-    id: 'moneybankManagement',
-    title: '머니뱅크 관리',
+    id: 'shoppingIntegrated',
+    title: '쇼핑몰 통합',
     pages: [
-      { id: 'integrated', title: '통합 현황', href: '/admin/moneybank/cubici/management/info_tab1' },
-      { id: 'usage', title: '이용상세', href: '/admin/moneybank/management/usageList' },
+      { id: 'integrated', title: '통합 현황', href: '/admin/cubici/infoIntegrated/cubici_tab1' },
+      { id: 'payment', title: '결제 관리', href: '/admin/cubici/manageMember/payment_tab1' },
     ],
   },
   {
     id: 'moneybankOperation',
     title: '머니뱅크 운영',
     pages: [
-      { id: 'request', title: '신청 접수', href: '/admin/moneybank/request' },
+      { id: 'integrated', title: '통합 현황', href: '/admin/moneybank/cubici/management/info_tab1' },
+      { id: 'service', title: '서비스 현황', href: '/admin/cubici/infoIntegrated/moneybank_tab1' },
+      { id: 'usage', title: '이용 상세', href: '/admin/moneybank/management/usageList' },
+      { id: 'request', title: '신청/승인', href: '/admin/moneybank/request' },
       { id: 'approval', title: '심사 승인', href: '/admin/moneybank/approval_tab1' },
-      { id: 'contract', title: '계약 관리', href: '/admin/moneybank/approval_tab2' },
+      { id: 'contract', title: '계약/상환', href: '/admin/moneybank/approval_tab2' },
       { id: 'settlement', title: '정산 관리', href: '/admin/moneybank/settlement' },
-      { id: 'redemption', title: '상환 관리', href: '/admin/moneybank/redemption' },
-      { id: 'manage', title: '프리즘 지표 관리', href: '/admin-spa?view=prism-management' },
+      { id: 'redemption', title: '상환 관리', pageTitle: '계약/상환', href: '/admin/moneybank/redemption' },
+      { id: 'funding', title: '자금조달 관리', pageTitle: '자금조달관리', href: '/admin/moneybank/funding' },
+      { id: 'manage', title: '신용평가지표', href: '/admin-spa?view=prism-management' },
     ],
   },
   {
@@ -63,7 +58,6 @@ export const adminMenu = [
       { id: 'charge', title: '요금제 관리', href: '/admin/cubici/adminPreference/manageCharge' },
       { id: 'promotion', title: '연계코드 관리', href: '/admin/cubici/adminPreference/managePromotion' },
       { id: 'partner', title: '협력사 관리', href: '/admin/cubici/adminPreference/managePartner' },
-      { id: 'moneybank', title: '머니뱅크 관리', href: '/admin/cubici/adminPreference/manageMoneybank_tab1' },
       { id: 'prizm', title: 'Prism System', href: '/admin-spa?view=prism-config' },
     ],
   },
@@ -226,7 +220,7 @@ export function AdminLayout({ activeCategoryId, activePageId, adminSession, chil
               <div className="subVisual">
                 <div className="txtBox">
                   <h2>{activeCategory?.title ?? ''}</h2>
-                  <h3>{activePage?.title ?? ''}</h3>
+                  <h3>{activePage?.pageTitle ?? activePage?.title ?? ''}</h3>
                 </div>
               </div>
             </div>

@@ -77,14 +77,15 @@ test('server monitoring status cards render with mock data', async ({ page }) =>
   await page.goto('/admin/cubici/adminMonitor/server_monitor');
 
   await expect(page.locator('.subVisual h3', { hasText: '서버 관리' })).toBeVisible();
-  await expect(page.getByText('상태 주의')).toBeVisible();
-  await expect(page.getByText('FastAPI/DB/배치 로그 기반')).toBeVisible();
-  await expect(page.getByText('외부 서버 metric 미연동')).toBeVisible();
-  await expect(page.getByText('Error Log 실패 건 확인')).toBeVisible();
+  await expect(page.locator('.serverMonitorSummary')).toContainText('종합 상태');
+  await expect(page.locator('.serverMonitorSummary')).toContainText('주의');
+  await expect(page.locator('.serverMonitorSummary')).toContainText('정상 처리');
+  await expect(page.getByText('외부 서버 metric 미연동')).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'API 서버' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'PostgreSQL' })).toBeVisible();
   await expect(page.locator('.serverStatusCard').filter({ hasText: '배치 성공' }).getByText('12건', { exact: true })).toBeVisible();
   await expect(page.locator('.serverStatusCard').filter({ hasText: '배치 실패' }).getByText('1건', { exact: true })).toBeVisible();
-  await expect(page.locator('.serverStatusCard').filter({ hasText: '배치 실패' }).getByText('cbci_err_report', { exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: '점검 기준' })).toBeVisible();
+  await expect(page.getByRole('columnheader', { name: '점검 항목' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'Error Log' })).toBeVisible();
 });

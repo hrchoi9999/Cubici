@@ -16,6 +16,7 @@ from cubici_service.db.connection import get_connection
 
 
 ChargeStatus = Literal["all", "operating", "ended"]
+ChargeType = Literal["all", "B", "A", "M", "O", "F"]
 ChargeOrderBy = Literal["reg_date_desc", "reg_date_asc", "amount_desc", "charge_name_asc", "charge_code_asc"]
 AdminAccountStatus = Literal["all", "pending", "approved"]
 AdminAccountOrderBy = Literal["reg_date_desc", "approval_date_desc", "name_asc", "admin_id_asc"]
@@ -628,6 +629,7 @@ class RawDataPreviewResponse(BaseModel):
 def _build_charge_filters(
     *,
     status: ChargeStatus,
+    charge_type: ChargeType,
     charge_code: str | None,
     charge_name: str | None,
 ) -> tuple[str, list[object]]:
@@ -638,6 +640,10 @@ def _build_charge_filters(
         filters.append("start_date <= current_date and expire_date >= current_date")
     elif status == "ended":
         filters.append("(start_date > current_date or expire_date < current_date)")
+
+    if charge_type != "all":
+        filters.append("charge_type = %s")
+        params.append(charge_type)
 
     if charge_code:
         filters.append("charge_code ilike %s")
@@ -683,12 +689,14 @@ def list_charges(
     offset: int,
     *,
     status: ChargeStatus = "all",
+    charge_type: ChargeType = "all",
     charge_code: str | None = None,
     charge_name: str | None = None,
     order_by: ChargeOrderBy = "reg_date_desc",
 ) -> ChargeListResponse:
     where_clause, filter_params = _build_charge_filters(
         status=status,
+        charge_type=charge_type,
         charge_code=charge_code,
         charge_name=charge_name,
     )
@@ -1258,12 +1266,21 @@ def _promotion_select_query() -> str:
                 select array_agg(pc.charge_code order by pc.charge_code)
                 from promotion_charge pc
                 where pc.promo_code = p.promo_code
+            ), (
+                select array_agg(trim(legacy.code) order by legacy.ordinality)::varchar[]
+                from unnest(string_to_array(coalesce(p.charges, ''), ',')) with ordinality as legacy(code, ordinality)
+                where trim(legacy.code) <> ''
             ), array[]::varchar[]) as charge_codes,
             coalesce((
                 select array_agg(c.charge_name order by pc.charge_code)
                 from promotion_charge pc
                 join charge c on c.charge_code = pc.charge_code
                 where pc.promo_code = p.promo_code
+            ), (
+                select array_agg(coalesce(c.charge_name, trim(legacy.code)) order by legacy.ordinality)::varchar[]
+                from unnest(string_to_array(coalesce(p.charges, ''), ',')) with ordinality as legacy(code, ordinality)
+                left join charge c on c.charge_code = trim(legacy.code)
+                where trim(legacy.code) <> ''
             ), array[]::varchar[]) as charge_names,
             p.discount_rate,
             p.discount_amount,
@@ -1588,7 +1605,16 @@ def _partner_select_query() -> str:
             p.partner_status,
             case when p.partner_status = '00' then '운영' else '종료' end as partner_status_label,
             p.partner_type,
-            coalesce(p.partner_type, '') as partner_type_label,
+            case p.partner_type
+                when 'BA' then '은행'
+                when 'BB' then 'B2B도매'
+                when 'CO' then '마케팅'
+                when 'FI' then '금융'
+                when 'MN' then '제조'
+                when 'TH' then '기타'
+                when 'CB' then '큐빅아이'
+                else coalesce(p.partner_type, '')
+            end as partner_type_label,
             p.memo,
             pm.manager_name,
             pm.manager_phone,
@@ -2419,9 +2445,21 @@ def _prizm_config_select_query() -> str:
                 else 'Division ' || division::text
             end as division_label,
             subject_no,
-            '주제 ' || subject_no::text as subject_name,
+            case
+                when division = 1 and subject_no = 1 then '기업개요'
+                when division = 1 and subject_no = 2 then '매출지표'
+                when division = 1 and subject_no = 3 then '정산지표'
+                when division = 1 and subject_no = 4 then '운영지표'
+                when division = 1 and subject_no = 5 then '신용평가'
+                when division = 1 and subject_no = 6 then '평가등급'
+                when division = 2 and subject_no = 1 then '기업개요'
+                when division = 2 and subject_no = 2 then '매출지표'
+                when division = 2 and subject_no = 3 then '운영지표'
+                when division = 2 and subject_no = 6 then '평가등급'
+                else '주제 ' || subject_no::text
+            end as subject_name,
             item_no,
-            item_nm,
+            btrim(item_nm) as item_nm,
             item_definition,
             item_weight,
             item_standard_low1,
@@ -2435,8 +2473,18 @@ def _prizm_config_select_query() -> str:
             item_standard_low5,
             item_standard_high5,
             case
-                when nullif(item_definition, '') is null or nullif(item_weight, '') is null then '기본값 미완성'
-                when nullif(item_standard_low1, '') is null or nullif(item_standard_high1, '') is null then '구간값 확인'
+                when nullif(btrim(item_definition), '') is null then '기본값 미완성'
+                when nullif(btrim(item_weight), '') is null
+                 and nullif(btrim(item_standard_low1), '') is null
+                 and nullif(btrim(item_standard_high1), '') is null
+                 and nullif(btrim(item_standard_low2), '') is null
+                 and nullif(btrim(item_standard_high2), '') is null
+                 and nullif(btrim(item_standard_low3), '') is null
+                 and nullif(btrim(item_standard_high3), '') is null
+                 and nullif(btrim(item_standard_low4), '') is null
+                 and nullif(btrim(item_standard_high4), '') is null
+                 and nullif(btrim(item_standard_low5), '') is null
+                 and nullif(btrim(item_standard_high5), '') is null then '기본값 미완성'
                 else '설정완료'
             end as config_status_label
         from prizm_items
@@ -2470,10 +2518,20 @@ def list_prizm_config_items(
                     count(*) filter (where division = 1)::int as prizm_count,
                     count(*) filter (where division = 2)::int as cra_count,
                     count(*) filter (
-                        where nullif(item_definition, '') is null
-                           or nullif(item_weight, '') is null
-                           or nullif(item_standard_low1, '') is null
-                           or nullif(item_standard_high1, '') is null
+                        where nullif(btrim(item_definition), '') is null
+                           or (
+                               nullif(btrim(item_weight), '') is null
+                               and nullif(btrim(item_standard_low1), '') is null
+                               and nullif(btrim(item_standard_high1), '') is null
+                               and nullif(btrim(item_standard_low2), '') is null
+                               and nullif(btrim(item_standard_high2), '') is null
+                               and nullif(btrim(item_standard_low3), '') is null
+                               and nullif(btrim(item_standard_high3), '') is null
+                               and nullif(btrim(item_standard_low4), '') is null
+                               and nullif(btrim(item_standard_high4), '') is null
+                               and nullif(btrim(item_standard_low5), '') is null
+                               and nullif(btrim(item_standard_high5), '') is null
+                           )
                     )::int as incomplete_count
                 from item_base
                 {where_clause}

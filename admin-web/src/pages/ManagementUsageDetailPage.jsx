@@ -79,8 +79,8 @@ export function ManagementUsageDetailPage() {
   }, [mbid]);
 
   return (
-    <>
-      <div className="m-tab">
+    <div className="managementUsageLvDetail">
+      <div className="m-tab managementUsageLvDetailTitle">
         <ul>
           <li className="active">
             <a href="javascript:;">회원 상세정보</a>
@@ -93,7 +93,7 @@ export function ManagementUsageDetailPage() {
       {detail ? (
         <>
           <MemberSummary detail={detail} />
-          <div className="m-tab managementDetailTabs">
+          <div className="m-tab managementDetailTabs managementUsageLvDetailTabs">
             <ul>
               <li className={activeTab === 'basic' ? 'active' : ''}>
                 <button type="button" onClick={() => setActiveTab('basic')}>기본정보</button>
@@ -113,73 +113,50 @@ export function ManagementUsageDetailPage() {
           {activeTab === 'moneybank' ? <MoneybankInfoTab detail={detail} /> : null}
           {activeTab === 'documents' ? <DocumentInfoTab detail={detail} /> : null}
           {activeTab === 'history' ? <RedemptionHistoryTab detail={detail} /> : null}
-          <div className="c-boardSet">
+          <div className="c-boardSet managementUsageLvDetailActions">
             <div className="button-box">
               <a className="bBtn2 sColorN listBtn" href="/admin/moneybank/management/usageList">목록</a>
             </div>
           </div>
         </>
       ) : null}
-    </>
+    </div>
   );
 }
 
 function MemberSummary({ detail }) {
   const { user, usage } = detail;
+  const items = [
+    { label: '회원상태', value: <span className="managementUsageLvStatus">{usage.usage_status}</span> },
+    { label: '회원명', value: user.user_name ?? '-' },
+    { label: '회원ID', value: user.user_email ?? '-' },
+    { label: '핸드폰', value: user.phone ?? '-' },
+    { label: '회사명', value: user.firm_name ?? '-' },
+    { label: '사업자등록번호', value: user.biz_num ?? '-' },
+    { label: '사업자 유형', value: user.biz_type ?? '-' },
+    { label: '업종', value: user.sectors ?? '-' },
+    { label: '설립연도', value: user.biz_setup_date ?? '-' },
+    { label: '최초가입', value: formatDate(user.user_reg_date) },
+    { label: '우편번호', value: user.zip_code ?? '-' },
+    { label: '회사주소', value: user.address ?? '-', wide: true },
+    { label: '이용서비스', value: usage.product_code ?? '-' },
+    { label: '계약만료', value: formatDate(usage.expire_date) },
+  ];
 
   return (
-    <section className="managementDetailSummary">
-      <article className="m-modalGrid">
+    <section className="managementDetailSummary managementUsageLvSummary">
+      <article className="m-modalGrid managementUsageLvPanel">
         <header>
           <h3>회원 정보</h3>
         </header>
-        <table className="detailInfoTable">
-          <caption className="caption">회원 정보</caption>
-          <tbody>
-            <tr>
-              <th scope="row">회원상태</th>
-              <td>{usage.usage_status}</td>
-              <th scope="row">회원명</th>
-              <td>{user.user_name ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">회원ID</th>
-              <td>{user.user_email ?? '-'}</td>
-              <th scope="row">핸드폰</th>
-              <td>{user.phone ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">회사명</th>
-              <td>{user.firm_name ?? '-'}</td>
-              <th scope="row">사업자등록번호</th>
-              <td>{user.biz_num ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">설립연도</th>
-              <td>{user.biz_setup_date ?? '-'}</td>
-              <th scope="row">최초가입</th>
-              <td>{formatDate(user.user_reg_date)}</td>
-            </tr>
-            <tr>
-              <th scope="row">사업자 유형</th>
-              <td>{user.biz_type ?? '-'}</td>
-              <th scope="row">업종</th>
-              <td>{user.sectors ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">우편번호</th>
-              <td>{user.zip_code ?? '-'}</td>
-              <th scope="row">회사주소</th>
-              <td>{user.address ?? '-'}</td>
-            </tr>
-            <tr>
-              <th scope="row">이용서비스</th>
-              <td>{usage.product_code ?? '-'}</td>
-              <th scope="row">계약만료</th>
-              <td>{formatDate(usage.expire_date)}</td>
-            </tr>
-          </tbody>
-        </table>
+        <dl className="managementUsageLvMemberGrid">
+          {items.map((item) => (
+            <div className={item.wide ? 'wide' : ''} key={item.label}>
+              <dt>{item.label}</dt>
+              <dd>{item.value}</dd>
+            </div>
+          ))}
+        </dl>
       </article>
     </section>
   );
@@ -187,8 +164,8 @@ function MemberSummary({ detail }) {
 
 function BasicInfoTab({ detail }) {
   return (
-    <section className="detailPanel">
-      <div className="detailSection">
+    <section className="detailPanel managementUsageLvDetailPanel">
+      <div className="detailSection managementUsageLvSection">
         <h3>기본정보</h3>
         <table className="detailInfoTable">
           <caption className="caption">기본정보</caption>
@@ -222,8 +199,8 @@ function MoneybankInfoTab({ detail }) {
   const { usage } = detail;
 
   return (
-    <section className="detailPanel">
-      <div className="detailSection">
+    <section className="detailPanel managementUsageLvDetailPanel">
+      <div className="detailSection managementUsageLvSection">
         <h3>머니뱅크 이용 현황</h3>
         <table className="detailInfoTable">
           <caption className="caption">머니뱅크 이용 현황</caption>
@@ -274,7 +251,7 @@ function MoneybankInfoTab({ detail }) {
 
 function ContractHistoryTable({ items }) {
   return (
-    <div className="detailSection">
+    <div className="detailSection managementUsageLvSection">
       <h3>이전 이력</h3>
       <div className="table-scroll detailTableScroll">
         <table className="m-shadowTable managementUsageHistoryTable">
@@ -321,8 +298,8 @@ function DocumentInfoTab({ detail }) {
   const document = detail.document;
 
   return (
-    <section className="detailPanel">
-      <div className="detailSection">
+    <section className="detailPanel managementUsageLvDetailPanel">
+      <div className="detailSection managementUsageLvSection">
         <h3>사업자 증빙서류</h3>
         <table className="detailInfoTable">
           <caption className="caption">사업자 증빙서류</caption>
@@ -361,8 +338,8 @@ function DocumentInfoTab({ detail }) {
 
 function RedemptionHistoryTab({ detail }) {
   return (
-    <section className="detailPanel">
-      <div className="detailSection">
+    <section className="detailPanel managementUsageLvDetailPanel">
+      <div className="detailSection managementUsageLvSection">
         <h3>상환 이력</h3>
         <div className="table-scroll detailTableScroll">
           <table className="m-shadowTable managementUsageHistoryTable">

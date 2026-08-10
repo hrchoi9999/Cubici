@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { fetchErrorLogs } from '../api/monitoring.js';
 
 const PAGE_SIZE = 20;
@@ -30,7 +30,6 @@ function shortLog(value) {
 export function ErrorLogPage() {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
-  const [counts, setCounts] = useState({ success: 0, fail: 0, pending: 0, workflow: '-' });
   const [offset, setOffset] = useState(0);
   const [filters, setFilters] = useState({
     from_date: beforeIso(7),
@@ -59,19 +58,12 @@ export function ErrorLogPage() {
         if (!ignore) {
           setItems(data.items ?? []);
           setTotal(data.total ?? 0);
-          setCounts({
-            success: data.success_count ?? 0,
-            fail: data.fail_count ?? 0,
-            pending: data.pending_action_count ?? data.fail_count ?? 0,
-            workflow: data.workflow_status_label ?? '-',
-          });
           setSelected(null);
         }
       } catch (error) {
         if (!ignore) {
           setItems([]);
           setTotal(0);
-          setCounts({ success: 0, fail: 0, pending: 0, workflow: '-' });
           setSelected(null);
           setMessage(error.message);
         }
@@ -89,9 +81,7 @@ export function ErrorLogPage() {
     };
   }, [offset, filters]);
 
-  const rows = useMemo(() => items, [items]);
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
-  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function updateSearchValue(event) {
     const { name, value } = event.target;
@@ -122,16 +112,23 @@ export function ErrorLogPage() {
     });
   }
 
+  function selectLog(row) {
+    setSelected(row);
+    window.requestAnimationFrame(() => {
+      document.querySelector('.errorLogLvList .tableScroll')?.scrollTo({ left: 0 });
+    });
+  }
+
   return (
-    <section className="adminPage monitoringPage errorLogPage">
-      <form className="m-search searchArea" onSubmit={handleSearch}>
-        <div className="line">
+    <section className="adminPage monitoringPage errorLogPage errorLogLvPage">
+      <form className="errorLogLvSearch" onSubmit={handleSearch}>
+        <div className="errorLogLvSearchPrimary">
           <div className="inputBox">
-            <label htmlFor="errorFromDate">시작일</label>
+            <label htmlFor="errorFromDate">시작</label>
             <input id="errorFromDate" name="fromDate" type="date" value={formValues.fromDate} onChange={updateSearchValue} />
           </div>
           <div className="inputBox">
-            <label htmlFor="errorToDate">종료일</label>
+            <label htmlFor="errorToDate">종료</label>
             <input id="errorToDate" name="toDate" type="date" value={formValues.toDate} onChange={updateSearchValue} />
           </div>
           <div className="inputBox">
@@ -146,27 +143,21 @@ export function ErrorLogPage() {
               <option value="FAIL">실패</option>
             </select>
           </div>
-          <div className="inputBox">
-            <label htmlFor="errorScenario">시나리오명</label>
-            <input id="errorScenario" name="scenario" type="text" value={formValues.scenario} onChange={updateSearchValue} />
-          </div>
           <button className="sBtn sColorLB" type="submit">검색</button>
+        </div>
+        <div className="errorLogLvSearchSecondary">
+          <div className="inputBox">
+            <label htmlFor="errorScenario">시나리오</label>
+            <input id="errorScenario" name="scenario" type="text" placeholder="시나리오..." value={formValues.scenario} onChange={updateSearchValue} />
+          </div>
         </div>
       </form>
 
-      <div className="summaryStrip inquirySummary monitoringSummary">
-        <span>전체 {total.toLocaleString()}건</span>
-        <span>성공 {counts.success.toLocaleString()}건</span>
-        <span>실패 {counts.fail.toLocaleString()}건</span>
-        <span>조치필요 {counts.pending.toLocaleString()}건</span>
-        <span>Workflow {counts.workflow}</span>
-        <span>{isLoading ? '조회 중' : `페이지 ${currentPage.toLocaleString()} / ${pageCount.toLocaleString()}`}</span>
-      </div>
-
       {message ? <div className="m-alert">{message}</div> : null}
 
-      <div className="tableScroll">
-        <table className="m-shadowTable errorLogTable">
+      <div className="errorLogLvList">
+        <div className="tableScroll">
+        <table className="m-shadowTable errorLogTable errorLogLvTable">
           <caption className="caption">에러로그 목록</caption>
           <thead>
             <tr>
@@ -174,35 +165,35 @@ export function ErrorLogPage() {
               <th>ID</th>
               <th>시나리오</th>
               <th>시작일</th>
+              <th>실행시간</th>
               <th>상태</th>
               <th>에러로그</th>
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, index) => (
-              <tr
-                key={`${row.status}-${row.shop_id ?? 'shop'}-${row.started_at ?? index}`}
-                className={selected === row ? 'active' : ''}
-                onClick={() => setSelected(row)}
-              >
+            {items.map((row, index) => (
+              <tr key={`${row.status}-${row.shop_id ?? 'shop'}-${row.started_at ?? index}`} className={selected === row ? 'active' : ''}>
                 <td>{row.shop_name ?? '-'}</td>
                 <td>{row.shop_id ?? '-'}</td>
                 <td className="subject">{row.scenario ?? '-'}</td>
                 <td>{formatDateTime(row.started_at)}</td>
+                <td>{row.runtime_label ?? '-'}</td>
                 <td>
                   <span className={`sBtn ${row.status === '성공' ? 'sColorLS' : 'sColorR'} rBtn`}>{row.status}</span>
                 </td>
-                <td className="subject">{shortLog(row.error_log)}</td>
+                <td className="subject">
+                  <button className="errorLogLvSelect" type="button" onClick={() => selectLog(row)}>{shortLog(row.error_log)}</button>
+                </td>
               </tr>
             ))}
             {isLoading ? (
               <tr>
-                <td colSpan="6">조회 중입니다.</td>
+                <td colSpan="7">조회 중입니다.</td>
               </tr>
             ) : null}
-            {!isLoading && rows.length === 0 ? (
+            {!isLoading && items.length === 0 ? (
               <tr>
-                <td colSpan="6">조회된 데이터가 없습니다.</td>
+                <td colSpan="7">조회된 데이터가 없습니다.</td>
               </tr>
             ) : null}
           </tbody>
@@ -210,20 +201,28 @@ export function ErrorLogPage() {
       </div>
 
       <div className="pagingControls">
-        <button className="sBtn sColorN" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
-        <span>{currentPage} / {pageCount}</span>
-        <button className="sBtn sColorN" type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+        <button type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
+        <span>{currentPage}</span>
+        <button type="button" onClick={goToNextPage} disabled={offset + PAGE_SIZE >= total}>다음</button>
+      </div>
       </div>
 
-      {selected ? <section className="messageTemplatePreview errorLogPreview">
-        <h4>에러로그 상세</h4>
-        <div className="summaryPills">
-          <span>{selected?.processing_status_label ?? '미선택'}</span>
-          <span>{selected?.runtime_label ?? '-'}</span>
-          <span>{selected?.source_table ?? '-'}</span>
-          <span>{selected?.follow_up_action_label ?? '-'}</span>
-        </div>
-        <p>{selected ? selected.error_log || '-' : '선택된 로그가 없습니다.'}</p>
+      {selected ? <section className="errorLogLvDetail">
+        <header>
+          <h3>에러로그 상세</h3>
+          <button type="button" onClick={() => setSelected(null)}>닫기</button>
+        </header>
+        <dl>
+          <div><dt>쇼핑몰</dt><dd>{selected.shop_name ?? '-'}</dd></div>
+          <div><dt>ID</dt><dd>{selected.shop_id ?? '-'}</dd></div>
+          <div><dt>시나리오</dt><dd>{selected.scenario ?? '-'}</dd></div>
+          <div><dt>시작일</dt><dd>{formatDateTime(selected.started_at)}</dd></div>
+          <div><dt>실행시간</dt><dd>{selected.runtime_label ?? '-'}</dd></div>
+          <div><dt>상태</dt><dd>{selected.status ?? '-'}</dd></div>
+          <div><dt>원본</dt><dd>{selected.source_table ?? '-'}</dd></div>
+          <div><dt>후속조치</dt><dd>{selected.follow_up_action_label ?? '-'}</dd></div>
+        </dl>
+        <pre>{selected.error_log || '-'}</pre>
       </section> : null}
     </section>
   );

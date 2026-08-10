@@ -45,6 +45,30 @@ const memberSummary = {
   ],
 };
 
+const integratedPeriodMetric = { today: 1, current_month: 2, previous_month: 3, available: true };
+const cubiciIntegrated = {
+  unit: 'day',
+  metrics: {
+    standard_date: '2026-08-09', from_date: '2026-08-01', to_date: '2026-08-09',
+    new_members: integratedPeriodMetric, withdrawn_members: integratedPeriodMetric,
+    fee_income: integratedPeriodMetric, dormant_members: integratedPeriodMetric,
+    sales_amount: integratedPeriodMetric, sales_quantity: integratedPeriodMetric,
+    settlement_amount: integratedPeriodMetric, sku_count: integratedPeriodMetric,
+    visitor_count: { today: null, current_month: null, previous_month: null, available: false },
+    max_concurrent_users: { today: null, current_month: null, previous_month: null, available: false },
+    average_usage_minutes: { today: null, current_month: null, previous_month: null, available: false },
+    average_shop_count: integratedPeriodMetric,
+  },
+  partners: [{ value: 'PARTNER-A', label: '협력사 A' }],
+  products: [{ value: 'MP', label: '선정산' }],
+  channels: [{ value: 'DIRECT', label: '큐빅아이' }],
+  series: [{
+    bucket: '2026-08-09', new_member_count: 1, withdrawn_member_count: 0,
+    cumulative_member_count: 40, cubici_average_days: 200, moneybank_average_days: 80,
+    channel_counts: { DIRECT: 1 },
+  }],
+};
+
 const overview = {
   unit: 'day',
   summary: {
@@ -111,12 +135,12 @@ const routeConfigs = [
   {
     code: 'ADM-01A-CUBICI-INTEGRATED',
     path: '/admin/cubici/infoIntegrated/cubici_tab1',
-    endpoint: '/management/member-summary',
-    ready: '.integratedPanel tbody tr',
+    endpoint: '/management/cubici-integrated',
+    ready: '.integratedLvChartBox canvas',
     interact: async (page) => {
       await Promise.all([
-        page.waitForRequest((request) => request.url().includes('/management/member-summary') && request.url().includes('unit=week')),
-        page.locator('.legacySearchBox select[name="unit"]').selectOption('week'),
+        page.waitForRequest((request) => request.url().includes('/management/cubici-integrated') && request.url().includes('unit=week')),
+        page.locator('#integratedUnit').selectOption('week').then(() => page.locator('.integratedLvSearch button[type="submit"]').click()),
       ]);
     },
   },
@@ -136,9 +160,9 @@ const routeConfigs = [
     code: 'ADM-02A-MEMBER-SUMMARY',
     path: '/admin/cubici/manageMember/member_tab1',
     endpoint: '/management/member-summary',
-    ready: '.memberSummaryTable tbody tr',
+    ready: '.memberSummaryChartBox canvas',
     interact: async (page) => {
-      await page.locator('#memberPartnerCode').fill('PARTNER-A');
+      await page.locator('#memberPartnerCode').selectOption('PARTNER-A');
       await Promise.all([
         page.waitForRequest((request) => request.url().includes('/management/member-summary') && request.url().includes('partner_code=PARTNER-A')),
         page.locator('form.searchArea:has(#memberPartnerCode) button[type="submit"]').click(),
@@ -193,6 +217,13 @@ function apiPayload(url) {
   if (url.includes('/accounts/admin-me')) {
     return { user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' };
   }
+  if (url.includes('/management/member-summary/options')) {
+    return {
+      partners: [{ value: 'PARTNER-A', label: '협력사 A' }],
+      products: [{ value: 'MP', label: '선정산' }],
+    };
+  }
+  if (url.includes('/management/cubici-integrated')) return cubiciIntegrated;
   if (url.includes('/management/member-summary')) return memberSummary;
   if (url.includes('/management/member-payments')) return payment;
   if (url.includes('/management/overview')) return overview;

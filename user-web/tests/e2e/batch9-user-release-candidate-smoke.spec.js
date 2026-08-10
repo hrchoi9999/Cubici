@@ -8,7 +8,7 @@ const session = {
     email: 'batch9-rc@example.com',
     name: 'Batch9 RC',
     phone: '010-9009-9009',
-    user_type: 'GENERAL',
+    user_type: 'USER',
     biz_name: '배포후보상사',
     biz_num: '000-00-09009',
     partner_code: 'RC',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ProductAnalysisCharts from '../components/ProductAnalysisCharts.jsx';
 import {
   DashboardSummary,
   Layout,
@@ -475,6 +476,7 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
     returns: [],
     settlements: [],
     monthly: null,
+    productAnalysis: null,
   });
   const activeTab = ['tab1', 'tab2', 'tab3'].includes(tab) ? tab : 'tab1';
 
@@ -482,7 +484,7 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
     let active = true;
     async function load() {
       if (!auth?.access_token) {
-        setState({ loading: false, message: '로그인 후 조회합니다.', sales: [], returns: [], settlements: [], monthly: null });
+        setState({ loading: false, message: '로그인 후 조회합니다.', sales: [], returns: [], settlements: [], monthly: null, productAnalysis: null });
         return;
       }
       if (shopFilter.loading || !shopFilter.shopPairs) {
@@ -496,14 +498,21 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
         if (salesFilters.shopType) salesParams.set('shop_type', salesFilters.shopType);
         if (salesFilters.fromDate) salesParams.set('from_date', salesFilters.fromDate);
         if (salesFilters.toDate) salesParams.set('to_date', salesFilters.toDate);
-        const [sales, returns, settlements, monthly] = await Promise.allSettled([
+        const analysisParams = new URLSearchParams({ shop_pairs: shopFilter.shopPairs });
+        if (salesFilters.shopType) analysisParams.set('shop_type', salesFilters.shopType);
+        if (salesFilters.fromDate) analysisParams.set('from_date', salesFilters.fromDate);
+        if (salesFilters.toDate) analysisParams.set('to_date', salesFilters.toDate);
+        const [sales, returns, settlements, monthly, productAnalysis] = await Promise.allSettled([
           fetchJson(`/v1/api/sales/orders?${salesParams.toString()}`),
           fetchJson(`/v1/api/sales/returns?limit=100&offset=0&shop_pairs=${shopPairs}`),
           fetchJson(`/v1/api/settlements?limit=100&offset=0&shop_pairs=${shopPairs}`),
           fetchAuthJson('/v1/api/accounts/me/dashboard-summary'),
+          activeTab === 'tab3'
+            ? fetchJson(`/v1/api/sales/product-analysis?${analysisParams.toString()}`)
+            : Promise.resolve(null),
         ]);
         if (!active) return;
-        const rejected = [sales, returns, settlements, monthly].find((result) => result.status === 'rejected');
+        const rejected = [sales, returns, settlements, monthly, productAnalysis].find((result) => result.status === 'rejected');
         setState({
           loading: false,
           message: rejected ? `일부 통합정보 조회 실패: ${rejected.reason.message}` : '',
@@ -511,17 +520,18 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
           returns: returns.status === 'fulfilled' ? returns.value.items ?? [] : [],
           settlements: settlements.status === 'fulfilled' ? settlements.value.items ?? [] : [],
           monthly: monthly.status === 'fulfilled' ? monthly.value : null,
+          productAnalysis: productAnalysis.status === 'fulfilled' ? productAnalysis.value : null,
         });
       } catch (error) {
         if (!active) return;
-        setState({ loading: false, message: `통합정보 조회 실패: ${error.message}`, sales: [], returns: [], settlements: [], monthly: null });
+        setState({ loading: false, message: `통합정보 조회 실패: ${error.message}`, sales: [], returns: [], settlements: [], monthly: null, productAnalysis: null });
       }
     }
     load();
     return () => {
       active = false;
     };
-  }, [auth?.access_token, salesFilters.fromDate, salesFilters.shopType, salesFilters.toDate, shopFilter.loading, shopFilter.shopPairs]);
+  }, [activeTab, auth?.access_token, salesFilters.fromDate, salesFilters.shopType, salesFilters.toDate, shopFilter.loading, shopFilter.shopPairs]);
 
   const summary = useMemo(() => buildIntegratedSummary(state), [state]);
   const monthlySummary = useMemo(() => buildIntegratedMonthlySummary(state.monthly, summary), [state.monthly, summary]);
@@ -626,11 +636,7 @@ function IntegratedInfoPage({ tab = 'tab1' }) {
               onChange={(name, value) => setSalesFilterDraft((current) => ({ ...current, [name]: value }))}
               onSearch={() => setSalesFilters(salesFilterDraft)}
             />
-            <div className="final-chart-grid u09-chart-stack">
-              <FinalChart title="쇼핑몰 결제 비중" src="/final-ui/static/img/sub/chart-3.png" />
-              <FinalChart title="쇼핑몰 가격할인 및 판촉" src="/final-ui/static/img/sub/chart-4.png" />
-              <FinalChart title="TOP 10 매출상품" src="/final-ui/static/img/sub/chart-5.png" />
-            </div>
+            <ProductAnalysisCharts analysis={state.productAnalysis} loading={state.loading} />
           </>
         ) : null}
             {state.message ? <p className="auth-message error">{state.message}</p> : null}

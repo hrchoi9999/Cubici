@@ -1,3 +1,5 @@
+from datetime import date
+
 from cubici_service.app import create_app
 from cubici_service.api.v1.endpoints import (
     accounts,
@@ -33,6 +35,7 @@ def test_domain_routes_registered() -> None:
         "/v1/api/accounts/me/shops/{account_id}",
         "/v1/api/sales",
         "/v1/api/sales/orders",
+        "/v1/api/sales/product-analysis",
         "/v1/api/sales/returns",
         "/v1/api/settlements",
         "/v1/api/settlements/{settlements_id}",
@@ -48,6 +51,8 @@ def test_domain_routes_registered() -> None:
         "/v1/api/contracts/{mbid}/documents/checks",
         "/v1/api/contracts/{mbid}/review-notes",
         "/v1/api/fintech/status",
+        "/v1/api/fintech/funding-summary",
+        "/v1/api/fintech/funding-providers",
         "/v1/api/fintech/trade-requests",
         "/v1/api/fintech/trade-requests/{req_date}/{bank_code}/{comp_code}/{seq_no}",
         "/v1/api/fintech/firm-requests",
@@ -121,6 +126,83 @@ def test_domain_status_payloads() -> None:
 
     assert {response.mode for response in responses} == {"read-only-skeleton"}
     assert all(response.source_tables for response in responses)
+
+
+def test_fintech_funding_summary_endpoint_payload(monkeypatch) -> None:
+    from datetime import datetime
+
+    from cubici_service.fintech.repository import (
+        FundingSummaryCounts,
+        FundingSummaryItem,
+        FundingSummaryResponse,
+    )
+
+    payload = FundingSummaryResponse(
+        limit=10,
+        offset=0,
+        counts=FundingSummaryCounts(
+            total_count=1,
+            funding_amount=1_000_000,
+            repayment_amount=700_000,
+            outstanding_amount=300_000,
+            repayment_excess_amount=0,
+        ),
+        items=[
+            FundingSummaryItem(
+                row_no=1,
+                fintech_id=1,
+                fintech_name="테스트 자금사",
+                registered_date=datetime(2026, 8, 10, 9, 0, 0),
+                repayment_period=30,
+                interest_rate=12.0,
+                funding_amount=1_000_000,
+                repayment_amount=700_000,
+                outstanding_amount=300_000,
+                request_count=2,
+            )
+        ],
+    )
+
+    monkeypatch.setattr(fintech, "list_funding_summaries", lambda **kwargs: payload)
+
+    response = fintech.funding_summary_list(limit=10, offset=0, order_by="registered_desc")
+
+    assert response.counts.outstanding_amount == 300_000
+    assert response.items[0].fintech_name == "테스트 자금사"
+
+
+def test_fintech_funding_provider_create_endpoint(monkeypatch) -> None:
+    from datetime import datetime
+
+    from cubici_service.fintech.repository import (
+        FundingProviderWriteRequest,
+        FundingProviderWriteResponse,
+        FundingSummaryItem,
+    )
+
+    provider = FundingSummaryItem(
+        row_no=1,
+        fintech_id=3,
+        fintech_name="신규자금사",
+        registered_date=datetime(2026, 8, 10, 10, 0, 0),
+        repayment_period=45,
+        interest_rate=11.5,
+        funding_amount=0,
+        repayment_amount=0,
+        outstanding_amount=0,
+        request_count=0,
+        calculation_status="NO_FUNDING",
+        configuration_status="BASIC_REGISTERED",
+    )
+    result = FundingProviderWriteResponse(action="created", fintech_id=3, provider=provider)
+    monkeypatch.setattr(fintech, "create_funding_provider", lambda payload: result)
+
+    response = fintech.funding_provider_create(
+        FundingProviderWriteRequest(fintech_name="신규자금사", repayment_period=45, interest_rate=11.5)
+    )
+
+    assert response.fintech_id == 3
+    assert response.provider.calculation_status == "NO_FUNDING"
 
 
 def test_monitoring_error_logs_endpoint_payload(monkeypatch) -> None:
@@ -440,7 +522,10 @@ def test_preferences_charge_endpoint_payload(monkeypatch) -> None:
         update_date=None,
     )
 
+    received_filters = {}
+
     def fake_list_charges(limit: int, offset: int, **filters) -> ChargeListResponse:
+        received_filters.update(filters)
         return ChargeListResponse(
             limit=limit,
             offset=offset,
@@ -458,7 +543,7 @@ def test_preferences_charge_endpoint_payload(monkeypatch) -> None:
     monkeypatch.setattr(preferences, "get_charge", fake_get_charge)
     monkeypatch.setattr(preferences, "update_charge", fake_update_charge)
 
-    response = preferences.charge_list(limit=10, offset=0, status="all")
+    response = preferences.charge_list(limit=10, offset=0, status="all", charge_type="B")
     detail = preferences.charge_detail("B0101")
     result = preferences.charge_update(
         "B0101",
@@ -473,6 +558,7 @@ def test_preferences_charge_endpoint_payload(monkeypatch) -> None:
 
     assert response.limit == 10
     assert response.counts.total_count == 1
+    assert received_filters["charge_type"] == "B"
     assert detail.charge_code == "B0101"
     assert result.action == "updated"
 
@@ -1087,6 +1173,102 @@ def test_management_member_summary_endpoint_payload(monkeypatch) -> None:
     assert response.unit == "day"
     assert response.partner_code == "CBCI"
     assert response.series == []
+
+
+def test_management_member_summary_options_endpoint_payload(monkeypatch) -> None:
+    from cubici_service.management.repository import (
+        MemberSummaryOption,
+        MemberSummaryOptionsResponse,
+    )
+
+    monkeypatch.setattr(
+        management,
+        "get_member_summary_options",
+        lambda: MemberSummaryOptionsResponse(
+            partners=[MemberSummaryOption(value="PARTNER-A", label="협력사 A")],
+            products=[MemberSummaryOption(value="MP", label="MP")],
+        ),
+    )
+
+    response = management.member_summary_options()
+
+    assert response.partners[0].value == "PARTNER-A"
+    assert response.products[0].value == "MP"
+
+
+def test_management_cubici_integrated_endpoint_payload(monkeypatch) -> None:
+    from cubici_service.management.repository import (
+        CubiciIntegratedMetrics,
+        CubiciIntegratedResponse,
+        CubiciIntegratedSeriesItem,
+        IntegratedPeriodMetric,
+        MemberSummaryOption,
+    )
+
+    value = IntegratedPeriodMetric(today=1, current_month=2, previous_month=3)
+    unavailable = IntegratedPeriodMetric(
+        today=None,
+        current_month=None,
+        previous_month=None,
+        available=False,
+    )
+
+    def fake_get_cubici_integrated_info(**filters) -> CubiciIntegratedResponse:
+        return CubiciIntegratedResponse(
+            unit=filters["unit"],
+            partner_code=filters.get("partner_code"),
+            product_code=filters.get("product_code"),
+            metrics=CubiciIntegratedMetrics(
+                standard_date=None,
+                from_date=None,
+                to_date=None,
+                new_members=value,
+                withdrawn_members=value,
+                fee_income=value,
+                dormant_members=value,
+                sales_amount=value,
+                sales_quantity=value,
+                settlement_amount=value,
+                sku_count=value,
+                visitor_count=unavailable,
+                max_concurrent_users=unavailable,
+                average_usage_minutes=unavailable,
+                average_shop_count=value,
+            ),
+            partners=[MemberSummaryOption(value="PARTNER-A", label="협력사 A")],
+            products=[MemberSummaryOption(value="MP", label="선정산")],
+            channels=[MemberSummaryOption(value="DIRECT", label="큐빅아이")],
+            series=[
+                CubiciIntegratedSeriesItem(
+                    bucket=date(2026, 8, 9),
+                    new_member_count=1,
+                    withdrawn_member_count=0,
+                    cumulative_member_count=10,
+                    cubici_average_days=100,
+                    moneybank_average_days=50,
+                    channel_counts={"DIRECT": 1},
+                )
+            ],
+        )
+
+    monkeypatch.setattr(
+        management,
+        "get_cubici_integrated_info",
+        fake_get_cubici_integrated_info,
+    )
+
+    response = management.cubici_integrated_info(
+        unit="week",
+        from_date=None,
+        to_date=None,
+        partner_code="PARTNER-A",
+        product_code="MP",
+    )
+
+    assert response.unit == "week"
+    assert response.metrics.new_members.current_month == 2
+    assert response.metrics.visitor_count.available is False
+    assert response.series[0].channel_counts == {"DIRECT": 1}
 
 
 def test_management_member_info_endpoint_payload(monkeypatch) -> None:
@@ -1842,6 +2024,9 @@ def test_management_overview_endpoint_payload(monkeypatch) -> None:
                 to_date=date(2024, 1, 1),
                 contract_total_count=0,
                 contract_today_count=0,
+                review_today_count=0,
+                approved_today_count=0,
+                terminated_today_count=0,
                 active_contract_count=0,
                 terminated_contract_count=0,
                 provision_today_amount=0,
@@ -1850,6 +2035,7 @@ def test_management_overview_endpoint_payload(monkeypatch) -> None:
                 repayment_today_amount=0,
                 repayment_total_amount=0,
                 repayment_total_count=0,
+                repayment_fee_total_amount=0,
                 outstanding_balance_amount=0,
                 outstanding_balance_count=0,
                 settlement_total_amount=0,
@@ -1859,8 +2045,16 @@ def test_management_overview_endpoint_payload(monkeypatch) -> None:
                 ManagementOverviewSeriesItem(
                     bucket=date(2024, 1, 1),
                     contract_count=0,
+                    review_count=0,
+                    approved_count=0,
+                    terminated_count=0,
+                    request_amount=0,
+                    review_amount=0,
+                    approved_amount=0,
                     provision_amount=0,
+                    provision_count=0,
                     repayment_amount=0,
+                    repayment_fee=0,
                     settlement_amount=0,
                     outstanding_balance=0,
                 )
@@ -1874,6 +2068,7 @@ def test_management_overview_endpoint_payload(monkeypatch) -> None:
 
     assert response.unit == "week"
     assert response.summary.standard_date == date(2024, 1, 1)
+    assert response.summary.repayment_fee_total_amount == 0
     assert len(response.series) == 1
 
 
@@ -2510,17 +2705,37 @@ def test_redemptions_endpoint_payload(monkeypatch) -> None:
         *,
         user_no=None,
         mbid=None,
+        user_name=None,
+        firm_name=None,
+        product_code=None,
+        contract_stage=None,
         outstanding_only=False,
         from_date=None,
         to_date=None,
+        order_by="date_desc",
     ) -> RedemptionListResponse:
         captured["user_no"] = user_no
         captured["mbid"] = mbid
+        captured["user_name"] = user_name
+        captured["firm_name"] = firm_name
+        captured["product_code"] = product_code
+        captured["contract_stage"] = contract_stage
+        captured["order_by"] = order_by
         return RedemptionListResponse(limit=limit, offset=offset, total=0, items=[])
 
     monkeypatch.setattr(redemptions, "list_redemptions", fake_list_redemptions)
 
-    response = redemptions.redemption_list(limit=10, offset=0, user_no=72, mbid="MPK")
+    response = redemptions.redemption_list(
+        limit=10,
+        offset=0,
+        user_no=72,
+        mbid="MPK",
+        user_name="홍길동",
+        firm_name="테스트상사",
+        product_code="MP",
+        contract_stage="active",
+        order_by="outstanding_desc",
+    )
 
     assert response.limit == 10
     assert response.offset == 0
@@ -2528,6 +2743,11 @@ def test_redemptions_endpoint_payload(monkeypatch) -> None:
     assert response.items == []
     assert captured["user_no"] == 72
     assert captured["mbid"] == "MPK"
+    assert captured["user_name"] == "홍길동"
+    assert captured["firm_name"] == "테스트상사"
+    assert captured["product_code"] == "MP"
+    assert captured["contract_stage"] == "active"
+    assert captured["order_by"] == "outstanding_desc"
 
 
 def test_contracts_endpoint_payload(monkeypatch) -> None:
@@ -2553,6 +2773,12 @@ def test_contracts_endpoint_payload(monkeypatch) -> None:
         min_sales_amount=1000,
         max_sales_amount=2000,
         order_by="sales_amount_desc",
+        request_scope=True,
+        request_stage="progress",
+        approval_scope=True,
+        approval_stage="wait",
+        contract_scope=True,
+        contract_stage="contract",
     )
 
     assert response.limit == 10
@@ -2568,6 +2794,12 @@ def test_contracts_endpoint_payload(monkeypatch) -> None:
     assert captured["min_sales_amount"] == 1000
     assert captured["max_sales_amount"] == 2000
     assert captured["order_by"] == "sales_amount_desc"
+    assert captured["request_scope"] is True
+    assert captured["request_stage"] == "progress"
+    assert captured["approval_scope"] is True
+    assert captured["approval_stage"] == "wait"
+    assert captured["contract_scope"] is True
+    assert captured["contract_stage"] == "contract"
 
 
 def test_contract_detail_endpoint_payload(monkeypatch) -> None:
@@ -3106,10 +3338,12 @@ def test_settlements_endpoint_payload(monkeypatch) -> None:
         keyword=None,
         from_date=None,
         to_date=None,
+        order_by="date_desc",
     ) -> SettlementListResponse:
         captured["shop_pairs"] = shop_pairs
         captured["shop_type"] = shop_type
         captured["keyword"] = keyword
+        captured["order_by"] = order_by
         return SettlementListResponse(limit=limit, offset=offset, total=0, items=[])
 
     monkeypatch.setattr(settlements, "list_settlements", fake_list_settlements)
@@ -3120,6 +3354,7 @@ def test_settlements_endpoint_payload(monkeypatch) -> None:
         shop_pairs="NAVER:seller01",
         shop_type="NAVER",
         keyword="bank",
+        order_by="amount_desc",
     )
 
     assert response.limit == 10
@@ -3129,6 +3364,7 @@ def test_settlements_endpoint_payload(monkeypatch) -> None:
     assert captured["shop_pairs"] == "NAVER:seller01"
     assert captured["shop_type"] == "NAVER"
     assert captured["keyword"] == "bank"
+    assert captured["order_by"] == "amount_desc"
 
 
 def test_shop_type_normalizer_maps_legacy_numeric_codes() -> None:
@@ -3213,3 +3449,36 @@ def test_sale_orders_endpoint_payload(monkeypatch) -> None:
     assert response.items == []
     assert captured["shop_pairs"] == "NAVER:seller01"
     assert captured["status"] == "PAID"
+
+
+def test_product_analysis_endpoint_payload(monkeypatch) -> None:
+    from cubici_service.sales.repository import ProductAnalysisResponse
+
+    captured = {}
+
+    def fake_get_product_analysis(*, shop_pairs=None, shop_type=None, shop_id=None, from_date=None, to_date=None):
+        captured.update(
+            shop_pairs=shop_pairs,
+            shop_type=shop_type,
+            from_date=from_date,
+            to_date=to_date,
+        )
+        return ProductAnalysisResponse(shop_breakdown=[], top_products=[])
+
+    monkeypatch.setattr(sales, "get_product_analysis", fake_get_product_analysis)
+
+    response = sales.product_analysis(
+        shop_pairs="NAVER:seller01",
+        shop_type="NAVER",
+        from_date=date(2026, 8, 1),
+        to_date=date(2026, 8, 10),
+    )
+
+    assert response.shop_breakdown == []
+    assert response.top_products == []
+    assert captured == {
+        "shop_pairs": "NAVER:seller01",
+        "shop_type": "NAVER",
+        "from_date": date(2026, 8, 1),
+        "to_date": date(2026, 8, 10),
+    }

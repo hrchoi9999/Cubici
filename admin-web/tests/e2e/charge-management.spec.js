@@ -82,11 +82,11 @@ test('charge management list, edit, and delete work with mock data', async ({ pa
 
   await expect(page.getByRole('heading', { name: '환경설정' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '요금제 관리' })).toBeVisible();
-  await expect(page.getByText('전체 1건')).toBeVisible();
+  await expect(page.locator('.chargeLvTotals')).toContainText('전체1개');
   await expect(page.getByRole('cell', { name: '1개월 기본요금' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '29,000원' })).toBeVisible();
 
-  await page.getByRole('button', { name: '보기' }).click();
+  await page.getByRole('button', { name: '상세보기' }).click();
   await expect(page.getByRole('heading', { name: '요금제 수정' })).toBeVisible();
   const editor = page.locator('.chargeEditorPanel');
   await editor.getByLabel('요금제명').fill('1개월 기본요금 수정');

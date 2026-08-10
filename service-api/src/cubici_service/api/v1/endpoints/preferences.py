@@ -16,6 +16,7 @@ from cubici_service.preferences.repository import (
     ChargeListResponse,
     ChargeOrderBy,
     ChargeStatus,
+    ChargeType,
     ChargeWriteRequest,
     ChargeWriteResponse,
     MoneybankProductListItem,
@@ -428,6 +429,7 @@ def charge_list(
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
     status: ChargeStatus = Query(default="all", pattern="^(all|operating|ended)$"),
+    charge_type: ChargeType = Query(default="all", pattern="^(all|B|A|M|O|F)$"),
     charge_code: str | None = Query(default=None, max_length=5),
     charge_name: str | None = Query(default=None, max_length=20),
     order_by: ChargeOrderBy = Query(
@@ -439,6 +441,7 @@ def charge_list(
         limit=limit,
         offset=offset,
         status=status,
+        charge_type=charge_type,
         charge_code=charge_code,
         charge_name=charge_name,
         order_by=order_by,

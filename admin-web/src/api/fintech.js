@@ -23,6 +23,31 @@ export async function fetchFintechStatus() {
   return response.json();
 }
 
+export async function fetchFundingSummary(options = {}) {
+  const response = await fetch(`${API_BASE_URL}/v1/api/fintech/funding-summary${buildQuery(options)}`);
+
+  if (!response.ok) {
+    throw new Error(`자금조달 현황 조회 실패: ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function createFundingProvider(payload) {
+  const response = await fetch(`${API_BASE_URL}/v1/api/fintech/funding-providers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(body.detail ?? `자금조달사 등록 실패: ${response.status}`);
+  }
+
+  return body;
+}
+
 export async function fetchFintechTradeRequests(options = {}) {
   const response = await fetch(`${API_BASE_URL}/v1/api/fintech/trade-requests${buildQuery(options)}`);
 

@@ -5,10 +5,10 @@ const MASTER_ADMIN_EMAIL = process.env.CUBICI_MASTER_ADMIN_EMAIL ?? 'admin@examp
 const routes = [
   ['/admin/cubici/infoIntegrated/cubici_tab1', '통합정보', '큐빅아이'],
   ['/admin/cubici/infoIntegrated/moneybank_tab1', '통합정보', '머니뱅크'],
-  ['/admin/cubici/manageMember/member_tab1', '회원관리', '회원현황'],
-  ['/admin/cubici/manageMember/member_tab2', '회원관리', '회원현황'],
-  ['/admin/cubici/manageMember/member_tab3', '회원관리', '회원현황'],
-  ['/admin/cubici/manageMember/userstatus?code=36', '회원관리', '회원현황'],
+  ['/admin/cubici/manageMember/member_tab1', '회원관리', '회원 현황'],
+  ['/admin/cubici/manageMember/member_tab2', '회원관리', '회원 현황'],
+  ['/admin/cubici/manageMember/member_tab3', '회원관리', '회원 현황'],
+  ['/admin/cubici/manageMember/userstatus?code=36', '회원관리', '회원 현황'],
   ['/admin/cubici/manageMember/payment_tab1', '회원관리', '결제관리'],
   ['/admin/cubici/manageMember/payment_tab2', '회원관리', '결제관리'],
   ['/admin/moneybank/cubici/management/info_tab1', '머니뱅크 관리', '통합 현황'],
@@ -17,8 +17,8 @@ const routes = [
   ['/admin/moneybank/approval_tab1', '머니뱅크 운영', '심사 승인'],
   ['/admin/moneybank/approval_tab2', '머니뱅크 운영', '계약 관리'],
   ['/admin/moneybank/settlement', '머니뱅크 운영', '정산 관리'],
-  ['/admin/moneybank/redemption', '머니뱅크 운영', '상환 관리'],
-  ['/admin/moneybank/manage', '머니뱅크 운영', '프리즘 지표 관리'],
+  ['/admin/moneybank/redemption', '머니뱅크 운영', '계약/상환'],
+  ['/admin/moneybank/manage', '머니뱅크 운영', '신용평가지표'],
   ['/admin/cubici/supportMember/manageInquiry', '고객관리', '고객문의'],
   ['/admin/cubici/supportMember/manageSms', '고객관리', '문자/이메일'],
   ['/admin/cubici/supportMember/manageEmail', '고객관리', '문자/이메일'],
@@ -112,7 +112,7 @@ test.describe('admin legacy-like UI focused smoke', () => {
     await page.goto('/admin/moneybank/request');
     await page.getByRole('button', { name: '회원관리' }).click();
     await expect(page.locator('#memberInfo')).toHaveClass(/open/);
-    await expect(page.locator('#memberInfo a', { hasText: '회원현황' })).toBeVisible();
+    await expect(page.locator('#memberInfo a', { hasText: '회원 현황' })).toBeVisible();
     await expect(page.locator('#memberInfo a', { hasText: '결제관리' })).toBeVisible();
     await expect(page).toHaveURL(/\/admin\/moneybank\/request$/);
   });

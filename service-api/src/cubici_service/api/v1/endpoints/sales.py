@@ -6,8 +6,10 @@ from fastapi import APIRouter, Query
 
 from cubici_service.api.v1.schemas import DomainStatus
 from cubici_service.sales.repository import (
+    ProductAnalysisResponse,
     SaleListResponse,
     SaleReturnListResponse,
+    get_product_analysis,
     list_sale_returns,
     list_sales,
 )
@@ -45,6 +47,23 @@ def sale_orders(
         shop_id=shop_id,
         status=status,
         keyword=keyword,
+        from_date=from_date,
+        to_date=to_date,
+    )
+
+
+@router.get("/product-analysis", response_model=ProductAnalysisResponse)
+def product_analysis(
+    shop_pairs: str | None = Query(default=None),
+    shop_type: str | None = Query(default=None),
+    shop_id: str | None = Query(default=None),
+    from_date: date | None = Query(default=None),
+    to_date: date | None = Query(default=None),
+) -> ProductAnalysisResponse:
+    return get_product_analysis(
+        shop_pairs=shop_pairs,
+        shop_type=shop_type,
+        shop_id=shop_id,
         from_date=from_date,
         to_date=to_date,
     )

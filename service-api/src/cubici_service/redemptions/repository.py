@@ -2,7 +2,7 @@
 
 from datetime import date, datetime
 import json
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import HTTPException
 from psycopg.rows import dict_row
@@ -13,6 +13,15 @@ from cubici_service.db.connection import get_connection
 
 class RedemptionListItem(BaseModel):
     mbid: str
+    contract_status: str | None = None
+    product_code: str | None = None
+    fintech_name: str | None = None
+    contract_date: datetime | None = None
+    user_email: str | None = None
+    firm_name: str | None = None
+    user_name: str | None = None
+    latest_max_outstanding_balance: int | None = None
+    service_fee: int = 0
     provision_count: int
     total_payment_amount: int
     total_usage_fee: int
@@ -58,6 +67,17 @@ class RedemptionListResponse(BaseModel):
     total: int
     counts: RedemptionCheckCounts = Field(default_factory=RedemptionCheckCounts)
     items: list[RedemptionListItem]
+
+
+RedemptionOrderBy = Literal[
+    "date_desc",
+    "date_asc",
+    "outstanding_desc",
+    "outstanding_asc",
+    "fee_desc",
+    "fee_asc",
+]
+RedemptionContractStage = Literal["waiting", "active", "ended"]
 
 
 class RedemptionSaleCreateItem(BaseModel):
@@ -154,6 +174,10 @@ def _build_redemption_filters(
     *,
     user_no: int | None,
     mbid: str | None,
+    user_name: str | None,
+    firm_name: str | None,
+    product_code: str | None,
+    contract_stage: RedemptionContractStage | None,
     outstanding_only: bool,
     from_date: date | None,
     to_date: date | None,
@@ -162,20 +186,33 @@ def _build_redemption_filters(
     params: list[object] = []
 
     if user_no is not None:
-        clauses.append(
-            "exists (select 1 from moneybank_contract c where c.mbid = b.mbid and c.user_no = %s)"
-        )
+        clauses.append("c.user_no = %s")
         params.append(user_no)
     if mbid:
         clauses.append("b.mbid ilike %s")
         params.append(f"%{mbid}%")
+    if user_name:
+        clauses.append("u.name ilike %s")
+        params.append(f"%{user_name}%")
+    if firm_name:
+        clauses.append("u.biz_name ilike %s")
+        params.append(f"%{firm_name}%")
+    if product_code:
+        clauses.append("c.product_code = %s")
+        params.append(product_code)
+    if contract_stage == "waiting":
+        clauses.append("upper(c.status) in ('ACCOUNT_STANDBY', '05', '81')")
+    elif contract_stage == "active":
+        clauses.append("upper(c.status) in ('CONTRACT', '06')")
+    elif contract_stage == "ended":
+        clauses.append("upper(c.status) in ('EXPIRED', 'SELF_TERMINATION', 'FORCE_TERMINATION', 'ACCOUNT_CLOSED', '07', '72', '73', '82')")
     if outstanding_only:
         clauses.append("coalesce(h.latest_outstanding_balance, 0) > 0")
     if from_date:
-        clauses.append("h.latest_history_date::date >= %s")
+        clauses.append("c.contract_date::date >= %s")
         params.append(from_date)
     if to_date:
-        clauses.append("h.latest_history_date::date <= %s")
+        clauses.append("c.contract_date::date <= %s")
         params.append(to_date)
 
     if not clauses:
@@ -257,6 +294,15 @@ def _redemption_summary_select() -> str:
     return """
         select
             b.mbid,
+            c.status as contract_status,
+            c.product_code,
+            f.fintech_name,
+            c.contract_date,
+            u.email as user_email,
+            u.biz_name as firm_name,
+            u.name as user_name,
+            latest_fee.max_outstanding_balance as latest_max_outstanding_balance,
+            coalesce(s.sales_usage_fee, 0)::bigint as service_fee,
             coalesce(p.provision_count, 0)::int as provision_count,
             coalesce(p.total_payment_amount, 0)::bigint as total_payment_amount,
             coalesce(p.total_usage_fee, 0)::bigint as total_usage_fee,
@@ -302,6 +348,16 @@ def _redemption_summary_select() -> str:
         left join deposit d on d.mbid = b.mbid
         left join sales s on s.mbid = b.mbid
         left join latest_history h on h.mbid = b.mbid
+        left join moneybank_contract c on c.mbid = b.mbid
+        left join users u on u.user_no = c.user_no
+        left join fintech f on f.id = c.fintech_id
+        left join lateral (
+            select fee.max_outstanding_balance
+            from moneybank_contract_fee fee
+            where fee.mbid = b.mbid
+            order by coalesce(fee.modified_date, fee.reg_date) desc nulls last, fee.id desc
+            limit 1
+        ) latest_fee on true
     """
 
 
@@ -311,17 +367,35 @@ def list_redemptions(
     *,
     user_no: int | None = None,
     mbid: str | None = None,
+    user_name: str | None = None,
+    firm_name: str | None = None,
+    product_code: str | None = None,
+    contract_stage: RedemptionContractStage | None = None,
     outstanding_only: bool = False,
     from_date: date | None = None,
     to_date: date | None = None,
+    order_by: RedemptionOrderBy = "date_desc",
 ) -> RedemptionListResponse:
     where_clause, filter_params = _build_redemption_filters(
         user_no=user_no,
         mbid=mbid,
+        user_name=user_name,
+        firm_name=firm_name,
+        product_code=product_code,
+        contract_stage=contract_stage,
         outstanding_only=outstanding_only,
         from_date=from_date,
         to_date=to_date,
     )
+    order_clauses = {
+        "date_desc": "coalesce(c.contract_date, timestamp '1900-01-01') desc, b.mbid desc",
+        "date_asc": "c.contract_date asc nulls last, b.mbid asc",
+        "outstanding_desc": "coalesce(h.latest_outstanding_balance, 0) desc, b.mbid desc",
+        "outstanding_asc": "coalesce(h.latest_outstanding_balance, 0) asc, b.mbid asc",
+        "fee_desc": "coalesce(s.sales_usage_fee, 0) desc, b.mbid desc",
+        "fee_asc": "coalesce(s.sales_usage_fee, 0) asc, b.mbid asc",
+    }
+    order_clause = order_clauses[order_by]
 
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
@@ -357,14 +431,7 @@ def list_redemptions(
                 {_redemption_summary_cte()}
                 {_redemption_summary_select()}
                 {where_clause}
-                order by
-                    greatest(
-                        coalesce(p.latest_provision_date, timestamp '1900-01-01'),
-                        coalesce(r.latest_balance_provision_date, timestamp '1900-01-01'),
-                        coalesce(s.latest_sales_paid_date, timestamp '1900-01-01'),
-                        coalesce(h.latest_history_date, timestamp '1900-01-01')
-                    ) desc,
-                    b.mbid desc
+                order by {order_clause}
                 limit %s offset %s
                 """,
                 (*filter_params, limit, offset),

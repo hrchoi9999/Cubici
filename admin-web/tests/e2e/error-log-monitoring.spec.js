@@ -1,4 +1,6 @@
+import path from 'node:path';
 import { expect, test } from '@playwright/test';
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
 
 const errorLogPayload = {
   limit: 20,
@@ -12,7 +14,7 @@ const errorLogPayload = {
     {
       shop_id: 'shop-001',
       shop_type: 'NAVER',
-      shop_name: '테스트몰',
+      shop_name: '11번가',
       scenario: '정산 수집',
       started_at: '2026-07-21T09:10:11',
       runtime_seconds: 125,
@@ -26,7 +28,7 @@ const errorLogPayload = {
     {
       shop_id: 'shop-002',
       shop_type: 'COUPANG',
-      shop_name: '오류몰',
+      shop_name: '쿠팡',
       scenario: '매출 수집',
       started_at: '2026-07-21T10:10:11',
       runtime_seconds: 61,
@@ -40,40 +42,61 @@ const errorLogPayload = {
   ],
 };
 
+const candidateDir = path.resolve(
+  process.cwd(),
+  '..',
+  'docs',
+  'reference',
+  'lv-ui',
+  'admin',
+  'ADM-LV-15-ERROR-LOG',
+  'candidate',
+);
+
 test.beforeEach(async ({ page }) => {
-  await page.route('**/v1/api/accounts/admin-me', async (route) => {
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify({ user_no: 1, email: 'admin@example.com', user_type: 'ADMIN_USER', name: '관리자' }),
-    });
-  });
-  await page.addInitScript(() => {
-    window.localStorage.setItem('cubiciAdminAuth', JSON.stringify({
-      token_type: 'Bearer',
-      access_token: 'error-log-test-token',
-      user: { email: 'admin@example.com', user_type: 'ADMIN_USER' },
-    }));
+  await installMockAdminAuth(page);
+  await page.route('**/v1/api/monitoring/error-logs?**', async (route) => {
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(errorLogPayload) });
   });
 });
 
-test('error log monitoring list and detail work with mock data', async ({ page }) => {
-  await page.route('**/v1/api/monitoring/error-logs?**', async (route) => {
-    await route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify(errorLogPayload),
-    });
-  });
-
+test('Error Log 검색, legacy 7열 목록과 상세가 작동한다', async ({ page }) => {
   await page.goto('/admin/cubici/adminMonitor/error_report');
 
   await expect(page.locator('.subVisual h3', { hasText: 'Error Log' })).toBeVisible();
-  await expect(page.getByText('전체 2건')).toBeVisible();
-  await expect(page.getByText('조치필요 1건')).toBeVisible();
-  await expect(page.getByText('Workflow 조치필요')).toBeVisible();
-  await expect(page.getByRole('cell', { name: '테스트몰' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '오류몰' })).toBeVisible();
-  await page.getByRole('row', { name: /오류몰/ }).click();
-  await expect(page.locator('.errorLogPreview p')).toContainText('API 응답 오류');
-  await expect(page.locator('.errorLogPreview')).toContainText('cbci_err_report');
-  await expect(page.locator('.errorLogPreview')).toContainText('원인 확인 후 재수집/배치 재실행');
+  await expect(page.getByRole('columnheader', { name: '실행시간' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '11번가' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '쿠팡' })).toBeVisible();
+
+  await page.getByLabel('시나리오').fill('매출');
+  const requestPromise = page.waitForRequest((request) => new URL(request.url()).searchParams.get('scenario') === '매출');
+  await page.getByRole('button', { name: '검색' }).click();
+  await requestPromise;
+
+  await page.getByRole('button', { name: 'API 응답 오류' }).click();
+  await expect(page.getByRole('heading', { name: '에러로그 상세' })).toBeVisible();
+  await expect(page.locator('.errorLogLvDetail')).toContainText('cbci_err_report');
+  await expect(page.locator('.errorLogLvDetail')).toContainText('원인 확인 후 재수집/배치 재실행');
+  await page.getByRole('button', { name: '닫기' }).click();
+  await expect(page.locator('.errorLogLvDetail')).toBeHidden();
+});
+
+test('ADM-LV-15 PC 및 모바일 후보 화면을 생성한다', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/admin/cubici/adminMonitor/error_report');
+  await expect(page.getByRole('cell', { name: '쿠팡' })).toBeVisible();
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-15-LIST-PC.png'), fullPage: true });
+  await page.getByRole('button', { name: 'API 응답 오류' }).click();
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-15-DETAIL-PC.png'), fullPage: true });
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/admin/cubici/adminMonitor/error_report');
+  await expect(page.getByRole('cell', { name: '쿠팡' })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await expect.poll(() => page.locator('.errorLogLvList .tableScroll').evaluate(
+    (element) => element.scrollWidth > element.clientWidth,
+  )).toBe(true);
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-15-LIST-MOBILE.png'), fullPage: true });
+  await page.getByRole('button', { name: 'API 응답 오류' }).click();
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-15-DETAIL-MOBILE.png'), fullPage: true });
 });

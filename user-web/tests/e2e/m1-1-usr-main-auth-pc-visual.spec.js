@@ -12,7 +12,7 @@ test('M1-1 captures the current authenticated PC main screen', async ({ page }) 
         user_no: 1,
         email: 'visual-reference@cubici.local',
         name: '홍길동',
-        user_type: 'GENERAL',
+        user_type: 'USER',
       },
     }));
   });

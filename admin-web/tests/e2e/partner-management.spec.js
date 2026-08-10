@@ -110,7 +110,7 @@ test('partner list, detail, update, and delete work with mock data', async ({ pa
 
   await expect(page.getByRole('heading', { name: '환경설정' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '협력사 관리' })).toBeVisible();
-  await expect(page.getByText('전체 1개')).toBeVisible();
+  await expect(page.locator('.partnerLvTotals')).toContainText('전체1개');
   await expect(page.getByRole('cell', { name: '아즈온' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BAAZ' })).toBeVisible();
 

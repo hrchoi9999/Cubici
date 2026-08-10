@@ -1,4 +1,15 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { expect, test } from '@playwright/test';
+
+import { installMockAdminAuth } from './helpers/mock-admin-auth.js';
+
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const candidateDir = path.resolve(
+  currentDir,
+  '../../../docs/reference/lv-ui/admin/ADM-LV-12-CUSTOMER-INQUIRY/candidate',
+);
 
 const inquiry = {
   qna_id: 1,
@@ -21,6 +32,7 @@ const inquiry = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await installMockAdminAuth(page);
   await page.route('**/v1/api/support/inquiries?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -90,32 +102,48 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-test('customer inquiry list and detail panel work with mock data', async ({ page }) => {
+test('ADM-LV-12 customer inquiry list, detail, reply, and responsive views work', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', (error) => pageErrors.push(error.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/admin/cubici/supportMember/manageInquiry');
 
   await expect(page.getByRole('heading', { name: '고객관리' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '고객문의' })).toBeVisible();
-  await expect(page.getByText('전체 1건')).toBeVisible();
-  await expect(page.getByText('답변완료 1건')).toBeVisible();
-  await expect(page.getByText('알림대기 0건')).toBeVisible();
-  await expect(page.getByText('실발송 미연동')).toBeVisible();
   await expect(page.getByText('문경남')).toBeVisible();
   await expect(page.getByText('문의 제목')).toBeVisible();
-  await expect(page.getByRole('cell', { name: '후속완료' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: '알림 미연동' })).toBeVisible();
+  await expect(page.locator('.inquiryLvTable thead th')).toHaveCount(8);
+  await expect(page.locator('.lvBoardPager button.active')).toHaveText('1');
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-12-LIST-PC.png'), fullPage: true });
 
-  await page.getByLabel('검색').fill('문의');
-  await page.getByLabel('답변상태').selectOption('answered');
+  await page.getByRole('searchbox', { name: '검색' }).fill('문의');
   await page.getByRole('button', { name: '검색' }).click();
 
   await page.getByRole('button', { name: '문의 제목' }).click();
-  await expect(page.locator('.inquiryContent p').filter({ hasText: '문의 내용' })).toBeVisible();
-  await expect(page.locator('.inquiryContent p').filter({ hasText: '답변 내용' })).toBeVisible();
-  await expect(page.locator('.detailInfoTable')).toContainText('후속완료');
-  await expect(page.locator('.detailInfoTable')).toContainText('알림 미연동');
+  await expect(page.locator('.customerInquiryLvArticle p').filter({ hasText: '문의 내용' })).toBeVisible();
+  await expect(page.locator('.customerInquiryLvArticle p').filter({ hasText: '답변 내용' })).toBeVisible();
+  await expect(page.locator('.customerInquiryLvWorkflow')).toContainText('후속완료');
+  await expect(page.locator('.customerInquiryLvWorkflow')).toContainText('알림 미연동');
+  await expect(page.locator('.inquiryLvTable')).toHaveCount(0);
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-12-DETAIL-PC.png'), fullPage: true });
 
   await page.getByLabel('답변 등록/수정').fill('수정 답변');
   await page.getByRole('button', { name: '답변수정' }).click();
   await expect(page.getByText('답변을 수정했습니다.')).toBeVisible();
-  await expect(page.locator('.inquiryContent p').filter({ hasText: '수정 답변' })).toBeVisible();
+  await expect(page.locator('.customerInquiryLvArticle p').filter({ hasText: '수정 답변' })).toBeVisible();
+  await page.getByRole('button', { name: '목록', exact: true }).click();
+  await expect(page.locator('.inquiryLvTable')).toBeVisible();
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/admin/cubici/supportMember/manageInquiry');
+  await expect.poll(async () => (await page.locator('#admin-navigation').boundingBox())?.x ?? 0).toBeLessThan(-100);
+  await expect(page.locator('.table-scroll')).toHaveCSS('overflow-x', 'auto');
+  expect(await page.evaluate(() => document.body.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-12-LIST-MOBILE.png'), fullPage: true });
+
+  await page.getByRole('button', { name: '문의 제목' }).click();
+  await expect(page.locator('.customerInquiryLvDetail')).toBeVisible();
+  expect(await page.evaluate(() => document.body.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
+  await page.screenshot({ path: path.join(candidateDir, 'ADM-LV-12-DETAIL-MOBILE.png'), fullPage: true });
+  expect(pageErrors).toEqual([]);
 });

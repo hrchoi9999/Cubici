@@ -46,3 +46,13 @@
 ## 다음 단일 Batch
 
 - U10 판매현황(`/cubici/salesInfo/sales`) 후보 이미지 사용자 확인
+
+## 2026-08-10 동적 그래프 보완
+
+- 정적 `chart-3.png`, `chart-4.png`, `chart-5.png` 표시를 제거했다.
+- 전체 주문을 DB에서 집계하는 `GET /v1/api/sales/product-analysis`를 추가했다.
+- 사용자 소유 쇼핑몰 범위, 쇼핑몰, 시작일, 종료일 조건을 집계 API에 적용했다.
+- Chart.js로 쇼핑몰 결제 비중 doughnut, 가격할인 및 판촉 mixed chart, TOP10 매출상품 horizontal bar를 구현했다.
+- 개발 DB의 전체 `sale` 데이터로 쇼핑몰별 집계 SQL과 TOP10 집계 SQL 실행을 확인했다.
+- Backend 계약·접근통제 focused test 83건, Frontend production build, PC·모바일 focused Playwright를 통과했다.
+- 보완 후 U09 기능 구현율은 95%다. Legacy의 `PRODUCT_PRICE`, `ORDER_PRICE`, `CAL_PRICE`, `PROMOTION_RATE`와 현재 DB 필드 의미의 최종 업무 검산은 잔여다.
