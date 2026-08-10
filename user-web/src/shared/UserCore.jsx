@@ -315,6 +315,12 @@ function clearAuthSession() {
   window.localStorage.removeItem(AUTH_STORAGE_KEY);
 }
 
+function redirectExpiredAuthSession() {
+  clearAuthSession();
+  const returnUrl = `${window.location.pathname}${window.location.search}`;
+  window.location.replace(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
+}
+
 function buildAuthHeaders() {
   const auth = readAuthSession();
   return auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : {};
@@ -355,6 +361,10 @@ async function fetchAuthJson(path, options = {}) {
       const body = text ? JSON.parse(text) : {};
       if (!response.ok) {
         const detail = typeof body.detail === 'string' ? body.detail : JSON.stringify(body.detail ?? {});
+        if (response.status === 401) {
+          redirectExpiredAuthSession();
+          throw new Error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        }
         throw new Error(detail || `${response.status}`);
       }
       return body;

@@ -144,6 +144,11 @@ function findRoute(path) {
   };
 }
 
+function normalizeAdminEntryPath(path) {
+  const normalizedPath = path.replace(/\/+$/, '') || '/';
+  return normalizedPath === '/admin-spa' ? '/admin' : normalizedPath;
+}
+
 export default function App() {
   const requestedView = new URLSearchParams(window.location.search).get('view');
   const path = requestedView === 'prism-config'
@@ -154,7 +159,7 @@ export default function App() {
         ? '/admin/moneybank/risk-results'
       : requestedView === 'prism'
         ? '/admin/cubici/adminPreference/prizmConfig'
-        : window.location.pathname;
+        : normalizeAdminEntryPath(window.location.pathname);
   const [adminSession, setAdminSession] = useState(() => {
     const session = readAdminSession();
     setAdminFetchSession(session);
