@@ -23,6 +23,7 @@ runBuild('admin-web', adminRoot, {
   VITE_CUBICI_MASTER_ADMIN_EMAIL: masterAdminEmail,
   CUBICI_ADMIN_BASE: '/admin/',
 });
+rewriteAdminSharedResourcePaths(path.join(adminRoot, 'dist', 'index.html'));
 
 fs.rmSync(outputRoot, { recursive: true, force: true });
 fs.mkdirSync(outputRoot, { recursive: true });
@@ -66,6 +67,15 @@ function copyDirectory(source, target) {
   }
 }
 
+function rewriteAdminSharedResourcePaths(indexPath) {
+  const html = fs.readFileSync(indexPath, 'utf8');
+  const rewritten = html.replaceAll('/admin/resources/', '/resources/');
+  if (rewritten === html) {
+    throw new Error('admin index did not contain base-prefixed shared resource paths');
+  }
+  fs.writeFileSync(indexPath, rewritten, 'utf8');
+}
+
 function writeCloudflareRoutingFiles(target) {
   fs.writeFileSync(
     path.join(target, '_redirects'),
@@ -102,6 +112,10 @@ function writeCloudflareRoutingFiles(target) {
       '    const url = new URL(request.url);',
       '    const lastSegment = url.pathname.split("/").pop() ?? "";',
       '    const looksLikeFile = lastSegment.includes(".");',
+      '    if (url.pathname.startsWith("/admin/resources/")) {',
+      '      const sharedResourceUrl = new URL(url.pathname.slice("/admin".length), url.origin);',
+      '      return env.ASSETS.fetch(new Request(sharedResourceUrl, request));',
+      '    }',
       '    const isAdminRoute = url.pathname === "/admin"',
       '      || url.pathname.startsWith("/admin/")',
       '      || url.pathname === "/admin-spa";',

@@ -49,10 +49,12 @@ assertWorkerFallback();
 assertHtmlBundle('admin/index.html', {
   title: 'Cubici Admin',
   assetPrefix: '/admin/assets/',
+  sharedResourcePrefix: '/resources/',
 });
 assertHtmlBundle('admin-spa.html', {
   title: 'Cubici Admin',
   assetPrefix: '/admin/assets/',
+  sharedResourcePrefix: '/resources/',
 });
 assertHtmlBundle('index.html', {
   title: 'Cubici User Web',
@@ -91,6 +93,7 @@ async function smokeRoutes() {
       ['/admin/settlement', 'Cubici Admin'],
       [adminAssetRoute, null],
       [userAssetRoute, null],
+      ['/admin/resources/rudicks/css/style-sub.css', null],
       ['/resources/rudicks/img/logo.svg', null],
     ];
     for (const [route, expectedTitle] of routeExpectations) {
@@ -166,20 +169,26 @@ function assertRoutesJson() {
 
 function assertWorkerFallback() {
   const worker = fs.readFileSync(path.join(bundleRoot, '_worker.js'), 'utf8');
-  for (const expected of ['env.ASSETS.fetch', 'looksLikeFile', 'url.pathname === "/admin"', 'url.pathname.startsWith("/admin/")', 'url.pathname === "/admin-spa"', '"/admin/"', '"/index.html"']) {
+  for (const expected of ['env.ASSETS.fetch', 'looksLikeFile', 'url.pathname.startsWith("/admin/resources/")', 'url.pathname === "/admin"', 'url.pathname.startsWith("/admin/")', 'url.pathname === "/admin-spa"', '"/admin/"', '"/index.html"']) {
     if (!worker.includes(expected)) {
       throw new Error(`_worker.js missing routing marker: ${expected}`);
     }
   }
 }
 
-function assertHtmlBundle(relativePath, { title, assetPrefix }) {
+function assertHtmlBundle(relativePath, { title, assetPrefix, sharedResourcePrefix }) {
   const html = fs.readFileSync(path.join(bundleRoot, relativePath), 'utf8');
   if (!html.includes(`<title>${title}</title>`)) {
     throw new Error(`${relativePath} is not ${title} bundle`);
   }
   if (!html.includes(assetPrefix)) {
     throw new Error(`${relativePath} does not reference ${assetPrefix} assets`);
+  }
+  if (sharedResourcePrefix && !html.includes(sharedResourcePrefix)) {
+    throw new Error(`${relativePath} does not reference ${sharedResourcePrefix} shared resources`);
+  }
+  if (html.includes('/admin/resources/')) {
+    throw new Error(`${relativePath} references invalid /admin/resources/ paths`);
   }
 }
 
@@ -212,6 +221,9 @@ function builtAssetPaths(relativePath) {
 }
 
 function resolveCloudflarePagesPath(pathname) {
+  if (pathname.startsWith('/admin/resources/')) {
+    return pathname.slice('/admin'.length).replace(/^\//, '');
+  }
   const staticCandidate = path.join(bundleRoot, pathname);
   if (pathname !== '/' && fs.existsSync(staticCandidate)) {
     return pathname.replace(/^\//, '');
