@@ -94,9 +94,9 @@ function findRoute(path) {
     return { category, page };
   }
 
-  if (path.includes('/admin/cubici/adminPreference/manageMoneybank_tab2')) {
-    const category = adminMenu.find((item) => item.id === 'moneybankOperation');
-    const page = category.pages.find((item) => item.id === 'funding');
+  if (path.includes('/admin/cubici/adminPreference/manageMoneybank_tab1') || path.includes('/admin/cubici/adminPreference/manageMoneybank_tab2')) {
+    const category = adminMenu.find((item) => item.id === 'preferInfo');
+    const page = category.pages.find((item) => item.id === 'moneybank');
     return { category, page };
   }
 

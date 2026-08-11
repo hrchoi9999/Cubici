@@ -58,6 +58,7 @@ export const adminMenu = [
       { id: 'charge', title: '요금제 관리', href: '/admin/cubici/adminPreference/manageCharge' },
       { id: 'promotion', title: '연계코드 관리', href: '/admin/cubici/adminPreference/managePromotion' },
       { id: 'partner', title: '협력사 관리', href: '/admin/cubici/adminPreference/managePartner' },
+      { id: 'moneybank', title: '머니뱅크 관리', href: '/admin/cubici/adminPreference/manageMoneybank_tab1' },
       { id: 'prizm', title: 'Prism System', href: '/admin-spa?view=prism-config' },
     ],
   },

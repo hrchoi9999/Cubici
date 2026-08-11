@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field, SecretStr
 
 
 SERVICE_API_ROOT = Path(__file__).resolve().parents[3]
-LOCAL_ENV_FILE = SERVICE_API_ROOT / ".env"
+PROJECT_ROOT = SERVICE_API_ROOT.parent
+LOCAL_ENV_FILES = (PROJECT_ROOT / ".env", SERVICE_API_ROOT / ".env")
 
 
 class Settings(BaseModel):
@@ -71,13 +72,14 @@ def get_settings() -> Settings:
     return Settings()
 
 
-def load_local_env(env_file: Path = LOCAL_ENV_FILE) -> None:
-    if not env_file.exists():
-        return
-
-    for raw_line in env_file.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#") or "=" not in line:
+def load_local_env(env_file: Path | None = None) -> None:
+    env_files = (env_file,) if env_file is not None else LOCAL_ENV_FILES
+    for candidate in env_files:
+        if not candidate.exists():
             continue
-        key, value = line.split("=", 1)
-        environ.setdefault(key.strip(), value.strip())
+        for raw_line in candidate.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, value = line.split("=", 1)
+            environ.setdefault(key.strip(), value.strip())

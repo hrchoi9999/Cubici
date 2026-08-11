@@ -85,7 +85,7 @@
 | D01 | 회원정보 | `/admin/cubici/manageMember/member_tab2` | 100% | 78% | PC·모바일 사용자 승인/표 좌우 스크롤 회귀 완료 |
 | D02 | 휴면/해지 | `/admin/cubici/manageMember/member_tab3` | 100% | 78% | PC·모바일 사용자 승인/상태 배지·표 좌우 스크롤 회귀 완료 |
 | D03 | 요금변경 관리 | `/admin/cubici/manageMember/payment_tab2` | 100% | 80% | PC·모바일 사용자 승인/표 좌우 스크롤·환급 focused 회귀 완료 |
-| D04 | 회원상세 | `/admin/cubici/manageMember/userstatus` | 100% | 78% | legacy 4탭 PC·모바일 사용자 승인/표 좌우 스크롤 회귀 완료 |
+| D04 | 회원상세 | `/admin/cubici/manageMember/userstatus` | 100% | 78% | legacy 4탭 PC·모바일 사용자 승인/표 좌우 스크롤 회귀 완료/결제이력·평가 저장·증빙 다운로드는 추가개발 분리 |
 | D05 | 이용상세 detail | `/admin/moneybank/management/usageDetail` | 100% | 88% | ADM-LV-24 승인 완료 |
 | D06 | 이메일 | `/admin/cubici/supportMember/manageEmail` | 100% | 88% | ADM-LV-13 승인 완료/운영 route alias 반영 |
 | D07 | FAQ | `/admin/cubici/supportMember/manageBoard_tab2` | 100% | 86% | ADM-LV-14 승인 완료 |
@@ -133,3 +133,4 @@
 - A24 Prism System 개발 DB lifecycle: UI 수정·API 재조회·변경이력·DB 저장·원복 1/1 통과, 임시 데이터 0건
 - 구형 관리자 Batch 테스트: 현재 LV DOM·제목·검색 구조와 불일치하여 별도 테스트 부채로 분류
 - 상세 결과: `docs/2026-08-10_CUBICI_FULL_REGRESSION_RESULT.md`
+- 2026-08-11 관리자 DB/API preflight: 실제 runtime login, 총 44건 `fail=0`, `review=2`, `deferred=7`, 임시 관리자 잔여 0건

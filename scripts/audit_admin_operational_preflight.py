@@ -6,11 +6,15 @@ identifiers. It checks HTTP status and aggregate counts only.
 
 from __future__ import annotations
 
+import argparse
+from contextlib import contextmanager
 from dataclasses import dataclass
+from os import environ, getenv
 from pathlib import Path
+import secrets
 import sys
 from time import perf_counter
-from typing import Any
+from typing import Any, Iterator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SERVICE_API_SRC = PROJECT_ROOT / "service-api" / "src"
@@ -19,7 +23,10 @@ if str(SERVICE_API_SRC) not in sys.path:
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+from cubici_service.accounts.repository import _hash_password  # noqa: E402
 from cubici_service.app import create_app  # noqa: E402
+from cubici_service.core.config import get_settings  # noqa: E402
+from cubici_service.db.connection import get_connection  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -133,10 +140,10 @@ def _status_for(check: Check, http_status: int, payload: Any, note: str) -> str:
     return "OK"
 
 
-def run_check(client: TestClient, check: Check) -> tuple[Result, Any]:
+def run_check(client: TestClient, check: Check, headers: dict[str, str]) -> tuple[Result, Any]:
     started = perf_counter()
     try:
-        response = client.get(check.url)
+        response = client.get(check.url, headers=headers)
         elapsed_ms = int((perf_counter() - started) * 1000)
         payload = response.json() if response.content else {}
         note = _extra_note(payload, check.note)
@@ -217,18 +224,119 @@ def print_table(results: list[Result]) -> None:
         )
 
 
-def main() -> int:
-    client = TestClient(create_app())
-    results: list[Result] = []
-    cached_payloads: dict[str, Any] = {}
-    for check in BASE_CHECKS:
-        result, payload = run_check(client, check)
-        results.append(result)
-        cached_payloads[check.url] = payload
-    for check in _dynamic_checks(cached_payloads):
-        result, _payload = run_check(client, check)
-        results.append(result)
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Cubici administrator DB/API preflight")
+    parser.add_argument(
+        "--local-ephemeral-admin",
+        action="store_true",
+        help="create a synthetic local ADMIN_USER, log in, and remove it after the preflight",
+    )
+    return parser.parse_args()
 
+
+@contextmanager
+def _local_auth_fixture(enabled: bool) -> Iterator[tuple[str, str] | None]:
+    if not enabled:
+        yield None
+        return
+
+    settings = get_settings()
+    if settings.environment.lower() != "local" or settings.db_host not in {"127.0.0.1", "localhost"}:
+        raise RuntimeError("ephemeral admin is restricted to the loopback local environment")
+
+    suffix = secrets.token_hex(8)
+    email = f"preflight-{suffix}@example.invalid"
+    password = secrets.token_urlsafe(32)
+    user_no: int | None = None
+    previous_master_email = environ.get("CUBICI_MASTER_ADMIN_EMAIL")
+
+    with get_connection(settings) as connection:
+        with connection.transaction():
+            with connection.cursor() as cursor:
+                cursor.execute("lock table users in share row exclusive mode")
+                cursor.execute("select coalesce(max(user_no), 0) + 1 from users")
+                user_no = cursor.fetchone()[0]
+                cursor.execute(
+                    """
+                    insert into users (
+                        user_no, email, password, user_type, name, phone, biz_num, biz_name,
+                        biz_setup_date, biz_type, sectors, fintech_id, reg_date, modified_date
+                    ) values (
+                        %s, %s, %s, 'ADMIN_USER', 'Local Preflight Admin', '', '',
+                        'Local Preflight', '20180101', 'CORP', 'ETC', 1, now(), now()
+                    )
+                    """,
+                    (user_no, email, _hash_password(password)),
+                )
+
+    environ["CUBICI_MASTER_ADMIN_EMAIL"] = email
+    get_settings.cache_clear()
+    try:
+        yield email, password
+    finally:
+        with get_connection(settings) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute("delete from users where user_no = %s and email = %s", (user_no, email))
+        if previous_master_email is None:
+            environ.pop("CUBICI_MASTER_ADMIN_EMAIL", None)
+        else:
+            environ["CUBICI_MASTER_ADMIN_EMAIL"] = previous_master_email
+        get_settings.cache_clear()
+
+
+def _admin_headers(
+    client: TestClient,
+    fixture_credentials: tuple[str, str] | None,
+) -> tuple[dict[str, str], str]:
+    bearer_token = getenv("CUBICI_ADMIN_BEARER_TOKEN", "").strip()
+    if bearer_token:
+        authorization = bearer_token if bearer_token.lower().startswith("bearer ") else f"Bearer {bearer_token}"
+        return {"Authorization": authorization}, "bearer-env"
+
+    email = getenv("CUBICI_MASTER_ADMIN_EMAIL", "").strip()
+    password = getenv("CUBICI_MASTER_ADMIN_PASSWORD", "")
+    if fixture_credentials is not None:
+        email, password = fixture_credentials
+    if not email or not password:
+        raise RuntimeError(
+            "administrator authentication is not configured; provide a runtime bearer token, "
+            "runtime login credentials, or --local-ephemeral-admin"
+        )
+
+    response = client.post(
+        "/v1/api/accounts/admin-login",
+        json={"email": email, "password": password},
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f"administrator runtime login failed with HTTP {response.status_code}")
+    payload = response.json()
+    access_token = str(payload.get("access_token", "")).strip()
+    user_type = str(payload.get("user", {}).get("user_type", "")).strip().upper()
+    if not access_token or user_type != "ADMIN_USER":
+        raise RuntimeError("administrator runtime login returned an invalid session")
+    return {"Authorization": f"Bearer {access_token}"}, "runtime-login"
+
+
+def main() -> int:
+    args = _parse_args()
+    try:
+        with _local_auth_fixture(args.local_ephemeral_admin) as fixture_credentials:
+            client = TestClient(create_app())
+            headers, auth_mode = _admin_headers(client, fixture_credentials)
+            results: list[Result] = []
+            cached_payloads: dict[str, Any] = {}
+            for check in BASE_CHECKS:
+                result, payload = run_check(client, check, headers)
+                results.append(result)
+                cached_payloads[check.url] = payload
+            for check in _dynamic_checks(cached_payloads):
+                result, _payload = run_check(client, check, headers)
+                results.append(result)
+    except RuntimeError as exc:
+        print(f"PREFLIGHT_BLOCKED {exc}")
+        return 2
+
+    print(f"AUTH mode={auth_mode}")
     print_table(results)
     fail_count = sum(1 for result in results if result.status == "FAIL")
     review_count = sum(1 for result in results if result.status in {"REVIEW", "EMPTY_REVIEW"})
