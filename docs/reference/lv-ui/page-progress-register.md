@@ -59,9 +59,9 @@
 | A04 | 쇼핑몰 통합/결제관리 | `/admin/cubici/manageMember/payment_tab1` | 100% | 80% | ADM-LV-03 사용자 승인/개발 DB 0건·빈 상태 검증 |
 | A05 | 머니뱅크 운영/통합 현황 | `/admin/moneybank/cubici/management/info_tab1`, `info_tab2` | 100% | 85% | ADM-LV-04 사용자 승인/두 탭·실차트 6개/잔액 3,616원 차이 추적 |
 | A06 | 머니뱅크 관리/이용상세 | `/admin/moneybank/management/usageList` | 100% | 88% | ADM-LV-24 사용자 승인/legacy 항목선택·CSV·명시적 가로스크롤·상세 4탭, 개발 DB 조회·focused 회귀 통과/legacy 산식 검산 잔여 |
-| A07 | 신청 접수 | `/admin/moneybank/request` | 100% | 92% | ADM-LV-05 사용자 승인/사용자 신청·서류 2건 업로드·심사대기 전환 브라우저 DB lifecycle 통과/서류보완·거부 분기 별도 회귀 잔여 |
-| A08 | 심사 승인 | `/admin/moneybank/approval_tab1` | 100% | 92% | ADM-LV-06 사용자 승인/조건 저장·수수료율 2건·조건 제시 브라우저 DB lifecycle 통과/조건거부 분기 별도 회귀 잔여 |
-| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 94% | ADM-LV-07 사용자 승인/이용조건 동의 조회·계약 체결·계좌대기 브라우저 DB lifecycle 통과/계약 이후 상환 연계는 A11에서 관리 |
+| A07 | 신청 접수 | `/admin/moneybank/request` | 100% | 92% | ADM-LV-05 사용자 승인/사용자 신청·서류 2건 업로드·심사대기 전환 브라우저 DB lifecycle 통과/운영 API·route smoke 통과/서류보완·거부 분기 별도 회귀 잔여 |
+| A08 | 심사 승인 | `/admin/moneybank/approval_tab1` | 100% | 92% | ADM-LV-06 사용자 승인/조건 저장·수수료율 2건·조건 제시 브라우저 DB lifecycle 통과/운영 API·route smoke 통과/조건거부 분기 별도 회귀 잔여 |
+| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 94% | ADM-LV-07 사용자 승인/이용조건 동의 조회·계약 체결·계좌대기 브라우저 DB lifecycle 통과/운영 API·route smoke 통과/계약 이후 상환 연계는 A11에서 관리 |
 | A10 | 정산 관리 | `/admin/moneybank/settlement` | 100% | 85% | ADM-LV-08 사용자 승인/개발 DB 469건·검산 test 통과/운영 DB 재검산 대기 |
 | A11 | 상환 관리 | `/admin/moneybank/redemption` | 100% | 90% | ADM-LV-09 사용자 승인/직접 LV 대조·개발 DB 6건·bundle smoke 통과/write E2E 재검증 대기 |
 | A12 | 신용평가지표 | `/admin/moneybank/manage` | 100% | 78% | ADM-LV-11 사용자 승인/PCS·PMS 설정표 26행·변경행 저장 mock 통과/실 DB write·산식 재계산 별도 |
