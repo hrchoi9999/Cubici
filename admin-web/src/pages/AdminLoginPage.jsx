@@ -1,9 +1,9 @@
 import { useState } from 'react';
 
-import { MASTER_ADMIN_EMAIL, loginMasterAdmin } from '../auth/adminAuth.js';
+import { loginMasterAdmin } from '../auth/adminAuth.js';
 
 function AdminLoginPage({ onLogin }) {
-  const [form, setForm] = useState({ email: MASTER_ADMIN_EMAIL, password: '' });
+  const [form, setForm] = useState({ email: '', password: '' });
   const [state, setState] = useState({ submitting: false, message: '' });
 
   function updateValue(event) {

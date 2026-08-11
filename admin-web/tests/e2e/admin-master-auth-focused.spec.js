@@ -11,9 +11,10 @@ test('admin pages require master admin login and logout clears access', async ({
   });
   await page.goto('/admin/cubici/infoIntegrated/cubici_tab1');
   await expect(page.getByRole('heading', { name: '관리자 로그인' })).toBeVisible();
-  await expect(page.getByLabel('관리자 계정')).toHaveValue(MASTER_ADMIN_EMAIL);
+  await expect(page.getByLabel('관리자 계정')).toHaveValue('');
   await expect(page.getByText('큐빅아이')).toHaveCount(0);
 
+  await page.getByLabel('관리자 계정').fill(MASTER_ADMIN_EMAIL);
   await page.getByLabel('비밀번호').fill(process.env.CUBICI_MASTER_ADMIN_PASSWORD);
   await page.getByRole('button', { name: '로그인' }).click();
 

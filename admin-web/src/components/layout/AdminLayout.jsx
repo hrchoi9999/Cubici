@@ -205,10 +205,39 @@ export function AdminLayout({ activeCategoryId, activePageId, adminSession, chil
     };
   }, [isNavigationOpen]);
 
+  function navigateWithinAdmin(event) {
+    if (
+      event.defaultPrevented
+      || event.button !== 0
+      || event.metaKey
+      || event.ctrlKey
+      || event.shiftKey
+      || event.altKey
+    ) {
+      return;
+    }
+
+    const anchor = event.target.closest?.('a[href]');
+    if (!anchor || anchor.target || anchor.hasAttribute('download')) return;
+
+    const target = new URL(anchor.href, window.location.href);
+    if (
+      target.origin !== window.location.origin
+      || !target.pathname.startsWith('/admin')
+      || target.pathname === '/admin/logout'
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    window.history.pushState({}, '', `${target.pathname}${target.search}${target.hash}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }
+
   return (
     <>
       <LoadingSpinner />
-      <div id="wrap" className="adminReactWrap">
+      <div id="wrap" className="adminReactWrap" onClick={navigateWithinAdmin}>
         <AdminHeader
           adminSession={adminSession}
           isNavigationOpen={isNavigationOpen}

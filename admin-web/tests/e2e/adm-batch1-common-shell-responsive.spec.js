@@ -12,9 +12,10 @@ const candidateDir = path.resolve(
 
 fs.mkdirSync(candidateDir, { recursive: true });
 
-function installApiMocks(page) {
+function installApiMocks(page, onAdminMe = () => {}) {
   return page.route('**/v1/api/**', async (route) => {
     const url = route.request().url();
+    if (url.includes('/accounts/admin-me')) onAdminMe();
     const payload = url.includes('/accounts/admin-me')
       ? {
           user_no: 1,
@@ -57,6 +58,7 @@ test('admin login keeps the common visual language on PC and mobile', async ({ p
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/admin');
   await expect(page.locator('.adminLoginCard')).toBeVisible();
+  await expect(page.getByLabel('관리자 계정')).toHaveValue('');
   await page.screenshot({ path: path.join(candidateDir, 'admin-login-pc.png') });
 
   await page.setViewportSize({ width: 390, height: 844 });
@@ -115,4 +117,27 @@ test('admin common shell uses a dismissible mobile navigation drawer', async ({ 
     () => document.body.scrollWidth - document.documentElement.clientWidth,
   );
   expect(bodyOverflow).toBeLessThanOrEqual(1);
+});
+
+test('admin sidebar navigation stays in the SPA and verifies the session once', async ({ page }) => {
+  let adminMeCalls = 0;
+  await installApiMocks(page, () => {
+    adminMeCalls += 1;
+  });
+  await installAdminSession(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/admin/cubici/manageMember/member_tab1');
+
+  await expect(page.locator('figure h3')).toHaveText('회원 현황');
+  await page.getByRole('button', { name: '쇼핑몰 통합', exact: true }).click();
+  await page.getByRole('link', { name: '통합 현황', exact: true }).click();
+
+  await expect(page).toHaveURL(/\/admin\/cubici\/infoIntegrated\/cubici_tab1$/);
+  await expect(page.locator('figure h3')).toHaveText('통합 현황');
+  await expect(page.getByText('관리자 권한 확인 중입니다.', { exact: true })).toHaveCount(0);
+  expect(adminMeCalls).toBe(1);
+
+  await page.goBack();
+  await expect(page.locator('figure h3')).toHaveText('회원 현황');
+  expect(adminMeCalls).toBe(1);
 });

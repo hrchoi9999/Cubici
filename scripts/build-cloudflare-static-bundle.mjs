@@ -12,7 +12,6 @@ const outputRoot = path.join(cubiciRoot, 'dist-cloudflare');
 const nodeExe = process.execPath;
 const viteCli = path.join(adminRoot, 'node_modules', 'vite', 'bin', 'vite.js');
 const apiBaseUrl = process.env.VITE_API_BASE_URL ?? 'https://api.example.com';
-const masterAdminEmail = process.env.VITE_CUBICI_MASTER_ADMIN_EMAIL ?? process.env.CUBICI_MASTER_ADMIN_EMAIL ?? 'admin@example.com';
 
 runBuild('user-web', userRoot, {
   VITE_API_BASE_URL: apiBaseUrl,
@@ -20,7 +19,6 @@ runBuild('user-web', userRoot, {
 
 runBuild('admin-web', adminRoot, {
   VITE_API_BASE_URL: apiBaseUrl,
-  VITE_CUBICI_MASTER_ADMIN_EMAIL: masterAdminEmail,
   CUBICI_ADMIN_BASE: '/admin/',
 });
 rewriteAdminSharedResourcePaths(path.join(adminRoot, 'dist', 'index.html'));

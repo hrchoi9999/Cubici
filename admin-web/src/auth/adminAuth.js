@@ -1,6 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const ADMIN_AUTH_STORAGE_KEY = 'cubiciAdminAuth';
-const MASTER_ADMIN_EMAIL = String(import.meta.env.VITE_CUBICI_MASTER_ADMIN_EMAIL ?? '').trim().toLowerCase();
 let activeAdminSession = null;
 let fetchInterceptorInstalled = false;
 let originalFetch = null;
@@ -31,9 +30,8 @@ function setAdminFetchSession(session) {
 }
 
 function isMasterAdminSession(session) {
-  const email = String(session?.user?.email ?? '').trim().toLowerCase();
   const userType = String(session?.user?.user_type ?? '').trim().toUpperCase();
-  return Boolean(session?.access_token) && email === MASTER_ADMIN_EMAIL && userType === 'ADMIN_USER';
+  return Boolean(session?.access_token) && userType === 'ADMIN_USER';
 }
 
 async function verifyMasterAdminSession(session) {
@@ -74,9 +72,6 @@ async function verifyMasterAdminSession(session) {
 
 async function loginMasterAdmin({ email, password }) {
   const normalizedEmail = String(email ?? '').trim().toLowerCase();
-  if (normalizedEmail !== MASTER_ADMIN_EMAIL) {
-    throw new Error('마스터 관리자 계정만 접속할 수 있습니다.');
-  }
 
   let response;
   try {
@@ -163,7 +158,6 @@ function getRequestPathname(url) {
 
 export {
   ADMIN_AUTH_STORAGE_KEY,
-  MASTER_ADMIN_EMAIL,
   clearAdminSession,
   installAdminFetchInterceptor,
   isMasterAdminSession,

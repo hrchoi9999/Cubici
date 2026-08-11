@@ -150,7 +150,9 @@ function normalizeAdminEntryPath(path) {
 }
 
 export default function App() {
-  const requestedView = new URLSearchParams(window.location.search).get('view');
+  const [locationHref, setLocationHref] = useState(() => window.location.href);
+  const currentLocation = new URL(locationHref);
+  const requestedView = currentLocation.searchParams.get('view');
   const path = requestedView === 'prism-config'
     ? '/admin/cubici/adminPreference/prizmConfig'
     : requestedView === 'prism-management'
@@ -159,7 +161,7 @@ export default function App() {
         ? '/admin/moneybank/risk-results'
       : requestedView === 'prism'
         ? '/admin/cubici/adminPreference/prizmConfig'
-        : normalizeAdminEntryPath(window.location.pathname);
+        : normalizeAdminEntryPath(currentLocation.pathname);
   const [adminSession, setAdminSession] = useState(() => {
     const session = readAdminSession();
     setAdminFetchSession(session);
@@ -167,6 +169,15 @@ export default function App() {
     return session;
   });
   const [isCheckingSession, setIsCheckingSession] = useState(Boolean(adminSession));
+
+  useEffect(() => {
+    function syncLocation() {
+      setLocationHref(window.location.href);
+    }
+
+    window.addEventListener('popstate', syncLocation);
+    return () => window.removeEventListener('popstate', syncLocation);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
