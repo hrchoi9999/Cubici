@@ -5869,6 +5869,109 @@ body {
   min-width: 900px;
 }
 
+/* D10: legacy RawData three-stage workspace aligned with Prism System. */
+#wrap.adminReactWrap .rawDataLvPage .prizmLvTabs {
+  margin-bottom: 14px;
+}
+
+#wrap.adminReactWrap .rawDataLvSearch {
+  margin-bottom: 14px;
+}
+
+#wrap.adminReactWrap .rawDataLvSearch .line {
+  grid-template-columns: minmax(300px, 1.5fr) minmax(180px, 0.8fr) minmax(180px, 0.8fr) 150px;
+  margin: 0;
+}
+
+#wrap.adminReactWrap .rawDataLvSearch .m-btn:disabled {
+  border-color: #c9d0da;
+  background: #e8ecf1;
+  color: #8994a3;
+}
+
+#wrap.adminReactWrap .rawDataLvSelector {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+#wrap.adminReactWrap .rawDataLvSelectPanel {
+  display: flex;
+  flex-direction: column;
+}
+
+#wrap.adminReactWrap .rawDataLvSelectPanel .rawDataColumnList,
+#wrap.adminReactWrap .rawDataLvSelectPanel .rawDataFormulaList,
+#wrap.adminReactWrap .rawDataLvSelectPanel .rawDataTypeList {
+  flex: 1;
+  min-height: 260px;
+  max-height: 340px;
+  border: 0;
+  background: #fff;
+}
+
+#wrap.adminReactWrap .rawDataLvSelectPanel .rawDataActions {
+  margin: 0;
+  padding: 10px;
+  border-top: 1px solid #d9dee5;
+}
+
+#wrap.adminReactWrap .rawDataLvSelectPanel footer {
+  margin-top: auto;
+}
+
+#wrap.adminReactWrap .rawDataTypeList p {
+  margin: 0;
+  padding: 14px;
+  color: #666;
+  font-size: 12px;
+}
+
+#wrap.adminReactWrap .rawDataTypeList button {
+  grid-template-columns: minmax(0, 1fr) 120px;
+}
+
+#wrap.adminReactWrap .rawDataLvFormulaPanel {
+  margin-top: 14px;
+}
+
+#wrap.adminReactWrap .rawDataLvFormulaPanel > header {
+  min-height: 42px;
+  margin: -14px -14px 12px;
+  padding: 0 12px;
+  background: #1598ef;
+}
+
+#wrap.adminReactWrap .rawDataLvFormulaPanel > header h4 {
+  color: #fff;
+}
+
+#wrap.adminReactWrap .rawDataLvPreviewPanel {
+  padding: 0;
+  overflow: hidden;
+}
+
+#wrap.adminReactWrap .rawDataLvPreviewPanel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 42px;
+  padding: 0 12px;
+  background: #eef4f8;
+  color: #002e6e;
+}
+
+#wrap.adminReactWrap .rawDataLvPreviewPanel > header h4 {
+  margin: 0;
+  color: #002e6e;
+}
+
+#wrap.adminReactWrap .rawDataLvPreviewPanel > header span {
+  font-size: 11px;
+}
+
+#wrap.adminReactWrap .rawDataLvPreviewPanel .legacyTableWrap {
+  padding: 10px 12px 0;
+}
+
 .integratedMetricGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(180px, 1fr));
@@ -6564,6 +6667,23 @@ body {
 
   .rawDataLayout {
     grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .rawDataLvSearch .line,
+  #wrap.adminReactWrap .rawDataLvSelector,
+  #wrap.adminReactWrap .rawDataLvFormulaPanel .rawDataFormulaForm {
+    grid-template-columns: 1fr;
+  }
+
+  #wrap.adminReactWrap .rawDataLvFormulaPanel .rawDataFormulaForm label.wide {
+    grid-column: span 1;
+  }
+
+  #wrap.adminReactWrap .rawDataLvSelectPanel .rawDataColumnList,
+  #wrap.adminReactWrap .rawDataLvSelectPanel .rawDataFormulaList,
+  #wrap.adminReactWrap .rawDataLvSelectPanel .rawDataTypeList {
+    min-height: 180px;
+    max-height: 260px;
   }
 
   .integratedMetricGrid {

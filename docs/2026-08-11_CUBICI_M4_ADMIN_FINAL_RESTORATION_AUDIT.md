@@ -4,8 +4,8 @@
 
 - 관리자 직접 메뉴 24개는 PC·모바일 사용자 승인을 완료했다.
 - 상세·파생 화면 10개는 React route와 기능 회귀 근거가 모두 있다.
-- 상세·파생 화면 중 1개는 엄격한 최종 승인 이미지가 없으므로 화면 복원 완료로 처리하지 않는다.
-- 전체 관리자 React 화면 복원율은 34개 가중 평균 99.4%다.
+- 상세·파생 화면 10개도 PC·모바일 또는 해당 탭 상태의 엄격한 사용자 승인을 완료했다.
+- 전체 관리자 React 화면 복원율은 34개 가중 평균 100%다.
 - 기능 구현은 직접 메뉴 평균 84.5%, 상세·파생 포함 보수적 평균 83.5%다.
 
 ## 화면 수 기준
@@ -45,23 +45,20 @@ JSP 물리 파일 수와 React 화면 수는 일대일 대응하지 않는다. l
 | D07 | `/admin/cubici/supportMember/manageBoard_tab2` | ADM-LV-14 FAQ PC·모바일 승인본 | 100% | 86% | 복원 승인 완료 |
 | D08 | `/admin/cubici/adminPreference/manageMoneybank_tab1` | 환경설정 Batch 승인 기록 | 100% | 85% | 복원 승인 완료 |
 | D09 | `/admin/cubici/adminPreference/manageMoneybank_tab2` | 환경설정 Batch 승인 기록 | 100% | 85% | 복원 승인 완료 |
-| D10 | `/admin/cubici/adminPreference/prizmRawData` | legacy JSP, React, focused E2E | 80% | 65% | 최종 승인 이미지, Excel·산식 잔여 |
+| D10 | `/admin/cubici/adminPreference/prizmRawData` | D10 PC·모바일 승인본, focused E2E 2/2 | 100% | 65% | 복원 승인 완료, Excel·산식 기능 잔여 |
 
 ## 검증
 
 | 항목 | 결과 |
 |---|---|
-| 관리자 production build | 통과, 75 modules, 5.02초 |
+| 관리자 production build | 최신 D10 build 통과, 75 modules, 8.13초 |
 | 현재 App route 정적 매핑 | 34/34 |
 | 직접 메뉴 최신 회귀 근거 | 24/24 통과 |
 | 상세·파생 조회/focused 회귀 근거 | 10/10 통과 |
 | 운영 배포 source | route 보완과 Prism UI/API 포함 |
 | A01·A03 후보/승인 이미지 hash | PC·모바일 4쌍 모두 일치 |
+| D01·D02·D03·D04·D10 승인 이미지 | 후보/승인본 SHA-256 일치 |
 
-## 남은 복원 Batch
+## 복원 완료
 
-엄격한 페이지 단위 승인 순서는 다음과 같다.
-
-1. D10 Prism RawData
-
-위 1개 승인 후 관리자 34개 화면의 UI 복원 작업을 종료한다. DB CRUD, legacy 산식 검산, Excel, 외부 연동은 기능 작업으로 별도 관리한다.
+관리자 직접 메뉴 24개와 상세·파생 화면 10개, 총 34개 화면의 UI 복원 작업을 종료한다. DB CRUD, legacy 산식 검산, Excel, 외부 연동은 기능 작업으로 별도 관리한다.

@@ -91,7 +91,7 @@
 | D07 | FAQ | `/admin/cubici/supportMember/manageBoard_tab2` | 100% | 86% | ADM-LV-14 승인 완료 |
 | D08 | 머니뱅크 상품 목록 | `/admin/cubici/adminPreference/manageMoneybank_tab1` | 100% | 85% | 환경설정 Batch 승인 완료 |
 | D09 | 머니뱅크 상품등록 | `/admin/cubici/adminPreference/manageMoneybank_tab2` | 100% | 85% | 환경설정 Batch 승인 완료 |
-| D10 | Prism RawData | `/admin/cubici/adminPreference/prizmRawData` | 80% | 65% | 구현·회귀 완료/최종 승인 이미지·Excel·산식 잔여 |
+| D10 | Prism RawData | `/admin/cubici/adminPreference/prizmRawData` | 100% | 65% | PC·모바일 사용자 승인/focused 2/2 통과/Excel·산식 기능 잔여 |
 
 - legacy 관리자 JSP는 물리 파일 72개, 공통·test 11개를 제외한 감사 대상 61개로 확정했다.
 - 상세 매핑과 제외 기준: `docs/2026-08-11_CUBICI_M4_ADMIN_FINAL_RESTORATION_AUDIT.md`
@@ -106,12 +106,13 @@
 - 엄격한 LV 재복원 기준 사용자 승인 완료: 24/24, 100%
 - 엄격한 LV 재복원 기준 후보 작성 완료: 24/24, 100%
 - 관리자 직접 메뉴 후보 검증 완료: 24/24
+- 관리자 상세·파생 화면 시각 승인 완료: 10/10
 - 관리자 운영 데이터 조회: 직접 메뉴 24/24, 상세/파생 10/10 통과
 - 관리자 전체 React route 매핑: 34/34
 - 관리자 운영 배포 source route·제목 보완 반영: 34/34
 - 관리자 직접 메뉴 평균 화면 복원율: 100%
-- 관리자 상세·파생 평균 화면 복원율: 98.0%
-- 관리자 전체 34개 평균 화면 복원율: 99.4%
+- 관리자 상세·파생 평균 화면 복원율: 100%
+- 관리자 전체 34개 평균 화면 복원율: 100%
 - 관리자 직접 메뉴 평균 내부 기능 구현율: 84.5%
 - 관리자 상세·파생 평균 내부 기능 구현율: 81.1%
 - 관리자 전체 34개 평균 내부 기능 구현율: 83.5%

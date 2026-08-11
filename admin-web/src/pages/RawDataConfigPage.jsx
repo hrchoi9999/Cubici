@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createRawDataFormula,
   deleteRawDataFormula,
@@ -60,6 +60,8 @@ export function RawDataConfigPage() {
   const [preview, setPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const previewScrollRef = useRef(null);
+  const [previewScroll, setPreviewScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -134,6 +136,28 @@ export function RawDataConfigPage() {
     () => tables.find((table) => table.table_name === selectedTable),
     [tables, selectedTable],
   );
+
+  useEffect(() => {
+    const container = previewScrollRef.current;
+    if (!container) return undefined;
+
+    function updateScrollState() {
+      setPreviewScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [preview]);
 
   function toggleColumn(columnName) {
     setSelectedColumns((current) => (
@@ -228,32 +252,32 @@ export function RawDataConfigPage() {
     }
   }
 
-  return (
-    <section className="adminPage">
-      <div className="adminPageHeader">
-        <div>
-          <h2>환경설정</h2>
-          <p>Prism RawData 테이블, 컬럼, 계산식을 관리합니다.</p>
-        </div>
-        <div className="summaryPills">
-          <span>테이블 {tables.length.toLocaleString()}개</span>
-          <span>컬럼 {columns.length.toLocaleString()}개</span>
-          <span>선택 {selectedColumns.length.toLocaleString()}개</span>
-          <span>계산식 {formulas.length.toLocaleString()}개</span>
-        </div>
-      </div>
+  function selectFormulaType(columnName) {
+    setFormulaForm((current) => ({ ...current, rawDataId: columnName, rawDataShop: selectedTable }));
+  }
 
-      <div className="legacyTabs">
+  function movePreviewScroll(direction) {
+    const container = previewScrollRef.current;
+    if (!container) return;
+    container.scrollTo({
+      left: container.scrollLeft + direction * Math.max(240, container.clientWidth * 0.65),
+      behavior: 'smooth',
+    });
+  }
+
+  return (
+    <section className="adminPage rawDataLvPage">
+      <div className="prizmLvTabs">
         <a href="/admin/cubici/adminPreference/prizmConfig">Prizm</a>
         <a href="/admin/cubici/adminPreference/craConfig">CRA Index</a>
         <a className="active" href="/admin/cubici/adminPreference/prizmRawData">RawData</a>
       </div>
 
-      <div className="rawDataLayout">
-        <section className="rawDataPanel">
-          <header>
-            <h4>{selectedTableMeta?.table_label ?? '테이블을 선택해 주세요.'}</h4>
-            <select value={selectedTable} onChange={(event) => setSelectedTable(event.target.value)}>
+      <div className="m-search searchArea rawDataLvSearch">
+        <div className="line">
+          <div className="inputBox">
+            <label htmlFor="rawDataTable">테이블</label>
+            <select id="rawDataTable" value={selectedTable} onChange={(event) => setSelectedTable(event.target.value)}>
               <option value="">선택</option>
               {tables.map((table) => (
                 <option key={table.table_name} value={table.table_name}>
@@ -261,7 +285,22 @@ export function RawDataConfigPage() {
                 </option>
               ))}
             </select>
-          </header>
+          </div>
+          <div className="inputBox">
+            <label htmlFor="rawDataFromDate">시작 일자</label>
+            <input id="rawDataFromDate" type="date" disabled />
+          </div>
+          <div className="inputBox">
+            <label htmlFor="rawDataToDate">종료 일자</label>
+            <input id="rawDataToDate" type="date" disabled />
+          </div>
+          <button className="m-btn" type="button" disabled>엑셀 다운로드</button>
+        </div>
+      </div>
+
+      <div className="prizmLvSelector rawDataLvSelector">
+        <section className="prizmLvSelectPanel rawDataLvSelectPanel">
+          <header><h3>{selectedTableMeta?.table_label ?? '테이블을 선택해 주세요.'}</h3></header>
           <div className="rawDataColumnList">
             {isLoading ? <p>테이블 목록을 조회 중입니다.</p> : null}
             {!isLoading && columns.length === 0 ? <p>선택된 테이블의 컬럼이 없습니다.</p> : null}
@@ -281,13 +320,30 @@ export function RawDataConfigPage() {
             <button type="button" className="lineButton" onClick={() => setSelectedColumns([])}>목록 초기화</button>
             <button type="button" className="primaryButton" onClick={handlePreview}>Preview</button>
           </div>
+          <footer><span>선택 컬럼</span><strong>{selectedColumns.length.toLocaleString()}개</strong></footer>
         </section>
 
-        <section className="rawDataPanel">
-          <header>
-            <h4>계산식</h4>
-            <button type="button" className="lineButton" onClick={handleNewFormula}>계산식 등록</button>
-          </header>
+        <section className="prizmLvSelectPanel rawDataLvSelectPanel">
+          <header><h3>타입</h3></header>
+          <div className="prizmLvChoiceList rawDataTypeList">
+            {columns.length === 0 ? <p>테이블을 선택해 주세요.</p> : null}
+            {columns.map((column) => (
+              <button
+                key={column.column_name}
+                type="button"
+                className={formulaForm.rawDataId === column.column_name ? 'active' : ''}
+                onClick={() => selectFormulaType(column.column_name)}
+              >
+                <span>{column.column_label}</span>
+                <strong>{column.data_type}</strong>
+              </button>
+            ))}
+          </div>
+          <footer><span>타입</span><strong>{columns.length.toLocaleString()}개</strong></footer>
+        </section>
+
+        <section className="prizmLvSelectPanel rawDataLvSelectPanel">
+          <header><h3>계산식</h3></header>
           <div className="rawDataFormulaList">
             {formulas.length === 0 ? <p>등록된 계산식이 없습니다.</p> : null}
             {formulas.map((formula) => (
@@ -303,37 +359,44 @@ export function RawDataConfigPage() {
               </button>
             ))}
           </div>
-
-          <form className="rawDataFormulaForm" onSubmit={handleSaveFormula}>
-            <label>
-              <span>타입</span>
-              <input name="rawDataId" value={formulaForm.rawDataId} onChange={updateFormulaValue} />
-            </label>
-            <label>
-              <span>쇼핑몰</span>
-              <input name="rawDataShop" value={formulaForm.rawDataShop} onChange={updateFormulaValue} />
-            </label>
-            <label>
-              <span>제목</span>
-              <input name="rawDataTitle" value={formulaForm.rawDataTitle} onChange={updateFormulaValue} />
-            </label>
-            <label className="wide">
-              <span>계산식</span>
-              <textarea name="rawDataContent" value={formulaForm.rawDataContent} onChange={updateFormulaValue} />
-            </label>
-            <div className="rawDataActions">
-              <button type="submit" className="primaryButton">{selectedFormula ? '수정' : '등록'}</button>
-              <button type="button" className="lineButton danger" disabled={!selectedFormula} onClick={handleDeleteFormula}>삭제</button>
-            </div>
-          </form>
+          <div className="rawDataActions">
+            <button type="button" className="primaryButton" onClick={handleNewFormula}>계산식 등록</button>
+          </div>
+          <footer><span>계산식</span><strong>{formulas.length.toLocaleString()}개</strong></footer>
         </section>
       </div>
 
       {message ? <p className="statusMessage">{message}</p> : null}
 
-      <section className="rawDataPreviewPanel">
-        <h4>Preview</h4>
-        <div className="legacyTableWrap">
+      <section className="rawDataPanel rawDataLvFormulaPanel">
+        <header><h4>{selectedFormula ? '계산식 수정' : '계산식 등록'}</h4></header>
+        <form className="rawDataFormulaForm" onSubmit={handleSaveFormula}>
+          <label>
+            <span>타입</span>
+            <input name="rawDataId" value={formulaForm.rawDataId} onChange={updateFormulaValue} />
+          </label>
+          <label>
+            <span>쇼핑몰</span>
+            <input name="rawDataShop" value={formulaForm.rawDataShop} onChange={updateFormulaValue} />
+          </label>
+          <label>
+            <span>제목</span>
+            <input name="rawDataTitle" value={formulaForm.rawDataTitle} onChange={updateFormulaValue} />
+          </label>
+          <label className="wide">
+            <span>계산식</span>
+            <textarea name="rawDataContent" value={formulaForm.rawDataContent} onChange={updateFormulaValue} />
+          </label>
+          <div className="rawDataActions">
+            <button type="submit" className="primaryButton">{selectedFormula ? '수정' : '등록'}</button>
+            <button type="button" className="lineButton danger" disabled={!selectedFormula} onClick={handleDeleteFormula}>삭제</button>
+          </div>
+        </form>
+      </section>
+
+      <section className="rawDataPreviewPanel rawDataLvPreviewPanel">
+        <header><h4>Preview</h4><span>{(preview?.rows ?? []).length.toLocaleString()}건</span></header>
+        <div className="legacyTableWrap" ref={previewScrollRef}>
           <table className="legacyTable rawDataPreviewTable">
             <thead>
               <tr>
@@ -355,6 +418,19 @@ export function RawDataConfigPage() {
             </tbody>
           </table>
         </div>
+        {previewScroll.max > 0 ? <div className="horizontalTableScrollbar" aria-label="RawData Preview 좌우 스크롤">
+          <button type="button" aria-label="RawData Preview 왼쪽으로 스크롤" onClick={() => movePreviewScroll(-1)} disabled={previewScroll.left <= 0}>&lt;</button>
+          <input
+            type="range"
+            aria-label="RawData Preview 가로 스크롤"
+            min="0"
+            max={previewScroll.max}
+            step="1"
+            value={Math.min(previewScroll.left, previewScroll.max)}
+            onChange={(event) => previewScrollRef.current?.scrollTo({ left: Number(event.target.value) })}
+          />
+          <button type="button" aria-label="RawData Preview 오른쪽으로 스크롤" onClick={() => movePreviewScroll(1)} disabled={previewScroll.left >= previewScroll.max}>&gt;</button>
+        </div> : null}
       </section>
     </section>
   );
