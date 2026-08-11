@@ -1,6 +1,6 @@
 # LV 페이지별 진행표
 
-기준일: 2026-08-10
+기준일: 2026-08-11
 
 - 화면 복원율: 기준 매핑/현재 출력/차이 검토/구현/사용자 승인 각 20점
 - 기능 구현율: UI/API/저장/산식/E2E 중 해당 항목 기준
@@ -53,9 +53,9 @@
 
 | ID | 메뉴/화면 | Route | 화면 복원율 | 기능 구현율 | 주요 잔여 |
 |---|---|---|---:|---:|---|
-| A01 | 통합정보/큐빅아이 | `/admin/cubici/infoIntegrated/cubici_tab1` | 86% | 75% | 승인 완료, 운영 DB 조회 통과/chart 산식 |
+| A01 | 통합정보/큐빅아이 | `/admin/cubici/infoIntegrated/cubici_tab1` | 100% | 75% | ADM-LV-02 PC·모바일 승인/실 DB·그래프 회귀 통과/chart 산식 잔여 |
 | A02 | 통합정보/머니뱅크 | `/admin/cubici/infoIntegrated/moneybank_tab1`, `moneybank_tab2` | 100% | 86% | ADM-LV-23 사용자 승인/legacy 현황종합·운영지표 2탭, KPI 8개, 그래프 6개, 검색·엑셀·개발 DB 조회 통과/재이용자·기간이전 누적 기준 잔여 |
-| A03 | 회원관리/회원현황 | `/admin/cubici/manageMember/member_tab1` | 92% | 78% | 승인 완료, 운영 DB 조회 통과/회원 집계 검산 |
+| A03 | 회원관리/회원현황 | `/admin/cubici/manageMember/member_tab1` | 100% | 78% | ADM-LV-01 PC·모바일 승인/실 DB·그래프 회귀 통과/회원 집계 검산 잔여 |
 | A04 | 쇼핑몰 통합/결제관리 | `/admin/cubici/manageMember/payment_tab1` | 100% | 80% | ADM-LV-03 사용자 승인/개발 DB 0건·빈 상태 검증 |
 | A05 | 머니뱅크 운영/통합 현황 | `/admin/moneybank/cubici/management/info_tab1`, `info_tab2` | 100% | 85% | ADM-LV-04 사용자 승인/두 탭·실차트 6개/잔액 3,616원 차이 추적 |
 | A06 | 머니뱅크 관리/이용상세 | `/admin/moneybank/management/usageList` | 100% | 88% | ADM-LV-24 사용자 승인/legacy 항목선택·CSV·명시적 가로스크롤·상세 4탭, 개발 DB 조회·focused 회귀 통과/legacy 산식 검산 잔여 |
@@ -76,14 +76,25 @@
 | A21 | 연계코드 관리 | `/admin/cubici/adminPreference/managePromotion` | 100% | 82% | ADM-LV-20 사용자 승인/legacy 13열·그룹헤더·검색·CRUD mock 통과/개발 DB 1건·요금제 연결 및 종료일 정합화/전체 실 DB CRUD 잔여 |
 | A22 | 협력사 관리 | `/admin/cubici/adminPreference/managePartner` | 100% | 86% | ADM-LV-21 사용자 승인/legacy 10열·담당자 그룹헤더·검색·집계·checksum·CRUD mock 통과/개발 DB 4건 조회·실 DB CRUD 잔여 |
 | A23 | 자금조달 관리 | `/admin/moneybank/funding` | 100% | 92% | ADM-LV-10 목록·등록 PC/모바일 사용자 승인/DB 기본등록·중복 방지·원복 E2E 통과 |
-| A24 | Prism System | `/admin/cubici/adminPreference/prizmConfig` | 100% | 92% | ADM-LV-22 사용자 승인/legacy 3단 지표설정·Prizm/CRA·종합현황·변경이력/개발 DB 26건/실 DB 수정·재조회·변경이력·원복 E2E 통과/산식 검산은 운영 지표관리 단계로 분리 |
+| A24 | Prism System | `/admin/cubici/adminPreference/prizmConfig` | 100% | 92% | ADM-LV-22 사용자 승인/legacy 3단 지표설정·Prizm/CRA·종합현황·변경이력/개발 DB 26건/실 DB 수정·재조회·변경이력·원복 E2E 통과/운영 배포 확인/산식 검산은 운영 지표관리 단계로 분리 |
 
 ## 관리자 상세/파생 화면
 
-- 직접 메뉴 외 회원 tab2/tab3/userstatus, 결제 tab2, 이용상세 detail, 게시판 FAQ, 이메일, 머니뱅크 상품 설정 tab1/tab2, Prism RawData 등을 포함해 현재 React route 기준 34개다.
-- 상세/파생 10/10은 운영 DB/API 조회 또는 focused 회귀를 통과했다. 이메일 파생 route의 상단 제목 alias는 로컬 후보에서 보완했으며 운영 배포 전이다.
-- M4에서 직접 메뉴 진행표와 별도로 상세/파생 화면 진행표를 확정한다.
-- legacy 후보 JSP 61개와의 대응 여부도 M4에서 각 화면에 기록한다.
+| ID | 화면 | Route | 화면 복원율 | 기능 구현율 | 상태 |
+|---|---|---|---:|---:|---|
+| D01 | 회원정보 | `/admin/cubici/manageMember/member_tab2` | 80% | 78% | 구현·회귀 완료/최종 승인 이미지 필요 |
+| D02 | 휴면/해지 | `/admin/cubici/manageMember/member_tab3` | 80% | 78% | 구현·회귀 완료/최종 승인 이미지 필요 |
+| D03 | 요금변경 관리 | `/admin/cubici/manageMember/payment_tab2` | 80% | 80% | 구현·회귀 완료/최종 승인 이미지 필요 |
+| D04 | 회원상세 | `/admin/cubici/manageMember/userstatus` | 80% | 78% | 구현·회귀 완료/최종 승인 이미지 필요 |
+| D05 | 이용상세 detail | `/admin/moneybank/management/usageDetail` | 100% | 88% | ADM-LV-24 승인 완료 |
+| D06 | 이메일 | `/admin/cubici/supportMember/manageEmail` | 100% | 88% | ADM-LV-13 승인 완료/운영 route alias 반영 |
+| D07 | FAQ | `/admin/cubici/supportMember/manageBoard_tab2` | 100% | 86% | ADM-LV-14 승인 완료 |
+| D08 | 머니뱅크 상품 목록 | `/admin/cubici/adminPreference/manageMoneybank_tab1` | 100% | 85% | 환경설정 Batch 승인 완료 |
+| D09 | 머니뱅크 상품등록 | `/admin/cubici/adminPreference/manageMoneybank_tab2` | 100% | 85% | 환경설정 Batch 승인 완료 |
+| D10 | Prism RawData | `/admin/cubici/adminPreference/prizmRawData` | 80% | 65% | 구현·회귀 완료/최종 승인 이미지·Excel·산식 잔여 |
+
+- legacy 관리자 JSP는 물리 파일 72개, 공통·test 11개를 제외한 감사 대상 61개로 확정했다.
+- 상세 매핑과 제외 기준: `docs/2026-08-11_CUBICI_M4_ADMIN_FINAL_RESTORATION_AUDIT.md`
 
 ## 현재 전체 기준
 
@@ -96,11 +107,16 @@
 - 엄격한 LV 재복원 기준 후보 작성 완료: 24/24, 100%
 - 관리자 직접 메뉴 후보 검증 완료: 24/24
 - 관리자 운영 데이터 조회: 직접 메뉴 24/24, 상세/파생 10/10 통과
-- 관리자 route·제목·데이터 완전 정상: 32/34
-- 관리자 로컬 배포 후보 route·제목·데이터 완전 정상: 34/34
+- 관리자 전체 React route 매핑: 34/34
+- 관리자 운영 배포 source route·제목 보완 반영: 34/34
+- 관리자 직접 메뉴 평균 화면 복원율: 100%
+- 관리자 상세·파생 평균 화면 복원율: 90.0%
+- 관리자 전체 34개 평균 화면 복원율: 97.1%
 - 관리자 직접 메뉴 평균 내부 기능 구현율: 84.5%
-- 기능 구현율은 사용자 페이지 M1, 관리자 페이지 M4 감사 후 확정값으로 갱신한다.
-- 현재 수치는 기존 문서와 테스트 파일을 근거로 한 초기 추정치이며 운영 완료율이 아니다.
+- 관리자 상세·파생 평균 내부 기능 구현율: 81.1%
+- 관리자 전체 34개 평균 내부 기능 구현율: 83.5%
+- 관리자 기능 구현율은 M4에서 상세·파생 화면을 포함한 보수적 baseline으로 갱신했다.
+- 기능 구현율은 내부 기능 기준이며 외부 연동과 별도 운영 산식 검산을 완료로 처리하지 않는다.
 
 ## 2026-08-10 전체 회귀검증
 
