@@ -46,7 +46,9 @@ test('moneybank request to account standby full lifecycle with user and admin sc
   await expectStatus(fixture.mbid, 'REQUEST');
   await expectUploadedDocumentCount(fixture.mbid, 2);
   await expectUserCurrentStatus(page, fixture, '신청접수');
-  await expectAdminApprovalStatus(page, fixture, '신청접수');
+  await moveRequestToReviewFromAdmin(page, fixture);
+  await expectStatus(fixture.mbid, 'PENDING_REVIEW');
+  await expectAdminApprovalStatus(page, fixture, '심사대기');
 
   await presentTermsFromAdmin(page, fixture);
   await expectStatus(fixture.mbid, 'CONDITIONS_ACCEPT');
@@ -62,15 +64,14 @@ test('moneybank request to account standby full lifecycle with user and admin sc
   await expectAdminContractStatus(page, fixture, '계좌대기');
 
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(fixture.mbid)}`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
   await expect(page.locator('input[value="계좌대기"]').first()).toBeVisible();
 });
 
 async function submitUserRequest(page, currentFixture, regFile, cbFile) {
   await page.goto(`${userBaseUrl}/moneybank/request`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
-  await expect(page.locator(`input[value="${currentFixture.userNo}"]`)).toBeVisible();
+  await expect(page.getByRole('button', { name: '서비스 신청', exact: true })).toBeVisible();
+  await expect(page.locator(`input[value="${currentFixture.email}"]`)).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.bizName}"]`)).toBeVisible();
   await expect(page.getByLabel('네이버')).toBeChecked();
 
@@ -89,14 +90,14 @@ async function submitUserRequest(page, currentFixture, regFile, cbFile) {
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
   await page.goto(`${userBaseUrl}/moneybank/current`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
-  const currentRow = page.locator('tbody tr').filter({ hasText: currentFixture.mbid });
-  await expect(currentRow).toContainText(expectedLabel);
+  await expect(page.getByRole('link', {
+    name: `${currentFixture.mbid} · ${expectedLabel}`,
+    exact: true,
+  })).toBeVisible();
 }
 
 async function expectUserContractDetailStatus(page, currentFixture, expectedLabel) {
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(currentFixture.mbid)}`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
   await expect(page.locator(`input[value="${expectedLabel}"]`).first()).toBeVisible();
 }
 
@@ -107,6 +108,22 @@ async function expectAdminApprovalStatus(page, currentFixture, expectedLabel) {
   const approvalRow = page.locator('tbody tr').filter({ hasText: currentFixture.userName });
   await expect(approvalRow).toContainText(currentFixture.bizName);
   await expect(approvalRow).toContainText(expectedLabel);
+}
+
+async function moveRequestToReviewFromAdmin(page, currentFixture) {
+  await page.goto(`${adminBaseUrl}/admin/moneybank/request`);
+  await page.getByLabel('회원명').fill(currentFixture.userName);
+  await page.getByRole('button', { name: '검색' }).click();
+
+  const requestRow = page.locator('tbody tr').filter({ hasText: currentFixture.userName });
+  await expect(requestRow).toContainText(currentFixture.email);
+  await expect(requestRow).toContainText('신청접수');
+  await requestRow.getByRole('button', { name: '신청접수' }).click();
+
+  await expect(page.getByRole('heading', { name: '신청 상태' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '심사대기 전환' })).toBeEnabled();
+  await page.getByRole('button', { name: '심사대기 전환' }).click();
+  await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
 }
 
 async function expectAdminContractStatus(page, currentFixture, expectedLabel) {
@@ -149,12 +166,11 @@ async function presentTermsFromAdmin(page, currentFixture) {
 async function acceptTermsFromUser(page, currentFixture) {
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(currentFixture.mbid)}`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
-  await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: '이용조건 확인', exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator(`input[value="${currentFixture.mbid}"]`).first()).toBeVisible();
   await expect(page.locator('input[value="조건제시"]').first()).toBeVisible();
-  await expect(page.getByText('80%')).toBeVisible();
-  await expect(page.getByText('1.35%')).toBeVisible();
+  await expect(page.getByLabel('머니뱅크 지급율')).toHaveValue('80%');
+  await expect(page.getByLabel('이용 수수료율')).toHaveValue('1.35%');
 
   await expect(page.getByRole('button', { name: '이용조건 동의' })).toBeEnabled();
   await page.getByRole('button', { name: '이용조건 동의' }).click();
@@ -169,7 +185,7 @@ async function readyContractFromAdmin(page, currentFixture) {
   const contractRow = page.locator('tbody tr').filter({ hasText: currentFixture.userName });
   await expect(contractRow).toContainText(currentFixture.bizName);
   await expect(contractRow).toContainText('동의');
-  await contractRow.getByRole('button', { name: '보기' }).click();
+  await contractRow.getByRole('button', { name: currentFixture.mbid, exact: true }).click();
 
   await expect(page.getByRole('heading', { name: '계약 정보' })).toBeVisible();
   await expect(page.getByRole('button', { name: '체결' })).toBeEnabled();

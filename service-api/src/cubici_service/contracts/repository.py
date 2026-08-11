@@ -633,6 +633,8 @@ def list_contracts(
                     select
                         fee.mbid,
                         fee.payment_rate,
+                        fee.sales_limit_per_order,
+                        fee.max_outstanding_balance,
                         exists (
                             select 1 from contract_fee_adjustment_history h where h.mbid = fee.mbid
                         ) as fee_adjusted,
@@ -641,7 +643,9 @@ def list_contracts(
                         select distinct on (mbid)
                             id,
                             mbid,
-                            payment_rate
+                            payment_rate,
+                            sales_limit_per_order,
+                            max_outstanding_balance
                         from moneybank_contract_fee
                         order by mbid, id desc
                     ) fee
@@ -656,6 +660,13 @@ def list_contracts(
                         group by contract_fee_id
                     ) rate on rate.contract_fee_id = fee.id
                 ) latest_fee on latest_fee.mbid = c.mbid
+                left join lateral (
+                    select outstanding_balance::bigint as latest_outstanding_balance
+                    from moneybank_redemption_history history
+                    where history.mbid = c.mbid
+                    order by history.id desc
+                    limit 1
+                ) balance on true
                 left join moneybank_contract_document cd on cd.mbid = c.mbid
                 left join (
                     select file_division_pk as mbid, count(*) as document_file_count

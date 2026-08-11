@@ -79,6 +79,12 @@ def test_contract_lifecycle_reaches_account_standby_with_real_db() -> None:
         detail = _get_json(client, f"/v1/api/contracts/{mbid}")
         assert detail["contract"]["latest_fee_rate"] == 1.35
 
+        contract_list = _get_json(client, f"/v1/api/contracts?limit=5&offset=0&user_no={user_no}")
+        listed_contract = next(item for item in contract_list["items"] if item["mbid"] == mbid)
+        assert listed_contract["latest_payment_rate"] == 80
+        assert listed_contract["latest_sales_limit_per_order"] == 700_000
+        assert listed_contract["latest_max_outstanding_balance"] == 5_000_000
+
         presented = _put_json(
             client,
             f"/v1/api/contracts/{mbid}/status",
