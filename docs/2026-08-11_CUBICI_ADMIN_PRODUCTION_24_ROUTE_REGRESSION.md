@@ -44,6 +44,7 @@
 - 새 탭, 다운로드, modifier click, 외부 링크, 로그아웃은 기존 브라우저 동작을 유지한다.
 - 페이지별 기존 `preventDefault` 탭 동작도 우선 적용되도록 유지한다.
 - 뒤로가기는 `popstate`로 원래 관리자 화면을 복원한다.
+- route 변경 시 sidebar의 펼침·활성 대분류도 현재 화면과 다시 동기화한다.
 
 ## 검증
 
@@ -54,11 +55,16 @@
 | 공통 shell focused E2E | 4/4 통과 |
 | 세션 검증 횟수 | 최초 진입 1회, 내부 메뉴 이동·뒤로가기 추가 호출 없음 |
 | 로그인/PC shell/mobile drawer | 통과 |
+| Cloudflare static bundle smoke | 통과 |
+| 운영 SPA 메뉴 이동·뒤로가기 | 통과, 권한 확인 화면 재노출 0회 |
+| 운영 sidebar 상태 | 뒤로가기 후 현재 대분류만 `active open` |
+| 운영 API DB health | HTTP 200, `cubici_prod`, application table 59개 |
 
 ## 상태와 다음 단계
 
 - 운영 24 route UI·실데이터 표시 회귀: 완료
 - 메뉴 전환 UX source 보완: 완료
 - 관리자 이메일의 frontend build-time 주입을 제거하고 Backend master 관리자 검증을 단일 권한 기준으로 유지했다.
-- Git commit/push와 운영 배포: 미수행
-- 사용자 승인 후 변경분을 배포하고 운영 메뉴 클릭에서 권한 확인 화면이 재노출되지 않는지 focused smoke한다.
+- Git commit/push: 완료 (`1e488f2`, `5e2d7a3`)
+- Cloudflare Pages 운영 배포: 완료 (`https://3eef1128.cubici.pages.dev`)
+- 운영 도메인 `https://cubici.co.kr`에서 새 admin asset과 SPA focused smoke를 확인했다.
