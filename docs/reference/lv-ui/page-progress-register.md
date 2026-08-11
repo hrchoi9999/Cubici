@@ -76,7 +76,7 @@
 | A21 | 연계코드 관리 | `/admin/cubici/adminPreference/managePromotion` | 100% | 82% | ADM-LV-20 사용자 승인/legacy 13열·그룹헤더·검색·CRUD mock 통과/개발 DB 1건·요금제 연결 및 종료일 정합화/전체 실 DB CRUD 잔여 |
 | A22 | 협력사 관리 | `/admin/cubici/adminPreference/managePartner` | 100% | 86% | ADM-LV-21 사용자 승인/legacy 10열·담당자 그룹헤더·검색·집계·checksum·CRUD mock 통과/개발 DB 4건 조회·실 DB CRUD 잔여 |
 | A23 | 자금조달 관리 | `/admin/moneybank/funding` | 100% | 92% | ADM-LV-10 목록·등록 PC/모바일 사용자 승인/DB 기본등록·중복 방지·원복 E2E 통과 |
-| A24 | Prism System | `/admin/cubici/adminPreference/prizmConfig` | 100% | 84% | ADM-LV-22 사용자 승인/legacy 3단 지표설정·Prizm/CRA·종합현황·변경이력·mock update 통과/개발 DB 26건 판정 정합화/산식 검산은 운영 지표관리 단계로 분리 |
+| A24 | Prism System | `/admin/cubici/adminPreference/prizmConfig` | 100% | 92% | ADM-LV-22 사용자 승인/legacy 3단 지표설정·Prizm/CRA·종합현황·변경이력/개발 DB 26건/실 DB 수정·재조회·변경이력·원복 E2E 통과/산식 검산은 운영 지표관리 단계로 분리 |
 
 ## 관리자 상세/파생 화면
 
@@ -98,7 +98,7 @@
 - 관리자 운영 데이터 조회: 직접 메뉴 24/24, 상세/파생 10/10 통과
 - 관리자 route·제목·데이터 완전 정상: 32/34
 - 관리자 로컬 배포 후보 route·제목·데이터 완전 정상: 34/34
-- 관리자 직접 메뉴 평균 내부 기능 구현율: 84.2%
+- 관리자 직접 메뉴 평균 내부 기능 구현율: 84.5%
 - 기능 구현율은 사용자 페이지 M1, 관리자 페이지 M4 감사 후 확정값으로 갱신한다.
 - 현재 수치는 기존 문서와 테스트 파일을 근거로 한 초기 추정치이며 운영 완료율이 아니다.
 
@@ -113,5 +113,6 @@
 - A07-A08 예외 흐름: 서류보완·신청거절·이용조건 거절 개발 DB/UI E2E 통과
 - A09-A11 예외 흐름: 계약 해지 및 지급·상환 등록/취소 개발 DB/UI E2E 2/2 통과
 - A09-A11 운영 배포: API image와 Cloudflare Pages 반영, 운영 read-only focused smoke 통과
+- A24 Prism System 개발 DB lifecycle: UI 수정·API 재조회·변경이력·DB 저장·원복 1/1 통과, 임시 데이터 0건
 - 구형 관리자 Batch 테스트: 현재 LV DOM·제목·검색 구조와 불일치하여 별도 테스트 부채로 분류
 - 상세 결과: `docs/2026-08-10_CUBICI_FULL_REGRESSION_RESULT.md`
