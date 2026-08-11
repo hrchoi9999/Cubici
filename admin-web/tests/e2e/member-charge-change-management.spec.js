@@ -1,4 +1,17 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import { expect, test } from '@playwright/test';
+
+const MASTER_ADMIN_EMAIL = process.env.CUBICI_MASTER_ADMIN_EMAIL ?? 'admin@example.com';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const candidateDir = path.resolve(
+  __dirname,
+  '../../../docs/reference/lv-ui/admin/ADM-D03-MEMBER-CHARGE-CHANGE/candidate',
+);
+
+fs.mkdirSync(candidateDir, { recursive: true });
 
 const listPayload = {
   limit: 20,
@@ -20,10 +33,10 @@ const listPayload = {
       status: '변경',
       charge_name: '3개월',
       start_date: '2023-04-06',
-      user_id: 'cubici@cubici.co.kr',
-      user_name: '최형락',
-      firm_name: '아즈온',
-      user_code: 'cubici@cubici.co.kr',
+      user_id: 'member-a@example.test',
+      user_name: '테스트회원A',
+      firm_name: '샘플상사A',
+      user_code: 'member-a@example.test',
       user_phone: '01000000000',
       firm_tel: '-',
       shop_count: 2,
@@ -34,10 +47,10 @@ const listPayload = {
       amount: 12000,
       refund_amount: 12000,
       refund_card: 0,
-      refund_user_name: '최형락',
-      refund_bank: '국민',
-      refund_account: '123456',
-      imp_uid: 'imp_202',
+      refund_user_name: '테스트회원A',
+      refund_bank: '테스트은행',
+      refund_account: '0000000000',
+      imp_uid: 'imp_test_202',
       refund_date: null,
       payment_date: '2023-04-07T12:00:00',
     },
@@ -48,10 +61,10 @@ const refundPayload = {
   status: 'RR',
   seq: 101,
   new_seq: 202,
-  user_code: 'cubici@cubici.co.kr',
+  user_code: 'member-a@example.test',
   rest_date: 10,
-  user_name: '최형락',
-  firm_name: '아즈온',
+  user_name: '테스트회원A',
+  firm_name: '샘플상사A',
   user_phone: '01000000000',
   ex_charge_name: '1개월',
   charge_name: '3개월',
@@ -62,13 +75,39 @@ const refundPayload = {
   refund_amount: 12000,
   refund_card: 0,
   refund_cash: 12000,
-  refund_user_name: '최형락',
-  refund_bank: '국민',
-  refund_account: '123456',
-  imp_uid: 'imp_202',
+  refund_user_name: '테스트회원A',
+  refund_bank: '테스트은행',
+  refund_account: '0000000000',
+  imp_uid: 'imp_test_202',
 };
 
+test.beforeEach(async ({ page }) => {
+  await page.route('**/v1/api/accounts/admin-me', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        user_no: 1,
+        email: MASTER_ADMIN_EMAIL,
+        user_type: 'ADMIN_USER',
+        name: '관리자',
+      }),
+    });
+  });
+  await page.addInitScript((masterAdminEmail) => {
+    window.localStorage.setItem(
+      'cubiciAdminAuth',
+      JSON.stringify({
+        token_type: 'Bearer',
+        access_token: 'test-token',
+        user: { email: masterAdminEmail, user_type: 'ADMIN_USER' },
+      }),
+    );
+  }, MASTER_ADMIN_EMAIL);
+});
+
 test('member charge change list renders refund workflow', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 });
   await page.route('**/v1/api/management/member-charge-changes?**', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -93,8 +132,17 @@ test('member charge change list renders refund workflow', async ({ page }) => {
   await expect(page.locator('.m-tab a').filter({ hasText: '요금변경 관리' })).toBeVisible();
   await expect(page.getByText('전체 1건')).toBeVisible();
   await expect(page.getByText('환급대기 1건')).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'cubici@cubici.co.kr' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'member-a@example.test' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '12,000원' })).toBeVisible();
+  const refundButtonHeight = await page.getByRole('button', { name: '환급' }).evaluate(
+    (element) => window.getComputedStyle(element).height,
+  );
+  expect(refundButtonHeight).not.toBe('27px');
+
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(candidateDir, 'ADM-D03-MEMBER-CHARGE-CHANGE-PC.png'),
+  });
 
   await page.getByRole('button', { name: '환급' }).click();
   await expect(page.getByText('서비스 환급')).toBeVisible();
@@ -103,4 +151,30 @@ test('member charge change list renders refund workflow', async ({ page }) => {
 
   await page.getByRole('button', { name: '환급완료' }).click();
   await expect(page.getByText('서비스 환급')).toBeHidden();
+});
+
+test('member charge change keeps its second tab and wide table usable on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route('**/v1/api/management/member-charge-changes?**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(listPayload),
+    });
+  });
+
+  await page.goto('/admin/cubici/manageMember/payment_tab2');
+
+  const activeTab = page.locator('.m-tab li.active');
+  await expect(activeTab).toContainText('요금변경 관리');
+  expect(await activeTab.evaluate((element) => Array.from(element.parentElement.children).indexOf(element))).toBe(1);
+  await expect(page.getByLabel('요금변경 목록 좌우 스크롤')).toBeVisible();
+  await page.getByLabel('요금변경 목록 오른쪽으로 스크롤').click();
+  await expect.poll(() => page.locator('.tableScroll').evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+  await page.getByLabel('요금변경 목록 왼쪽으로 스크롤').click();
+  await expect.poll(() => page.locator('.tableScroll').evaluate((element) => element.scrollLeft)).toBe(0);
+  await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
+  await page.screenshot({
+    fullPage: true,
+    path: path.join(candidateDir, 'ADM-D03-MEMBER-CHARGE-CHANGE-MOBILE.png'),
+  });
 });
