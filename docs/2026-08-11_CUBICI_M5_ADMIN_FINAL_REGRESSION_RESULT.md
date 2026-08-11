@@ -51,6 +51,7 @@ M5는 UI route 회귀를 완료했으며 내부 기능 잔여율은 변경하지
 
 ## 다음 Batch
 
-1. M5 및 인증 preflight 변경을 정확한 파일만 staging·민감정보 점검·commit·push한다.
-2. 이후 별도 승인으로 Cloudflare Pages 운영 배포와 운영 URL smoke를 수행한다.
-3. 운영 API image 변경은 이번 source 변경에 포함되지 않으므로 Docker API 재배포 대상이 아니다.
+1. M5 및 인증 preflight 변경 commit·push 완료: `dd785db`.
+2. Cloudflare Pages 운영 배포와 운영 URL smoke 완료: `f9efb16f.cubici.pages.dev`.
+3. 운영 API/DB health는 HTTP 200이며 Docker API image 재배포는 수행하지 않았다.
+4. 상세 결과는 `docs/2026-08-11_CUBICI_M5_CLOUDFLARE_PRODUCTION_DEPLOYMENT.md`에 기록했다.
