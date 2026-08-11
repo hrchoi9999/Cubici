@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fetchMemberInfo } from '../api/management.js';
 
 const PAGE_SIZE = 20;
@@ -32,6 +32,8 @@ export function MemberInfoPage() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [message, setMessage] = useState('');
+  const listScrollRef = useRef(null);
+  const [listScroll, setListScroll] = useState({ left: 0, max: 0 });
 
   useEffect(() => {
     let ignore = false;
@@ -69,6 +71,30 @@ export function MemberInfoPage() {
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const pageCount = Math.max(1, Math.ceil((counts.total_count ?? 0) / PAGE_SIZE));
 
+  useEffect(() => {
+    const container = listScrollRef.current;
+    if (!container) {
+      return undefined;
+    }
+
+    function updateScrollState() {
+      setListScroll({
+        left: Math.round(container.scrollLeft),
+        max: Math.max(0, Math.round(container.scrollWidth - container.clientWidth)),
+      });
+    }
+
+    updateScrollState();
+    container.addEventListener('scroll', updateScrollState, { passive: true });
+    const resizeObserver = new ResizeObserver(updateScrollState);
+    resizeObserver.observe(container);
+
+    return () => {
+      container.removeEventListener('scroll', updateScrollState);
+      resizeObserver.disconnect();
+    };
+  }, [rows]);
+
   function updateSearchValue(event) {
     const { name, value } = event.target;
     setFormValues((current) => ({ ...current, [name]: value }));
@@ -97,6 +123,19 @@ export function MemberInfoPage() {
       const next = value + PAGE_SIZE;
       return next >= counts.total_count ? value : next;
     });
+  }
+
+  function moveListScroll(direction) {
+    const container = listScrollRef.current;
+    if (!container) return;
+    container.scrollTo({
+      left: container.scrollLeft + direction * Math.max(240, container.clientWidth * 0.65),
+      behavior: 'smooth',
+    });
+  }
+
+  function changeListScroll(event) {
+    listScrollRef.current?.scrollTo({ left: Number(event.target.value) });
   }
 
   return (
@@ -162,7 +201,7 @@ export function MemberInfoPage() {
 
       {message ? <div className="m-alert">{message}</div> : null}
 
-      <div className="tableScroll">
+      <div className="tableScroll" ref={listScrollRef}>
         <table className="m-table memberInfoTable">
           <thead>
             <tr>
@@ -199,6 +238,19 @@ export function MemberInfoPage() {
           </tbody>
         </table>
       </div>
+      {listScroll.max > 0 ? <div className="horizontalTableScrollbar" aria-label="회원정보 목록 좌우 스크롤">
+        <button type="button" aria-label="회원정보 목록 왼쪽으로 스크롤" onClick={() => moveListScroll(-1)} disabled={listScroll.left <= 0}>&lt;</button>
+        <input
+          type="range"
+          aria-label="회원정보 목록 가로 스크롤"
+          min="0"
+          max={listScroll.max}
+          step="1"
+          value={Math.min(listScroll.left, listScroll.max)}
+          onChange={changeListScroll}
+        />
+        <button type="button" aria-label="회원정보 목록 오른쪽으로 스크롤" onClick={() => moveListScroll(1)} disabled={listScroll.left >= listScroll.max}>&gt;</button>
+      </div> : null}
 
       <div className="pagination">
         <button className="m-btn" type="button" onClick={goToPreviousPage} disabled={offset === 0}>이전</button>
