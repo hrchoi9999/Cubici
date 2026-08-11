@@ -52,7 +52,7 @@ test('admin reject and user terms refusal exception statuses are persisted and d
   await refuseTermsFromUser(page, refused);
   await expectStatus(refused.mbid, 'TERMS_REFUSED');
   await expectUserCurrentStatus(page, refused, '동의거부');
-  await expectAdminApprovalStatus(page, refused, '동의거부');
+  await expectAdminApprovalStatus(page, refused, '거부');
 });
 
 async function createRequestFromUser(page, currentFixture) {
@@ -64,11 +64,9 @@ async function createRequestFromUser(page, currentFixture) {
 
   await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/request`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
-  await expect(page.locator(`input[value="${currentFixture.userNo}"]`)).toBeVisible();
+  await expect(page.getByRole('button', { name: '서비스 신청', exact: true })).toBeVisible();
+  await expect(page.locator(`input[value="${currentFixture.email}"]`)).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.bizName}"]`)).toBeVisible();
-  await expect(page.getByText('연결 완료')).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('input[value="1개"]')).toBeVisible();
   await expect(page.getByLabel('네이버')).toBeChecked();
 
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
@@ -104,7 +102,7 @@ async function rejectRequestFromAdmin(page, currentFixture) {
   await expect(requestRow).toContainText('신청접수');
   await requestRow.getByRole('button', { name: '신청접수' }).click();
 
-  await expect(page.getByText('상태 상세')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '신청 상태' })).toBeVisible();
   const statusResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '거부' }).click();
   await expectApiResponse(statusResponsePromise);
@@ -115,7 +113,6 @@ async function rejectRequestFromAdmin(page, currentFixture) {
 async function refuseTermsFromUser(page, currentFixture) {
   await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/current/${encodeURIComponent(currentFixture.mbid)}`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 계약 상세' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '이용조건 확인' })).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('input[value="조건제시"]').first()).toBeVisible();
   const refuseResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
@@ -126,12 +123,20 @@ async function refuseTermsFromUser(page, currentFixture) {
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
   await page.goto(`${userBaseUrl}/moneybank/current`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
-  const currentRow = page.locator('tbody tr').filter({ hasText: currentFixture.mbid });
-  await expect(currentRow).toContainText(expectedLabel);
+  await expect(page.getByRole('link', {
+    name: `${currentFixture.mbid} · ${expectedLabel}`,
+    exact: true,
+  })).toBeVisible();
 }
 
 async function expectAdminApprovalStatus(page, currentFixture, expectedLabel) {
+  const response = await apiJson(
+    `/v1/api/contracts?limit=10&offset=0&approval_scope=true&approval_stage=refuse&user_name=${encodeURIComponent(currentFixture.userName)}`,
+  );
+  expect(response.total).toBe(1);
+  expect(response.items[0].status).toBe('TERMS_REFUSED');
+  expect(response.approval_summary.refuse).toBe(1);
+
   await page.goto(`${adminBaseUrl}/admin/moneybank/approval_tab1`);
   await page.getByLabel('회원명').fill(currentFixture.userName);
   await page.getByRole('button', { name: '검색' }).click();

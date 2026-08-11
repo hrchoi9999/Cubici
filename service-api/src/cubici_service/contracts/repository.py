@@ -385,7 +385,7 @@ def _build_contract_filters(
     if approval_scope:
         clauses.append(
             "upper(c.status) in ('PENDING_REVIEW', 'CONDITIONS_ACCEPT', 'USE_AGREE', "
-            "'CONDITIONS_REFUSED', 'REJECTED', '03', '04', '05', '41')"
+            "'CONDITIONS_REFUSED', 'TERMS_REFUSED', 'REJECTED', '03', '04', '05', '41', '51')"
         )
     if approval_stage == "wait":
         clauses.append("upper(c.status) in ('PENDING_REVIEW', '03')")
@@ -396,7 +396,7 @@ def _build_contract_filters(
             f"{adjustment_clause} (select 1 from contract_fee_adjustment_history h where h.mbid = c.mbid)"
         )
     elif approval_stage == "refuse":
-        clauses.append("upper(c.status) in ('CONDITIONS_REFUSED', 'REJECTED', '41')")
+        clauses.append("upper(c.status) in ('CONDITIONS_REFUSED', 'TERMS_REFUSED', 'REJECTED', '41', '51')")
     if contract_scope:
         clauses.append(
             "upper(c.status) in ('CONDITIONS_ACCEPT', 'USE_AGREE', 'CONTRACT', 'EXPIRED', "
@@ -517,8 +517,8 @@ def list_contracts(
                     count(*) filter (where upper(c.status) in ('PENDING_REVIEW', '03')) as approval_wait,
                     count(*) filter (
                         where upper(c.status) in (
-                            'CONDITIONS_ACCEPT', 'USE_AGREE', 'CONDITIONS_REFUSED', 'REJECTED',
-                            '04', '05', '41'
+                            'CONDITIONS_ACCEPT', 'USE_AGREE', 'CONDITIONS_REFUSED', 'TERMS_REFUSED',
+                            'REJECTED', '04', '05', '41', '51'
                         )
                     ) as approval_complete,
                     count(*) filter (
@@ -534,7 +534,7 @@ def list_contracts(
                           )
                     ) as approval_adjust,
                     count(*) filter (
-                        where upper(c.status) in ('CONDITIONS_REFUSED', 'REJECTED', '41')
+                        where upper(c.status) in ('CONDITIONS_REFUSED', 'TERMS_REFUSED', 'REJECTED', '41', '51')
                     ) as approval_refuse,
                     count(*) filter (
                         where upper(c.status) in (

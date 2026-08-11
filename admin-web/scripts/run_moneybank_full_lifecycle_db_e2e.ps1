@@ -1,6 +1,7 @@
 param(
     [string]$ContainerName = 'cubici-postgres-dev',
-    [string]$NodeExe = ''
+    [string]$NodeExe = '',
+    [string[]]$Specs = @('moneybank-full-lifecycle-db-e2e.spec.js')
 )
 
 $ErrorActionPreference = 'Stop'
@@ -104,7 +105,8 @@ with get_connection() as connection:
 
     Push-Location $adminRoot
     try {
-        & $NodeExe .\scripts\run-playwright-e2e.mjs moneybank-full-lifecycle-db-e2e.spec.js --project=chromium
+        $playwrightArgs = @('.\scripts\run-playwright-e2e.mjs') + $Specs + @('--project=chromium')
+        & $NodeExe @playwrightArgs
         $testExitCode = $LASTEXITCODE
     }
     finally {

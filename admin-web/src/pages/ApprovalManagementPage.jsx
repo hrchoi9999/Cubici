@@ -44,7 +44,7 @@ function formatBusinessPeriod(value) {
 
 function approvalStatusLabel(contract) {
   if (hasContractStatus(contract.status, ['PENDING_REVIEW', '03'])) return '심사대기';
-  if (hasContractStatus(contract.status, ['CONDITIONS_REFUSED', 'REJECTED', '41'])) return '거부';
+  if (hasContractStatus(contract.status, ['CONDITIONS_REFUSED', 'TERMS_REFUSED', 'REJECTED', '41', '51'])) return '거부';
   if (contract.fee_adjusted) return '조정';
   if (hasContractStatus(contract.status, ['CONDITIONS_ACCEPT', 'USE_AGREE', '04', '05'])) return '승인';
   return formatContractStatus(contract.status);

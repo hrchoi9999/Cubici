@@ -64,11 +64,9 @@ async function submitUserRequest(page, currentFixture, regFile, cbFile) {
   await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/request`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 신청' })).toBeVisible();
-  await expect(page.locator(`input[value="${currentFixture.userNo}"]`)).toBeVisible();
+  await expect(page.getByRole('button', { name: '서비스 신청', exact: true })).toBeVisible();
+  await expect(page.locator(`input[value="${currentFixture.email}"]`)).toBeVisible();
   await expect(page.locator(`input[value="${currentFixture.bizName}"]`)).toBeVisible();
-  await expect(page.getByText('연결 완료')).toBeVisible({ timeout: 30_000 });
-  await expect(page.locator('input[value="1개"]')).toBeVisible();
   await expect(page.getByLabel('네이버')).toBeChecked();
 
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
@@ -102,7 +100,7 @@ async function requestSupplementFromAdmin(page, currentFixture) {
   await expect(requestRow).toContainText('신청접수');
   await requestRow.getByRole('button', { name: '신청접수' }).click();
 
-  await expect(page.getByText('상태 상세')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '신청 상태' })).toBeVisible();
   await expect(page.getByRole('button', { name: '서류보완 요청' })).toBeVisible();
   const statusResponsePromise = waitForApiResponse(page, `/v1/api/contracts/${currentFixture.mbid}/status`, 'PUT');
   await page.getByRole('button', { name: '서류보완 요청' }).click();
@@ -115,7 +113,6 @@ async function submitSupplementFromUser(page, currentFixture, regFile, cbFile) {
   await setUserSession(page, currentFixture.session);
   await page.goto(`${userBaseUrl}/moneybank/current`);
 
-  await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
   await expect(page.getByRole('heading', { name: '보완서류 제출' })).toBeVisible();
   await page.getByLabel('사업자등록증').setInputFiles(regFile);
   await page.getByLabel('대표자 신분증').setInputFiles(cbFile);
@@ -173,9 +170,10 @@ async function expectApiResponses(responsesPromise) {
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
   await page.goto(`${userBaseUrl}/moneybank/current`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
-  const currentRow = page.locator('tbody tr').filter({ hasText: currentFixture.mbid });
-  await expect(currentRow).toContainText(expectedLabel);
+  await expect(page.getByRole('link', {
+    name: `${currentFixture.mbid} · ${expectedLabel}`,
+    exact: true,
+  })).toBeVisible();
 }
 
 function createDocumentSupplementFixture() {
