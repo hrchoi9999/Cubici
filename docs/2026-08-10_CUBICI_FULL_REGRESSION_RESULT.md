@@ -18,7 +18,7 @@
 | FastAPI 비DB 회귀 | 132 passed, 7 skipped | 통과 |
 | 사용자 Playwright | 102/102 시나리오 통과 | 통과 |
 | 관리자 현재 LV 직접 메뉴 | 55/55 시나리오 통과 | 통과 |
-| DB 쓰기 E2E | 132 passed, 4 skipped, 3 failed | 환경 미완료 |
+| DB 쓰기 E2E | 후속 focused 5/5 통과 | 인증환경 복구 완료 |
 | 구형 관리자 Batch/기능 테스트 | 현재 LV DOM·제목·검색 요청과 불일치 다수 | 테스트 부채 |
 
 ## 사용자 회귀
@@ -39,7 +39,7 @@
 
 ## 미완료·리스크
 
-1. DB 쓰기 E2E 3건은 PostgreSQL 인증정보가 테스트 프로세스에 주입되지 않아 `fe_sendauth: no password supplied`로 실패했다. 제품 기능 실패로 판정하지 않았으며 보안상 자격증명을 자동 추출하지 않았다.
+1. DB 쓰기 E2E 인증 실패는 2026-08-11 후속 Batch에서 해결했다. 실제 비밀번호를 조회하지 않고 일회성 개발 DB 역할과 가상 master 관리자를 사용해 focused 5/5 통과 및 테스트 데이터 0건 원복을 확인했다.
 2. 구형 관리자 Batch 테스트에는 현재 LV에서 변경된 제목, DOM class, 탭 구조, 검색 요청 조건을 기대하는 항목이 남아 있다. 현재 승인 기준 테스트는 통과했지만, 릴리즈 전 구형 테스트 삭제·갱신 범위를 별도 Batch로 정리해야 한다.
 3. Python 3.14 환경에서 pytest 종료 뒤 access violation 메시지가 발생했다. 테스트 assertion은 통과했으나 Python·psycopg/FastAPI 조합의 런타임 호환성 점검이 필요하다.
 4. 결제, SMS, 메일, 실송금 등 외부 연동은 추가개발 범위이며 이번 회귀의 정상 동작 판정에서 제외했다.
@@ -47,7 +47,7 @@
 
 ## 다음 단계
 
-- 실제 DB 쓰기 E2E 인증환경 정비 및 3건 재검증
+- DB 쓰기 E2E 인증환경 정비 및 재검증: 완료
 - 구형 관리자 회귀 테스트 정리
 - 민감정보 점검 후 사용자·관리자 release candidate Git 작업
 - Docker 운영 배포 및 Cloudflare 운영 URL smoke

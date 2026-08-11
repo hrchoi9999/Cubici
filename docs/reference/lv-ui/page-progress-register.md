@@ -59,9 +59,9 @@
 | A04 | 쇼핑몰 통합/결제관리 | `/admin/cubici/manageMember/payment_tab1` | 100% | 80% | ADM-LV-03 사용자 승인/개발 DB 0건·빈 상태 검증 |
 | A05 | 머니뱅크 운영/통합 현황 | `/admin/moneybank/cubici/management/info_tab1`, `info_tab2` | 100% | 85% | ADM-LV-04 사용자 승인/두 탭·실차트 6개/잔액 3,616원 차이 추적 |
 | A06 | 머니뱅크 관리/이용상세 | `/admin/moneybank/management/usageList` | 100% | 88% | ADM-LV-24 사용자 승인/legacy 항목선택·CSV·명시적 가로스크롤·상세 4탭, 개발 DB 조회·focused 회귀 통과/legacy 산식 검산 잔여 |
-| A07 | 신청 접수 | `/admin/moneybank/request` | 100% | 85% | ADM-LV-05 사용자 승인/개발 DB 집계 통과/실 API 상세 쓰기 회귀 대기 |
-| A08 | 심사 승인 | `/admin/moneybank/approval_tab1` | 100% | 82% | ADM-LV-06 사용자 승인/legacy 집계 SQL 통과/실데이터 상세 쓰기 회귀 대기 |
-| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 85% | ADM-LV-07 사용자 승인/개발 DB 4건 SQL 통과/실 API 상세 쓰기 회귀 대기 |
+| A07 | 신청 접수 | `/admin/moneybank/request` | 100% | 87% | ADM-LV-05 사용자 승인/개발 DB 집계·계약 신청 API write E2E 통과/브라우저 실 DB write 잔여 |
+| A08 | 심사 승인 | `/admin/moneybank/approval_tab1` | 100% | 85% | ADM-LV-06 사용자 승인/legacy 집계 SQL·계약 상태 전환 API write E2E 통과/브라우저 실 DB write 잔여 |
+| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 88% | ADM-LV-07 사용자 승인/개발 DB 4건 SQL·계약 체결 API write E2E 통과/브라우저 실 DB write 잔여 |
 | A10 | 정산 관리 | `/admin/moneybank/settlement` | 100% | 85% | ADM-LV-08 사용자 승인/개발 DB 469건·검산 test 통과/운영 DB 재검산 대기 |
 | A11 | 상환 관리 | `/admin/moneybank/redemption` | 100% | 90% | ADM-LV-09 사용자 승인/직접 LV 대조·개발 DB 6건·bundle smoke 통과/write E2E 재검증 대기 |
 | A12 | 신용평가지표 | `/admin/moneybank/manage` | 100% | 78% | ADM-LV-11 사용자 승인/PCS·PMS 설정표 26행·변경행 저장 mock 통과/실 DB write·산식 재계산 별도 |
@@ -71,11 +71,11 @@
 | A16 | Error Log | `/admin/cubici/adminMonitor/error_report` | 100% | 75% | ADM-LV-15 사용자 승인/직접 LV 7열·검색·상세 mock 통과/개발 DB 로그 0건 |
 | A17 | 서버 관리 | `/admin/cubici/adminMonitor/server_monitor` | 100% | 65% | ADM-LV-16 사용자 승인/내부 API·DB·배치 상태 검증/직접 LV 화면·외부 OS metric 없음 |
 | A18 | 펌뱅킹 전문 | `/admin/cubici/adminMonitor/fintech_trade` | 100% | 72% | ADM-LV-17 사용자 승인/목록·검색·상세 parser·테스트 저장 통과/실송금 제외 |
-| A19 | 관리자 등록 | `/admin/cubici/adminPreference/adminRegister_tab1` | 100% | 82% | ADM-LV-18 사용자 승인/legacy 11열·검색·신청·승인·수정·해지 focused E2E 통과/개발 DB 0건 |
+| A19 | 관리자 등록 | `/admin/cubici/adminPreference/adminRegister_tab1` | 100% | 86% | ADM-LV-18 사용자 승인/legacy 11열·검색·신청·승인·수정·중복 방지 개발 DB write E2E 통과/접근권한 연동 잔여 |
 | A20 | 요금제 관리 | `/admin/cubici/adminPreference/manageCharge` | 100% | 78% | ADM-LV-19 사용자 승인/legacy 7열·유형검색·CRUD mock 통과/개발 DB 5건·실 DB 쓰기 잔여 |
 | A21 | 연계코드 관리 | `/admin/cubici/adminPreference/managePromotion` | 100% | 82% | ADM-LV-20 사용자 승인/legacy 13열·그룹헤더·검색·CRUD mock 통과/개발 DB 1건·요금제 연결 및 종료일 정합화/전체 실 DB CRUD 잔여 |
 | A22 | 협력사 관리 | `/admin/cubici/adminPreference/managePartner` | 100% | 86% | ADM-LV-21 사용자 승인/legacy 10열·담당자 그룹헤더·검색·집계·checksum·CRUD mock 통과/개발 DB 4건 조회·실 DB CRUD 잔여 |
-| A23 | 자금조달 관리 | `/admin/moneybank/funding` | 100% | 90% | ADM-LV-10 목록·등록 PC/모바일 사용자 승인/DB 기본등록·검산상태 통과 |
+| A23 | 자금조달 관리 | `/admin/moneybank/funding` | 100% | 92% | ADM-LV-10 목록·등록 PC/모바일 사용자 승인/DB 기본등록·중복 방지·원복 E2E 통과 |
 | A24 | Prism System | `/admin/cubici/adminPreference/prizmConfig` | 100% | 84% | ADM-LV-22 사용자 승인/legacy 3단 지표설정·Prizm/CRA·종합현황·변경이력·mock update 통과/개발 DB 26건 판정 정합화/산식 검산은 운영 지표관리 단계로 분리 |
 
 ## 관리자 상세/파생 화면
@@ -98,7 +98,7 @@
 - 관리자 운영 데이터 조회: 직접 메뉴 24/24, 상세/파생 10/10 통과
 - 관리자 route·제목·데이터 완전 정상: 32/34
 - 관리자 로컬 배포 후보 route·제목·데이터 완전 정상: 34/34
-- 관리자 직접 메뉴 평균 내부 기능 구현율: 78.0%
+- 관리자 직접 메뉴 평균 내부 기능 구현율: 82.7%
 - 기능 구현율은 사용자 페이지 M1, 관리자 페이지 M4 감사 후 확정값으로 갱신한다.
 - 현재 수치는 기존 문서와 테스트 파일을 근거로 한 초기 추정치이며 운영 완료율이 아니다.
 
@@ -108,6 +108,6 @@
 - 관리자 현재 LV 직접 메뉴 24개: Playwright 55/55 통과
 - 사용자·관리자 production build: 모두 통과
 - FastAPI 비DB 회귀: 132 passed, 7 skipped
-- DB 쓰기 E2E: PostgreSQL 비밀번호 미주입으로 3건 환경 미완료
+- DB 쓰기 E2E: 일회성 개발 DB 인증으로 service-api focused 5/5 통과, 잔여 테스트 데이터 0건
 - 구형 관리자 Batch 테스트: 현재 LV DOM·제목·검색 구조와 불일치하여 별도 테스트 부채로 분류
 - 상세 결과: `docs/2026-08-10_CUBICI_FULL_REGRESSION_RESULT.md`
