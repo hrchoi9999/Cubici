@@ -134,10 +134,14 @@ test('admin sidebar navigation stays in the SPA and verifies the session once', 
 
   await expect(page).toHaveURL(/\/admin\/cubici\/infoIntegrated\/cubici_tab1$/);
   await expect(page.locator('figure h3')).toHaveText('통합 현황');
+  await expect(page.locator('#shoppingIntegrated')).toHaveClass(/active/);
   await expect(page.getByText('관리자 권한 확인 중입니다.', { exact: true })).toHaveCount(0);
   expect(adminMeCalls).toBe(1);
 
   await page.goBack();
   await expect(page.locator('figure h3')).toHaveText('회원 현황');
+  await expect(page.locator('#memberInfo')).toHaveClass(/active/);
+  await expect(page.locator('#memberInfo')).toHaveClass(/open/);
+  await expect(page.locator('#shoppingIntegrated')).not.toHaveClass(/active|open/);
   expect(adminMeCalls).toBe(1);
 });

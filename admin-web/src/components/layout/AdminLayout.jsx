@@ -112,6 +112,10 @@ function AdminHeader({ adminSession, isNavigationOpen, onToggleNavigation }) {
 function AdminSidebar({ activeCategoryId, activePageId }) {
   const [openCategoryId, setOpenCategoryId] = useState(activeCategoryId);
 
+  useEffect(() => {
+    setOpenCategoryId(activeCategoryId);
+  }, [activeCategoryId]);
+
   function toggleCategory(categoryId) {
     setOpenCategoryId((current) => (
       current === categoryId && categoryId !== activeCategoryId ? activeCategoryId : categoryId
