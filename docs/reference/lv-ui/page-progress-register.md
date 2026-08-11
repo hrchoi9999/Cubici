@@ -61,9 +61,9 @@
 | A06 | 머니뱅크 관리/이용상세 | `/admin/moneybank/management/usageList` | 100% | 88% | ADM-LV-24 사용자 승인/legacy 항목선택·CSV·명시적 가로스크롤·상세 4탭, 개발 DB 조회·focused 회귀 통과/legacy 산식 검산 잔여 |
 | A07 | 신청 접수 | `/admin/moneybank/request` | 100% | 95% | ADM-LV-05 사용자 승인/신청·서류 업로드·심사대기 전환/서류보완·재제출·신청거절 개발 DB/UI E2E 통과/운영 API·route smoke 통과 |
 | A08 | 심사 승인 | `/admin/moneybank/approval_tab1` | 100% | 95% | ADM-LV-06 사용자 승인/조건 저장·제시·이용조건 거절 및 관리자 거부 집계 개발 DB/UI E2E 통과/운영 API·route smoke 통과 |
-| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 97% | ADM-LV-07 사용자 승인/계약 체결·계좌대기·관리자 해지·사용자 해지 상태·휴면/해지 목록 개발 DB/UI E2E 통과/운영 API·route smoke 통과 |
+| A09 | 계약 관리 | `/admin/moneybank/approval_tab2` | 100% | 98% | ADM-LV-07 사용자 승인/계약 체결·계좌대기·관리자 해지·사용자 해지 상태·휴면/해지 목록 개발 DB/UI E2E 통과/운영 배포·계약 4건·해지 액션 smoke 통과 |
 | A10 | 정산 관리 | `/admin/moneybank/settlement` | 100% | 85% | ADM-LV-08 사용자 승인/개발 DB 469건·검산 test 통과/운영 DB 재검산 대기 |
-| A11 | 상환 관리 | `/admin/moneybank/redemption` | 100% | 96% | ADM-LV-09 사용자 승인/지급·상환 등록, 상환·지급 취소, 누적액·잔액·취소 이력 개발 DB/UI E2E 통과/legacy 산식 최종 검산 잔여 |
+| A11 | 상환 관리 | `/admin/moneybank/redemption` | 100% | 97% | ADM-LV-09 사용자 승인/지급·상환 등록, 상환·지급 취소 개발 DB/UI E2E 통과/운영 배포·상환 6건·잔액 일치·등록 UI smoke 통과/legacy 산식 최종 검산 잔여 |
 | A12 | 신용평가지표 | `/admin/moneybank/manage` | 100% | 78% | ADM-LV-11 사용자 승인/PCS·PMS 설정표 26행·변경행 저장 mock 통과/실 DB write·산식 재계산 별도 |
 | A13 | 고객문의 | `/admin/cubici/supportMember/manageInquiry` | 100% | 86% | ADM-LV-12 사용자 승인/legacy 8열 목록·상세·답변수정 통과/실 DB write·첨부 대기 |
 | A14 | 문자/이메일 | `/admin/cubici/supportMember/manageSms`, `manageEmail` | 100% | 88% | ADM-LV-13 사용자 승인/legacy 2탭·6열 목록·편집·이메일 상세·CRUD mock 통과/실 DB write 대기 |
@@ -98,7 +98,7 @@
 - 관리자 운영 데이터 조회: 직접 메뉴 24/24, 상세/파생 10/10 통과
 - 관리자 route·제목·데이터 완전 정상: 32/34
 - 관리자 로컬 배포 후보 route·제목·데이터 완전 정상: 34/34
-- 관리자 직접 메뉴 평균 내부 기능 구현율: 84.1%
+- 관리자 직접 메뉴 평균 내부 기능 구현율: 84.2%
 - 기능 구현율은 사용자 페이지 M1, 관리자 페이지 M4 감사 후 확정값으로 갱신한다.
 - 현재 수치는 기존 문서와 테스트 파일을 근거로 한 초기 추정치이며 운영 완료율이 아니다.
 
@@ -112,5 +112,6 @@
 - A07-A09 브라우저 DB lifecycle: 1/1 통과, `REQUEST`부터 `ACCOUNT_STANDBY`까지 실제 상태 전이 확인
 - A07-A08 예외 흐름: 서류보완·신청거절·이용조건 거절 개발 DB/UI E2E 통과
 - A09-A11 예외 흐름: 계약 해지 및 지급·상환 등록/취소 개발 DB/UI E2E 2/2 통과
+- A09-A11 운영 배포: API image와 Cloudflare Pages 반영, 운영 read-only focused smoke 통과
 - 구형 관리자 Batch 테스트: 현재 LV DOM·제목·검색 구조와 불일치하여 별도 테스트 부채로 분류
 - 상세 결과: `docs/2026-08-10_CUBICI_FULL_REGRESSION_RESULT.md`
