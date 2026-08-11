@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchContractDetail, fetchContracts, updateContractStatus } from '../api/contracts.js';
-import { canMakeContractStatus, formatContractStatus } from '../utils/contractStatus.js';
+import { canCancelContractStatus, canMakeContractStatus, formatContractStatus } from '../utils/contractStatus.js';
 
 const PAGE_SIZE = 10;
 
@@ -291,6 +291,7 @@ function ContractDetailPanel({ detail, message, onStatusAction }) {
   const latestFee = detail?.fees?.[0];
   const rates = latestFee?.rates ?? [];
   const makeContractEnabled = canMakeContractStatus(contract?.status);
+  const cancelContractEnabled = canCancelContractStatus(contract?.status);
 
   return (
     <section className="detailPanel">
@@ -353,15 +354,31 @@ function ContractDetailPanel({ detail, message, onStatusAction }) {
             </tbody>
           </table>
           <div className="detailActionRow">
-            <button
-              className="sBtn sColorLB"
-              disabled={!makeContractEnabled}
-              onClick={() => onStatusAction('contract_ready', 'contract readied by admin')}
-              type="button"
-            >
-              체결
-            </button>
-            <span>{makeContractEnabled ? '계약 체결 후 계좌대기 단계로 전환합니다.' : '사용자 이용조건 동의 상태에서만 체결할 수 있습니다.'}</span>
+            {makeContractEnabled ? (
+              <button
+                className="sBtn sColorLB"
+                onClick={() => onStatusAction('contract_ready', 'contract readied by admin')}
+                type="button"
+              >
+                체결
+              </button>
+            ) : null}
+            {cancelContractEnabled ? (
+              <button
+                className="sBtn sColorG"
+                onClick={() => onStatusAction('cancel', 'contract terminated by admin')}
+                type="button"
+              >
+                해지
+              </button>
+            ) : null}
+            <span>
+              {makeContractEnabled
+                ? '계약 체결 후 계좌대기 단계로 전환합니다.'
+                : cancelContractEnabled
+                  ? '계약 해지 후 사용자 현황과 휴면/해지 목록에 반영합니다.'
+                  : '현재 상태에서 처리 가능한 계약 액션이 없습니다.'}
+            </span>
           </div>
         </div>
       ) : null}

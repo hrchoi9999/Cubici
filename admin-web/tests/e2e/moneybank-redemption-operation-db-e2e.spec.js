@@ -33,12 +33,12 @@ test('admin redemption provision, repayment, repayment cancel, and provision can
   await seedProvision(fixture, 'SD', 100_000);
 
   await page.goto(`${adminBaseUrl}/admin/moneybank/redemption`);
-  await page.getByLabel('MBID').fill(fixture.mbid);
+  await page.getByLabel('회원명').fill(fixture.userName);
   await page.getByRole('button', { name: '검색' }).click();
 
   const listRow = page.locator('tbody tr').filter({ hasText: fixture.mbid }).first();
   await expect(listRow).toContainText('100,000');
-  await listRow.getByRole('button', { name: '보기' }).click();
+  await listRow.getByRole('button', { name: fixture.mbid }).click();
 
   const detailPanel = page.locator('.detailPanel');
   await expect(detailPanel.getByRole('link', { name: '상환 상세' })).toBeVisible();

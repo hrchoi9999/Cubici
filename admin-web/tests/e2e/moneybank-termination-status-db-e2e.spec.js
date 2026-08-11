@@ -86,25 +86,23 @@ async function createAccountStandbyContract(currentFixture) {
 }
 
 async function terminateFromAdminRequestStatus(page, currentFixture) {
-  await page.goto(`${adminBaseUrl}/admin/moneybank/request`);
+  await page.goto(`${adminBaseUrl}/admin/moneybank/approval_tab2`);
   await page.getByLabel('회원명').fill(currentFixture.userName);
   await page.getByRole('button', { name: '검색' }).click();
 
-  const requestRow = page.locator('tbody tr').filter({ hasText: currentFixture.userName });
-  await expect(requestRow).toContainText('계좌대기');
-  await requestRow.getByRole('button', { name: '계좌대기' }).click();
+  const contractRow = page.locator('tbody tr').filter({ hasText: currentFixture.mbid });
+  await expect(contractRow).toContainText('계좌대기');
+  await contractRow.getByRole('button', { name: currentFixture.mbid }).click();
 
-  await expect(page.getByText('상태 상세')).toBeVisible();
+  await expect(page.getByRole('heading', { name: '계약 정보' })).toBeVisible();
   await page.getByRole('button', { name: '해지' }).click();
   await expect(page.getByText('계약 상태 변경이 완료되었습니다.')).toBeVisible();
-  await expect(page.locator('td').filter({ hasText: '해지' }).first()).toBeVisible();
+  await expect(page.getByRole('cell', { name: '해지', exact: true })).toBeVisible();
 }
 
 async function expectUserCurrentStatus(page, currentFixture, expectedLabel) {
   await page.goto(`${userBaseUrl}/moneybank/current`);
-  await expect(page.getByRole('heading', { name: '머니뱅크 현황' })).toBeVisible();
-  const currentRow = page.locator('tbody tr').filter({ hasText: currentFixture.mbid });
-  await expect(currentRow).toContainText(expectedLabel);
+  await expect(page.getByRole('link', { name: `${currentFixture.mbid} · ${expectedLabel}` })).toBeVisible();
 }
 
 async function expectMemberWithdrawalRow(page, currentFixture) {
