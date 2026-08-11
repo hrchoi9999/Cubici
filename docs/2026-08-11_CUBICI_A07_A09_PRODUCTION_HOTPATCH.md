@@ -1,5 +1,7 @@
 # Cubici A07-A09 운영 API 반영 및 smoke
 
+> 후속 Batch에서 외부 운영 env 경로를 복구하고 새 Docker image로 정식 재배포했다. 현재 운영 상태는 `2026-08-11_CUBICI_PRODUCTION_API_IMAGE_REBUILD.md`를 기준으로 한다.
+
 ## 배포 범위
 
 - 기준 commit: `a58ee8a`
