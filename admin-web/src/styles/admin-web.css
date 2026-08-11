@@ -6861,6 +6861,16 @@ body {
   border-top-color: #0e57bf;
 }
 
+#wrap.adminReactWrap .contentArea table span.sBtn.rBtn {
+  min-width: 0;
+  height: 27px;
+  padding: 0 13px;
+  font-size: 12px;
+  line-height: 27px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
 #wrap.adminReactWrap .contentArea table thead th {
   background: #f0f4ff;
   color: #29347e;

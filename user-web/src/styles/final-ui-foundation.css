@@ -6229,26 +6229,28 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 74px;
-  height: 30px;
-  padding: 0 12px;
+  min-width: 67px;
+  height: 27px;
+  padding: 0 11px;
   color: #fff;
+  font-size: 12px;
   font-weight: 700;
   background: #1759bd;
-  border-radius: 18px;
+  border-radius: 16px;
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u11-status-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 58px;
-  height: 30px;
-  padding: 0 12px;
+  min-width: 52px;
+  height: 27px;
+  padding: 0 11px;
   color: #fff;
+  font-size: 12px;
   font-weight: 700;
   background: #1759bd;
-  border-radius: 18px;
+  border-radius: 16px;
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u11-status-pill.claim-return {
@@ -6331,8 +6333,8 @@
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u13-status-pill {
-  min-width: 116px;
-  font-size: 12px;
+  min-width: 104px;
+  font-size: 11px;
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u13-settlement-summary {

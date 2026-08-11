@@ -4,8 +4,8 @@
 
 - 관리자 직접 메뉴 24개는 PC·모바일 사용자 승인을 완료했다.
 - 상세·파생 화면 10개는 React route와 기능 회귀 근거가 모두 있다.
-- 상세·파생 화면 중 4개는 엄격한 최종 승인 이미지가 없으므로 화면 복원 완료로 처리하지 않는다.
-- 전체 관리자 React 화면 복원율은 34개 가중 평균 97.6%다.
+- 상세·파생 화면 중 3개는 엄격한 최종 승인 이미지가 없으므로 화면 복원 완료로 처리하지 않는다.
+- 전체 관리자 React 화면 복원율은 34개 가중 평균 98.2%다.
 - 기능 구현은 직접 메뉴 평균 84.5%, 상세·파생 포함 보수적 평균 83.5%다.
 
 ## 화면 수 기준
@@ -37,7 +37,7 @@ JSP 물리 파일 수와 React 화면 수는 일대일 대응하지 않는다. l
 | ID | Route | 화면 근거 | 화면 복원율 | 기능 구현율 | 판정 |
 |---|---|---|---:|---:|---|
 | D01 | `/admin/cubici/manageMember/member_tab2` | D01 PC·모바일 승인본 | 100% | 78% | 복원 승인 완료 |
-| D02 | `/admin/cubici/manageMember/member_tab3` | legacy JSP, React, focused E2E | 80% | 78% | 최종 승인 이미지 필요 |
+| D02 | `/admin/cubici/manageMember/member_tab3` | D02 PC·모바일 승인본 | 100% | 78% | 복원 승인 완료 |
 | D03 | `/admin/cubici/manageMember/payment_tab2` | legacy JSP, React, focused E2E | 80% | 80% | 최종 승인 이미지 필요 |
 | D04 | `/admin/cubici/manageMember/userstatus` | `member_status.jsp`, React, focused E2E | 80% | 78% | 최종 승인 이미지 필요 |
 | D05 | `/admin/moneybank/management/usageDetail` | ADM-LV-24 PC·모바일 승인본 | 100% | 88% | 복원 승인 완료 |
@@ -62,9 +62,8 @@ JSP 물리 파일 수와 React 화면 수는 일대일 대응하지 않는다. l
 
 엄격한 페이지 단위 승인 순서는 다음과 같다.
 
-1. D02 휴면/해지
-2. D03 요금변경 관리
-3. D04 회원상세
-4. D10 Prism RawData
+1. D03 요금변경 관리
+2. D04 회원상세
+3. D10 Prism RawData
 
-위 4개 승인 후 관리자 34개 화면의 UI 복원 작업을 종료한다. DB CRUD, legacy 산식 검산, Excel, 외부 연동은 기능 작업으로 별도 관리한다.
+위 3개 승인 후 관리자 34개 화면의 UI 복원 작업을 종료한다. DB CRUD, legacy 산식 검산, Excel, 외부 연동은 기능 작업으로 별도 관리한다.

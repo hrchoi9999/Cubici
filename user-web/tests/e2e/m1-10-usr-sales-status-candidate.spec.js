@@ -57,6 +57,8 @@ test('M1-10 verifies LV sales status layout and retained functions on PC', async
   const expectedHeaders = ['결제일자', '쇼핑몰', '주문번호', '진행상태', '상품명', '쇼핑몰상품번호', '판매수량', '주문금액', '구매자명', '구매자ID'];
   await expect(page.locator('.final-commerce-page.c2p1 thead th')).toHaveText(expectedHeaders);
   await expect(page.locator('.u10-status-pill').first()).toHaveText('주문완료');
+  await expect(page.locator('.u10-status-pill').first()).toHaveCSS('font-size', '12px');
+  await expect(page.locator('.u10-status-pill').first()).toHaveCSS('height', '27px');
   await expect(page.locator('.u10-sales-summary')).toContainText('총 주문건수 합계');
 
   await page.screenshot({ fullPage: true, path: '../docs/reference/lv-ui/work/USR-SALES-STATUS-PC/candidate/candidate-react.png' });

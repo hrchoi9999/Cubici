@@ -76,6 +76,8 @@ test('M1-13 verifies LV settlement detail and retained functions on PC', async (
     '결제일자', '쇼핑몰', '주문번호', '진행상태', '상품명', '상품번호', '구매자명', '구매자ID', '판매수량', '주문금액', '정산예정일', '정산예정액', '정산입금일', '정산입금액',
   ]);
   await expect(page.locator('.u13-status-pill').first()).toContainText('정산예정');
+  await expect(page.locator('.u13-status-pill').first()).toHaveCSS('font-size', '11px');
+  await expect(page.locator('.u13-status-pill').first()).toHaveCSS('height', '27px');
   await expect(page.locator('.u13-settlement-summary')).toContainText('13건');
   await expect(page.locator('.u13-settlement-summary')).toContainText('79,872원');
   expect(await page.locator('.final-commerce-page.c3p2 tbody td').nth(0).evaluate((element) => getComputedStyle(element).position)).toBe('sticky');

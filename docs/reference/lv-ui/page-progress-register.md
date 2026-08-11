@@ -83,7 +83,7 @@
 | ID | 화면 | Route | 화면 복원율 | 기능 구현율 | 상태 |
 |---|---|---|---:|---:|---|
 | D01 | 회원정보 | `/admin/cubici/manageMember/member_tab2` | 100% | 78% | PC·모바일 사용자 승인/표 좌우 스크롤 회귀 완료 |
-| D02 | 휴면/해지 | `/admin/cubici/manageMember/member_tab3` | 80% | 78% | 구현·회귀 완료/최종 승인 이미지 필요 |
+| D02 | 휴면/해지 | `/admin/cubici/manageMember/member_tab3` | 100% | 78% | PC·모바일 사용자 승인/상태 배지·표 좌우 스크롤 회귀 완료 |
 | D03 | 요금변경 관리 | `/admin/cubici/manageMember/payment_tab2` | 80% | 80% | 구현·회귀 완료/최종 승인 이미지 필요 |
 | D04 | 회원상세 | `/admin/cubici/manageMember/userstatus` | 80% | 78% | 구현·회귀 완료/최종 승인 이미지 필요 |
 | D05 | 이용상세 detail | `/admin/moneybank/management/usageDetail` | 100% | 88% | ADM-LV-24 승인 완료 |
@@ -110,8 +110,8 @@
 - 관리자 전체 React route 매핑: 34/34
 - 관리자 운영 배포 source route·제목 보완 반영: 34/34
 - 관리자 직접 메뉴 평균 화면 복원율: 100%
-- 관리자 상세·파생 평균 화면 복원율: 92.0%
-- 관리자 전체 34개 평균 화면 복원율: 97.6%
+- 관리자 상세·파생 평균 화면 복원율: 94.0%
+- 관리자 전체 34개 평균 화면 복원율: 98.2%
 - 관리자 직접 메뉴 평균 내부 기능 구현율: 84.5%
 - 관리자 상세·파생 평균 내부 기능 구현율: 81.1%
 - 관리자 전체 34개 평균 내부 기능 구현율: 83.5%

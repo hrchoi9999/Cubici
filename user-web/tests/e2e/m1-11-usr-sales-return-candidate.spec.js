@@ -74,6 +74,8 @@ test('M1-11 verifies LV sales return layout and retained functions on PC', async
   await expect(page.locator('.final-commerce-page.c2p2 thead th')).toHaveText(expectedHeaders);
   await expect(page.locator('.u11-status-pill.claim-exchange').first()).toHaveText('교환');
   await expect(page.locator('.u11-status-pill.claim-return').first()).toHaveText('반품');
+  await expect(page.locator('.u11-status-pill.claim-exchange').first()).toHaveCSS('font-size', '12px');
+  await expect(page.locator('.u11-status-pill.claim-exchange').first()).toHaveCSS('height', '27px');
   await expect(page.locator('.u11-return-summary')).toContainText('반품금액 합계');
   await expect(page.locator('.u11-return-summary')).toContainText('교환금액 합계');
 
