@@ -498,3 +498,22 @@ export async function previewRawData(payload) {
 
   return response.json();
 }
+
+export async function exportRawData(payload) {
+  const response = await fetch(`${API_BASE_URL}/v1/api/preferences/raw-data/export`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    throw new Error(`RawData 엑셀 다운로드 실패: ${response.status}`);
+  }
+
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+  return {
+    blob: await response.blob(),
+    filename: filenameMatch?.[1] ?? 'cubici_raw_data.xlsx',
+  };
+}

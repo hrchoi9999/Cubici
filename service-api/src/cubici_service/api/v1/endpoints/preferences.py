@@ -1,6 +1,6 @@
 """Admin preference API."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from cubici_service.preferences.repository import (
     AdminAccountApproveRequest,
@@ -46,6 +46,7 @@ from cubici_service.preferences.repository import (
     PrizmConfigUpdateRequest,
     PrizmConfigUpdateResponse,
     RawDataColumnOption,
+    RawDataExportRequest,
     RawDataFormulaItem,
     RawDataFormulaWriteRequest,
     RawDataFormulaWriteResponse,
@@ -64,6 +65,7 @@ from cubici_service.preferences.repository import (
     delete_partner,
     delete_promotion,
     delete_raw_data_formula,
+    export_raw_data,
     get_admin_account,
     get_charge,
     get_moneybank_product,
@@ -276,7 +278,10 @@ def partner_update(partner_id: str, payload: PartnerWriteRequest) -> PartnerWrit
 
 @router.delete("/partners/{partner_id}", response_model=PartnerWriteResponse)
 def partner_delete(partner_id: str) -> PartnerWriteResponse:
-    result = delete_partner(partner_id)
+    try:
+        result = delete_partner(partner_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if result is None:
         raise HTTPException(status_code=404, detail="partner not found")
     return result
@@ -424,6 +429,22 @@ def raw_data_preview(payload: RawDataPreviewRequest) -> RawDataPreviewResponse:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+@router.post("/raw-data/export")
+def raw_data_export(request: Request, payload: RawDataExportRequest) -> Response:
+    admin = getattr(request.state, "master_admin", None)
+    if admin is None:
+        raise HTTPException(status_code=401, detail="master admin authentication context required")
+    try:
+        export_file = export_raw_data(payload, admin_user_no=admin.user_no)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return Response(
+        content=export_file.content,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f'attachment; filename="{export_file.filename}"'},
+    )
+
+
 @router.get("/charges", response_model=ChargeListResponse)
 def charge_list(
     limit: int = Query(default=20, ge=1, le=100),
@@ -471,7 +492,10 @@ def charge_update(charge_code: str, payload: ChargeWriteRequest) -> ChargeWriteR
 
 @router.delete("/charges/{charge_code}", response_model=ChargeWriteResponse)
 def charge_delete(charge_code: str) -> ChargeWriteResponse:
-    result = delete_charge(charge_code)
+    try:
+        result = delete_charge(charge_code)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     if result is None:
         raise HTTPException(status_code=404, detail="charge not found")
     return result

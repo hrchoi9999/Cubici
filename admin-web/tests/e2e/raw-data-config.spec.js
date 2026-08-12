@@ -101,6 +101,14 @@ test.beforeEach(async ({ page }) => {
       }),
     });
   });
+  await page.route('**/v1/api/preferences/raw-data/export', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      headers: { 'Content-Disposition': 'attachment; filename="cubici_raw_sale_order_test.xlsx"' },
+      body: Buffer.from('test-xlsx'),
+    });
+  });
   await page.addInitScript((masterAdminEmail) => {
     window.localStorage.setItem(
       'cubiciAdminAuth',
@@ -120,8 +128,8 @@ test('raw data config restores legacy selector flow on PC', async ({ page }) => 
   const activeTab = page.locator('.prizmLvTabs .active');
   await expect(activeTab).toHaveText('RawData');
   expect(await activeTab.evaluate((element) => Array.from(element.parentElement.children).indexOf(element))).toBe(2);
-  await expect(page.getByLabel('시작 일자')).toBeDisabled();
-  await expect(page.getByLabel('종료 일자')).toBeDisabled();
+  await expect(page.getByLabel('시작 일자')).toBeEnabled();
+  await expect(page.getByLabel('종료 일자')).toBeEnabled();
   await expect(page.getByRole('button', { name: '엑셀 다운로드' })).toBeDisabled();
 
   await page.getByLabel('테이블').selectOption('sale_order');
@@ -131,6 +139,11 @@ test('raw data config restores legacy selector flow on PC', async ({ page }) => 
   for (let index = 0; index < await columnChecks.count(); index += 1) {
     await columnChecks.nth(index).check();
   }
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: '엑셀 다운로드' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toBe('cubici_raw_sale_order_test.xlsx');
+  await expect(page.getByText('RawData 엑셀 파일을 다운로드했습니다.')).toBeVisible();
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
   await expect(page.getByRole('cell', { name: 'TEST-ORDER-001' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '1000' })).toBeVisible();

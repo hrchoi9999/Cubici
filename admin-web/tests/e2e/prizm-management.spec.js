@@ -81,3 +81,50 @@ test('prizm management risk result list, source status, and detail work with moc
   await expect(page.getByRole('heading', { name: 'PMS 평가 결과' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'prizm_pms_result' })).toBeVisible();
 });
+
+test('prizm management preserves a PCS-only legacy result without breaking the detail view', async ({ page }) => {
+  const pcsOnlyRow = {
+    ...riskRow,
+    pms_no: null,
+    pms_grade: null,
+    pms_score: null,
+    sales_total_score: null,
+    manage_total_score: null,
+    pms_reg_date: null,
+  };
+
+  await page.route('**/v1/api/risk-results?**', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({
+        limit: 20,
+        offset: 0,
+        total: 1,
+        counts: {
+          total_count: 1,
+          pcs_count: 1,
+          pms_count: 0,
+          linked_count: 0,
+          incomplete_count: 1,
+          source_status_label: 'PCS/PMS 일부 누락',
+          policy_status_label: '조회 재현',
+        },
+        items: [pcsOnlyRow],
+      }),
+    });
+  });
+
+  await page.goto('/admin/moneybank/risk-results');
+
+  await expect(page.getByText('PMS 0건')).toBeVisible();
+  await expect(page.getByText('연결 0건')).toBeVisible();
+  await expect(page.getByText('상태 PCS/PMS 일부 누락')).toBeVisible();
+
+  const row = page.getByRole('row').filter({ has: page.getByRole('cell', { name: 'MPG2626001' }) });
+  await expect(row.getByRole('cell', { name: '-', exact: true })).toHaveCount(6);
+
+  await row.getByRole('button', { name: '보기' }).click();
+  await expect(page.getByRole('heading', { name: 'PCS 평가 결과' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'PMS 평가 결과' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '- / -', exact: true })).toBeVisible();
+});

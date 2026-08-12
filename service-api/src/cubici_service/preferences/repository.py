@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+import json
+from io import BytesIO
 from datetime import date, datetime
 from typing import Any, Literal
 
@@ -11,6 +13,8 @@ from psycopg.rows import dict_row
 from psycopg import sql
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field, SecretStr, model_validator
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill
 
 from cubici_service.db.connection import get_connection
 
@@ -626,6 +630,32 @@ class RawDataPreviewResponse(BaseModel):
     rows: list[dict[str, Any]]
 
 
+class RawDataExportRequest(BaseModel):
+    table_name: str = Field(min_length=1, max_length=100)
+    columns: list[str] = Field(min_length=1, max_length=20)
+    from_date: date | None = None
+    to_date: date | None = None
+    limit: int = Field(default=1000, ge=1, le=5000)
+
+    @model_validator(mode="after")
+    def validate_date_range(self) -> "RawDataExportRequest":
+        if (self.from_date is None) != (self.to_date is None):
+            raise ValueError("from_date and to_date must be provided together")
+        if self.from_date and self.to_date:
+            if self.from_date > self.to_date:
+                raise ValueError("from_date must be on or before to_date")
+            if (self.to_date - self.from_date).days > 366:
+                raise ValueError("raw data export range cannot exceed 366 days")
+        return self
+
+
+class RawDataExportFile(BaseModel):
+    filename: str
+    content: bytes
+    row_count: int
+    file_sha256: str
+
+
 def _build_charge_filters(
     *,
     status: ChargeStatus,
@@ -868,6 +898,17 @@ def delete_charge(charge_code: str) -> ChargeWriteResponse | None:
 
     with get_connection() as connection:
         with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select
+                    exists(select 1 from promotion_charge where charge_code = %s),
+                    exists(select 1 from billing_payment_detail where charge_code = %s)
+                """,
+                (charge_code, charge_code),
+            )
+            promotion_used, billing_used = cursor.fetchone()
+            if promotion_used or billing_used:
+                raise ValueError("charge is in use and cannot be deleted")
             cursor.execute("delete from charge where charge_code = %s", (charge_code,))
 
     return ChargeWriteResponse(action="deleted", charge_code=charge_code, charge=None)
@@ -1911,6 +1952,17 @@ def delete_partner(partner_id: str) -> PartnerWriteResponse | None:
 
     with get_connection() as connection:
         with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                select
+                    exists(select 1 from users where partner_code = %s),
+                    exists(select 1 from promotion where partner_code = %s)
+                """,
+                (existing.partner.partner_code, existing.partner.partner_code),
+            )
+            user_used, promotion_used = cursor.fetchone()
+            if user_used or promotion_used:
+                raise ValueError("partner is in use and cannot be deleted")
             cursor.execute("delete from partner_manager where partner_code = %s", (existing.partner.partner_code,))
             cursor.execute("delete from partner where partner_id = %s", (partner_id,))
 
@@ -2747,6 +2799,26 @@ def _raw_data_table_type(table_name: str) -> str:
     return "99"
 
 
+RAW_DATA_SENSITIVE_COLUMNS = {
+    "sale": {"pcc", "orderer_id", "orderer_name"},
+    "settlement": {"bank_account_holder", "bank_name", "bank_account"},
+}
+RAW_DATA_SENSITIVE_TOKENS = ("password", "passwd", "token", "secret", "resident", "phone", "email")
+RAW_DATA_DATE_COLUMNS = {
+    "sale": "paid_date",
+    "sale_return": "request_date",
+    "settlement": "settlement_date",
+    "moneybank_redemption_sales": "paid_date",
+}
+
+
+def _is_sensitive_raw_data_column(table_name: str, column_name: str) -> bool:
+    normalized = column_name.lower()
+    return normalized in RAW_DATA_SENSITIVE_COLUMNS.get(table_name.lower(), set()) or any(
+        token in normalized for token in RAW_DATA_SENSITIVE_TOKENS
+    )
+
+
 def list_raw_data_tables() -> list[RawDataTableOption]:
     with get_connection() as connection:
         with connection.cursor(row_factory=dict_row) as cursor:
@@ -2801,6 +2873,7 @@ def list_raw_data_columns(table_name: str) -> list[RawDataColumnOption]:
             data_type=row["data_type"],
         )
         for row in rows
+        if not _is_sensitive_raw_data_column(table_name, row["column_name"])
     ]
 
 
@@ -2971,6 +3044,114 @@ def preview_raw_data(payload: RawDataPreviewRequest) -> RawDataPreviewResponse:
         table_name=payload.table_name,
         columns=selected_columns,
         rows=[dict(row) for row in rows],
+    )
+
+
+def _excel_safe_value(value: Any) -> Any:
+    if isinstance(value, (dict, list, tuple)):
+        value = json.dumps(value, ensure_ascii=False, default=str)
+    elif isinstance(value, bytes):
+        value = value.hex()
+    elif isinstance(value, datetime) and value.tzinfo is not None:
+        value = value.replace(tzinfo=None)
+    if isinstance(value, str) and value.startswith(("=", "+", "-", "@")):
+        return f"'{value}"
+    return value
+
+
+def build_raw_data_workbook(columns: list[str], rows: list[dict[str, Any]]) -> bytes:
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = "RawData"
+    worksheet.freeze_panes = "A2"
+
+    header_fill = PatternFill(fill_type="solid", fgColor="0B3A78")
+    header_font = Font(color="FFFFFF", bold=True)
+    for index, column in enumerate(columns, start=1):
+        cell = worksheet.cell(row=1, column=index, value=column)
+        cell.fill = header_fill
+        cell.font = header_font
+
+    widths = [len(column) for column in columns]
+    for row_index, row in enumerate(rows, start=2):
+        for column_index, column in enumerate(columns, start=1):
+            value = _excel_safe_value(row.get(column))
+            worksheet.cell(row=row_index, column=column_index, value=value)
+            widths[column_index - 1] = min(40, max(widths[column_index - 1], len(str(value or ""))))
+
+    worksheet.auto_filter.ref = f"A1:{worksheet.cell(row=1, column=len(columns)).coordinate}"
+    for index, width in enumerate(widths, start=1):
+        worksheet.column_dimensions[worksheet.cell(row=1, column=index).column_letter].width = min(40, width + 2)
+
+    output = BytesIO()
+    workbook.save(output)
+    return output.getvalue()
+
+
+def export_raw_data(payload: RawDataExportRequest, *, admin_user_no: int) -> RawDataExportFile:
+    available_columns = list_raw_data_columns(payload.table_name)
+    available_names = {column.column_name for column in available_columns}
+    if len(set(payload.columns)) != len(payload.columns):
+        raise ValueError("raw data export columns must be unique")
+    invalid_columns = [column for column in payload.columns if column not in available_names]
+    if invalid_columns:
+        raise ValueError("raw data export contains unavailable or sensitive columns")
+
+    date_column = RAW_DATA_DATE_COLUMNS.get(payload.table_name.lower())
+    if payload.from_date and not date_column:
+        raise ValueError("date filtering is not supported for this raw data table")
+    if date_column and date_column not in available_names:
+        date_column = None
+        if payload.from_date:
+            raise ValueError("configured date column is unavailable")
+
+    query = sql.SQL("select {fields} from {table}").format(
+        fields=sql.SQL(", ").join(sql.Identifier(column) for column in payload.columns),
+        table=sql.Identifier(payload.table_name),
+    )
+    params: list[Any] = []
+    if payload.from_date and payload.to_date and date_column:
+        query += sql.SQL(" where {date_column}::date between %s and %s").format(date_column=sql.Identifier(date_column))
+        params.extend([payload.from_date, payload.to_date])
+    if date_column:
+        query += sql.SQL(" order by {date_column} desc nulls last").format(date_column=sql.Identifier(date_column))
+    query += sql.SQL(" limit %s")
+    params.append(payload.limit)
+
+    with get_connection() as connection:
+        with connection.cursor(row_factory=dict_row) as cursor:
+            cursor.execute(query, params)
+            rows = [dict(row) for row in cursor.fetchall()]
+
+        content = build_raw_data_workbook(payload.columns, rows)
+        file_sha256 = hashlib.sha256(content).hexdigest()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                insert into raw_data_export_audit (
+                    admin_user_no, table_name, selected_columns, from_date, to_date,
+                    requested_limit, exported_rows, file_sha256, status
+                )
+                values (%s, %s, %s, %s, %s, %s, %s, %s, 'SUCCESS')
+                """,
+                (
+                    admin_user_no,
+                    payload.table_name,
+                    payload.columns,
+                    payload.from_date,
+                    payload.to_date,
+                    payload.limit,
+                    len(rows),
+                    file_sha256,
+                ),
+            )
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    return RawDataExportFile(
+        filename=f"cubici_raw_{payload.table_name}_{timestamp}.xlsx",
+        content=content,
+        row_count=len(rows),
+        file_sha256=file_sha256,
     )
 
 

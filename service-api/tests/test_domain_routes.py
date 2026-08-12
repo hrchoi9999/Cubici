@@ -1,5 +1,8 @@
 from datetime import date
 
+import pytest
+from fastapi import HTTPException
+
 from cubici_service.app import create_app
 from cubici_service.api.v1.endpoints import (
     accounts,
@@ -103,6 +106,7 @@ def test_domain_routes_registered() -> None:
         "/v1/api/preferences/raw-data/formulas",
         "/v1/api/preferences/raw-data/formulas/{raw_data_no}",
         "/v1/api/preferences/raw-data/preview",
+        "/v1/api/preferences/raw-data/export",
         "/v1/api/preferences/charges",
         "/v1/api/preferences/charges/{charge_code}",
         "/v1/api/support/inquiries",
@@ -1134,6 +1138,25 @@ def test_preferences_raw_data_endpoint_payload(monkeypatch) -> None:
     assert formulas[0].raw_data_no == 1
     assert created.action == "created"
     assert preview.rows[0]["amount"] == 1000
+
+
+def test_preferences_delete_conflicts_return_http_409(monkeypatch) -> None:
+    def fake_delete_charge(charge_code: str):
+        raise ValueError("charge is in use and cannot be deleted")
+
+    def fake_delete_partner(partner_id: str):
+        raise ValueError("partner is in use and cannot be deleted")
+
+    monkeypatch.setattr(preferences, "delete_charge", fake_delete_charge)
+    monkeypatch.setattr(preferences, "delete_partner", fake_delete_partner)
+
+    with pytest.raises(HTTPException) as charge_error:
+        preferences.charge_delete("TEST")
+    with pytest.raises(HTTPException) as partner_error:
+        preferences.partner_delete("TEST")
+
+    assert charge_error.value.status_code == 409
+    assert partner_error.value.status_code == 409
 
 
 def test_management_member_summary_endpoint_payload(monkeypatch) -> None:

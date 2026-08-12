@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createRawDataFormula,
   deleteRawDataFormula,
+  exportRawData,
   fetchRawDataColumns,
   fetchRawDataFormulas,
   fetchRawDataTables,
@@ -59,6 +60,9 @@ export function RawDataConfigPage() {
   const [formulaForm, setFormulaForm] = useState(emptyFormula);
   const [preview, setPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [message, setMessage] = useState('');
   const previewScrollRef = useRef(null);
   const [previewScroll, setPreviewScroll] = useState({ left: 0, max: 0 });
@@ -252,6 +256,42 @@ export function RawDataConfigPage() {
     }
   }
 
+  async function handleExport() {
+    if (!selectedTable || selectedColumns.length === 0) {
+      setMessage('테이블과 컬럼을 선택하세요.');
+      return;
+    }
+    if (Boolean(fromDate) !== Boolean(toDate)) {
+      setMessage('시작 일자와 종료 일자를 함께 입력하세요.');
+      return;
+    }
+
+    setMessage('');
+    setIsExporting(true);
+    try {
+      const result = await exportRawData({
+        table_name: selectedTable,
+        columns: selectedColumns,
+        from_date: fromDate || null,
+        to_date: toDate || null,
+        limit: 5000,
+      });
+      const url = window.URL.createObjectURL(result.blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = result.filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.URL.revokeObjectURL(url);
+      setMessage('RawData 엑셀 파일을 다운로드했습니다.');
+    } catch (error) {
+      setMessage(error.message);
+    } finally {
+      setIsExporting(false);
+    }
+  }
+
   function selectFormulaType(columnName) {
     setFormulaForm((current) => ({ ...current, rawDataId: columnName, rawDataShop: selectedTable }));
   }
@@ -288,13 +328,20 @@ export function RawDataConfigPage() {
           </div>
           <div className="inputBox">
             <label htmlFor="rawDataFromDate">시작 일자</label>
-            <input id="rawDataFromDate" type="date" disabled />
+            <input id="rawDataFromDate" type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} />
           </div>
           <div className="inputBox">
             <label htmlFor="rawDataToDate">종료 일자</label>
-            <input id="rawDataToDate" type="date" disabled />
+            <input id="rawDataToDate" type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} />
           </div>
-          <button className="m-btn" type="button" disabled>엑셀 다운로드</button>
+          <button
+            className="m-btn"
+            type="button"
+            disabled={!selectedTable || selectedColumns.length === 0 || isExporting}
+            onClick={handleExport}
+          >
+            {isExporting ? '다운로드 중' : '엑셀 다운로드'}
+          </button>
         </div>
       </div>
 

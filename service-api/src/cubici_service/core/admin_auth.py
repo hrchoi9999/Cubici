@@ -77,7 +77,7 @@ async def enforce_master_admin_for_protected_api(request: Request, settings: Set
         return None
 
     try:
-        authenticate_master_admin(request.headers.get("authorization"), settings)
+        request.state.master_admin = authenticate_master_admin(request.headers.get("authorization"), settings)
     except HTTPException as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
     return None
