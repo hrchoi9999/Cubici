@@ -175,7 +175,7 @@ test('redemption history filters, payload detail, and cancel modal work with moc
   await expect(page.getByText('최근 작업 이력')).toBeVisible();
   await expect(page.getByText('RPTEST001')).toBeVisible();
 
-  await page.getByLabel('상태').selectOption('취소이력');
+  await page.locator('.redemptionHistoryFilters select[name="status"]').selectOption('취소이력');
   await expect(page.getByText('CXTEST001')).toBeVisible();
   await expect(page.getByText('RPTEST001')).toHaveCount(0);
 

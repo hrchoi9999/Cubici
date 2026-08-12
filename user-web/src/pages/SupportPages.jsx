@@ -136,11 +136,10 @@ function NoticeBoardList({ items, loading, emptyMessage, page, onPageChange }) {
   );
 }
 
-function QaBoardList({ items, loading, emptyMessage, page, onPageChange }) {
-  const totalPages = Math.max(1, Math.ceil(items.length / QA_PAGE_SIZE));
+function QaBoardList({ items, loading, emptyMessage, page, total, onPageChange }) {
+  const totalPages = Math.max(1, Math.ceil(total / QA_PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const startIndex = (currentPage - 1) * QA_PAGE_SIZE;
-  const pageItems = items.slice(startIndex, startIndex + QA_PAGE_SIZE);
   const pageButtonCount = Math.min(totalPages, 5);
   const firstVisiblePage = Math.min(
     Math.max(1, currentPage - 2),
@@ -172,12 +171,12 @@ function QaBoardList({ items, loading, emptyMessage, page, onPageChange }) {
               </tr>
             </thead>
             <tbody>
-              {pageItems.length ? pageItems.map((item, index) => {
+              {items.length ? items.map((item, index) => {
                 const href = `/board/qa/${encodeURIComponent(item.qna_id)}`;
                 const answered = String(item.answer_status ?? '').includes('완료');
                 return (
                   <tr key={`qa-${item.qna_id}`}>
-                    <td className="num pc">{items.length - startIndex - index}</td>
+                    <td className="num pc">{total - startIndex - index}</td>
                     <td className="type">{item.type_label ?? item.type ?? '-'}</td>
                     <td className="writer">{item.created_by ?? '-'}</td>
                     <td className="title"><a href={href}>{item.title ?? '-'}</a></td>
@@ -329,8 +328,14 @@ function SupportBoardPage({ kind, mode = 'list' }) {
       }
       setState((current) => ({ ...current, loading: true, error: '' }));
       try {
+        const qaQuery = new URLSearchParams({
+          limit: String(QA_PAGE_SIZE),
+          offset: String((qaPage - 1) * QA_PAGE_SIZE),
+          user_no: String(userNo),
+        });
+        if (qaSearchQuery) qaQuery.set('keyword', qaSearchQuery);
         const path = kind === 'qa'
-          ? `/v1/api/support/inquiries?limit=30&offset=0&user_no=${encodeURIComponent(userNo)}`
+          ? `/v1/api/support/inquiries?${qaQuery.toString()}`
           : config.endpoint;
         const response = await fetchJson(path);
         if (!active) return;
@@ -358,7 +363,7 @@ function SupportBoardPage({ kind, mode = 'list' }) {
     return () => {
       active = false;
     };
-  }, [config.endpoint, isQaWrite, kind, userNo]);
+  }, [config.endpoint, isQaWrite, kind, qaPage, qaSearchQuery, userNo]);
 
   function updateForm(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -409,12 +414,6 @@ function SupportBoardPage({ kind, mode = 'list' }) {
     return state.items.filter((item) => [item.title, item.type_label, item.type, item.content]
       .some((value) => String(value ?? '').toLocaleLowerCase('ko-KR').includes(query)));
   }, [kind, noticeSearchQuery, state.items]);
-  const qaItems = useMemo(() => {
-    if (kind !== 'qa' || !qaSearchQuery) return state.items;
-    const query = qaSearchQuery.toLocaleLowerCase('ko-KR');
-    return state.items.filter((item) => [item.title, item.type_label, item.type, item.created_by, item.answer_status]
-      .some((value) => String(value ?? '').toLocaleLowerCase('ko-KR').includes(query)));
-  }, [kind, qaSearchQuery, state.items]);
   const faqItems = useMemo(() => {
     if (kind !== 'faq' || !faqSearchQuery) return state.items;
     const query = faqSearchQuery.toLocaleLowerCase('ko-KR');
@@ -428,9 +427,10 @@ function SupportBoardPage({ kind, mode = 'list' }) {
   }, [noticeItems.length]);
 
   useEffect(() => {
-    const totalPages = Math.max(1, Math.ceil(qaItems.length / QA_PAGE_SIZE));
+    if (kind !== 'qa') return;
+    const totalPages = Math.max(1, Math.ceil(state.total / QA_PAGE_SIZE));
     setQaPage((current) => Math.min(current, totalPages));
-  }, [qaItems.length]);
+  }, [kind, state.total]);
 
   useEffect(() => {
     const totalPages = Math.max(1, Math.ceil(faqItems.length / FAQ_PAGE_SIZE));
@@ -542,10 +542,11 @@ function SupportBoardPage({ kind, mode = 'list' }) {
             </div>
             <QaBoardList
               emptyMessage={qaSearchQuery ? '검색 결과가 없습니다.' : config.empty}
-              items={qaItems}
+              items={state.items}
               loading={state.loading}
               onPageChange={setQaPage}
               page={qaPage}
+              total={state.total}
             />
           </>
         ) : kind === 'faq' ? (

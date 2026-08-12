@@ -105,7 +105,10 @@ test.beforeEach(async ({ page }) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      headers: { 'Content-Disposition': 'attachment; filename="cubici_raw_sale_order_test.xlsx"' },
+      headers: {
+        'Access-Control-Expose-Headers': 'Content-Disposition',
+        'Content-Disposition': 'attachment; filename="cubici_raw_sale_order_test.xlsx"',
+      },
       body: Buffer.from('test-xlsx'),
     });
   });

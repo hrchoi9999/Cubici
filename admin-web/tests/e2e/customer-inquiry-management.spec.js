@@ -31,7 +31,10 @@ const inquiry = {
   workflow_status_label: '정상',
 };
 
+let replyPayload;
+
 test.beforeEach(async ({ page }) => {
+  replyPayload = null;
   await installMockAdminAuth(page);
   await page.route('**/v1/api/support/inquiries?**', async (route) => {
     await route.fulfill({
@@ -71,6 +74,7 @@ test.beforeEach(async ({ page }) => {
 
   await page.route('**/v1/api/support/inquiries/1/replies/1', async (route) => {
     const payload = await route.request().postDataJSON();
+    replyPayload = payload;
 
     await route.fulfill({
       contentType: 'application/json',
@@ -131,6 +135,10 @@ test('ADM-LV-12 customer inquiry list, detail, reply, and responsive views work'
   await page.getByRole('button', { name: '답변수정' }).click();
   await expect(page.getByText('답변을 수정했습니다.')).toBeVisible();
   await expect(page.locator('.customerInquiryLvArticle p').filter({ hasText: '수정 답변' })).toBeVisible();
+  expect(replyPayload).toMatchObject({
+    user_no: 1,
+    operated_by: '관리자',
+  });
   await page.getByRole('button', { name: '목록', exact: true }).click();
   await expect(page.locator('.inquiryLvTable')).toBeVisible();
 

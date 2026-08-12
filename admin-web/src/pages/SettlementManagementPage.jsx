@@ -22,6 +22,7 @@ function formatNumber(value) {
 function formatSettlementCheckStatus(value) {
   const labels = {
     OK: '일치',
+    SOURCE_RECONCILED: '원천일치',
     DIFF: '차이',
     LEGACY_BATCH_VALUE: '원본산출',
     NOT_CHECKED: '미검산',
@@ -78,6 +79,7 @@ export function SettlementManagementPage() {
   const [counts, setCounts] = useState({
     total_count: 0,
     ok_count: 0,
+    source_reconciled_count: 0,
     diff_count: 0,
     legacy_batch_value_count: 0,
     unchecked_count: 0,
@@ -303,6 +305,7 @@ export function SettlementManagementPage() {
         <span><b>검산</b>{counts.check_status_label ?? '-'}</span>
         <span><b>전체</b>{formatNumber(counts.total_count ?? 0)}건</span>
         <span><b>일치</b>{formatNumber(counts.ok_count ?? 0)}건</span>
+        <span><b>원천일치</b>{formatNumber(counts.source_reconciled_count ?? 0)}건</span>
         <span><b>차이</b>{formatNumber(counts.diff_count ?? 0)}건</span>
         <span><b>원본산출</b>{formatNumber(counts.legacy_batch_value_count ?? 0)}건</span>
         <span><b>절대차이</b>{formatNumber(counts.absolute_difference ?? 0)}원</span>

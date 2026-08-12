@@ -14,6 +14,8 @@ def test_admin_api_auth_path_policy() -> None:
     assert is_admin_protected_request("GET", "/v1/api/preferences/charges") is False
     assert is_admin_protected_request("GET", "/v1/api/support/boards/notice") is False
     assert is_admin_protected_request("POST", "/v1/api/support/boards/notice") is True
+    assert is_admin_protected_request("POST", "/v1/api/support/inquiries/10/replies") is True
+    assert is_admin_protected_request("PUT", "/v1/api/support/inquiries/10/replies/20") is True
     assert is_admin_protected_request("GET", "/v1/api/health") is False
 
 

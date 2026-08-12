@@ -26,7 +26,7 @@ function statusClassName(status) {
   return status === '답변완료' ? 'sColorLB' : 'sColorLG';
 }
 
-export function CustomerInquiryPage() {
+export function CustomerInquiryPage({ adminSession }) {
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [answeredCount, setAnsweredCount] = useState(0);
@@ -150,8 +150,8 @@ export function CustomerInquiryPage() {
     try {
       const payload = {
         content: trimmedContent,
-        user_no: 99,
-        operated_by: 'admin',
+        user_no: adminSession.user.user_no,
+        operated_by: adminSession.user.name ?? adminSession.user.email,
       };
       const firstReply = selected.replies?.[0];
       const result = firstReply

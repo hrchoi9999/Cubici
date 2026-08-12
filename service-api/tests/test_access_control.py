@@ -144,3 +144,72 @@ def test_contract_request_rejects_other_user_no(monkeypatch) -> None:
 
     assert response.status_code == 403
     assert response.json()["detail"] == "resource owner required"
+
+
+def _inquiry_update_payload(user_no: int) -> dict:
+    return {
+        "user_no": user_no,
+        "type": "CUBICI",
+        "title": "문의 제목",
+        "content": "문의 내용",
+        "visibility": "private",
+        "operated_by": "user-web",
+    }
+
+
+def test_inquiry_update_accepts_owner_user_no_from_body(monkeypatch) -> None:
+    from cubici_service.api.v1.endpoints import support
+    from cubici_service.support.repository import InquiryWriteResponse
+
+    captured = {}
+
+    def fake_update_inquiry(qna_id, payload) -> InquiryWriteResponse:
+        captured["qna_id"] = qna_id
+        captured["user_no"] = payload.user_no
+        return InquiryWriteResponse(action="updated", qna_id=qna_id)
+
+    monkeypatch.setattr("cubici_service.core.access_control.get_authenticated_user", lambda token: _user(user_no=72))
+    monkeypatch.setattr(support, "update_inquiry", fake_update_inquiry)
+
+    response = TestClient(create_app()).put(
+        "/v1/api/support/inquiries/10",
+        headers={"Authorization": "Bearer user-token"},
+        json=_inquiry_update_payload(72),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"action": "updated", "qna_id": 10, "detail": None}
+    assert captured == {"qna_id": 10, "user_no": 72}
+
+
+def test_inquiry_update_rejects_other_user_no_from_body(monkeypatch) -> None:
+    from cubici_service.api.v1.endpoints import support
+
+    called = False
+
+    def fake_update_inquiry(qna_id, payload):
+        nonlocal called
+        called = True
+
+    monkeypatch.setattr("cubici_service.core.access_control.get_authenticated_user", lambda token: _user(user_no=72))
+    monkeypatch.setattr(support, "update_inquiry", fake_update_inquiry)
+
+    response = TestClient(create_app()).put(
+        "/v1/api/support/inquiries/10?user_no=72",
+        headers={"Authorization": "Bearer user-token"},
+        json=_inquiry_update_payload(73),
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "resource owner required"
+    assert called is False
+
+
+def test_inquiry_update_requires_bearer_token() -> None:
+    response = TestClient(create_app()).put(
+        "/v1/api/support/inquiries/10",
+        json=_inquiry_update_payload(72),
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "bearer token required"

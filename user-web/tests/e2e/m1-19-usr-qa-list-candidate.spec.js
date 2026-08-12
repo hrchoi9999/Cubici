@@ -28,21 +28,31 @@ const qaItems = Array.from({ length: 12 }, (_, index) => ({
 }));
 
 async function installMocks(page, items = []) {
+  const requests = [];
   await page.addInitScript((auth) => {
     window.localStorage.setItem('cubiciUserAuth', JSON.stringify(auth));
   }, session);
   await page.route('**/v1/api/**', async (route) => {
     const url = new URL(route.request().url());
+    const keyword = url.searchParams.get('keyword')?.toLocaleLowerCase('ko-KR') ?? '';
+    const filteredItems = keyword
+      ? items.filter((item) => [item.title, item.type_label, item.type, item.created_by, item.answer_status]
+        .some((value) => String(value ?? '').toLocaleLowerCase('ko-KR').includes(keyword)))
+      : items;
+    const limit = Number(url.searchParams.get('limit') ?? 10);
+    const offset = Number(url.searchParams.get('offset') ?? 0);
+    if (url.pathname.endsWith('/support/inquiries')) requests.push(url);
     const body = url.pathname.endsWith('/support/inquiries')
       ? {
-          total: items.length,
-          answered_count: items.filter((item) => item.answer_status === '답변완료').length,
-          waiting_count: items.filter((item) => item.answer_status !== '답변완료').length,
-          items,
+          total: filteredItems.length,
+          answered_count: filteredItems.filter((item) => item.answer_status === '답변완료').length,
+          waiting_count: filteredItems.filter((item) => item.answer_status !== '답변완료').length,
+          items: filteredItems.slice(offset, offset + limit),
         }
       : { total: 0, items: [] };
     await route.fulfill({ contentType: 'application/json', status: 200, body: JSON.stringify(body) });
   });
+  return requests;
 }
 
 test('M1-19 restores the LV empty Q&A list on PC', async ({ page }) => {
@@ -75,16 +85,21 @@ test('M1-19 restores the LV empty Q&A list on PC', async ({ page }) => {
 
 test('M1-19 filters, paginates and links Q&A data', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 });
-  await installMocks(page, qaItems);
+  const requests = await installMocks(page, qaItems);
   await page.goto(`${baseUrl}${routePath}`, { waitUntil: 'networkidle' });
 
   await expect(page.locator('.u19-qa-table tbody tr')).toHaveCount(10);
   await expect(page.locator('.u19-qa-table .completion')).toHaveCount(4);
+  expect(requests.at(-1).searchParams.get('limit')).toBe('10');
+  expect(requests.at(-1).searchParams.get('offset')).toBe('0');
   await page.getByRole('button', { name: '다음 페이지' }).click();
   await expect(page.locator('.u19-qa-table tbody tr')).toHaveCount(2);
+  expect(requests.at(-1).searchParams.get('offset')).toBe('10');
   await page.getByLabel('Q&A 검색').fill('중복적으로');
   await page.getByRole('button', { name: '검색', exact: true }).click();
   await expect(page.locator('.u19-qa-table tbody tr')).toHaveCount(1);
+  expect(requests.at(-1).searchParams.get('keyword')).toBe('중복적으로');
+  expect(requests.at(-1).searchParams.get('offset')).toBe('0');
   await expect(page.locator('.u19-qa-table .title a')).toHaveAttribute('href', '/board/qa/QNA-12');
 });
 

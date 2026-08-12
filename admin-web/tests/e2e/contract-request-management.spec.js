@@ -184,15 +184,15 @@ test('contract request list, filters, detail, and approve action work with mock 
 
   await page.goto('/admin/moneybank/request');
 
-  await expect(page.getByRole('heading', { name: '신청 접수' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '신청/승인' })).toBeVisible();
   await expect(page.getByText('신청 접수 목록')).toBeVisible();
   await expect(page.getByText('테스트대표')).toBeVisible();
-  await expect(page.getByText('2,500,000')).toBeVisible();
+  await expect(page.getByRole('cell', { name: '2,500' })).toBeVisible();
 
   await page.getByLabel('회원명').fill('테스트대표');
   await page.getByLabel('회사명').fill('테스트상사');
-  await page.getByLabel('신청상태').fill('REQUEST');
-  await page.getByLabel('정렬').selectOption('sales_amount_desc');
+  await page.getByLabel('신청상태').selectOption('progress');
+  await page.getByLabel('보기기준').selectOption('sales_amount_desc');
   await page.getByRole('button', { name: '검색' }).click();
 
   await expect(page.getByText('owner@example.test')).toBeVisible();

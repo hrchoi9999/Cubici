@@ -1,5 +1,7 @@
 import { expect, test } from '../../../admin-web/node_modules/@playwright/test/index.mjs';
 
+test.skip(process.env.CUBICI_RUN_DB_E2E !== '1', 'set CUBICI_RUN_DB_E2E=1 to run local PostgreSQL UI E2E tests');
+
 const apiBaseUrl = process.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 const authSession = {
   access_token: 'e2e-local-token',

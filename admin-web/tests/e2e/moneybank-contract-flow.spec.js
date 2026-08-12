@@ -247,7 +247,7 @@ test('contract detail readies contract only after user terms agreement', async (
   await listResponse;
 
   await expect(page.getByText('흐름테스트')).toBeVisible();
-  await page.getByRole('button', { name: '보기' }).click();
+  await page.locator('.contractLvMbidButton').click();
 
   const detailPanel = page.locator('.detailPanel');
   await expect(detailPanel.getByRole('cell', { name: '동의' })).toBeVisible();

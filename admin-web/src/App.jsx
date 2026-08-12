@@ -291,7 +291,7 @@ export default function App() {
       {isPrizmManagementPage ? <PrizmManagementPage /> : null}
       {isSettlementPage ? <SettlementManagementPage /> : null}
       {isRedemptionPage ? <RedemptionManagementPage /> : null}
-      {isCustomerInquiryPage ? <CustomerInquiryPage /> : null}
+      {isCustomerInquiryPage ? <CustomerInquiryPage adminSession={adminSession} /> : null}
       {isMessageTemplatePage ? <MessageTemplatePage /> : null}
       {isCustomerBoardPage ? <CustomerBoardPage /> : null}
       {isErrorLogPage ? <ErrorLogPage /> : null}

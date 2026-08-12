@@ -39,7 +39,7 @@ const items = [
 const payload = {
   limit: 10, offset: 0, total: 3,
   counts: {
-    total_count: 3, ok_count: 2, diff_count: 1, legacy_batch_value_count: 0,
+    total_count: 3, ok_count: 2, source_reconciled_count: 0, diff_count: 1, legacy_batch_value_count: 0,
     unchecked_count: 0, total_difference: -22000, absolute_difference: 22000,
     check_status_label: '검산차이',
   },
@@ -108,7 +108,7 @@ test('ADM-LV-08 keeps settlement management responsive on mobile', async ({ page
   await expect(page.locator('.settlementLvSearch .inputBox')).toHaveCount(5);
   await expect(page.locator('body')).toHaveJSProperty('scrollWidth', 390);
   await expect(page.locator('.settlementTable')).toHaveCSS('min-width', '1180px');
-  await expect(page.locator('.settlementLvSummary span')).toHaveCount(6);
+  await expect(page.locator('.settlementLvSummary span')).toHaveCount(7);
 
   await page.screenshot({ fullPage: true, path: path.join(candidateDir, 'ADM-LV-08-SETTLEMENT-MANAGEMENT-MOBILE.png') });
 });

@@ -1,6 +1,7 @@
 """Read-only settlement queries."""
 
 from datetime import date, datetime
+from decimal import Decimal, ROUND_HALF_UP
 from typing import Literal
 
 from psycopg.rows import dict_row
@@ -40,6 +41,7 @@ class SettlementListItem(BaseModel):
 class SettlementCheckCounts(BaseModel):
     total_count: int = 0
     ok_count: int = 0
+    source_reconciled_count: int = 0
     diff_count: int = 0
     legacy_batch_value_count: int = 0
     unchecked_count: int = 0
@@ -138,6 +140,8 @@ def list_settlements(
                 f"""
                 select
                     settlements_id,
+                    shop_type,
+                    settlement_type,
                     total_sale,
                     service_fee,
                     settlement_target_amount,
@@ -239,6 +243,22 @@ def _int_value(value: object) -> int:
     return int(value or 0)
 
 
+def _coupang_source_check_amount(row: dict, target_amount: int, pending_released_amount: int) -> int | None:
+    shop_type = str(row.get("shop_type") or "").strip().upper()
+    settlement_type = str(row.get("settlement_type") or "").strip().upper()
+    if (
+        shop_type != "COUPANG"
+        or settlement_type not in {"RESERVE", "WEEKLY"}
+        or target_amount <= 0
+        or pending_released_amount != 0
+    ):
+        return None
+
+    return int(
+        (Decimal(target_amount) * Decimal("0.7")).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    )
+
+
 def _with_settlement_amount_check(row: dict) -> dict:
     checked = dict(row)
     total_sale = _int_value(checked.get("total_sale"))
@@ -267,8 +287,14 @@ def _with_settlement_amount_check(row: dict) -> dict:
     if target_amount == 0 and pending_released_amount == 0 and computed_target != 0:
         check_amount = computed_target
 
+    source_check_amount = _coupang_source_check_amount(checked, target_amount, pending_released_amount)
+    if source_check_amount is not None:
+        check_amount = source_check_amount
+
     difference = settlement_amount - check_amount
-    if difference == 0:
+    if source_check_amount is not None and abs(difference) <= 1:
+        status = "SOURCE_RECONCILED"
+    elif difference == 0:
         status = "OK"
     elif target_amount == 0 and pending_released_amount == 0 and computed_target == 0 and settlement_amount != 0:
         status = "LEGACY_BATCH_VALUE"
@@ -283,6 +309,9 @@ def _with_settlement_amount_check(row: dict) -> dict:
 
 def _build_settlement_check_counts(rows: list[dict]) -> SettlementCheckCounts:
     ok_count = sum(1 for row in rows if row.get("settlement_check_status") == "OK")
+    source_reconciled_count = sum(
+        1 for row in rows if row.get("settlement_check_status") == "SOURCE_RECONCILED"
+    )
     diff_count = sum(1 for row in rows if row.get("settlement_check_status") == "DIFF")
     legacy_batch_value_count = sum(
         1 for row in rows if row.get("settlement_check_status") == "LEGACY_BATCH_VALUE"
@@ -298,12 +327,15 @@ def _build_settlement_check_counts(rows: list[dict]) -> SettlementCheckCounts:
         check_status_label = "원본산출값 확인"
     elif unchecked_count:
         check_status_label = "미검산"
+    elif source_reconciled_count:
+        check_status_label = "원천검산일치"
     else:
         check_status_label = "검산일치"
 
     return SettlementCheckCounts(
         total_count=len(rows),
         ok_count=ok_count,
+        source_reconciled_count=source_reconciled_count,
         diff_count=diff_count,
         legacy_batch_value_count=legacy_batch_value_count,
         unchecked_count=unchecked_count,

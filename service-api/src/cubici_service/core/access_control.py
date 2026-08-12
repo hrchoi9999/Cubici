@@ -199,9 +199,13 @@ async def enforce_user_ownership_for_common_api(request: Request, settings: Sett
 
         inquiry_match = SUPPORT_INQUIRY_PATH_RE.match(path)
         if inquiry_match:
+            requested_user_no = _int_or_none(query.get("user_no"))
+            if request.method.upper() == "PUT":
+                payload = await _json_body(request)
+                requested_user_no = _int_or_none(payload.get("user_no"))
             require_master_admin_or_same_user(
                 request.headers.get("authorization"),
-                _int_or_none(query.get("user_no")),
+                requested_user_no,
                 settings=settings,
             )
             return None

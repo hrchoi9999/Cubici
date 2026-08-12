@@ -29,7 +29,7 @@
 | U16 | 머니뱅크 검토·심사 | `/moneybank/*/evaluate` | `c4p2_2.html`+2상품 PC/모바일 승인 이미지 | 100% | 95% | 조건동의·전자서명 mock DB lifecycle 완료 |
 | U17 | 머니뱅크 서비스현황 | `/moneybank/current` | `c4p3.html`+PC/모바일 승인 이미지 | 100% | 90% | 약관·해지·상환 회귀 완료/legacy 산식 검산 잔여 |
 | U18 | 서비스공지 목록 | `/board/notice/index` | PC 캡처+`c5p2.html`+PC/모바일 승인 이미지 | 100% | 95% | 실 DB 등록·목록·상세 회귀 완료 |
-| U19 | Q&A 목록 | `/board/qa/index` | PC 캡처+`c5p3.html`+PC/모바일 승인 이미지 | 100% | 85% | 화면 승인 완료/운영 데이터 목록·답변상태 회귀검증 |
+| U19 | Q&A 목록 | `/board/qa/index` | PC 캡처+`c5p3.html`+PC/모바일 승인 이미지 | 100% | 95% | 31건 실DB 서버 페이지·검색·답변상태·소유자 격리 회귀 완료 |
 | U20 | FAQ | `/board/faq/index` | PC 캡처+`c5p4.html`+PC/모바일 승인 이미지 | 100% | 95% | 실 DB 목록·인라인 상세·텍스트 보안 회귀 완료 |
 | U21 | Q&A 작성 | `/board/qa/write` | `QnA-write.html`+PC/모바일 원본 렌더링+승인 이미지 | 100% | 90% | 화면 승인 완료/실 DB 등록·상세 이동 재검증 |
 | U22 | 마이페이지 가입정보 | `/cubici/mypage/profile`, `companyInfo` | `01_sub_16가입정보.jpg`+`c6p1.html`+PC/모바일 원본 렌더링+승인 이미지 | 100% | 95% | 실 DB 수정 회귀 완료/SMS·주소는 ADD-EXT-01·03 |

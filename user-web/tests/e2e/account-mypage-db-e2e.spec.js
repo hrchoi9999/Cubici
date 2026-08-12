@@ -21,6 +21,12 @@ test.afterEach(() => {
 });
 
 test('account recovery and mypage section routes render', async ({ page }) => {
+  await page.route('**/v1/api/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify({ items: [], total: 0 }),
+  }));
+
   await page.goto('/idSearch');
   await expect(page.getByRole('heading', { name: 'ID SEARCH' })).toBeVisible();
   await page.getByRole('button', { name: '아이디 확인' }).click();

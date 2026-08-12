@@ -16,6 +16,17 @@ test('M1-1 captures the current authenticated PC main screen', async ({ page }) 
       },
     }));
   });
+  await page.route('**/v1/api/accounts/me/dashboard-summary', (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      sales_total_amount: 123500000,
+      settlement_total_amount: 123500000,
+      moneybank_available_balance: 123500000,
+      total_principal_amount: 123500000,
+      total_repayment_amount: 123500000,
+      activities: [],
+    }),
+  }));
 
   await page.goto(targetUrl, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);

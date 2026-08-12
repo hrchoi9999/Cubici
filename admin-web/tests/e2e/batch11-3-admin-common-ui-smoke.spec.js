@@ -3,10 +3,10 @@ import { expect, test } from '@playwright/test';
 const MASTER_ADMIN_EMAIL = process.env.VITE_CUBICI_MASTER_ADMIN_EMAIL ?? process.env.CUBICI_MASTER_ADMIN_EMAIL ?? '';
 
 const routes = [
-  '/admin/cubici/manageMember/member_tab1',
-  '/admin/moneybank/request',
-  '/admin/cubici/supportMember/manageInquiry',
-  '/admin/cubici/adminPreference/manageCharge',
+  ['/admin/cubici/manageMember/member_tab1', '.searchArea'],
+  ['/admin/moneybank/request', '.searchArea'],
+  ['/admin/cubici/supportMember/manageInquiry', '.customerInquiryLvToolbar'],
+  ['/admin/cubici/adminPreference/manageCharge', '.searchArea'],
 ];
 
 function emptyApiPayload(url) {
@@ -70,7 +70,7 @@ test.describe('batch 11-3 admin common UI smoke', () => {
     }, MASTER_ADMIN_EMAIL);
   });
 
-  for (const path of routes) {
+  for (const [path, searchSelector] of routes) {
     test(`${path} renders common search and table shell`, async ({ page }) => {
       const pageErrors = [];
       page.on('pageerror', (error) => pageErrors.push(error.message));
@@ -78,12 +78,12 @@ test.describe('batch 11-3 admin common UI smoke', () => {
       await page.goto(path);
 
       await expect(page.locator('#wrap.adminReactWrap')).toBeVisible();
-      await expect(page.locator('.searchArea').first()).toBeVisible();
+      await expect(page.locator(searchSelector).first()).toBeVisible();
       await expect(page.locator('.legacyListTable, .m-shadowTable, table').first()).toBeVisible();
 
       const metrics = await page.evaluate(() => {
-        const searchArea = document.querySelector('.searchArea');
-        const inputBox = document.querySelector('.searchArea .inputBox');
+        const searchArea = document.querySelector('.searchArea, .customerInquiryLvToolbar');
+        const inputBox = document.querySelector('.searchArea .inputBox, .customerInquiryLvSearch');
         const table = document.querySelector('.m-shadowTable, table');
         const bodyOverflow = document.body.scrollWidth - document.documentElement.clientWidth;
 

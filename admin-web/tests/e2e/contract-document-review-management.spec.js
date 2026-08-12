@@ -216,7 +216,7 @@ test('contract document check save and review note create work with mock data', 
 
   await page.goto('/admin/moneybank/request');
 
-  await expect(page.getByRole('heading', { name: '신청 접수' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '신청/승인' })).toBeVisible();
   await expect(page.getByText('심사테스트')).toBeVisible();
 
   await page.getByRole('button', { name: 'N (0건)' }).click();

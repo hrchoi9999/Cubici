@@ -249,7 +249,7 @@ export function MoneybankIntegratedInfoPage() {
     { icon: '/resources/rudicks/admin/img/icon/user-round.png', title: '머니뱅크 가입승인', lines: [`• 금일 : ${formatNumber(summary?.approved_today_count)}`, `• 누적 : ${formatNumber(summary?.contract_total_count)}`] },
     { icon: '/resources/rudicks/admin/img/icon/money-get.svg', title: '서비스 원금 (백만원)', lines: [`• 금일 : ${formatMillion(summary?.provision_today_amount)}`, `• 누적 : ${formatMillion(summary?.provision_total_amount)} / ${formatNumber(summary?.provision_total_count)}건`] },
     { icon: '/resources/rudicks/admin/img/icon/won-round.svg', title: '상환 원금 (백만원)', lines: [`• 금일 : ${formatMillion(summary?.repayment_today_amount)}`, `• 누적 : ${formatMillion(summary?.repayment_total_amount)} / ${formatNumber(summary?.repayment_total_count)}건`] },
-    { icon: '/resources/rudicks/admin/img/icon/scale.svg', title: '상환 원금잔액 (백만원)', lines: [`• 누적 : ${formatMillion(summary?.outstanding_balance_amount)}`, `• ${formatNumber(summary?.outstanding_balance_count)}건 / ${summary?.balance_reconcile_status_label ?? '미검증'}`] },
+    { icon: '/resources/rudicks/admin/img/icon/scale.svg', title: '상환 원금잔액 (백만원)', lines: [`• 누적 : ${formatMillion(summary?.outstanding_balance_amount)}`, `• ${formatNumber(summary?.outstanding_balance_count)}건 / ${summary?.balance_reconcile_status_label ?? '미검증'}`, ...(summary?.opening_repayment_amount > 0 ? [`• 초기이관 상환 : ${formatNumber(summary.opening_repayment_amount)}원`] : [])] },
   ];
   const charts = isOperationsTab ? operationsCharts : overviewCharts;
 

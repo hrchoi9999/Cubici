@@ -172,7 +172,7 @@ test('contract document upload and confirm flow works with mock data', async ({ 
 
   await page.goto('/admin/moneybank/request');
 
-  await expect(page.getByRole('heading', { name: '신청 접수' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: '신청/승인' })).toBeVisible();
   await expect(page.getByText('서류테스트')).toBeVisible();
 
   await page.getByRole('button', { name: 'N (0건)' }).click();

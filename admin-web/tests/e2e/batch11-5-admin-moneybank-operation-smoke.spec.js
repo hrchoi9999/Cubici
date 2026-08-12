@@ -5,8 +5,8 @@ const MASTER_ADMIN_EMAIL = process.env.VITE_CUBICI_MASTER_ADMIN_EMAIL ?? process
 const routes = [
   ['/admin/moneybank/request', ['.searchArea', '.requestTable', '.tableTotal']],
   ['/admin/moneybank/approval_tab1', ['.searchArea', '.approvalTable', '.tableTotal']],
-  ['/admin/moneybank/approval_tab2', ['.searchArea', '.contractManagementTable', '.tableTotal']],
-  ['/admin/moneybank/settlement', ['.searchArea', '.summaryPills', '.settlementTable', '.tableTotal']],
+  ['/admin/moneybank/approval_tab2', ['.searchArea', '.contractManagementTable', '.paging']],
+  ['/admin/moneybank/settlement', ['.searchArea', '.settlementLvSummary', '.settlementTable', '.tableTotal']],
   ['/admin/moneybank/redemption', ['.searchArea', '.redemptionLvTableOptions', '.redemptionTable', '.paging']],
   ['/admin/moneybank/manage', ['.creditIndicatorTab', '.creditIndicatorMetricTable', '.creditIndicatorGradeTable', '.creditIndicatorActions']],
 ];

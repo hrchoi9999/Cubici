@@ -33,6 +33,9 @@ class ManagementOverviewSummary(BaseModel):
     repayment_total_amount: int
     repayment_total_count: int
     repayment_fee_total_amount: int = 0
+    opening_repayment_amount: int = 0
+    opening_repayment_count: int = 0
+    reconciled_repayment_total_amount: int = 0
     outstanding_balance_amount: int
     outstanding_balance_count: int
     balance_reconcile_amount: int = 0
@@ -2913,14 +2916,80 @@ def _fetch_summary(cursor, *, from_date: date | None, to_date: date | None) -> d
         ),
     )
     summary = cursor.fetchone()
-    balance_reconcile_amount = int(summary["provision_total_amount"] or 0) - int(summary["repayment_total_amount"] or 0)
+    opening_repayment = _fetch_opening_repayment(cursor, to_date=to_date)
+    return _apply_ledger_reconciliation(summary, opening_repayment)
+
+
+def _fetch_opening_repayment(cursor, *, to_date: date | None) -> dict:
+    cursor.execute(
+        """
+        with first_history as (
+            select distinct on (mbid)
+                mbid,
+                coalesce(cumulative_repayment_amount, 0)::bigint as cumulative_repayment_amount
+            from moneybank_redemption_history
+            where (%s::date is null or reg_date::date <= %s::date)
+            order by mbid, reg_date nulls last, id
+        ), latest_history as (
+            select distinct on (mbid)
+                mbid,
+                coalesce(cumulative_repayment_amount, 0)::bigint as cumulative_repayment_amount
+            from moneybank_redemption_history
+            where (%s::date is null or reg_date::date <= %s::date)
+            order by mbid, reg_date desc nulls last, id desc
+        ), repayment as (
+            select
+                mbid,
+                coalesce(sum(repayment_amount), 0)::bigint as amount,
+                count(*)::int as rows
+            from moneybank_redemption_repayment
+            where (%s::date is null
+                or coalesce(balance_provision_date, reg_date, modified_date)::date <= %s::date)
+            group by mbid
+        ), explained as (
+            select fh.mbid, fh.cumulative_repayment_amount as opening_amount
+            from first_history fh
+            join latest_history lh using (mbid)
+            left join repayment r using (mbid)
+            where coalesce(r.rows, 0) = 0
+              and fh.cumulative_repayment_amount > 0
+              and lh.cumulative_repayment_amount - coalesce(r.amount, 0)
+                    = fh.cumulative_repayment_amount
+        )
+        select
+            count(*)::int as opening_repayment_count,
+            coalesce(sum(opening_amount), 0)::bigint as opening_repayment_amount
+        from explained
+        """,
+        (to_date, to_date, to_date, to_date, to_date, to_date),
+    )
+    return cursor.fetchone()
+
+
+def _apply_ledger_reconciliation(summary: dict, opening_repayment: dict) -> dict:
+    opening_repayment_amount = int(opening_repayment["opening_repayment_amount"] or 0)
+    opening_repayment_count = int(opening_repayment["opening_repayment_count"] or 0)
+    reconciled_repayment_total_amount = (
+        int(summary["repayment_total_amount"] or 0) + opening_repayment_amount
+    )
+    balance_reconcile_amount = (
+        int(summary["provision_total_amount"] or 0) - reconciled_repayment_total_amount
+    )
     balance_reconcile_diff = int(summary["outstanding_balance_amount"] or 0) - balance_reconcile_amount
     summary["data_source_label"] = "PostgreSQL 직접집계"
     summary["aggregation_status_label"] = "legacy procedure 대조 필요"
     summary["shop_grouping_status_label"] = "shop grouping 대조 필요"
+    summary["opening_repayment_amount"] = opening_repayment_amount
+    summary["opening_repayment_count"] = opening_repayment_count
+    summary["reconciled_repayment_total_amount"] = reconciled_repayment_total_amount
     summary["balance_reconcile_amount"] = balance_reconcile_amount
     summary["balance_reconcile_diff"] = balance_reconcile_diff
-    summary["balance_reconcile_status_label"] = "검산일치" if balance_reconcile_diff == 0 else "검산차이"
+    if balance_reconcile_diff != 0:
+        summary["balance_reconcile_status_label"] = "검산차이"
+    elif opening_repayment_amount:
+        summary["balance_reconcile_status_label"] = "초기이관 포함 일치"
+    else:
+        summary["balance_reconcile_status_label"] = "검산일치"
     return summary
 
 

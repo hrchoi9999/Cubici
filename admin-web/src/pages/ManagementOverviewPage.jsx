@@ -143,7 +143,7 @@ function OverviewKpis({ isLoading, summary }) {
     { icon: 'user-round.png', title: '머니뱅크 회원', unit: '(명)', lines: [`금일: ${empty ? '-' : formatNumber(summary.contract_today_count)}`, `누적: ${empty ? '-' : formatNumber(summary.contract_total_count)}`] },
     { icon: 'money-get.svg', title: '서비스 원금누적', unit: '(백만원)', lines: [`금일: ${empty ? '-' : formatMillion(summary.provision_today_amount)} / ${empty ? '-' : formatNumber(summary.provision_total_count)}건`, `누적: ${empty ? '-' : formatMillion(summary.provision_total_amount)} / ${empty ? '-' : formatNumber(summary.provision_total_count)}건`] },
     { icon: 'won-round.svg', title: '상환 원금누적', unit: '(백만원)', lines: [`금일: ${empty ? '-' : formatMillion(summary.repayment_today_amount)} / ${empty ? '-' : formatNumber(summary.repayment_total_count)}건`, `누적: ${empty ? '-' : formatMillion(summary.repayment_total_amount)} / ${empty ? '-' : formatNumber(summary.repayment_total_count)}건`] },
-    { icon: 'scale.svg', title: '상환 원금잔액', unit: '(백만원)', lines: [`잔액총액: ${empty ? '-' : formatMillion(summary.balance_reconcile_amount)}`, `${empty ? '-' : formatNumber(summary.outstanding_balance_count)}건`] },
+    { icon: 'scale.svg', title: '상환 원금잔액', unit: '(백만원)', lines: [`잔액총액: ${empty ? '-' : formatMillion(summary.balance_reconcile_amount)}`, `${empty ? '-' : formatNumber(summary.outstanding_balance_count)}건`, ...(summary?.opening_repayment_amount > 0 ? [`초기이관 상환: ${formatNumber(summary.opening_repayment_amount)}원`] : [])] },
   ];
 
   return <KpiGrid items={items} />;

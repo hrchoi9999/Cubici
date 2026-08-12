@@ -9,7 +9,7 @@ const routes = [
   },
   {
     path: '/admin/cubici/infoIntegrated/moneybank_tab1',
-    required: ['.legacyTabs', '.integratedMetricGrid', '.legacySearchBox', '.integratedPanel'],
+    required: ['.integratedLvTabs', '.moneybankLvMetricGrid', '.moneybankLvSearch', '.integratedLvPanel'],
   },
   {
     path: '/admin/cubici/manageMember/member_tab1',
@@ -17,7 +17,7 @@ const routes = [
   },
   {
     path: '/admin/cubici/supportMember/manageInquiry',
-    required: ['.managementOptions', '.searchArea', '.inquirySummary', '.inquiryTable', '.inquiryDetail'],
+    required: ['.customerInquiryLvToolbar', '.customerInquiryLvSearch', '.customerInquiryLvMeta', '.inquiryTable'],
   },
 ];
 
