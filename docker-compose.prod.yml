@@ -46,7 +46,7 @@ services:
       CUBICI_SMS_ENABLED: ${CUBICI_SMS_ENABLED:-false}
       CUBICI_MAIL_ENABLED: ${CUBICI_MAIL_ENABLED:-false}
     ports:
-      - "127.0.0.1:${CUBICI_API_PUBLIC_PORT:-8000}:8000"
+      - "127.0.0.1:${CUBICI_API_PUBLIC_PORT:-18000}:8000"
     volumes:
       - ./data_local/documents:/app/data/documents
       - ./logs/service-api-prod:/app/.logs

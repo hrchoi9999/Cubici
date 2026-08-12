@@ -1,6 +1,7 @@
 param(
     [string]$EnvFile = 'D:\Cubici_Runtime\production.env',
     [string]$PublicHealthUrl = 'https://api.cubici.co.kr/v1/api/health',
+    [int]$ApiPublicPort = 18000,
     [int]$HealthTimeoutSeconds = 90,
     [switch]$PreflightOnly
 )
@@ -20,6 +21,9 @@ $containerName = 'cubici-api-prod'
 $replacementStarted = $false
 $oldImageId = ''
 $composeImageName = ''
+
+# The production host port must stay outside Windows dynamic exclusion ranges.
+$env:CUBICI_API_PUBLIC_PORT = [string]$ApiPublicPort
 
 function Invoke-Compose {
     param([Parameter(Mandatory)][string[]]$Arguments)
