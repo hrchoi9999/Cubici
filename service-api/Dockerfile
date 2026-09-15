@@ -14,7 +14,8 @@ COPY pyproject.toml ./
 COPY src ./src
 
 RUN python -m pip install --no-cache-dir --upgrade pip \
-    && python -m pip install --no-cache-dir .
+    && python -m pip install --no-cache-dir . \
+    && python -c "import psycopg; import cubici_service.app"
 
 EXPOSE 8000
 

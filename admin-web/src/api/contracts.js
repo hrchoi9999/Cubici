@@ -1,3 +1,6 @@
+import { readAdminSession } from '../auth/adminAuth.js';
+import { downloadFile } from '../utils/downloadFile.js';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const RESERVED_QUERY_KEYS = new Set(['limit', 'offset']);
 
@@ -163,4 +166,13 @@ export async function createContractReviewNote(mbid, payload) {
 
 export function getContractDocumentDownloadUrl(mbid, uuid) {
   return `${API_BASE_URL}/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files/${encodeURIComponent(uuid)}/download`;
+}
+
+export function downloadContractDocument(mbid, file) {
+  const session = readAdminSession();
+  return downloadFile(
+    getContractDocumentDownloadUrl(mbid, file.uuid),
+    session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+    [file.origin_file_name, file.file_ext].filter(Boolean).join('.'),
+  );
 }

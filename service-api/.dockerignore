@@ -1,0 +1,16 @@
+# Only package metadata and source are required by the image.
+**
+!pyproject.toml
+!src/
+!src/**
+**/.env*
+**/*.log
+**/__pycache__
+**/__pycache__/**
+**/*.py[cod]
+**/.cache
+**/.cache/**
+**/.venv
+**/.venv/**
+**/.git
+**/.git/**

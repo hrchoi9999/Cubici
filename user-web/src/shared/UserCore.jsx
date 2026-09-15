@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { downloadFile } from './downloadFile.js';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 const AUTH_STORAGE_KEY = 'cubiciUserAuth';
@@ -489,6 +490,14 @@ function contractDetailPath(mbid) {
 
 function contractDocumentDownloadUrl(mbid, uuid, userNo) {
   return `${API_BASE_URL}/v1/api/contracts/${encodeURIComponent(mbid)}/documents/files/${encodeURIComponent(uuid)}/download?user_no=${encodeURIComponent(userNo)}`;
+}
+
+function downloadContractDocumentForUser(mbid, file, userNo) {
+  return downloadFile(
+    contractDocumentDownloadUrl(mbid, file.uuid, userNo),
+    buildAuthHeaders(),
+    [file.origin_file_name, file.file_ext].filter(Boolean).join('.'),
+  );
 }
 
 async function fetchContractDetailForUser(mbid, userNo) {
@@ -1330,6 +1339,7 @@ export {
   updateContractDocumentStatus,
   contractDetailPath,
   contractDocumentDownloadUrl,
+  downloadContractDocumentForUser,
   fetchContractDetailForUser,
   fetchContractDocumentsForUser,
   fetchInquiryDetailForUser,

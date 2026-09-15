@@ -8210,7 +8210,7 @@ body {
 #wrap.adminReactWrap .managementUsageLvSection > h3::before {
   width: 14px;
   height: 14px;
-  background-image: url('/resources/rudicks/img/icon/bullet-icon01-white.svg');
+  background-image: url('/resources/rudicks/img/icon/bullet-icon01.svg');
 }
 
 #wrap.adminReactWrap .managementUsageLvPanel .detailInfoTable,

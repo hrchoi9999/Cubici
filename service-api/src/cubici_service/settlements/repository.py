@@ -70,9 +70,21 @@ def _build_settlement_filters(
     keyword: str | None,
     from_date: date | None,
     to_date: date | None,
+    owner_shop_pairs: list[tuple[str, str]] | None = None,
 ) -> tuple[str, list[object]]:
     clauses = []
     params: list[object] = []
+
+    # Keep authorization exact, independently of partial administrator search.
+    if owner_shop_pairs is not None:
+        if not owner_shop_pairs:
+            clauses.append("1 = 0")
+        else:
+            clauses.append("(" + " or ".join(
+                "(upper(shop_type) = %s and shop_id = %s)" for _ in owner_shop_pairs
+            ) + ")")
+            for pair in owner_shop_pairs:
+                params.extend(pair)
 
     if shop_pairs is not None:
         pair_clause, pair_params = build_shop_pair_clause(shop_pairs)
@@ -116,6 +128,7 @@ def list_settlements(
     from_date: date | None = None,
     to_date: date | None = None,
     order_by: SettlementOrderBy = "date_desc",
+    owner_shop_pairs: list[tuple[str, str]] | None = None,
 ) -> SettlementListResponse:
     where_clause, filter_params = _build_settlement_filters(
         shop_pairs=shop_pairs,
@@ -125,6 +138,7 @@ def list_settlements(
         keyword=keyword,
         from_date=from_date,
         to_date=to_date,
+        owner_shop_pairs=owner_shop_pairs,
     )
 
     order_clause = {

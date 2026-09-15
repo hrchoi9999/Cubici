@@ -10,7 +10,7 @@ import {
   REQUEST_DOCUMENT_ACCEPT,
   canDecideTerms,
   contractDetailPath,
-  contractDocumentDownloadUrl,
+  downloadContractDocumentForUser,
   createInquiryForUser,
   fetchAuthJson,
   fetchChargePlans,
@@ -1577,6 +1577,17 @@ function ContractDetailPage({ mbid }) {
   const userNo = auth?.user?.user_no;
   const [state, setState] = useState({ loading: true, message: '', detail: null, documents: null, operations: null });
   const [terminationState, setTerminationState] = useState({ submitting: false, message: '' });
+  const [downloadState, setDownloadState] = useState({ pending: false, message: '' });
+
+  async function download(file) {
+    setDownloadState({ pending: true, message: '' });
+    try {
+      await downloadContractDocumentForUser(mbid, file, userNo);
+      setDownloadState({ pending: false, message: '' });
+    } catch (error) {
+      setDownloadState({ pending: false, message: error.message });
+    }
+  }
 
   const load = useCallback(async () => {
     if (!auth?.access_token || !userNo) {
@@ -1785,6 +1796,7 @@ function ContractDetailPage({ mbid }) {
             </section>
             <section className="data-table-wrap">
               <h2>제출서류</h2>
+              {downloadState.message ? <p className="submit-message" role="alert">{downloadState.message}</p> : null}
               <table>
                 <thead>
                   <tr><th>구분</th><th>파일명</th><th>크기</th><th>등록일</th><th>다운로드</th></tr>
@@ -1796,7 +1808,7 @@ function ContractDetailPage({ mbid }) {
                       <td>{item.origin_file_name}.{item.file_ext}</td>
                       <td>{Number(item.file_size ?? 0).toLocaleString('ko-KR')} byte</td>
                       <td>{formatDate(item.input_date)}</td>
-                      <td><a className="status-link" href={contractDocumentDownloadUrl(mbid, item.uuid, userNo)}>다운로드</a></td>
+                      <td><button className="status-link" type="button" disabled={downloadState.pending} onClick={() => download(item)}>다운로드</button></td>
                     </tr>
                   )) : (
                     <tr><td colSpan="5">제출된 서류가 없습니다.</td></tr>

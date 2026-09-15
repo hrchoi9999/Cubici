@@ -1,6 +1,11 @@
 """Customer support API."""
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from cubici_service.core.access_control import (
+    request_access_settings,
+    require_master_admin_or_same_user,
+)
 
 from cubici_service.support.repository import (
     BoardKind,
@@ -70,7 +75,25 @@ def inquiry_create(payload: InquiryUpsertRequest) -> InquiryWriteResponse:
     return create_inquiry(payload)
 
 
-@router.get("/inquiries/{qna_id}", response_model=InquiryDetailResponse)
+def _authorize_inquiry_read(
+    request: Request, qna_id: int, user_no: int | None = Query(default=None, ge=1),
+) -> None:
+    # The repository binds this authenticated user_no together with qna_id in SQL.
+    require_master_admin_or_same_user(
+        request.headers.get("authorization"), user_no, settings=request_access_settings(request),
+    )
+
+
+def _authorize_inquiry_update(request: Request, qna_id: int, payload: InquiryUpsertRequest) -> None:
+    require_master_admin_or_same_user(
+        request.headers.get("authorization"), payload.user_no, settings=request_access_settings(request),
+    )
+
+
+@router.get(
+    "/inquiries/{qna_id}", response_model=InquiryDetailResponse,
+    dependencies=[Depends(_authorize_inquiry_read)],
+)
 def inquiry_detail(
     qna_id: int,
     user_no: int | None = Query(default=None, ge=1),
@@ -81,12 +104,18 @@ def inquiry_detail(
     return detail
 
 
-@router.put("/inquiries/{qna_id}", response_model=InquiryWriteResponse)
+@router.put(
+    "/inquiries/{qna_id}", response_model=InquiryWriteResponse,
+    dependencies=[Depends(_authorize_inquiry_update)],
+)
 def inquiry_update(qna_id: int, payload: InquiryUpsertRequest) -> InquiryWriteResponse:
     return update_inquiry(qna_id=qna_id, payload=payload)
 
 
-@router.delete("/inquiries/{qna_id}", response_model=InquiryWriteResponse)
+@router.delete(
+    "/inquiries/{qna_id}", response_model=InquiryWriteResponse,
+    dependencies=[Depends(_authorize_inquiry_read)],
+)
 def inquiry_delete(
     qna_id: int,
     user_no: int = Query(ge=1),

@@ -7,7 +7,7 @@ import {
   fetchContractDocumentFiles,
   fetchContractReviewNotes,
   fetchContracts,
-  getContractDocumentDownloadUrl,
+  downloadContractDocument,
   uploadContractDocumentFile,
   updateContractDocumentChecks,
   updateContractStatus,
@@ -1272,6 +1272,17 @@ function toDocumentCheckFormValues(document) {
 function DocumentFileManager({ mbid, files, fileMessage, isComplete, onConfirm, onUpload }) {
   const [documentType, setDocumentType] = useState('CBInfo');
   const [selectedFile, setSelectedFile] = useState(null);
+  const [downloadState, setDownloadState] = useState({ pending: false, message: '' });
+
+  async function download(file) {
+    setDownloadState({ pending: true, message: '' });
+    try {
+      await downloadContractDocument(mbid, file);
+      setDownloadState({ pending: false, message: '' });
+    } catch (error) {
+      setDownloadState({ pending: false, message: error.message });
+    }
+  }
 
   function submitUpload(event) {
     event.preventDefault();
@@ -1302,6 +1313,7 @@ function DocumentFileManager({ mbid, files, fileMessage, isComplete, onConfirm, 
         </button>
       </form>
       {fileMessage ? <p className="detailMessage">{fileMessage}</p> : null}
+      {downloadState.message ? <p className="detailMessage" role="alert">{downloadState.message}</p> : null}
       <div className="documentConfirm">
         <button className="big-blue-btn2" type="button" onClick={() => onConfirm(mbid)} disabled={isComplete || files.length === 0}>
           {isComplete ? '입력완료' : '입력완료'}
@@ -1330,7 +1342,7 @@ function DocumentFileManager({ mbid, files, fileMessage, isComplete, onConfirm, 
               <td>{formatNumber(file.file_size)}</td>
               <td>{formatDate(file.input_date)}</td>
               <td>
-                <a href={getContractDocumentDownloadUrl(mbid, file.uuid)}>다운로드</a>
+                <button className="linkButton" type="button" disabled={downloadState.pending} onClick={() => download(file)}>다운로드</button>
               </td>
             </tr>
           ))}

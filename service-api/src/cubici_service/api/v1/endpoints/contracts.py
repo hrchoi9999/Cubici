@@ -2,7 +2,12 @@
 
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+
+from cubici_service.core.access_control import (
+    request_access_settings,
+    require_master_admin_or_contract_action,
+)
 
 from cubici_service.contracts.repository import (
     ContractFeeAdjustmentRequest,
@@ -93,7 +98,17 @@ def contract_detail(
     return detail
 
 
-@router.put("/{mbid}/status", response_model=ContractStatusUpdateResponse)
+def _authorize_status_change(request: Request, mbid: str, payload: ContractStatusUpdateRequest) -> None:
+    require_master_admin_or_contract_action(
+        request.headers.get("authorization"), mbid, payload.action,
+        settings=request_access_settings(request),
+    )
+
+
+@router.put(
+    "/{mbid}/status", response_model=ContractStatusUpdateResponse,
+    dependencies=[Depends(_authorize_status_change)],
+)
 def contract_status_update(
     mbid: str,
     payload: ContractStatusUpdateRequest,

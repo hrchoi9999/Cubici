@@ -99,7 +99,7 @@ function AdminHeader({ adminSession, isNavigationOpen, onToggleNavigation }) {
           <div className="userMenu">
             <div className="userInfo">{adminEmail} 님, 안녕하세요!</div>
             <div className="btns">
-              <a href="/logout" className="sBtn bsColorN hrBtn modalOpen">
+              <a href="/admin/logout" className="sBtn bsColorN hrBtn modalOpen">
                 로그아웃
               </a>
             </div>

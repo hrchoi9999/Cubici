@@ -17,8 +17,11 @@ from cubici_service.db.connection import get_connection
 CONTRACT_PATH_RE = re.compile(r"^/v1/api/contracts/([^/]+)(/|$)")
 REDEMPTION_PATH_RE = re.compile(r"^/v1/api/redemptions/([^/]+)(/|$)")
 DOCUMENT_PATH_RE = re.compile(r"^/v1/api/contracts/([^/]+)/documents/([^/]+)(/|$)")
-SETTLEMENT_DETAIL_PATH_RE = re.compile(r"^/v1/api/settlements/(\d+)$")
-SUPPORT_INQUIRY_PATH_RE = re.compile(r"^/v1/api/support/inquiries/(\d+)$")
+OWNER_CONTRACT_STATUS_ACTIONS = frozenset({"agree_terms", "refuse_terms", "request_termination"})
+
+
+def request_access_settings(request: Request) -> Settings:
+    return getattr(request.state, "access_settings", None) or get_settings()
 
 
 def authenticate_bearer_user(authorization: str | None) -> AccountAuthUser:
@@ -107,7 +110,39 @@ def require_master_admin_or_settlement_owner(
     raise HTTPException(status_code=403, detail="settlement owner required")
 
 
+def require_master_admin_or_contract_action(
+    authorization: str | None,
+    mbid: str,
+    action: str,
+    *,
+    settings: Settings | None = None,
+) -> AccountAuthUser:
+    user = require_master_admin_or_contract_owner(authorization, mbid, settings=settings)
+    if not is_master_admin(user, settings) and action not in OWNER_CONTRACT_STATUS_ACTIONS:
+        raise HTTPException(status_code=403, detail="master admin required for contract action")
+    return user
+
+
+def authorized_settlement_shop_pairs(
+    authorization: str | None,
+    *,
+    shop_pairs: str | None,
+    shop_type: str | None,
+    shop_id: str | None,
+    settings: Settings | None = None,
+) -> list[tuple[str, str]] | None:
+    user = require_master_admin_or_shop_scope(
+        authorization, shop_pairs=shop_pairs, shop_type=shop_type, shop_id=shop_id, settings=settings,
+    )
+    if is_master_admin(user, settings):
+        return None
+    if shop_pairs == "__none__":
+        return []
+    return _normalize_requested_pairs(shop_pairs=shop_pairs, shop_type=shop_type, shop_id=shop_id)
+
+
 async def enforce_user_ownership_for_common_api(request: Request, settings: Settings) -> JSONResponse | None:
+    request.state.access_settings = settings
     if request.method.upper() == "OPTIONS":
         return None
 
@@ -126,15 +161,6 @@ async def enforce_user_ownership_for_common_api(request: Request, settings: Sett
                 shop_pairs=query.get("shop_pairs"),
                 shop_type=query.get("shop_type"),
                 shop_id=query.get("shop_id"),
-                settings=settings,
-            )
-            return None
-
-        settlement_match = SETTLEMENT_DETAIL_PATH_RE.match(path)
-        if settlement_match:
-            require_master_admin_or_settlement_owner(
-                request.headers.get("authorization"),
-                int(settlement_match.group(1)),
                 settings=settings,
             )
             return None
@@ -197,18 +223,6 @@ async def enforce_user_ownership_for_common_api(request: Request, settings: Sett
             )
             return None
 
-        inquiry_match = SUPPORT_INQUIRY_PATH_RE.match(path)
-        if inquiry_match:
-            requested_user_no = _int_or_none(query.get("user_no"))
-            if request.method.upper() == "PUT":
-                payload = await _json_body(request)
-                requested_user_no = _int_or_none(payload.get("user_no"))
-            require_master_admin_or_same_user(
-                request.headers.get("authorization"),
-                requested_user_no,
-                settings=settings,
-            )
-            return None
     except HTTPException as exc:
         return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
@@ -285,9 +299,12 @@ def _fetch_settlement_shop_pair(settlements_id: int) -> tuple[str, str] | None:
 async def _json_body(request: Request) -> dict:
     try:
         body = await request.body()
-        return json.loads(body.decode("utf-8")) if body else {}
-    except json.JSONDecodeError as exc:
+        payload = json.loads(body.decode("utf-8")) if body else {}
+    except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise HTTPException(status_code=422, detail="invalid json body") from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=422, detail="json body must be an object")
+    return payload
 
 
 def _int_or_none(value: object) -> int | None:

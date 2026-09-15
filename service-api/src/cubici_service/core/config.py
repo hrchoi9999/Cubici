@@ -4,7 +4,8 @@ from functools import lru_cache
 from os import environ, getenv
 from pathlib import Path
 
-from pydantic import BaseModel, Field, SecretStr
+from pydantic import BaseModel, Field, SecretStr, model_validator
+from psycopg.conninfo import make_conninfo
 
 
 SERVICE_API_ROOT = Path(__file__).resolve().parents[3]
@@ -54,15 +55,22 @@ class Settings(BaseModel):
         )
     )
 
+    @model_validator(mode="after")
+    def require_production_auth_secret(self) -> "Settings":
+        if self.environment.strip().lower() in {"prod", "production", "production-local", "staging"}:
+            secret = self.auth_secret.get_secret_value().strip()
+            if len(secret) < 32 or secret.lower().startswith(("change-me", "local-dev-only")):
+                raise ValueError("CUBICI_AUTH_SECRET must be a non-placeholder secret of at least 32 characters in production")
+        return self
+
     @property
     def db_conninfo(self) -> str:
-        password = self.db_password.get_secret_value()
-        return (
-            f"host={self.db_host} "
-            f"port={self.db_port} "
-            f"dbname={self.db_name} "
-            f"user={self.db_user} "
-            f"password={password}"
+        return make_conninfo(
+            host=self.db_host,
+            port=self.db_port,
+            dbname=self.db_name,
+            user=self.db_user,
+            password=self.db_password.get_secret_value(),
         )
 
 
