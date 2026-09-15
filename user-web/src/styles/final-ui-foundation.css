@@ -2283,8 +2283,46 @@
     background: #f0f4f8;
   }
 
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-main-content .main-wrap {
+    min-width: 0;
+    max-width: calc(100% - 24px);
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .section {
+    display: block;
+  }
+
   #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .col-box.col-2 .col-item {
     min-height: 180px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item {
+    display: block;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item .icon.pc {
+    display: none;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item .inner-item {
+    min-width: 0;
+    gap: 10px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item .tit {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item.item-2 .inner-item:nth-of-type(2) {
+    padding-left: 0;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item.item-1 .data-wrap,
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item.item-2 .data-wrap {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 }
 
@@ -2297,6 +2335,28 @@
     width: 100%;
     min-height: 160px;
     padding: 22px 25px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .main-r-box {
+    padding: 10px 15px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item {
+    padding: 10px 5px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item .icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item .tit,
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item.item-2 .data-wrap {
+    font-size: 13px;
+  }
+
+  #wrap.user-web-wrap.final-ui-shell .lv-auth-main-page .lv-auth-dashboard .bank-item.item-1 .data-in {
+    font-size: 18px;
   }
 }
 
@@ -5085,7 +5145,7 @@
     display: none;
   }
 
-  #wrap.user-web-wrap.final-ui-shell .final-main-page .final-mobile-logout {
+  #wrap.user-web-wrap.final-ui-shell.public-main-shell .final-main-page .final-mobile-logout {
     display: block;
   }
 
@@ -6144,20 +6204,31 @@
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u10-table-controls label {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   gap: 10px;
   height: 40px;
   padding: 0 14px;
   color: #333844;
   font-size: 13px;
+  white-space: nowrap;
   background: #fff;
   border: 1px solid #d9deed;
   border-radius: 20px;
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .u10-table-controls select {
+  height: 100%;
   border: 0;
   background: transparent;
+}
+
+@media all and (min-width: 1024px) and (max-width: 1119px) {
+  #wrap.user-web-wrap.final-ui-shell.commerce-shell:has(.final-commerce-page:is(.c2p1, .c2p2, .c3p2)) .react-final-sub-visual .inner,
+  #wrap.user-web-wrap.final-ui-shell.commerce-shell .final-commerce-page:is(.c2p1, .c2p2, .c3p2) .inner {
+    min-width: 0;
+    width: 100%;
+  }
 }
 
 #wrap.user-web-wrap.final-ui-shell.commerce-shell .final-commerce-page.c2p1 .basic-table {
@@ -6570,7 +6641,7 @@
   }
 
   #wrap.user-web-wrap.final-ui-shell.commerce-shell .u10-table-controls {
-    overflow-x: auto;
+    flex-wrap: wrap;
   }
 
   #wrap.user-web-wrap.final-ui-shell.commerce-shell .u10-sales-summary {

@@ -356,7 +356,7 @@ function MainPage() {
         </figure>
         </div>
 
-        <section className="mobile-view final-mobile-logout">
+        {!isAuthenticated && <section className="mobile-view final-mobile-logout">
           <div className="logout-content">
             <nav className="lv-mobile-section-tabs" aria-label="주요 서비스 바로가기">
               <a className="active" href="/cubici/integratedInfo/tab1">통합정보</a>
@@ -415,7 +415,7 @@ function MainPage() {
               </div>
             </div>
           </div>
-        </section>
+        </section>}
 
         <section className="content-wrap lv-main-content">
           <div className="main-wrap inner">
