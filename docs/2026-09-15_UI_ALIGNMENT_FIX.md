@@ -55,3 +55,29 @@ $env:CUBICI_USER_E2E_PORT = '18126'
 - 운영 사이트에는 기존 배포가 남아 있음. 운영 반영은 별도 배포 작업이 필요함.
 - 전체 사용자/관리자 UI, 업무 기능, legacy 산식, 접근권한에 대한 전체 회귀 검증 결과가 아님.
 - 좁은 데스크톱에서 공통 헤더 문구가 여러 줄로 보이는 기존 표현은 이번 본문 수정 범위에 포함하지 않음.
+
+## 후속 승인에 따른 운영 배포 및 푸시
+
+- 사용자가 이후 배포 및 푸시를 명시 승인함. 위 미배포 서술은 로컬 수정 완료 시점 기록임.
+- UI 소스/회귀 테스트/검토 문서 5개만 커밋: `d836ab3bdeef0eb3f2e3500d38c77eefc41242b5`.
+- GitHub `hrchoi9999/Cubici`의 `fix/cloudflare-admin-spa-routing`에 푸시하고 원격 해시 일치 확인. main 병합이나 force push는 하지 않음.
+- 공식 Wrangler로 Pages 프로젝트 `cubici`, production branch `main`에 `dist-cloudflare`만 배포함. 배포 소스 메타데이터는 위 코드 커밋과 일치함.
+- 배포 ID: `e98f3946-92ad-42f1-9c44-b95fe4b0af38`.
+- 배포 주소: https://e98f3946.cubici.pages.dev
+- 운영 주소: https://cubici.co.kr
+- 롤백 기준: 이전 운영 배포 `4b4b21d5-23a2-40f4-acd2-47fb31359202`. 필요 시 Cloudflare Pages의 이전 배포 롤백 기능으로 복귀하며 DB/API는 건드리지 않음.
+- 운영 API 주소로 사용자/관리자 번들을 재빌드하고 `smoke-cloudflare-static-bundle.mjs` 통과. 관리자 번들, 공통 resources, final-ui 자산 디렉터리 해시가 이전 배포와 모두 동일함. 실제 새 업로드는 사용자 HTML/JS/CSS 3개이며 나머지 3754개 자산은 재사용함.
+- 게시 대상 5개만 staging 확인, diff 공백 검사 및 비밀키 패턴 검사 통과. 별도 읽기 전용 검토 담당이 확정적 회귀나 민감정보 공개 위험을 발견하지 못함. 기존 관리자 E2E 7개, PNG 2개와 과거 미추적 자료는 커밋하지 않고 보존함.
+- 배포 전용 주소와 운영 주소에서 `verify-astra-deployment.mjs` 각각 23/23 통과: HTML/JS/CSS/관리자 경로와 정적 파일의 원격 해시 일치, CSS 참조 자산 존재 확인.
+- API `/v1/api/health`, `/v1/api/health/db` 모두 HTTP 200. API 이미지, Docker 서비스, DB, 외부 runtime env 변경 없음.
+
+### 배포 전환 캐시 처리
+
+초기 운영 도메인 검증에서 새 JS `/assets/index-B5Yjghyv.js`에 412-byte HTML이 캐시된 응답(HTTP 200, text/html, CF-Cache-Status HIT)을 확인함. 같은 URL에 배포 식별 query를 붙인 응답은 정상 JavaScript 및 로컬 해시와 일치하여 배포 원본 손상과 구분함.
+
+Cloudflare 대시보드에서 다음 두 URL만 선택적으로 purge한 후 운영 23/23 검증 통과함. 전체 cache purge, DNS, 캐시 정책, 보안 설정 변경은 하지 않음.
+
+- `https://cubici.co.kr/assets/index-B5Yjghyv.js`
+- `https://cubici.co.kr/assets/index-C4aow9g9.css`
+
+배포 전용 주소의 Chrome 렌더링은 확인됨. 전환 중 접속했던 기존 Chrome에는 브라우저 캐시로 빈 화면이 남아 사용자에게 강력 새로고침을 요청함. CDN purge는 이미 내려받은 브라우저 로컬 캐시를 직접 지우지 않으므로, 같은 증상일 때 Ctrl+Shift+R로 재요청이 필요함. 실제 로그인/업무 데이터 변경은 수행하지 않음.
