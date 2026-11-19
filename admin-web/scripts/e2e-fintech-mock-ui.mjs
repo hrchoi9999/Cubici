@@ -1,13 +1,15 @@
 import { spawn } from 'node:child_process';
 import { setTimeout as delay } from 'node:timers/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const workspaceRoot = 'D:\\Alt_CSM';
-const cubiciRoot = `${workspaceRoot}\\Cubici`;
-const pythonExe = `${workspaceRoot}\\.venv\\Scripts\\python.exe`;
+const cubiciRoot = fileURLToPath(new URL('../../', import.meta.url));
 const nodeExe = `${workspaceRoot}\\.tools\\node-v22.13.1-win-x64\\node.exe`;
-const serviceApiRoot = `${cubiciRoot}\\service-api`;
-const adminWebRoot = `${cubiciRoot}\\admin-web`;
+const serviceApiRoot = path.join(cubiciRoot, 'service-api');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(serviceApiRoot, '.venv315', 'Scripts', 'python.exe');
+const adminWebRoot = path.join(cubiciRoot, 'admin-web');
 const viteCli = `${adminWebRoot}\\node_modules\\vite\\bin\\vite.js`;
 const apiBaseUrl = 'http://127.0.0.1:8000';
 const adminBaseUrl = 'http://127.0.0.1:5174';

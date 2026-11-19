@@ -7,7 +7,11 @@ $ErrorActionPreference = "Stop"
 $CubiciRoot = Split-Path -Parent $PSScriptRoot
 $WorkspaceRoot = Split-Path -Parent $CubiciRoot
 $ServiceApiRoot = Join-Path $CubiciRoot "service-api"
-$PythonExe = Join-Path $WorkspaceRoot ".venv\Scripts\python.exe"
+if ($env:CUBICI_PYTHON_EXE) {
+  $PythonExe = $env:CUBICI_PYTHON_EXE
+} else {
+  $PythonExe = Join-Path $CubiciRoot "service-api\.venv315\Scripts\python.exe"
+}
 
 if (-not (Test-Path $PythonExe)) {
     throw "Python venv not found: $PythonExe"

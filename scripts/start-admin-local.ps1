@@ -7,8 +7,15 @@ $ErrorActionPreference = "Stop"
 
 $CubiciRoot = Split-Path -Parent $PSScriptRoot
 $WorkspaceRoot = Split-Path -Parent $CubiciRoot
-$PythonExe = Join-Path $WorkspaceRoot ".venv\Scripts\python.exe"
+if ($env:CUBICI_PYTHON_EXE) {
+  $PythonExe = $env:CUBICI_PYTHON_EXE
+} else {
+  $PythonExe = Join-Path $CubiciRoot "service-api\.venv315\Scripts\python.exe"
+}
 $NodeExe = Join-Path $WorkspaceRoot ".tools\node-v22.13.1-win-x64\node.exe"
+if (-not (Test-Path -LiteralPath $NodeExe -PathType Leaf)) {
+  $NodeExe = (Get-Command node -ErrorAction Stop).Source
+}
 $ServiceApiRoot = Join-Path $CubiciRoot "service-api"
 $AdminWebRoot = Join-Path $CubiciRoot "admin-web"
 $ServiceLogs = Join-Path $ServiceApiRoot ".logs"

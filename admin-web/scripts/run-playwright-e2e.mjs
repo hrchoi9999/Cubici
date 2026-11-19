@@ -12,7 +12,8 @@ const cubiciRoot = path.resolve(adminRoot, '..');
 const userRoot = path.join(cubiciRoot, 'user-web');
 const serviceApiRoot = path.join(cubiciRoot, 'service-api');
 const browserPath = path.join(workspaceRoot, '.downloads', 'ms-playwright');
-const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(serviceApiRoot, '.venv315',
+  ...(process.platform === 'win32' ? ['Scripts', 'python.exe'] : ['bin', 'python']));
 const dynamicPortOffset = String(process.pid % 1000).padStart(3, '0');
 const previewPort = process.env.CUBICI_E2E_PORT || `28${dynamicPortOffset}`;
 const apiPort = process.env.CUBICI_API_E2E_PORT || `29${dynamicPortOffset}`;

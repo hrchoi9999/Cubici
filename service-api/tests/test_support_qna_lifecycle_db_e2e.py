@@ -217,7 +217,7 @@ def _insert_fixture_users(suffix: str) -> tuple[int, int, int]:
                         now(), now()
                     )
                     """,
-                    [(*row, f"QNA{row[0]}") for row in rows],
+                    [(*row, f"QNA{row[0] % 10_000_000:07d}") for row in rows],
                 )
         return (first_user_no, first_user_no + 1, first_user_no + 2)
     except Exception as exc:  # pragma: no cover - local environment guard

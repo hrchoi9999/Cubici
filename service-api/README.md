@@ -4,16 +4,26 @@ Python backend for Cubici legacy service reproduction.
 
 ## Runtime
 
-- Python: `D:\Alt_CSM\.venv\Scripts\python.exe`
-- Version: Python 3.14.5
+- Local Python: CPython 3.15.2, `service-api\.venv315\Scripts\python.exe` on Windows
+- Python dependencies: `uv.lock`, including the default `dev` group for tests
 - DB target: PostgreSQL
 - Framework: FastAPI
 
 ## Local Run
 
+From the repository root on Windows, with uv 0.10.12 available:
+
 ```powershell
-D:\Alt_CSM\.venv\Scripts\python.exe -m uvicorn cubici_service.app:app --app-dir D:\Alt_CSM\Cubici\service-api\src --host 127.0.0.1 --port 8000 --reload
+$env:UV_PROJECT_ENVIRONMENT = Join-Path (Get-Location) 'service-api\.venv315'
+$env:PYYAML_FORCE_LIBYAML = '0'
+uv sync --project service-api --locked --no-install-project --python C:\Python315\python.exe
+& .\service-api\.venv315\Scripts\python.exe -m uvicorn cubici_service.app:app --app-dir .\service-api\src --host 127.0.0.1 --port 8000 --reload
 ```
+
+Local launch and E2E scripts default to `service-api/.venv315`. Set
+`CUBICI_PYTHON_EXE` to select an already prepared interpreter; CI provides its
+locked Python 3.15.2 environment through PATH. The production image has its own
+runtime configuration.
 
 ## Base Endpoints
 

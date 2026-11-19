@@ -5,7 +5,12 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $serviceApiRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$python = Join-Path $serviceApiRoot '.venv\Scripts\python.exe'
+$python = if ($env:CUBICI_PYTHON_EXE) { $env:CUBICI_PYTHON_EXE } else {
+    Join-Path $serviceApiRoot '.venv315\Scripts\python.exe'
+}
+if (-not (Get-Command $python -ErrorAction SilentlyContinue)) {
+    throw "Set up the Python 3.15.2 environment first: $python"
+}
 $role = "cubici_e2e_$PID"
 $password = [guid]::NewGuid().ToString('N')
 $email = "e2e-master-$PID@example.invalid"

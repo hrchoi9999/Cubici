@@ -11,7 +11,8 @@ const serviceApiRoot = path.join(cubiciRoot, 'service-api');
 const workspaceRoot = path.resolve(cubiciRoot, '..');
 const browserPath = path.join(workspaceRoot, '.downloads', 'ms-playwright');
 const nodeExe = process.execPath;
-const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(workspaceRoot, '.venv', 'Scripts', 'python.exe');
+const pythonExe = process.env.CUBICI_PYTHON_EXE || path.join(serviceApiRoot, '.venv315',
+  ...(process.platform === 'win32' ? ['Scripts', 'python.exe'] : ['bin', 'python']));
 const apiPort = process.env.CUBICI_API_E2E_PORT || '8000';
 const userPort = process.env.CUBICI_USER_E2E_PORT || '4175';
 const apiUrl = `http://127.0.0.1:${apiPort}`;

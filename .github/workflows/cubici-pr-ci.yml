@@ -49,12 +49,13 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.15.2"
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest fastapi "pydantic>=2.13.4" "psycopg[binary]>=3.3.4" python-multipart "uvicorn[standard]>=0.38.0" httpx
+          python -m pip install uv==0.10.12
+          PYYAML_FORCE_LIBYAML=0 uv sync --project service-api --locked --no-install-project --python "$(command -v python)"
+          echo "$GITHUB_WORKSPACE/service-api/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Install PostgreSQL client
         run: |
@@ -62,17 +63,17 @@ jobs:
           sudo apt-get install -y postgresql-client
 
       - name: Apply database schema and CI seed
-        run: python scripts/ci/apply_postgres_schema.py
+        run: python scripts/ci/apply_postgres_schema.py --seed-db-e2e-contract
 
       - name: Run service-api non-DB tests
         env:
           CUBICI_RUN_DB_E2E: "0"
-        run: python -m pytest service-api/tests -k "not db_e2e and not e2e"
+        run: python -m pytest service-api/tests -m "not db_e2e"
 
       - name: Run service-api DB-included tests
         env:
           CUBICI_RUN_DB_E2E: "1"
-        run: python -m pytest service-api/tests
+        run: python -m pytest service-api/tests -m db_e2e
 
   frontend:
     name: frontend build and smoke
@@ -134,7 +135,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.14"
+          python-version: "3.15.2"
 
       - uses: actions/setup-node@v4
         with:
@@ -142,8 +143,9 @@ jobs:
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install pytest fastapi "pydantic>=2.13.4" "psycopg[binary]>=3.3.4" python-multipart "uvicorn[standard]>=0.38.0" httpx
+          python -m pip install uv==0.10.12
+          PYYAML_FORCE_LIBYAML=0 uv sync --project service-api --locked --no-install-project --python "$(command -v python)"
+          echo "$GITHUB_WORKSPACE/service-api/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Install PostgreSQL client
         run: |

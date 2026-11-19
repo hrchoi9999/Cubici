@@ -9,7 +9,12 @@ $ErrorActionPreference = 'Stop'
 $adminRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $cubiciRoot = (Resolve-Path (Join-Path $adminRoot '..')).Path
 $serviceApiRoot = Join-Path $cubiciRoot 'service-api'
-$python = Join-Path $serviceApiRoot '.venv\Scripts\python.exe'
+$python = if ($env:CUBICI_PYTHON_EXE) { $env:CUBICI_PYTHON_EXE } else {
+    Join-Path $serviceApiRoot '.venv315\Scripts\python.exe'
+}
+if (-not (Get-Command $python -ErrorAction SilentlyContinue)) {
+    throw "Set up the Python 3.15.2 environment first: $python"
+}
 if (-not $NodeExe) {
     $nodeCommand = Get-Command node -ErrorAction SilentlyContinue
     $NodeExe = if ($nodeCommand) {

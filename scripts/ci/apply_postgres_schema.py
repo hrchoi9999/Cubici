@@ -6,6 +6,7 @@ uses only environment variables supplied by the workflow.
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import subprocess
@@ -23,11 +24,21 @@ MIGRATION_DIR = REPO_ROOT / "db" / "postgres" / "migrations"
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--seed-db-e2e-contract", action="store_true")
+    args = parser.parse_args()
     run_psql_sql(_postgres_compatible_legacy_schema())
     run_psql_file(SCHEMA_DIR / "002_application_schema_draft.sql")
     for migration in sorted(MIGRATION_DIR.glob("*.sql")):
         run_psql_file(migration)
     seed_minimal_data()
+    if args.seed_db_e2e_contract:
+        run_psql_sql("""
+            insert into moneybank_contract (
+                mbid, user_no, fintech_id, product_code, status, reg_no_first, reg_date
+            ) values ('ZTEST00001', 1, 1, 'MP', 'CONTRACT', 'E2EFIXTURE', now())
+            on conflict (mbid) do nothing;
+        """)
 
 
 def run_psql_file(path: Path) -> None:

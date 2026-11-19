@@ -135,6 +135,7 @@ user-web/playwright-report/
 /test-results/
 /.deploy-worktrees/
 service-api/.venv/
+service-api/.venv315/
 service-api/.logs/
 service-api/.pytest_cache/
 .pnpm-store/
